@@ -91,49 +91,103 @@ export const BLOG_POSTS: BlogPost[] = [
     image: '/images/may-2026-london-ontario-market-update.png',
     imageAlt: 'May 2026 London Ontario real estate market update — West London spring market conditions',
     content: `
-      <p>Spring 2026 is delivering exactly what West London buyers and sellers expect from the most active selling season of the year: rising transaction volume, competitive pricing, and motivated activity on both sides of the table. Transaction volume across London Ontario is up approximately 8% year-over-year, and West London neighbourhoods are leading the charge. Here is what the May 2026 numbers mean for you.</p>
+      <p>Spring is doing what spring does in London, Ontario — bringing more buyers out, more homes to market, and a little more confidence back into the numbers. May 2026 was a solid month for London real estate. Sales climbed, prices firmed up from April, and the overall picture looks like a market that has found a healthier rhythm after a year of adjustment. Here is a full breakdown of what happened — and what it means if you are thinking about buying or selling this summer.</p>
 
-      <h2>Sales Volume in West London</h2>
-      <p>Transaction volume across London Ontario was up approximately 8% year-over-year in May, with West London neighbourhoods including <a href="/areas/oakridge/">Oakridge</a>, <a href="/areas/byron/">Byron</a>, and <a href="/areas/lambeth/">Lambeth</a> showing above-average activity. The Oakridge area in particular saw strong demand for detached bungalows and two-storey homes in the $600,000 to $800,000 range.</p>
+      <h2>London Ontario Real Estate Market: May 2026 Snapshot</h2>
+      <table>
+        <thead>
+          <tr><th>Metric</th><th>May 2026</th><th>Month-Over-Month</th><th>Year-Over-Year</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Average Sale Price</td><td>$638,813</td><td>+5.9%</td><td>-1.2%</td></tr>
+          <tr><td>Median Sale Price</td><td>$580,000</td><td>+3.6%</td><td>-3.6%</td></tr>
+          <tr><td>Sales (Transaction Volume)</td><td>543</td><td>+26.0%</td><td>+11.3%</td></tr>
+          <tr><td>New Listings</td><td>1,296</td><td>+5.9%</td><td>-7.8%</td></tr>
+          <tr><td>Average Days on Market</td><td>33 days</td><td>-7.5%</td><td>+17.3%</td></tr>
+          <tr><td>Median SP/LP Ratio</td><td>97.7%</td><td>+0.1%</td><td>-0.3%</td></tr>
+          <tr><td>% Sold Above List</td><td>19.2%</td><td>—</td><td>—</td></tr>
+          <tr><td>% Sold Below List</td><td>74.2%</td><td>—</td><td>—</td></tr>
+          <tr><td>Total Dollar Volume</td><td>$346,875,205</td><td>+33.5%</td><td>+9.9%</td></tr>
+        </tbody>
+      </table>
+      <p><em>Source: The Habistat Analytics Platform in partnership with PropTx. Data covers all residential property types across London East, London North, and London South (Middlesex). Generated June 16, 2026. Subject to change.</em></p>
 
-      <h2>Average Prices: Where Do We Stand?</h2>
-      <p>The London Ontario average home price hovers around $620,000 to $650,000 in May 2026, depending on property type and neighbourhood. Executive homes in <a href="/areas/lambeth/">Lambeth</a> and <a href="/areas/hyde-park/">Hyde Park</a> continue to command premiums, while <a href="/areas/west-london/">West London</a> remains one of the more accessible entry points for buyers who want an established neighbourhood without the Oakridge or Byron price tag.</p>
+      <h2>How Many Homes Sold in London Ontario in May 2026?</h2>
+      <p>543 homes sold in London in May 2026 — up 11.3% compared to May 2025 (488 sales) and up 26.0% from April 2026 (431 sales). That month-over-month jump is the clearest signal yet that London's spring market has arrived. It was the strongest single month of 2026 so far.</p>
+      <p>Year-to-date, London sits at 1,931 sales — essentially flat versus the same period last year (1,948 sales, down just 0.9%). The market is not roaring ahead, but it is holding steady and May moved things in the right direction.</p>
 
-      <h2>Days on Market</h2>
-      <p>Well-priced homes in desirable West London neighbourhoods are moving in 14 to 21 days on average. Overpriced listings are sitting significantly longer, which is a strong reminder that <a href="/services/selling/">pricing strategy</a> matters more than ever in the current environment.</p>
+      <h2>What Is the Average Home Price in London Ontario Right Now?</h2>
+      <p>The average home price in London Ontario in May 2026 was <strong>$638,813</strong> — up 5.9% from April and down 1.2% from May 2025. The median sale price was <strong>$580,000</strong> — up 3.6% month-over-month and down 3.6% year-over-year.</p>
+      <p>Prices are running modestly below last May's levels, which were elevated coming off a stronger spring in 2025. But the month-over-month trend is positive — prices climbed through the spring of 2026, which is exactly the seasonal pattern a healthy market produces. The year-to-date average price sits at $617,284, compared to $642,754 at this point last year — a 4.0% gap that is narrowing.</p>
 
-      <h2>What This Means for Buyers</h2>
-      <p>Competition is real but manageable. Multiple-offer situations are happening on well-priced properties, but they are not universal. Buyers who have their financing confirmed and are working with a local Real Estate Broker are in a strong position. Not sure where to start? Read our <a href="/blog/first-time-home-buyer-london-ontario-guide/">first-time buyer guide</a> or learn about <a href="/services/buying/">the buying process</a>.</p>
+      <h2>Where Are Homes Selling in London? Active Listings by Price Range</h2>
+      <p>The most active price range in London right now is the $500,000 to $599,999 band, with 410 active listings — the deepest pool of available inventory in the city. Currently there are 2,272 active listings with a median list price of $625,000.</p>
+      <table>
+        <thead>
+          <tr><th>Price Range</th><th>Active Listings</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Under $300,000</td><td>149</td></tr>
+          <tr><td>$300,000 – $399,999</td><td>228</td></tr>
+          <tr><td>$400,000 – $499,999</td><td>285</td></tr>
+          <tr><td>$500,000 – $599,999</td><td><strong>410 — most active range</strong></td></tr>
+          <tr><td>$600,000 – $699,999</td><td>321</td></tr>
+          <tr><td>$700,000 – $799,999</td><td>243</td></tr>
+          <tr><td>$800,000 – $999,999</td><td>322</td></tr>
+          <tr><td>$1,000,000 and above</td><td>314</td></tr>
+        </tbody>
+      </table>
+      <p>Entry-level inventory under $300,000 remains very limited. The bulk of the market operates between $400,000 and $800,000. For a neighbourhood-by-neighbourhood breakdown of where to find value, see our <a href="/blog/cheapest-area-buy-house-london-ontario/">London Ontario affordability guide</a>.</p>
 
-      <h2>What This Means for Sellers</h2>
-      <p>Now is an excellent time to list. Buyer demand is active, inventory is still relatively balanced, and well-presented homes are selling close to asking price. The key is getting the pricing right from day one. <a href="/services/home-evaluation/">Book a complimentary home evaluation</a> to start with accurate data.</p>
+      <h2>Total Dollar Volume</h2>
+      <p>May 2026 recorded <strong>$346,875,205</strong> in total residential sales volume — up 33.5% from April and up 9.9% from May 2025. Year-to-date dollar volume sits at just under $1.2 billion ($1,191,976,262), running about 4.8% behind last year's pace. But May's numbers were the strongest of 2026 so far, and the trajectory is improving month over month.</p>
 
-      <h2>Looking Ahead</h2>
-      <p>With the <a href="https://www.bankofcanada.ca/core-functions/monetary-policy/key-interest-rate/" target="_blank" rel="noopener noreferrer">Bank of Canada rate trajectory</a> looking relatively stable through summer, the London Ontario market should maintain its current pace through June and July before the typical summer slowdown. See our <a href="/blog/june-2026-london-ontario-market-update/">June 2026 update</a> for the latest numbers.</p>
+      <h2>How Many Homes Are Listed in London Ontario?</h2>
+      <p>1,296 new listings came to market in May — up 5.9% from April, though down 7.8% compared to May 2025. Year-to-date, new listings sit at 5,058 versus 5,030 at this point last year — up just 0.6%. Supply is not flooding in, but it is steady, keeping the market from tilting sharply in either direction.</p>
+
+      <h2>How Long Are Homes Taking to Sell?</h2>
+      <p>Average days on market in May 2026: <strong>33 days</strong> — down from 36 in April, up from 28 in May 2025. Median days on market: <strong>22 days</strong> — flat month-over-month, up from 19 in May 2025. Active (unsold) listings sit at a median of 34 days — that gap between sold (22 days) and active (34 days) tells the story: well-priced homes move, overpriced homes sit.</p>
+
+      <h2>Are Homes Selling Above or Below Asking Price?</h2>
+      <p>74.2% of London homes sold below asking price in May 2026. 19.2% sold above asking. 6.6% sold at list price. The average SP/LP ratio was 97.8% — a slight improvement from April (97.6%) but down from May 2025 (98.3%). Multiple offers still happen on well-priced, turnkey homes, but most buyers have real negotiating room in this market.</p>
+
+      <h2>Terminations: A Positive Signal</h2>
+      <p>405 listings were terminated in May — down 7.1% from April and down 16.1% from May 2025. Fewer sellers pulling their listings suggests more realistic pricing is coming to market and seller confidence is improving. The downward trend here is a healthy one.</p>
+
+      <h2>What Does This Mean for Buyers in London Ontario?</h2>
+      <p>May 2026 was a strong month to be a buyer in London. Inventory is solid, homes are taking longer to sell, and the sale-to-list ratio gives negotiating room in most situations. Well-priced homes in desirable neighbourhoods like <a href="/areas/oakridge/">Oakridge</a>, <a href="/areas/byron/">Byron</a>, and <a href="/areas/lambeth/">Lambeth</a> are still moving — being <a href="/mortgages/pre-approval/">pre-approved</a> and ready to act when the right home appears remains the right strategy. Read our <a href="/blog/first-time-home-buyer-london-ontario-guide/">first-time buyer guide</a> for a full walkthrough.</p>
+
+      <h2>What Does This Mean for Sellers in London Ontario?</h2>
+      <p>The spring window is open — May proved buyers are out there and willing to transact. But with 74% of homes <a href="/services/selling/">selling below asking</a> and days on market up year-over-year, overpricing is not a strategy, it is a delay. Sellers who price accurately and present well are still achieving strong results. Start with a <a href="/services/home-evaluation/">complimentary home evaluation</a> to know exactly where your home stands. See our <a href="/blog/june-2026-london-ontario-market-update/">June 2026 update</a> for the latest numbers.</p>
     `,
     faqs: [
       {
-        question: 'What is the average home price in London Ontario in May 2026?',
-        answer: 'The London Ontario average home price is approximately $620,000–$650,000 in May 2026, depending on property type and neighbourhood. West London neighbourhoods like Oakridge and Byron command a premium over the city average, while West London near Commissioners Road offers more accessible entry-level pricing.',
+        question: 'What is the average home price in London Ontario in 2026?',
+        answer: 'The average sale price in London Ontario in May 2026 was $638,813. The year-to-date average through May is $617,284, compared to $642,754 at the same point last year — a 4.0% gap that is narrowing as spring momentum builds.',
       },
       {
-        question: 'Is the spring market active in London Ontario in 2026?',
-        answer: 'Yes — transaction volume across London Ontario is up approximately 8% year-over-year in May 2026. West London neighbourhoods including Oakridge, Byron, and Lambeth are showing above-average buyer activity, with well-priced listings in the $600,000–$800,000 range moving particularly well.',
+        question: 'Is London Ontario a buyer\'s or seller\'s market right now?',
+        answer: 'London Ontario is currently in balanced-to-buyer-leaning market conditions. With 74.2% of homes selling below list price and homes taking longer to sell than a year ago (median 22 days versus 19 in May 2025), buyers have real negotiating power in most situations. Well-priced homes in strong locations still attract competition.',
       },
       {
-        question: 'How quickly are homes selling in West London in spring 2026?',
-        answer: 'Well-priced homes in desirable West London neighbourhoods are selling in 14 to 21 days on average in spring 2026. Properties that are overpriced relative to recent comparable sales are sitting significantly longer and often require reductions before selling.',
+        question: 'How many homes are for sale in London Ontario right now?',
+        answer: 'As of late May/early June 2026, there are 2,272 active residential listings in London Ontario, with a median list price of $625,000 and an average list price of $722,034. The most active price range is $500,000–$599,999 with 410 active listings.',
       },
       {
-        question: 'Are there multiple offers on homes in London Ontario right now?',
-        answer: 'Multiple-offer situations are occurring on well-priced properties in competitive West London neighbourhoods, but they are not universal. Buyers who are pre-approved, prepared, and working with a local broker are in the strongest position to compete successfully.',
+        question: 'How long does it take to sell a home in London Ontario?',
+        answer: 'The median days on market for sold homes in May 2026 was 22 days. Active (unsold) listings are sitting at a median of 34 days — that gap tells you everything: well-priced homes move in three weeks, overpriced homes sit for over a month. The year-to-date median is 24 days, up from 20 days last year.',
       },
       {
-        question: 'Should I buy or sell in London Ontario this spring?',
-        answer: 'Sellers are well-positioned in spring 2026 — buyer demand is active and inventory remains relatively balanced. Well-presented, accurately priced listings are selling close to asking. Buyers who are pre-approved and working with a knowledgeable local broker can still find strong opportunities before summer competition eases.',
+        question: 'Is now a good time to buy a home in London Ontario?',
+        answer: 'Conditions in May 2026 favour buyers more than they have in several years. Inventory is solid at 2,272 active listings, prices are stable, the Bank of Canada rate has held at 2.25% since late 2025, and 74% of homes are selling below asking. Buyers who have been waiting for the right window have a real opportunity right now.',
+      },
+      {
+        question: 'Is now a good time to sell a home in London Ontario?',
+        answer: 'Selling in London in 2026 requires a strategic approach. Homes priced accurately and presented well are achieving close to asking price and selling within 22 days (median). The spring market has been active — 543 sales in May was the strongest month of 2026. Pricing competitively from day one is essential.',
       },
     ],
     sources: [
+      { label: 'The Habistat Analytics Platform in partnership with PropTx — London Ontario Residential Data, June 16, 2026', url: 'https://www.habistat.com' },
       { label: 'Bank of Canada — Key Interest Rate', url: 'https://www.bankofcanada.ca/core-functions/monetary-policy/key-interest-rate/' },
       { label: 'London and St. Thomas Association of REALTORS® (LSTAR)', url: 'https://www.lstar.ca' },
     ],
