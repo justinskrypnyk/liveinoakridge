@@ -8,7 +8,7 @@ export const SITE = {
   url: 'https://www.liveinoakridge.ca',
   phone: '519-639-5176',
   phoneDisplay: '519.639.5176',
-  email: 'justin@liveinoakridge.ca',
+  email: 'info@homeswithjustin.ca',
   brokerage: 'Sutton Group Chapman Realty Inc., Brokerage',
   address: {
     street: '',

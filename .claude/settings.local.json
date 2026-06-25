@@ -33,7 +33,12 @@
       "Bash(gh auth *)",
       "Bash(git init *)",
       "Bash(git add *)",
-      "Bash(git commit *)"
+      "Bash(git commit *)",
+      "Bash(git remote *)",
+      "Bash(git push *)",
+      "Bash(cp /Users/justinskrypnyk/Desktop/london-realtor/flavicon.png /Users/justinskrypnyk/Desktop/london-realtor/public/favicon.png)",
+      "Bash(cp /Users/justinskrypnyk/Desktop/london-realtor/justinlogo.png /Users/justinskrypnyk/Desktop/london-realtor/public/images/justinlogo.png)",
+      "Bash(cp /Users/justinskrypnyk/Desktop/london-realtor/chapmanlogo.png /Users/justinskrypnyk/Desktop/london-realtor/public/images/chapmanlogo.png)"
     ]
   }
 }
