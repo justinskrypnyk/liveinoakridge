@@ -10,6 +10,8 @@ export interface BlogPost {
   image?: string;
   imageAlt?: string;
   content: string;
+  faqs?: Array<{ question: string; answer: string }>;
+  sources?: Array<{ label: string; url: string }>;
 }
 
 export const BLOG_POSTS: BlogPost[] = [
@@ -23,7 +25,7 @@ export const BLOG_POSTS: BlogPost[] = [
     author: 'Justin Skrypnyk',
     readTime: '5 min read',
     content: `
-      <p>Summer has arrived across West London, and the real estate market has carried spring momentum into June 2026. Here is a frank look at what the numbers are showing — and what they mean for buyers and sellers right now in London Ontario.</p>
+      <p>The London Ontario real estate market in June 2026 is active, balanced, and favouring well-prepared buyers and accurately priced sellers. Transaction volume is running approximately 6% ahead of the same period last year, and West London neighbourhoods continue to lead in buyer demand. Here is a frank look at what the data shows and what it means for you right now.</p>
 
       <h2>Sales Volume Remains Active</h2>
       <p>London Ontario transaction volume year-to-date in 2026 is running approximately 6% ahead of the same period last year. <a href="/areas/oakridge/">Oakridge</a>, <a href="/areas/byron/">Byron</a>, and <a href="/areas/lambeth/">Lambeth</a> continue to lead West London in buyer demand, with well-priced listings moving in 14 to 21 days. <a href="/areas/hyde-park/">Hyde Park</a> new construction in the $750,000–$950,000 range is also seeing strong activity from upsizing families.</p>
@@ -50,6 +52,32 @@ export const BLOG_POSTS: BlogPost[] = [
         <li><strong><a href="/areas/west-london/">West London</a></strong> — Best value in the west end. Entry-level detached generating attention.</li>
       </ul>
     `,
+    faqs: [
+      {
+        question: 'What is the average home price in London Ontario in June 2026?',
+        answer: 'The London Ontario average home price is approximately $625,000–$660,000 as of June 2026, depending on property type and neighbourhood. Premium west-end areas like Oakridge and Byron are trading 10–20% above the city average, while West London near the Commissioners corridor offers more accessible entry points.',
+      },
+      {
+        question: 'Is it a buyer\'s or seller\'s market in London Ontario right now?',
+        answer: 'West London in June 2026 is a balanced-to-sellers market in well-priced neighbourhoods. Properties priced accurately in Oakridge, Byron, and Lambeth are selling in 14–21 days, sometimes with multiple offers. Overpriced listings are sitting significantly longer.',
+      },
+      {
+        question: 'How long does it take to sell a house in London Ontario in summer 2026?',
+        answer: 'Well-priced homes in desirable West London neighbourhoods are selling in approximately 14 to 21 days on average in summer 2026. Properties that are overpriced relative to comparable sales are taking considerably longer and often require price reductions.',
+      },
+      {
+        question: 'What are current mortgage rates in London Ontario?',
+        answer: 'As of June 2026, 5-year fixed mortgage rates are generally available in the 4.50%–5.25% range for well-qualified buyers. Variable rates are comparable or slightly lower depending on the lender and your financial profile. A mortgage broker can access rates across multiple lenders to find your best option.',
+      },
+      {
+        question: 'Is now a good time to buy a home in London Ontario?',
+        answer: 'Summer 2026 offers a reasonable entry window for prepared buyers. Competition is slightly lower than the spring peak, giving buyers more time to make informed decisions. If you are pre-approved, have clarity on your target neighbourhoods, and are working with a local broker, summer is a practical time to buy.',
+      },
+    ],
+    sources: [
+      { label: 'Bank of Canada — Key Interest Rate', url: 'https://www.bankofcanada.ca/core-functions/monetary-policy/key-interest-rate/' },
+      { label: 'London and St. Thomas Association of REALTORS® (LSTAR)', url: 'https://www.lstar.ca' },
+    ],
   },
   {
     slug: 'may-2026-london-ontario-market-update',
@@ -63,7 +91,7 @@ export const BLOG_POSTS: BlogPost[] = [
     image: '/images/may-2026-london-ontario-market-update.png',
     imageAlt: 'May 2026 London Ontario real estate market update — West London spring market conditions',
     content: `
-      <p>Spring has arrived in West London, and with it, the familiar surge in real estate activity that makes the May market one of the most dynamic months of the year. Here is what the numbers are telling us as we close out May 2026.</p>
+      <p>Spring 2026 is delivering exactly what West London buyers and sellers expect from the most active selling season of the year: rising transaction volume, competitive pricing, and motivated activity on both sides of the table. Transaction volume across London Ontario is up approximately 8% year-over-year, and West London neighbourhoods are leading the charge. Here is what the May 2026 numbers mean for you.</p>
 
       <h2>Sales Volume in West London</h2>
       <p>Transaction volume across London Ontario was up approximately 8% year-over-year in May, with West London neighbourhoods including <a href="/areas/oakridge/">Oakridge</a>, <a href="/areas/byron/">Byron</a>, and <a href="/areas/lambeth/">Lambeth</a> showing above-average activity. The Oakridge area in particular saw strong demand for detached bungalows and two-storey homes in the $600,000 to $800,000 range.</p>
@@ -83,6 +111,32 @@ export const BLOG_POSTS: BlogPost[] = [
       <h2>Looking Ahead</h2>
       <p>With the <a href="https://www.bankofcanada.ca/core-functions/monetary-policy/key-interest-rate/" target="_blank" rel="noopener noreferrer">Bank of Canada rate trajectory</a> looking relatively stable through summer, the London Ontario market should maintain its current pace through June and July before the typical summer slowdown. See our <a href="/blog/june-2026-london-ontario-market-update/">June 2026 update</a> for the latest numbers.</p>
     `,
+    faqs: [
+      {
+        question: 'What is the average home price in London Ontario in May 2026?',
+        answer: 'The London Ontario average home price is approximately $620,000–$650,000 in May 2026, depending on property type and neighbourhood. West London neighbourhoods like Oakridge and Byron command a premium over the city average, while West London near Commissioners Road offers more accessible entry-level pricing.',
+      },
+      {
+        question: 'Is the spring market active in London Ontario in 2026?',
+        answer: 'Yes — transaction volume across London Ontario is up approximately 8% year-over-year in May 2026. West London neighbourhoods including Oakridge, Byron, and Lambeth are showing above-average buyer activity, with well-priced listings in the $600,000–$800,000 range moving particularly well.',
+      },
+      {
+        question: 'How quickly are homes selling in West London in spring 2026?',
+        answer: 'Well-priced homes in desirable West London neighbourhoods are selling in 14 to 21 days on average in spring 2026. Properties that are overpriced relative to recent comparable sales are sitting significantly longer and often require reductions before selling.',
+      },
+      {
+        question: 'Are there multiple offers on homes in London Ontario right now?',
+        answer: 'Multiple-offer situations are occurring on well-priced properties in competitive West London neighbourhoods, but they are not universal. Buyers who are pre-approved, prepared, and working with a local broker are in the strongest position to compete successfully.',
+      },
+      {
+        question: 'Should I buy or sell in London Ontario this spring?',
+        answer: 'Sellers are well-positioned in spring 2026 — buyer demand is active and inventory remains relatively balanced. Well-presented, accurately priced listings are selling close to asking. Buyers who are pre-approved and working with a knowledgeable local broker can still find strong opportunities before summer competition eases.',
+      },
+    ],
+    sources: [
+      { label: 'Bank of Canada — Key Interest Rate', url: 'https://www.bankofcanada.ca/core-functions/monetary-policy/key-interest-rate/' },
+      { label: 'London and St. Thomas Association of REALTORS® (LSTAR)', url: 'https://www.lstar.ca' },
+    ],
   },
   {
     slug: 'oakridge-vs-byron-west-london-neighbourhoods',
@@ -94,7 +148,7 @@ export const BLOG_POSTS: BlogPost[] = [
     author: 'Justin Skrypnyk',
     readTime: '7 min read',
     content: `
-      <p>Two of West London's most desirable and established neighbourhoods often come up in the same breath when buyers are deciding where to plant roots. <a href="/areas/oakridge/">Oakridge</a> and <a href="/areas/byron/">Byron</a> both offer mature streets, strong schools, and a genuine sense of community — but they have meaningfully different characters that suit different buyers. Here is how they compare across the factors that matter most.</p>
+      <p>Oakridge and Byron are West London's two most established, desirable neighbourhoods — and choosing between them is one of the most common decisions buyers face. Both offer mature streets, strong schools, and genuine community character. But they are meaningfully different places to live. This comparison covers the factors that actually matter: price, schools, outdoor lifestyle, daily convenience, and fit.</p>
 
       <h2>Location and Feel</h2>
       <p><a href="/areas/oakridge/">Oakridge</a> occupies the Oxford Street corridor between Wonderland Road and Sanatorium Road — west London's true mid-point, with quick access to the city in every direction. The neighbourhood feels settled and self-contained, centred around Oakridge Optimist Park and the Oxford & Hyde Park commercial node with Remark Fresh Markets, Shoppers Drug Mart, and Starbucks within walking distance.</p>
@@ -118,8 +172,35 @@ export const BLOG_POSTS: BlogPost[] = [
       <h2>Who Should Choose Each Neighbourhood?</h2>
       <p><strong>Choose <a href="/areas/oakridge/">Oakridge</a> if:</strong> You want a central west-end location, strong schools, walkable amenities, and a mature community with a slightly more accessible price point.</p>
       <p><strong>Choose <a href="/areas/byron/">Byron</a> if:</strong> Outdoor lifestyle is your priority, you want a more village-like feel, and Byron Secondary School's academic profile is important to your family.</p>
-      <p>If you are still not sure which fits you better, <a href="/contact/">reach out to Justin</a> for a no-pressure conversation. He has helped families make this exact decision dozens of times and knows both neighbourhoods inside out. You can also <a href="/areas/oakridge/buy/">search homes for sale in Oakridge</a> or <a href="/areas/byron/buy/">browse homes for sale in Byron</a> to get a feel for what is available.</p>
+      <p>If you are still not sure which fits you better, <a href="/contact/">reach out to Justin</a> for a no-pressure conversation. He has helped families make this exact decision dozens of times and knows both neighbourhoods inside out. You can also explore all <a href="/areas/">areas we serve</a> or read our <a href="/blog/london-ontario-neighbourhood-guide-2026/">complete London Ontario neighbourhood guide</a> for further context.</p>
     `,
+    faqs: [
+      {
+        question: 'Is Oakridge or Byron more expensive in London Ontario?',
+        answer: 'Both neighbourhoods command a premium over the London Ontario average. Oakridge detached homes typically sell in the $650,000–$850,000 range. Byron commands a slight premium at $700,000–$950,000 for detached, with executive properties exceeding that. The price gap between the two is relatively modest — roughly 5–10% in favour of Oakridge being more accessible.',
+      },
+      {
+        question: 'Which has better schools, Oakridge or Byron?',
+        answer: 'Both neighbourhoods have strong school catchments. Oakridge is served by Oakridge Public School, Mother Teresa Catholic Elementary, and Oakridge Secondary School. Byron is served by Byron Northview Public School and Byron Secondary School. Byron Secondary School has a slight academic edge at the secondary level and is frequently cited among the region\'s top-performing high schools.',
+      },
+      {
+        question: 'Is Oakridge or Byron better for families with young children?',
+        answer: 'Both are excellent choices for families. Oakridge offers strong schools, Oakridge Optimist Park with a splash pad, and highly walkable everyday amenities. Byron offers Springbank Park\'s 200+ acres, the Thames River trail system, and Byron Secondary School. The right fit depends on whether you prioritize outdoor space (Byron) or central convenience (Oakridge).',
+      },
+      {
+        question: 'What is the average home price in Oakridge vs Byron in 2026?',
+        answer: 'In 2026, Oakridge detached homes are generally trading in the $650,000–$850,000 range. Byron detached homes range from $700,000–$950,000, with executive properties above that. Both are 10–20% above the London Ontario city average of approximately $625,000–$660,000.',
+      },
+      {
+        question: 'Which West London neighbourhood has the best outdoor access?',
+        answer: 'Byron wins decisively for outdoor lifestyle. Springbank Park — London\'s largest park at over 200 acres — runs through Byron along the Thames River, and the Thames Valley Parkway trail system is directly accessible. Oakridge has Oakridge Optimist Park and the unique Sifton Bog Conservation Area, but Springbank Park is in a different category for sheer outdoor space.',
+      },
+    ],
+    sources: [
+      { label: 'Thames Valley District School Board (TVDSB)', url: 'https://www.tvdsb.ca' },
+      { label: 'London District Catholic School Board (LDCSB)', url: 'https://www.ldcsb.ca' },
+      { label: 'City of London — Springbank Park', url: 'https://london.ca/parks-nature/parks/springbank-park' },
+    ],
   },
   {
     slug: 'first-time-home-buyer-london-ontario-guide',
@@ -131,7 +212,7 @@ export const BLOG_POSTS: BlogPost[] = [
     author: 'Justin Skrypnyk',
     readTime: '10 min read',
     content: `
-      <p>Buying your first home in London Ontario is one of the most significant financial decisions you will ever make — and it does not have to be overwhelming. This complete guide walks through everything a first-time buyer in London needs to understand, from government programs to neighbourhood selection to what happens on closing day.</p>
+      <p>Buying your first home in London Ontario involves government programs worth thousands of dollars, closing costs most buyers underestimate, and neighbourhood decisions that will shape your daily life for years. This guide walks you through every step — from calculating your true budget to getting the keys — so you know exactly what to expect.</p>
 
       <h2>Step 1: Understand Your True Budget</h2>
       <p>Before you look at a single listing, you need to know what you can actually afford. Go beyond the mortgage payment to account for all costs of homeownership in London Ontario:</p>
@@ -182,6 +263,34 @@ export const BLOG_POSTS: BlogPost[] = [
 
       <p>Ready to start? <a href="/services/first-time-buyers/">Learn about Justin's first-time buyer process</a> or <a href="/contact/">reach out for a no-pressure conversation</a> about where you stand and what comes next.</p>
     `,
+    faqs: [
+      {
+        question: 'What is the minimum down payment to buy a house in Ontario in 2026?',
+        answer: 'The minimum down payment in Ontario is 5% on homes priced up to $500,000. For the portion between $500,000 and $999,999, the minimum is 10%. Homes priced at $1,000,000 or more require a minimum 20% down payment. If your down payment is less than 20%, you must also pay CMHC mortgage insurance, typically 2.8%–4% of the mortgage amount.',
+      },
+      {
+        question: 'What government programs are available for first-time home buyers in Canada?',
+        answer: 'Key federal programs include the First Home Savings Account (FHSA — contribute up to $8,000/year tax-free, $40,000 lifetime maximum, with tax-free qualifying withdrawals), the Home Buyers\' Plan (withdraw up to $35,000 from your RRSP tax-free, $70,000 per couple), and the First-Time Home Buyers\' Tax Credit (up to $1,500 in federal tax savings). New construction buyers may also qualify for the GST/HST New Housing Rebate.',
+      },
+      {
+        question: 'How much does it cost to close on a house in Ontario?',
+        answer: 'Closing costs in Ontario include Ontario Land Transfer Tax (calculated on the purchase price), legal fees ($1,200–$1,800), title insurance ($200–$400), home inspection ($450–$600), and moving costs ($1,000–$3,000). As a general rule, budget 1.5%–2.5% of the purchase price for total closing costs beyond your down payment.',
+      },
+      {
+        question: 'Do buyers pay real estate agent fees in Ontario?',
+        answer: 'No. In Ontario, the buyer\'s representative is compensated through co-operating commission paid by the seller\'s brokerage — buyers are represented at no direct cost. There is no financial reason not to work with an experienced local broker who knows your target neighbourhoods.',
+      },
+      {
+        question: 'What is the difference between a mortgage pre-approval and pre-qualification?',
+        answer: 'A pre-qualification is an informal estimate based on self-reported income and expenses — it is not verified by the lender and carries no rate commitment. A pre-approval is a verified, documented assessment by a lender that confirms your maximum purchase price and locks in an interest rate for 90–120 days. In a competitive London Ontario neighbourhood, only a pre-approval gives you the credibility to make an offer.',
+      },
+    ],
+    sources: [
+      { label: 'Canada Revenue Agency — First Home Savings Account (FHSA)', url: 'https://www.canada.ca/en/revenue-agency/services/tax/individuals/topics/first-home-savings-account.html' },
+      { label: 'Canada.ca — Home Buyers\' Plan', url: 'https://www.canada.ca/en/revenue-agency/services/tax/individuals/topics/rrsps-related-plans/what-home-buyers-plan.html' },
+      { label: 'CMHC — Mortgage Loan Insurance', url: 'https://www.cmhc-schl.gc.ca/consumers/home-buying/mortgage-loan-insurance-for-consumers' },
+      { label: 'Real Estate Council of Ontario (RECO)', url: 'https://www.reco.on.ca' },
+    ],
   },
   {
     slug: 'how-to-sell-your-home-london-ontario',
@@ -193,7 +302,7 @@ export const BLOG_POSTS: BlogPost[] = [
     author: 'Justin Skrypnyk',
     readTime: '8 min read',
     content: `
-      <p>Selling your home in London Ontario is one of the largest financial transactions of your life, and the difference between a well-executed sale and a poorly executed one can be tens of thousands of dollars. This guide covers everything you need to know to sell your home in the London Ontario market — from timing your listing to negotiating the best possible price.</p>
+      <p>Selling your home in London Ontario is one of the largest financial transactions of your life — and the difference between a well-executed sale and a poorly managed one can be tens of thousands of dollars. This guide covers everything you need to know, from timing your listing to negotiating the best possible price, based on how the London Ontario market actually works in 2026.</p>
 
       <h2>Step 1: Get a Complimentary Home Evaluation First</h2>
       <p>Before you do anything else, you need to know what your home is actually worth in today's market. Online automated estimates are notoriously inaccurate for individual properties — they cannot see your updated kitchen, finished basement, or the fact that comparable properties on your street recently sold above the estimate. A real <a href="/services/home-evaluation/">complimentary home evaluation from a local Real Estate Broker</a> gives you an accurate, data-backed price range before you make any decisions.</p>
@@ -221,10 +330,37 @@ export const BLOG_POSTS: BlogPost[] = [
 
       <h2>When Is the Best Time to Sell in London Ontario?</h2>
       <p>Spring (March–May) is consistently the most active period for London Ontario real estate — highest buyer competition, fastest sales. Fall (September–October) is the second strongest window. Summer and winter are slower but not dead: serious buyers are always in the market.</p>
-      <p>The honest answer is that the best time to sell is when you are ready, your home is prepared, and you have the right guidance. Check our <a href="/blog/may-2026-london-ontario-market-update/">current market update</a> to understand exactly where conditions stand right now.</p>
+      <p>The honest answer is that the best time to sell is when you are ready, your home is prepared, and you have the right guidance. Check our <a href="/blog/june-2026-london-ontario-market-update/">current market update</a> to understand exactly where conditions stand right now.</p>
 
       <p>Ready to find out what your home is worth? <a href="/services/home-evaluation/">Book your complimentary home evaluation</a> or <a href="/contact/">call Justin at 519.639.5176</a> to start the conversation.</p>
     `,
+    faqs: [
+      {
+        question: 'When is the best time to sell a home in London Ontario?',
+        answer: 'Spring (March–May) is consistently London Ontario\'s most active and competitive selling season, delivering the highest buyer competition and fastest sales. Fall (September–October) is the second strongest window. The honest answer is that the best time to sell is when your home is prepared, priced correctly, and you have expert guidance — motivated buyers are active year-round.',
+      },
+      {
+        question: 'How do I price my home correctly in London Ontario?',
+        answer: 'Accurate pricing starts with a complimentary home evaluation from a local Real Estate Broker who analyses recent comparable sales in your specific neighbourhood. Online automated estimates are often inaccurate for individual properties because they cannot account for condition, renovations, and micro-market factors. Homes priced accurately from day one consistently sell for more than homes that start too high and require reductions.',
+      },
+      {
+        question: 'How long does it take to sell a house in London Ontario?',
+        answer: 'Well-priced homes in desirable West London neighbourhoods are currently selling in approximately 14 to 21 days. The closing period after a firm deal is typically 30 to 90 days from the date of acceptance, with 60 days being most common. Overpriced listings sit significantly longer and often net less than accurately priced homes.',
+      },
+      {
+        question: 'Do I need to stage my home to sell it in London Ontario?',
+        answer: 'Professional staging or a staging consultation consistently results in faster sales and higher final sale prices by helping buyers visualize the home at its best. At minimum, decluttering, deep cleaning, depersonalizing, and addressing visible deficiencies are essential before listing. Justin\'s full-service listing program includes a complimentary staging consultation.',
+      },
+      {
+        question: 'How much does it cost to sell a house in Ontario?',
+        answer: 'Selling costs in Ontario include real estate commission (negotiated with your broker), legal fees ($1,000–$1,500), any agreed-upon repairs or pre-listing improvements, and moving costs. Unlike buying, there is no Land Transfer Tax on the selling side. The exact costs depend on your sale price, the commission structure, and the condition of your home going into the listing.',
+      },
+    ],
+    sources: [
+      { label: 'London and St. Thomas Association of REALTORS® (LSTAR)', url: 'https://www.lstar.ca' },
+      { label: 'Real Estate Council of Ontario (RECO) — Selling a Home', url: 'https://www.reco.on.ca/consumers/selling-a-home/' },
+      { label: 'Realtor.ca — MLS® Listings', url: 'https://www.realtor.ca' },
+    ],
   },
   {
     slug: 'real-estate-broker-vs-agent-ontario',
@@ -236,7 +372,7 @@ export const BLOG_POSTS: BlogPost[] = [
     author: 'Justin Skrypnyk',
     readTime: '5 min read',
     content: `
-      <p>When you search for a "real estate agent in London Ontario," you will see a mix of titles — agent, salesperson, broker, broker of record. These are not interchangeable, and understanding the difference can be relevant when deciding who you trust with the biggest financial transaction of your life.</p>
+      <p>In Ontario, the terms "real estate agent," "salesperson," and "broker" are often used interchangeably — but they are not the same credential. Understanding the difference helps you make a more informed decision about who you trust with the largest financial transaction of your life.</p>
 
       <h2>Who Regulates Real Estate in Ontario?</h2>
       <p>All real estate professionals in Ontario are regulated by the <a href="https://www.reco.on.ca" target="_blank" rel="noopener noreferrer">Real Estate Council of Ontario (RECO)</a> under the Trust in Real Estate Services Act (TRESA), which came into force in 2023. RECO licenses all salespeople, brokers, and brokerages, and enforces professional standards and consumer protection rules. If you are working with a professional in Ontario, you can verify their license through <a href="https://www.reco.on.ca/consumers/find-a-realtor/" target="_blank" rel="noopener noreferrer">RECO's public registry</a>.</p>
@@ -244,7 +380,7 @@ export const BLOG_POSTS: BlogPost[] = [
       <h2>Real Estate Salesperson vs. Real Estate Broker: The Difference</h2>
       <p>In Ontario:</p>
       <ul>
-        <li><strong>Real Estate Salesperson</strong> — The entry-level Ontario license. Candidates complete the Humber College Real Estate Salesperson program and pass provincial licensing exams. Salespersons must work under the supervision of a registered Broker of Record.</li>
+        <li><strong>Real Estate Salesperson</strong> — The entry-level Ontario licence. Candidates complete the Humber College Real Estate Salesperson program and pass provincial licensing exams. Salespersons must work under the supervision of a registered Broker of Record.</li>
         <li><strong>Real Estate Broker</strong> — A more advanced designation requiring two years of active experience as a registered salesperson, additional coursework through Humber College's Broker program, and successful completion of separate broker licensing exams. Brokers can operate with greater professional autonomy and are qualified to supervise salespersons.</li>
         <li><strong>Broker of Record</strong> — The individual legally responsible for a brokerage's compliance, operations, and supervision of all registered members. Every brokerage in Ontario must have a designated Broker of Record.</li>
       </ul>
@@ -258,6 +394,34 @@ export const BLOG_POSTS: BlogPost[] = [
 
       <p>Ready to learn more about <a href="/services/buying/">buying a home in London Ontario</a>? Or <a href="/services/selling/">selling your London Ontario home</a>? <a href="/contact/">Reach out to Justin</a> for a straightforward conversation about your situation and options.</p>
     `,
+    faqs: [
+      {
+        question: 'What is the difference between a real estate broker and a real estate agent in Ontario?',
+        answer: 'In Ontario, a real estate salesperson (commonly called an "agent") holds the entry-level provincial licence through RECO. A Real Estate Broker has completed additional education through Humber College\'s Broker program and two years of active experience as a registered salesperson before earning the Broker designation — a higher credential under Ontario regulation.',
+      },
+      {
+        question: 'How do I verify a real estate professional\'s licence in Ontario?',
+        answer: 'You can verify any Ontario real estate professional\'s licence status, registration history, and any disciplinary actions through RECO\'s public registry at reco.on.ca. This is a free public tool and takes under a minute to use.',
+      },
+      {
+        question: 'Who regulates real estate agents in Ontario?',
+        answer: 'The Real Estate Council of Ontario (RECO) regulates all real estate salespeople, brokers, and brokerages under the Trust in Real Estate Services Act (TRESA), which replaced the Real Estate and Business Brokers Act (REBBA) in 2023. RECO enforces professional standards, investigates complaints, and protects consumers.',
+      },
+      {
+        question: 'Is it free to use a buyer\'s agent in Ontario?',
+        answer: 'Yes — buyers in Ontario are represented at no direct cost. The seller\'s brokerage compensates the buyer\'s representative through co-operating commission. There is no financial reason not to work with an experienced, local real estate professional who knows your target neighbourhoods.',
+      },
+      {
+        question: 'What is a Broker of Record in Ontario real estate?',
+        answer: 'A Broker of Record is the individual legally responsible for a brokerage\'s compliance with RECO regulations, day-to-day operations, and supervision of all registered salespeople and brokers within that brokerage. Every Ontario brokerage must have a designated Broker of Record on file with RECO.',
+      },
+    ],
+    sources: [
+      { label: 'Real Estate Council of Ontario (RECO)', url: 'https://www.reco.on.ca' },
+      { label: 'RECO — Find a REALTOR® (Public Registry)', url: 'https://www.reco.on.ca/consumers/find-a-realtor/' },
+      { label: 'Ontario — Trust in Real Estate Services Act (TRESA)', url: 'https://www.ontario.ca/laws/statute/02r30' },
+      { label: 'Humber College — Real Estate Education', url: 'https://realestate.humber.ca' },
+    ],
   },
   {
     slug: 'interest-rates-london-ontario-home-prices',
@@ -269,10 +433,10 @@ export const BLOG_POSTS: BlogPost[] = [
     author: 'Justin Skrypnyk',
     readTime: '7 min read',
     content: `
-      <p>One of the most common questions from London Ontario buyers and sellers right now is some version of: "Should I wait for rates to drop?" It is a fair question. Mortgage rates are the single biggest lever on affordability, and the <a href="https://www.bankofcanada.ca/core-functions/monetary-policy/key-interest-rate/" target="_blank" rel="noopener noreferrer">Bank of Canada decisions</a> over the past few years have reshaped what buyers can qualify for.</p>
+      <p>Interest rates are the single biggest lever on housing affordability — and the question every London Ontario buyer and seller is asking in 2026 is: should I wait for rates to drop? The short answer is that waiting for rates is a strategy that frequently backfires. Here is the full picture.</p>
 
       <h2>Where Are Rates Right Now?</h2>
-      <p>As of May 2026, the Bank of Canada overnight lending rate is creating a 5-year fixed mortgage rate environment in the 4.75% to 5.50% range for well-qualified buyers. Variable rates are close to or slightly below fixed rates depending on the lender. Learn more about getting pre-approved through our <a href="/mortgages/pre-approval/">mortgage pre-approval page</a>.</p>
+      <p>As of mid-2026, the <a href="https://www.bankofcanada.ca/core-functions/monetary-policy/key-interest-rate/" target="_blank" rel="noopener noreferrer">Bank of Canada overnight lending rate</a> is creating a 5-year fixed mortgage rate environment in the 4.50% to 5.25% range for well-qualified buyers. Variable rates are close to or slightly below fixed rates depending on the lender. Learn more about getting pre-approved through our <a href="/mortgages/pre-approval/">mortgage pre-approval page</a>.</p>
 
       <h2>What Rate Cuts Mean for London Ontario Home Prices</h2>
       <p>Every 0.25% reduction in the Bank of Canada overnight rate typically translates to roughly $12 to $15 per month lower payment per $100,000 borrowed on a 25-year amortization. For a $600,000 London Ontario home with 20% down, that is about $60 to $72 per month per rate cut.</p>
@@ -285,6 +449,33 @@ export const BLOG_POSTS: BlogPost[] = [
 
       <p>Questions about how rates affect what you can buy? <a href="/mortgages/calculator/">Use our mortgage calculator</a> to model different rate scenarios, or <a href="/contact/">reach out to Justin</a> to discuss your specific situation.</p>
     `,
+    faqs: [
+      {
+        question: 'How do interest rate changes affect London Ontario home prices?',
+        answer: 'Rate cuts improve buyer affordability, typically increasing demand and pushing prices upward. Rate increases reduce borrowing power, which can moderate price growth. The relationship is real but not immediate — local supply, population growth, and employment levels also drive prices. In London Ontario, the city\'s relative affordability compared to Toronto means rate impacts are proportionally lower.',
+      },
+      {
+        question: 'Should I wait for interest rates to drop before buying a house in London Ontario?',
+        answer: 'Waiting for rates to drop is a strategy that frequently backfires. When rates fall, buyer demand typically surges as affordability improves, driving prices higher — you may save on monthly payments but pay more for the home itself. The best time to buy is when you are financially ready, pre-approved, and have found the right property in your target neighbourhood.',
+      },
+      {
+        question: 'What is the current 5-year fixed mortgage rate in Ontario?',
+        answer: 'As of mid-2026, 5-year fixed mortgage rates are generally available in the 4.50%–5.25% range for well-qualified buyers in Ontario. Variable rates are comparable or slightly lower depending on the lender. Rates vary based on your credit profile, down payment, and which lender or mortgage broker you use.',
+      },
+      {
+        question: 'How much does a 0.25% Bank of Canada rate cut save per month?',
+        answer: 'A 0.25% reduction in the Bank of Canada overnight rate saves approximately $12–$15 per month per $100,000 borrowed on a 25-year amortization. On a $480,000 mortgage (20% down on a $600,000 London Ontario home), that is roughly $60–$72 per month per rate cut.',
+      },
+      {
+        question: 'What is the Bank of Canada overnight rate and how does it affect mortgages?',
+        answer: 'The Bank of Canada overnight rate is the benchmark interest rate that influences the prime rate charged by Canadian banks. Variable mortgage rates and home equity lines of credit are typically priced at prime plus or minus a margin. Fixed mortgage rates are influenced by bond yields, which respond to Bank of Canada policy direction and broader economic conditions.',
+      },
+    ],
+    sources: [
+      { label: 'Bank of Canada — Key Interest Rate', url: 'https://www.bankofcanada.ca/core-functions/monetary-policy/key-interest-rate/' },
+      { label: 'Bank of Canada — Monetary Policy Report', url: 'https://www.bankofcanada.ca/publications/mpr/' },
+      { label: 'CMHC — Housing Market Outlook', url: 'https://www.cmhc-schl.gc.ca/en/housing-observer-online' },
+    ],
   },
   {
     slug: 'cheapest-area-buy-house-london-ontario',
@@ -296,7 +487,7 @@ export const BLOG_POSTS: BlogPost[] = [
     author: 'Justin Skrypnyk',
     readTime: '6 min read',
     content: `
-      <p>Affordability is relative, but if you are looking for the most accessible entry points into the London Ontario market, there are clear patterns. Here is a frank neighbourhood-by-neighbourhood breakdown of where you can buy a house in London Ontario at the lowest price points — without sacrificing liveability.</p>
+      <p>East London offers London's most affordable detached home prices, starting in the $400,000–$550,000 range. In the west end, West London near Commissioners Road delivers the best balance of price and established neighbourhood quality. Here is a frank neighbourhood-by-neighbourhood breakdown of where you can buy a house in London Ontario at the lowest price points — without sacrificing liveability.</p>
 
       <h2>East London — Most Affordable Detached Homes</h2>
       <p><a href="/areas/east-london/">East London</a> offers London's most affordable entry-level prices for detached homes, with properties starting in the $400,000 to $550,000 range. Established and diverse communities east of Adelaide Street are undergoing revitalization, with growing investment activity and improving infrastructure. For buyers who prioritize getting into a detached home at the lowest possible price in an established area, East London delivers.</p>
@@ -315,8 +506,34 @@ export const BLOG_POSTS: BlogPost[] = [
 
       <h2>The Bottom Line</h2>
       <p>For the most accessible entry point in the west end with genuine liveability, <a href="/areas/west-london/">West London near the Commissioners corridor</a> is the strongest choice. For the absolute lowest detached home prices, <a href="/areas/east-london/">East London</a> delivers. For south London convenience at an accessible price, <a href="/areas/white-oaks/">White Oaks</a> is worth exploring.</p>
-      <p>Want to explore homes currently available in any of these areas? See our full <a href="/blog/london-ontario-neighbourhood-guide-2026/">London Ontario neighbourhood guide</a>, or <a href="/contact/">reach out to Justin</a> for a no-pressure conversation about which area fits your budget and lifestyle.</p>
+      <p>Want to explore homes currently available in any of these areas? See our full <a href="/blog/london-ontario-neighbourhood-guide-2026/">London Ontario neighbourhood guide</a>, compare areas in our <a href="/blog/oakridge-vs-byron-west-london-neighbourhoods/">Oakridge vs. Byron</a> breakdown, or <a href="/contact/">reach out to Justin</a> for a no-pressure conversation about which area fits your budget and lifestyle.</p>
     `,
+    faqs: [
+      {
+        question: 'What is the cheapest area to buy a house in London Ontario?',
+        answer: 'East London offers London Ontario\'s most affordable detached home prices, starting in the $400,000–$550,000 range. In the west end, the West London corridor along Commissioners Road West offers the best balance of price and established neighbourhood quality, with entry-level detached homes from approximately $520,000.',
+      },
+      {
+        question: 'Can I buy a detached house under $500,000 in London Ontario?',
+        answer: 'Yes, particularly in East London where entry-level detached homes start below $500,000. Townhomes and semi-detached homes in South London, White Oaks, and Westmount are also available in the $460,000–$550,000 range. Availability at these price points varies with market conditions.',
+      },
+      {
+        question: 'What is the average home price in East London Ontario?',
+        answer: 'Detached homes in East London Ontario typically range from $400,000 to $580,000, making it London\'s most affordable entry-level market for detached properties. Semis and townhomes are available at lower price points. East London is undergoing ongoing revitalization with growing investment activity.',
+      },
+      {
+        question: 'What is the most affordable neighbourhood in West London Ontario?',
+        answer: 'West London near the Commissioners Road West corridor offers the most accessible pricing in the established west end, with entry-level detached homes typically ranging from $520,000 to $720,000 — significantly below comparable Oakridge ($650,000–$850,000) and Byron ($700,000–$950,000) properties.',
+      },
+      {
+        question: 'Is London Ontario real estate affordable compared to Toronto?',
+        answer: 'Yes — London Ontario home prices are significantly more affordable than Toronto and the GTA. The London Ontario average home price is approximately $625,000–$660,000, while the Toronto area regularly averages over $1.1 million. London consistently ranks among Ontario\'s most accessible mid-sized city real estate markets.',
+      },
+    ],
+    sources: [
+      { label: 'London and St. Thomas Association of REALTORS® (LSTAR)', url: 'https://www.lstar.ca' },
+      { label: 'CMHC — Housing Market Outlook', url: 'https://www.cmhc-schl.gc.ca/en/housing-observer-online' },
+    ],
   },
   {
     slug: 'house-prices-expected-to-rise-london-ontario',
@@ -328,7 +545,7 @@ export const BLOG_POSTS: BlogPost[] = [
     author: 'Justin Skrypnyk',
     readTime: '8 min read',
     content: `
-      <p>After the peak of 2022 and the correction that followed through 2023, the London Ontario market has found a degree of stability. The question everyone is asking is: where does it go from here?</p>
+      <p>London Ontario home prices have stabilized following the 2022 peak and 2023 correction, and current data points to modest appreciation ahead. The city\'s fundamental demand drivers — population growth, constrained supply, and relative GTA affordability — remain intact. Here is what the evidence actually shows.</p>
 
       <h2>Where We Are Now</h2>
       <p>The London Ontario average home price is currently around $620,000 to $650,000, below the 2022 peak but well above pre-pandemic levels. The correction has softened, and we are seeing balanced-to-slight seller market conditions in desirable West London neighbourhoods like <a href="/areas/oakridge/">Oakridge</a>, <a href="/areas/byron/">Byron</a>, and <a href="/areas/lambeth/">Lambeth</a>.</p>
@@ -343,6 +560,34 @@ export const BLOG_POSTS: BlogPost[] = [
       <p>No one can reliably predict home prices with precision. What I can tell you with confidence: the London Ontario market has strong long-term fundamentals, West London is a perennially desirable destination for buyers, and the buyers who consistently win are those who buy when they are financially ready — not when they think the market will be perfect. See our <a href="/blog/interest-rates-london-ontario-home-prices/">interest rates analysis</a> for context on how rate movements affect this picture.</p>
       <p>Want to know what your home is worth right now? <a href="/services/home-evaluation/">Get a complimentary home evaluation</a>. Thinking about buying? <a href="/services/buying/">Learn about Justin's buyer process</a>.</p>
     `,
+    faqs: [
+      {
+        question: 'Will house prices go up in London Ontario in 2026?',
+        answer: 'Modest price appreciation in 2026–2027 is supported by population growth, constrained housing supply, and an improving rate environment. However, stretched affordability and slowly rising inventory are counterweights. The consensus among market observers is modest growth rather than dramatic swings in either direction.',
+      },
+      {
+        question: 'Is London Ontario real estate a good long-term investment?',
+        answer: 'London Ontario has demonstrated strong long-term price appreciation anchored by a diversified economy — Western University, London Health Sciences Centre, and a growing tech sector — along with sustained population growth and structural housing demand. Like any real estate investment, outcomes depend on neighbourhood selection, timing, and property condition.',
+      },
+      {
+        question: 'What is the average home price in London Ontario right now?',
+        answer: 'The London Ontario average home price is approximately $620,000–$660,000 as of mid-2026. Premium west-end neighbourhoods like Oakridge and Byron trade 10–20% above the city average, while East London and South London offer more affordable entry points below the average.',
+      },
+      {
+        question: 'Why are London Ontario home prices rising?',
+        answer: 'Key drivers include sustained population growth driven by immigration, constrained housing supply relative to demand across Ontario, London\'s diversified and growing economic base, and the city\'s continued attractiveness as an affordable alternative to GTA markets. These structural factors support a floor under London Ontario values.',
+      },
+      {
+        question: 'When will London Ontario home prices drop significantly?',
+        answer: 'No credible market analyst is forecasting a significant price drop in London Ontario. Prices may moderate in a sustained high-rate or elevated-inventory environment, but the fundamental demand drivers — population growth, supply constraints, and relative GTA affordability — support long-term stability. Buyers who are financially ready are generally better served buying when right for them than timing the market.',
+      },
+    ],
+    sources: [
+      { label: 'CMHC — Housing Supply Report', url: 'https://www.cmhc-schl.gc.ca/en/housing-observer-online/2024-housing-observer/housing-supply-report' },
+      { label: 'Bank of Canada — Monetary Policy Report', url: 'https://www.bankofcanada.ca/publications/mpr/' },
+      { label: 'London and St. Thomas Association of REALTORS® (LSTAR)', url: 'https://www.lstar.ca' },
+      { label: 'Statistics Canada — Population Growth Data', url: 'https://www.statcan.gc.ca/en/subjects-start/population_and_demography' },
+    ],
   },
   {
     slug: 'london-ontario-neighbourhood-guide-2026',
@@ -354,7 +599,7 @@ export const BLOG_POSTS: BlogPost[] = [
     author: 'Justin Skrypnyk',
     readTime: '12 min read',
     content: `
-      <p>London Ontario's real estate market spans over a dozen distinct communities, each with its own character, price range, and lifestyle. Whether you are relocating from Toronto, buying your first home, or upsizing within the city, this guide gives you a frank breakdown of where to look based on what matters most to you.</p>
+      <p>London Ontario spans over a dozen distinct communities, each with its own character, price range, and lifestyle. The right neighbourhood depends on your budget, school priorities, commute, and what daily life should feel like. This guide gives you a frank, neighbourhood-by-neighbourhood breakdown — written by someone who actually lives and works here.</p>
 
       <h2>West London: The Established Core</h2>
 
@@ -420,8 +665,36 @@ export const BLOG_POSTS: BlogPost[] = [
       <p>If you want rural peace with city proximity, Komoka sits 10 minutes west of London along the Thames River. Komoka Provincial Park, large lots, and a genuine small-town community make it the choice for buyers who won't sacrifice space or nature. Prices range from $600,000 to $900,000.</p>
 
       <h2>Ready to Find the Right Neighbourhood?</h2>
-      <p><a href="/contact/">Reach out to Justin</a> for a no-pressure conversation — he has helped buyers navigate exactly this decision across every London Ontario community. You can also <a href="/services/buying/">learn about the buying process</a>, explore all <a href="/areas/">neighbourhoods we serve</a>, or see <a href="/blog/cheapest-area-buy-house-london-ontario/">which areas are most affordable</a>.</p>
+      <p><a href="/contact/">Reach out to Justin</a> for a no-pressure conversation — he has helped buyers navigate exactly this decision across every London Ontario community. You can also <a href="/services/buying/">learn about the buying process</a>, explore all <a href="/areas/">neighbourhoods we serve</a>, see which areas are <a href="/blog/cheapest-area-buy-house-london-ontario/">most affordable</a>, or compare <a href="/blog/oakridge-vs-byron-west-london-neighbourhoods/">Oakridge vs. Byron</a> in detail.</p>
     `,
+    faqs: [
+      {
+        question: 'What is the best neighbourhood in London Ontario to live in?',
+        answer: 'The best neighbourhood depends entirely on your priorities. For established west-end living with top schools and walkable amenities, Oakridge and Byron consistently rank highest. For new construction and family-oriented streets, Hyde Park and Lambeth lead. For value and central location, West London and Medway are underrated choices. For affordability, East London and South London offer the most accessible entry points.',
+      },
+      {
+        question: 'Which area of London Ontario has the best schools?',
+        answer: 'Oakridge, Byron, and Lambeth consistently rank among London Ontario\'s strongest school catchments. Byron Secondary School and Oakridge Secondary School are frequently cited as the region\'s top-performing high schools. Hyde Park and Sunningdale have strong newer schools as well. School catchments can be verified through the Thames Valley District School Board (TVDSB) and London District Catholic School Board (LDCSB).',
+      },
+      {
+        question: 'What is the most expensive neighbourhood in London Ontario?',
+        answer: 'Byron and Lambeth are typically London Ontario\'s most expensive residential neighbourhoods. Byron executive homes regularly exceed $900,000–$1.1 million; Lambeth estate communities in Heathwoods and Privé reach $1.1 million and above. Masonville and Sunningdale are also among the city\'s premium markets.',
+      },
+      {
+        question: 'What is the most affordable neighbourhood in London Ontario?',
+        answer: 'East London offers the city\'s most affordable detached home prices, typically ranging from $400,000 to $580,000. In the west end, West London near Commissioners Road is the most accessible established neighbourhood, starting around $520,000 for entry-level detached. Westmount has condos starting below $350,000.',
+      },
+      {
+        question: 'What is the best area in London Ontario for families with children?',
+        answer: 'Hyde Park, Lambeth, Oakridge, and Byron are consistently London Ontario\'s top choices for families — combining strong school catchments with parks, community amenities, and safe, walkable streets. Hyde Park and Lambeth offer newer construction with modern family layouts; Oakridge and Byron offer mature, established communities with proven school track records.',
+      },
+    ],
+    sources: [
+      { label: 'Thames Valley District School Board (TVDSB)', url: 'https://www.tvdsb.ca' },
+      { label: 'London District Catholic School Board (LDCSB)', url: 'https://www.ldcsb.ca' },
+      { label: 'London and St. Thomas Association of REALTORS® (LSTAR)', url: 'https://www.lstar.ca' },
+      { label: 'City of London — Neighbourhood Profiles', url: 'https://london.ca/living-london/neighbourhoods' },
+    ],
   },
 ];
 

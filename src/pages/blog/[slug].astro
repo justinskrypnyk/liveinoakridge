@@ -81,6 +81,20 @@ const { post } = Astro.props;
       },
       isPartOf: { '@id': `${SITE.url}/#website` },
     })} />
+    {post.faqs && post.faqs.length > 0 && (
+      <script type="application/ld+json" set:html={JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        mainEntity: post.faqs.map(faq => ({
+          '@type': 'Question',
+          name: faq.question,
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: faq.answer,
+          },
+        })),
+      })} />
+    )}
   </Fragment>
 
   <section class="bg-navy py-16 text-white">
@@ -128,6 +142,34 @@ const { post } = Astro.props;
             </div>
           )}
           <div class="bg-white rounded-2xl p-10 shadow-sm prose prose-slate prose-headings:font-serif prose-headings:text-navy prose-a:text-gold prose-strong:text-navy max-w-none" set:html={post.content} />
+
+          {post.faqs && post.faqs.length > 0 && (
+            <div class="mt-8 bg-white rounded-2xl p-10 shadow-sm">
+              <h2 class="font-serif text-2xl text-navy mb-8">Frequently Asked Questions</h2>
+              <div class="space-y-6">
+                {post.faqs.map(faq => (
+                  <div class="border-b border-slate/10 pb-6 last:border-0 last:pb-0">
+                    <h3 class="font-semibold text-navy mb-2 leading-snug">{faq.question}</h3>
+                    <p class="text-slate text-sm leading-relaxed">{faq.answer}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {post.sources && post.sources.length > 0 && (
+            <div class="mt-6 bg-white rounded-2xl p-6 shadow-sm">
+              <h3 class="font-semibold text-navy text-xs uppercase tracking-wide mb-3">Sources & Data</h3>
+              <ul class="space-y-1.5">
+                {post.sources.map(source => (
+                  <li class="text-xs text-slate flex items-start gap-2">
+                    <span class="text-gold mt-0.5 shrink-0">—</span>
+                    <a href={source.url} target="_blank" rel="noopener noreferrer" class="hover:text-gold transition-colors">{source.label}</a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           <div class="mt-8 bg-navy text-white rounded-2xl p-8 flex gap-6 items-start">
             <div class="w-16 h-16 bg-gold rounded-2xl flex items-center justify-center text-navy font-bold font-serif text-xl shrink-0">JS</div>
