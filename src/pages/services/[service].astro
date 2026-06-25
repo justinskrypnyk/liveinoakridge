@@ -1,0 +1,167 @@
+---
+import Base from '@/layouts/Base.astro';
+import Schema from '@/components/Schema.astro';
+import ContactForm from '@/components/ContactForm.astro';
+import { SERVICES } from '@/data/services';
+import { AREAS } from '@/data/areas';
+import { SITE } from '@/data/site';
+
+export function getStaticPaths() {
+  return SERVICES.map((service) => ({
+    params: { service: service.slug },
+    props: { service },
+  }));
+}
+
+const { service } = Astro.props;
+---
+
+<Base title={service.metaTitle} description={service.metaDescription}>
+  <Fragment slot="head">
+    <Schema
+      type="service"
+      serviceName={service.name}
+      description={service.metaDescription}
+      pageUrl={`${SITE.url}/services/${service.slug}/`}
+      faqs={service.faqs}
+    />
+  </Fragment>
+
+  <!-- Hero -->
+  <section class="bg-navy py-20 text-white">
+    <div class="container-site">
+      <nav aria-label="Breadcrumb" class="flex items-center gap-2 text-sm text-white/40 mb-8">
+        <a href="/" class="hover:text-gold transition-colors">Home</a>
+        <span>/</span>
+        <a href="/services/" class="hover:text-gold transition-colors">Services</a>
+        <span>/</span>
+        <span class="text-white/70">{service.name}</span>
+      </nav>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <div>
+          <div class="text-5xl mb-6">{service.icon}</div>
+          <h1 class="font-serif text-4xl md:text-5xl font-bold mb-4">{service.headline}</h1>
+          <div class="gold-divider mb-6"></div>
+          <p class="text-xl text-white/70 leading-relaxed mb-8">{service.longDescription}</p>
+          <a href="/contact/" class="btn-primary">{service.ctaText}</a>
+        </div>
+
+        <div class="bg-white/5 border border-white/10 rounded-2xl p-8">
+          <h3 class="font-serif text-xl text-white mb-5">Get Started Today</h3>
+          <ContactForm subject={service.name} ctaLabel={service.ctaText} dark />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Benefits -->
+  <section class="py-20 bg-cream">
+    <div class="container-site">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-16">
+        <div>
+          <h2 class="section-heading">What You Can Expect</h2>
+          <div class="gold-divider mb-8"></div>
+          <ul class="space-y-4">
+            {service.benefits.map((benefit) => (
+              <li class="flex items-start gap-3">
+                <svg class="w-5 h-5 text-gold shrink-0 mt-0.5" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <span class="text-navy/80">{benefit}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div>
+          <h2 class="section-heading">The Process</h2>
+          <div class="gold-divider mb-8"></div>
+          <div class="space-y-5">
+            {service.process.map((item) => (
+              <div class="flex gap-4">
+                <div class="text-gold font-serif text-xl font-bold shrink-0 w-8">{item.step}</div>
+                <div>
+                  <h3 class="font-semibold text-navy mb-1">{item.title}</h3>
+                  <p class="text-sm text-slate leading-relaxed">{item.body}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- This service by area -->
+  <section class="py-16 bg-white">
+    <div class="container-site">
+      <h2 class="font-serif text-2xl text-navy mb-2">{service.name} by Neighbourhood</h2>
+      <p class="text-slate text-sm mb-8">Justin offers {service.name.toLowerCase()} services across all West London communities. Select your area for hyper-local guidance.</p>
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+        {AREAS.map((area) => {
+          const path = service.slug === 'buying'
+            ? `/areas/${area.slug}/buy/`
+            : service.slug === 'selling' || service.slug === 'home-evaluation'
+              ? service.slug === 'home-evaluation'
+                ? `/areas/${area.slug}/home-evaluation/`
+                : `/areas/${area.slug}/sell/`
+              : `/areas/${area.slug}/`;
+          return (
+            <a
+              href={path}
+              class="bg-cream hover:bg-gold hover:text-navy border border-gray-100 hover:border-gold text-navy/80 text-sm font-medium px-4 py-3 rounded-xl transition-all text-center"
+            >
+              {area.name}
+            </a>
+          );
+        })}
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ Section -->
+  {service.faqs && service.faqs.length > 0 && (
+    <section class="py-20 bg-cream">
+      <div class="container-site max-w-3xl">
+        <div class="text-center mb-12">
+          <h2 class="section-heading">Frequently Asked Questions</h2>
+          <div class="gold-divider mx-auto mb-4"></div>
+          <p class="section-subheading mx-auto">Common questions about {service.name.toLowerCase()} in London Ontario.</p>
+        </div>
+        <div class="space-y-4">
+          {service.faqs.map((faq) => (
+            <details class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden group" name={`faq-${service.slug}`}>
+              <summary class="flex items-center justify-between gap-4 p-6 cursor-pointer list-none font-semibold text-navy hover:text-gold transition-colors">
+                <span>{faq.q}</span>
+                <svg class="w-5 h-5 shrink-0 text-gold transition-transform group-open:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <path d="M19 9l-7 7-7-7"/>
+                </svg>
+              </summary>
+              <div class="px-6 pb-6 text-slate leading-relaxed text-sm border-t border-cream pt-4">
+                {faq.a}
+              </div>
+            </details>
+          ))}
+        </div>
+        <div class="text-center mt-10">
+          <p class="text-slate text-sm mb-4">Have a question not answered here?</p>
+          <a href="/contact/" class="btn-primary">{service.ctaText}</a>
+        </div>
+      </div>
+    </section>
+  )}
+
+  <!-- Bottom CTA -->
+  <section class="py-16 bg-gold">
+    <div class="container-site text-center">
+      <h2 class="font-serif text-3xl text-navy mb-4">{service.ctaText}?</h2>
+      <p class="text-navy/70 mb-8 max-w-xl mx-auto">Reach out today — no pressure, no pitch, just an honest conversation.</p>
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <a href="/contact/" class="btn-secondary">Send a Message</a>
+        <a href={`tel:${SITE.phone}`} class="inline-flex items-center gap-2 bg-navy text-white font-semibold px-7 py-3.5 rounded-lg hover:bg-navy-dark transition-all">
+          Call {SITE.phoneDisplay}
+        </a>
+      </div>
+    </div>
+  </section>
+</Base>

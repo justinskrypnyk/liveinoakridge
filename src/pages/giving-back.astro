@@ -1,0 +1,84 @@
+---
+import Base from '@/layouts/Base.astro';
+import { SITE } from '@/data/site';
+---
+
+<Base
+  title="Giving Back to Oakridge & London Ontario | Justin Skrypnyk Real Estate Broker"
+  description="Justin Skrypnyk is committed to giving back to the communities he serves across West London. Learn about the organizations and causes supported by Live In Oakridge."
+>
+  <section class="bg-navy py-20 text-white">
+    <div class="container-site">
+      <nav aria-label="Breadcrumb" class="flex items-center gap-2 text-sm text-white/40 mb-8">
+        <a href="/" class="hover:text-gold transition-colors">Home</a>
+        <span>/</span>
+        <span class="text-white/70">Giving Back</span>
+      </nav>
+      <div class="max-w-3xl">
+        <h1 class="font-serif text-5xl font-bold mb-4">Giving Back</h1>
+        <div class="gold-divider mb-6"></div>
+        <p class="text-xl text-white/70 leading-relaxed">
+          Community isn't just a selling point — it's a responsibility. Justin Skrypnyk is committed to supporting the organizations and causes that make Oakridge and West London a great place to call home.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="py-20 bg-cream">
+    <div class="container-site max-w-4xl">
+      <div class="prose prose-slate max-w-none mb-16">
+        <div class="bg-white rounded-2xl p-10 shadow-card">
+          <h2 class="font-serif text-3xl text-navy mb-4">Community First</h2>
+          <div class="gold-divider mb-6"></div>
+          <p class="text-slate leading-relaxed text-lg">
+            Real estate is a people business, and the communities Justin serves deserve more than just professional competence. Whether it's supporting local schools, participating in neighbourhood events, or contributing to West London causes, Justin believes that business success and community investment go hand in hand.
+          </p>
+          <p class="text-slate leading-relaxed mt-4">
+            A portion of every transaction supports local community organizations across Oakridge, Byron, Westmount, and the broader London Ontario area. Justin also volunteers with neighbourhood associations and participates in local events throughout the year.
+          </p>
+        </div>
+      </div>
+
+      <!-- Ways Justin gives back -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16">
+        {[
+          {
+            icon: '🏫',
+            title: 'Local Schools',
+            body: 'Supporting Oakridge elementary and secondary schools through fundraisers, sponsorships, and direct contributions.',
+          },
+          {
+            icon: '🌳',
+            title: 'Sifton Bog Conservation',
+            body: 'Contributing to the protection and maintenance of Sifton Bog Nature Reserve — one of Oakridge\'s most treasured natural assets.',
+          },
+          {
+            icon: '🤝',
+            title: 'Neighbourhood Associations',
+            body: 'Active participation in Oakridge and West London neighbourhood associations, helping shape the community\'s future.',
+          },
+          {
+            icon: '🍕',
+            title: 'Community Events',
+            body: 'Sponsoring and participating in local block parties, charity events, and community gatherings throughout the year.',
+          },
+        ].map((item) => (
+          <div class="card p-8 flex gap-5">
+            <div class="text-4xl shrink-0">{item.icon}</div>
+            <div>
+              <h3 class="font-serif text-lg text-navy mb-2">{item.title}</h3>
+              <p class="text-slate text-sm leading-relaxed">{item.body}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <!-- CTA -->
+      <div class="bg-navy text-white rounded-2xl p-10 text-center">
+        <h2 class="font-serif text-3xl mb-4">Know a Local Cause That Deserves Support?</h2>
+        <p class="text-white/60 mb-8 max-w-xl mx-auto">Justin is always open to hearing about community organizations in West London. If there's a cause close to your heart, reach out.</p>
+        <a href="/contact/" class="btn-primary">Get in Touch</a>
+      </div>
+    </div>
+  </section>
+</Base>

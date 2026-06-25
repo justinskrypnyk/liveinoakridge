@@ -1,0 +1,152 @@
+---
+import Base from '@/layouts/Base.astro';
+import Schema from '@/components/Schema.astro';
+import GoogleMap from '@/components/GoogleMap.astro';
+import ContactForm from '@/components/ContactForm.astro';
+import { AREAS } from '@/data/areas';
+import { SITE } from '@/data/site';
+
+export function getStaticPaths() {
+  return AREAS.map((area) => ({
+    params: { area: area.slug },
+    props: { area },
+  }));
+}
+
+const { area } = Astro.props;
+
+const title = `Buy a Home in ${area.name}, London Ontario | Justin Skrypnyk Real Estate Broker`;
+const description = `Looking to buy a home in ${area.name}, London Ontario? Justin Skrypnyk is a local Real Estate Broker who knows every street. Start your ${area.name} home search today. Call ${SITE.phoneDisplay}.`;
+---
+
+<Base title={title} description={description}>
+  <Fragment slot="head">
+    <Schema
+      type="area-service"
+      areaName={area.name}
+      serviceName="Home Buying"
+      description={description}
+      pageUrl={`${SITE.url}/areas/${area.slug}/buy/`}
+    />
+  </Fragment>
+
+  <!-- Hero -->
+  <section class="bg-navy py-20 text-white">
+    <div class="container-site">
+      <nav aria-label="Breadcrumb" class="flex items-center gap-2 text-sm text-white/40 mb-8 flex-wrap">
+        <a href="/" class="hover:text-gold transition-colors">Home</a>
+        <span>/</span>
+        <a href="/areas/" class="hover:text-gold transition-colors">Areas We Serve</a>
+        <span>/</span>
+        <a href={`/areas/${area.slug}/`} class="hover:text-gold transition-colors">{area.name}</a>
+        <span>/</span>
+        <span class="text-white/70">Buy</span>
+      </nav>
+      <div class="max-w-3xl">
+        <h1 class="font-serif text-4xl md:text-5xl font-bold mb-4">
+          Buy a Home in {area.name}, London Ontario
+        </h1>
+        <div class="gold-divider mb-6"></div>
+        <p class="text-xl text-white/70 leading-relaxed">
+          Find your perfect home in {area.name} with a Real Estate Broker who knows the neighbourhood — not just the data. Justin Skrypnyk gives buyers a genuine local advantage in every offer.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Content -->
+  <section class="py-20 bg-cream">
+    <div class="container-site">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
+        <!-- Content -->
+        <div class="lg:col-span-2 space-y-10">
+          <div>
+            <h2 class="font-serif text-2xl text-navy mb-4">Why Buy in {area.name}?</h2>
+            <p class="text-slate leading-relaxed mb-4">{area.longDescription}</p>
+            <p class="text-slate leading-relaxed">
+              With typical home prices ranging from <strong class="text-navy">{area.avgPrice}</strong>, {area.name} offers excellent value compared to Toronto and the GTA. As a buyer's representative, Justin negotiates on your behalf and ensures you never overpay in this market.
+            </p>
+          </div>
+
+          <div>
+            <h2 class="font-serif text-2xl text-navy mb-4">What to Expect Buying in {area.name}</h2>
+            <div class="space-y-4">
+              {[
+                { step: '01', title: 'Local Search Strategy', body: `Justin helps you identify which streets in ${area.name} offer the best value, school access, and future appreciation potential.` },
+                { step: '02', title: 'MLS® Access + Off-Market', body: `You get access to all active MLS® listings plus Justin's local network for off-market opportunities that never appear on Realtor.ca.` },
+                { step: '03', title: 'Competitive Offers', body: `In ${area.name}'s competitive market, Justin structures offers that win without overpaying — using real data, not guesses.` },
+                { step: '04', title: 'Due Diligence', body: 'Home inspection, title search, and condition review — every purchase is protected by thorough due diligence.' },
+              ].map((item) => (
+                <div class="flex gap-4 bg-white rounded-xl p-5 shadow-card">
+                  <div class="text-gold font-serif text-2xl font-bold shrink-0 w-10">{item.step}</div>
+                  <div>
+                    <h3 class="font-semibold text-navy mb-1">{item.title}</h3>
+                    <p class="text-sm text-slate">{item.body}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <h2 class="font-serif text-2xl text-navy mb-4">{area.name} Neighbourhood Highlights</h2>
+            <ul class="space-y-3">
+              {area.highlights.map((h) => (
+                <li class="flex items-start gap-3">
+                  <svg class="w-5 h-5 text-gold shrink-0 mt-0.5" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                  <span class="text-navy/80">{h}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <!-- Map -->
+          <div>
+            <h2 class="font-serif text-2xl text-navy mb-4">{area.name} on the Map</h2>
+            <GoogleMap query={area.mapEmbedId} title={`${area.name}, London Ontario`} height="350px" />
+          </div>
+        </div>
+
+        <!-- Sidebar -->
+        <aside class="space-y-6">
+          <div class="bg-white rounded-2xl p-6 shadow-card">
+            <h3 class="font-serif text-xl text-navy mb-4">Start Your {area.shortName} Search</h3>
+            <ContactForm subject={`Buy in ${area.name} - Inquiry`} ctaLabel="Contact Justin" />
+          </div>
+
+          <div class="bg-navy text-white rounded-2xl p-6">
+            <h3 class="font-serif text-lg mb-3">Quick Stats: {area.name}</h3>
+            <div class="space-y-3 text-sm">
+              <div class="flex justify-between border-b border-white/10 pb-2">
+                <span class="text-white/60">Price Range</span>
+                <span class="font-medium text-gold">{area.avgPrice}</span>
+              </div>
+              <div class="flex justify-between border-b border-white/10 pb-2">
+                <span class="text-white/60">Home Types</span>
+                <span class="font-medium text-right">{area.homingTypes.slice(0, 2).join(', ')}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-white/60">Schools</span>
+                <span class="font-medium">{area.schools.length} Nearby</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Related links -->
+          <div class="bg-cream rounded-2xl p-6 border border-gray-100">
+            <h3 class="font-semibold text-navy mb-3 text-sm">Related Pages</h3>
+            <ul class="space-y-2">
+              <li><a href={`/areas/${area.slug}/`} class="text-sm text-slate hover:text-gold transition-colors">↗ {area.name} Neighbourhood Overview</a></li>
+              <li><a href={`/areas/${area.slug}/sell/`} class="text-sm text-slate hover:text-gold transition-colors">↗ Selling in {area.name}</a></li>
+              <li><a href={`/areas/${area.slug}/home-evaluation/`} class="text-sm text-slate hover:text-gold transition-colors">↗ Complimentary Home Evaluation in {area.name}</a></li>
+              <li><a href="/services/buying/" class="text-sm text-slate hover:text-gold transition-colors">↗ Our Buying Process</a></li>
+              <li><a href="/services/first-time-buyers/" class="text-sm text-slate hover:text-gold transition-colors">↗ First-Time Buyer Guide</a></li>
+            </ul>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </section>
+</Base>

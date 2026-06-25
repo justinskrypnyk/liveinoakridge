@@ -1,0 +1,106 @@
+---
+import Base from '@/layouts/Base.astro';
+import Schema from '@/components/Schema.astro';
+import { AREAS } from '@/data/areas';
+import { SITE } from '@/data/site';
+---
+
+<Base
+  title="Areas We Serve in London Ontario | Justin Skrypnyk Real Estate Broker"
+  description="Justin Skrypnyk serves buyers and sellers across West London — Oakridge, Byron, Westmount, Lambeth, West London, Hyde Park, and Komoka. Explore your neighbourhood."
+>
+  <Fragment slot="head">
+    <Schema type="home" />
+    <script type="application/ld+json" set:html={JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'ItemList',
+      name: 'West London & London Ontario Neighbourhoods — Justin Skrypnyk Real Estate',
+      description: 'Real estate neighbourhoods served by Justin Skrypnyk, Real Estate Broker with Sutton Group Chapman Realty Inc., Brokerage.',
+      url: `${SITE.url}/areas/`,
+      numberOfItems: AREAS.length,
+      itemListElement: AREAS.map((area, i) => ({
+        '@type': 'ListItem',
+        position: i + 1,
+        name: `${area.name}, London Ontario`,
+        url: `${SITE.url}/areas/${area.slug}/`,
+        description: area.description,
+      })),
+    })} />
+  </Fragment>
+
+  <!-- Page Hero -->
+  <section class="bg-navy py-20 text-white">
+    <div class="container-site">
+      <nav aria-label="Breadcrumb" class="flex items-center gap-2 text-sm text-white/40 mb-8">
+        <a href="/" class="hover:text-gold transition-colors">Home</a>
+        <span>/</span>
+        <span class="text-white/70">Areas We Serve</span>
+      </nav>
+      <div class="max-w-3xl">
+        <h1 class="font-serif text-5xl font-bold mb-4">Areas We Serve</h1>
+        <div class="gold-divider mb-6"></div>
+        <p class="text-xl text-white/70 leading-relaxed">
+          Local knowledge isn't just a slogan — it's the edge. Justin Skrypnyk knows the micro-markets, school catchments, and hidden gems across West London and beyond. Browse every area below.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Areas Grid -->
+  <section class="py-20 bg-cream">
+    <div class="container-site">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {AREAS.map((area) => (
+          <div class="card flex flex-col">
+            <div class="h-52 bg-gradient-to-br from-navy-light to-navy relative overflow-hidden">
+              <img
+                src={area.image}
+                alt={area.imageAlt}
+                class="w-full h-full object-cover"
+                width="600"
+                height="400"
+                loading="lazy"
+              />
+              <div class="absolute inset-0 bg-gradient-to-t from-navy/70 to-transparent"></div>
+              <div class="absolute bottom-4 left-4">
+                <h2 class="font-serif text-2xl text-white">{area.name}</h2>
+                <p class="text-sm text-white/60">{area.avgPrice}</p>
+              </div>
+            </div>
+            <div class="p-6 flex flex-col flex-1">
+              <p class="text-slate text-sm leading-relaxed mb-5">{area.description}</p>
+
+              <ul class="space-y-2 mb-6">
+                {area.highlights.slice(0, 3).map((h) => (
+                  <li class="flex items-start gap-2 text-sm text-navy/70">
+                    <svg class="w-4 h-4 text-gold shrink-0 mt-0.5" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    {h}
+                  </li>
+                ))}
+              </ul>
+
+              <div class="mt-auto border-t border-gray-100 pt-5 flex gap-3">
+                <a href={`/areas/${area.slug}/`} class="btn-primary text-sm py-2.5 px-5 flex-1 justify-center">
+                  Explore {area.shortName}
+                </a>
+                <a href={`/areas/${area.slug}/buy/`} class="btn-secondary text-sm py-2.5 px-4">Buy</a>
+                <a href={`/areas/${area.slug}/sell/`} class="btn-secondary text-sm py-2.5 px-4">Sell</a>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- Bottom CTA -->
+  <section class="py-16 bg-navy text-white">
+    <div class="container-site text-center">
+      <h2 class="font-serif text-3xl mb-4">Don't See Your Neighbourhood?</h2>
+      <p class="text-white/60 mb-8 max-w-xl mx-auto">Justin works across all of London Ontario and the surrounding region. If you don't see your area listed, get in touch — chances are he can still help.</p>
+      <a href="/contact/" class="btn-primary">Contact Justin</a>
+    </div>
+  </section>
+</Base>

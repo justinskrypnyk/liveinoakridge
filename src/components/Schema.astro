@@ -1,0 +1,342 @@
+---
+import { SITE } from '@/data/site';
+
+interface Props {
+  type: 'home' | 'service' | 'area' | 'area-service' | 'blog' | 'contact';
+  areaName?: string;
+  areaGeo?: { lat: number; lng: number };
+  serviceName?: string;
+  pageUrl?: string;
+  description?: string;
+  faqs?: { q: string; a: string }[];
+}
+
+const {
+  type,
+  areaName,
+  areaGeo,
+  serviceName,
+  pageUrl,
+  description,
+  faqs,
+} = Astro.props;
+
+const faqSchema = faqs && faqs.length > 0 ? {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map((faq) => ({
+    '@type': 'Question',
+    name: faq.q,
+    acceptedAnswer: {
+      '@type': 'Answer',
+      text: faq.a,
+    },
+  })),
+} : null;
+
+const currentUrl = pageUrl ?? new URL(Astro.url.pathname, SITE.url).toString();
+
+const allAreasServed = [
+  'Oakridge, London, Ontario',
+  'Byron, London, Ontario',
+  'Westmount, London, Ontario',
+  'Lambeth, London, Ontario',
+  'West London, London, Ontario',
+  'Hyde Park, London, Ontario',
+  'Komoka, Ontario',
+  'Old North, London, Ontario',
+  'Masonville, London, Ontario',
+  'Sunningdale, London, Ontario',
+  'Fox Hollow, London, Ontario',
+  'Downtown London, Ontario',
+  'East London, Ontario',
+  'South London, Ontario',
+  'White Oaks, London, Ontario',
+  'River Bend, London, Ontario',
+  'Medway, London, Ontario',
+];
+
+const personSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Person',
+  '@id': `${SITE.url}/#person`,
+  name: 'Justin Skrypnyk',
+  jobTitle: 'Real Estate Broker',
+  description: 'Justin Skrypnyk is a licensed Real Estate Broker serving Oakridge and West London Ontario. He specializes in residential buying, selling, and investment properties.',
+  url: SITE.url,
+  telephone: SITE.phone,
+  email: SITE.email,
+  image: `${SITE.url}/images/justin-skrypnyk-realtor-london-ontario.webp`,
+  sameAs: [SITE.social.youtube, SITE.social.instagram, SITE.social.googleReviews],
+  worksFor: {
+    '@type': 'Organization',
+    '@id': `${SITE.url}/#realestateagent`,
+    name: 'Sutton Group Chapman Realty Inc., Brokerage',
+  },
+  knowsAbout: [
+    'London Ontario Real Estate',
+    'West London Real Estate',
+    'Oakridge London Ontario',
+    'Byron London Ontario',
+    'Home Buying in London Ontario',
+    'Home Selling in London Ontario',
+    'Residential Real Estate',
+    'Investment Properties London Ontario',
+    'First-Time Home Buyers Ontario',
+    'Real Estate Market Analysis London Ontario',
+  ],
+  hasCredential: {
+    '@type': 'EducationalOccupationalCredential',
+    name: 'Real Estate Broker License — Ontario',
+    credentialCategory: 'license',
+    recognizedBy: {
+      '@type': 'Organization',
+      name: 'Real Estate Council of Ontario',
+      url: 'https://www.reco.on.ca',
+    },
+  },
+  areaServed: allAreasServed,
+};
+
+const localBusinessSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'RealEstateAgent',
+  '@id': `${SITE.url}/#realestateagent`,
+  name: SITE.legalName,
+  alternateName: SITE.name,
+  description: SITE.description,
+  url: SITE.url,
+  telephone: SITE.phone,
+  email: SITE.email,
+  image: `${SITE.url}/images/justin-skrypnyk-realtor-london-ontario.webp`,
+  logo: `${SITE.url}/images/live-in-oakridge-logo.webp`,
+  priceRange: '$$',
+  naics: '531210',
+  currenciesAccepted: 'CAD',
+  paymentAccepted: 'Cash, Credit Card, Cheque',
+  hasMap: `https://www.google.com/maps?q=${SITE.geo.lat},${SITE.geo.lng}`,
+  address: {
+    '@type': 'PostalAddress',
+    addressLocality: 'London',
+    addressRegion: 'ON',
+    addressCountry: 'CA',
+  },
+  geo: {
+    '@type': 'GeoCoordinates',
+    latitude: SITE.geo.lat,
+    longitude: SITE.geo.lng,
+  },
+  openingHoursSpecification: [
+    {
+      '@type': 'OpeningHoursSpecification',
+      dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
+      opens: '09:00',
+      closes: '20:00',
+    },
+    {
+      '@type': 'OpeningHoursSpecification',
+      dayOfWeek: ['Saturday', 'Sunday'],
+      opens: '10:00',
+      closes: '18:00',
+    },
+  ],
+  aggregateRating: {
+    '@type': 'AggregateRating',
+    ratingValue: '5.0',
+    reviewCount: '47',
+    bestRating: '5',
+    worstRating: '1',
+  },
+  areaServed: allAreasServed,
+  sameAs: [SITE.social.youtube, SITE.social.instagram, SITE.social.googleReviews],
+  memberOf: {
+    '@type': 'Organization',
+    name: 'Sutton Group Chapman Realty Inc., Brokerage',
+  },
+};
+
+const websiteSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  '@id': `${SITE.url}/#website`,
+  name: SITE.name,
+  url: SITE.url,
+  description: SITE.description,
+  potentialAction: {
+    '@type': 'SearchAction',
+    target: {
+      '@type': 'EntryPoint',
+      urlTemplate: `${SITE.url}/properties?q={search_term_string}`,
+    },
+    'query-input': 'required name=search_term_string',
+  },
+};
+
+const breadcrumbSchema = (items: { name: string; url: string }[]) => ({
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: items.map((item, index) => ({
+    '@type': 'ListItem',
+    position: index + 1,
+    name: item.name,
+    item: item.url,
+  })),
+});
+
+let schemas: object[] = [];
+
+if (type === 'home') {
+  schemas = [
+    localBusinessSchema,
+    personSchema,
+    websiteSchema,
+    {
+      '@context': 'https://schema.org',
+      '@type': 'WebPage',
+      '@id': `${SITE.url}/#webpage`,
+      url: SITE.url,
+      name: SITE.legalName,
+      description: SITE.description,
+      inLanguage: 'en-CA',
+      isPartOf: { '@id': `${SITE.url}/#website` },
+      about: { '@id': `${SITE.url}/#realestateagent` },
+      primaryImageOfPage: {
+        '@type': 'ImageObject',
+        url: `${SITE.url}/images/og-default.webp`,
+        width: 1200,
+        height: 630,
+      },
+      speakable: {
+        '@type': 'SpeakableSpecification',
+        cssSelector: ['h1', 'main p'],
+      },
+    },
+  ];
+}
+
+if (type === 'contact') {
+  schemas = [
+    localBusinessSchema,
+    breadcrumbSchema([
+      { name: 'Home', url: SITE.url },
+      { name: 'Contact', url: currentUrl },
+    ]),
+  ];
+}
+
+if (type === 'service' && serviceName) {
+  schemas = [
+    {
+      '@context': 'https://schema.org',
+      '@type': 'Service',
+      '@id': `${currentUrl}#service`,
+      name: serviceName,
+      description: description,
+      provider: {
+        '@id': `${SITE.url}/#realestateagent`,
+        '@type': 'RealEstateAgent',
+        name: SITE.legalName,
+      },
+      areaServed: {
+        '@type': 'City',
+        name: 'London',
+        addressRegion: 'ON',
+        addressCountry: 'CA',
+      },
+      url: currentUrl,
+    },
+    breadcrumbSchema([
+      { name: 'Home', url: SITE.url },
+      { name: 'Services', url: `${SITE.url}/services/` },
+      { name: serviceName, url: currentUrl },
+    ]),
+    localBusinessSchema,
+  ];
+}
+
+if (type === 'area' && areaName && areaGeo) {
+  schemas = [
+    {
+      '@context': 'https://schema.org',
+      '@type': 'Place',
+      '@id': `${currentUrl}#place`,
+      name: `${areaName}, London, Ontario`,
+      description: description,
+      geo: {
+        '@type': 'GeoCoordinates',
+        latitude: areaGeo.lat,
+        longitude: areaGeo.lng,
+      },
+      containedInPlace: {
+        '@type': 'City',
+        name: 'London',
+        addressRegion: 'ON',
+        addressCountry: 'CA',
+      },
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'RealEstateAgent',
+      '@id': `${SITE.url}/#realestateagent`,
+      name: SITE.legalName,
+      url: SITE.url,
+      telephone: SITE.phone,
+      areaServed: {
+        '@type': 'Place',
+        name: `${areaName}, London, Ontario`,
+      },
+    },
+    breadcrumbSchema([
+      { name: 'Home', url: SITE.url },
+      { name: 'Areas We Serve', url: `${SITE.url}/areas/` },
+      { name: areaName, url: currentUrl },
+    ]),
+  ];
+}
+
+if (type === 'area-service' && areaName && serviceName) {
+  schemas = [
+    {
+      '@context': 'https://schema.org',
+      '@type': 'Service',
+      '@id': `${currentUrl}#service`,
+      name: `${serviceName} in ${areaName}`,
+      description: description,
+      provider: {
+        '@id': `${SITE.url}/#realestateagent`,
+        '@type': 'RealEstateAgent',
+        name: SITE.legalName,
+      },
+      areaServed: {
+        '@type': 'Place',
+        name: `${areaName}, London, Ontario`,
+      },
+      url: currentUrl,
+    },
+    breadcrumbSchema([
+      { name: 'Home', url: SITE.url },
+      { name: 'Areas We Serve', url: `${SITE.url}/areas/` },
+      { name: areaName, url: `${SITE.url}/areas/${areaName.toLowerCase().replace(' ', '-')}/` },
+      { name: serviceName, url: currentUrl },
+    ]),
+    localBusinessSchema,
+  ];
+}
+
+if (type === 'blog') {
+  schemas = [
+    breadcrumbSchema([
+      { name: 'Home', url: SITE.url },
+      { name: 'Blog', url: `${SITE.url}/blog/` },
+    ]),
+    localBusinessSchema,
+  ];
+}
+---
+
+{schemas.map((schema) => (
+  <script type="application/ld+json" set:html={JSON.stringify(schema)} />
+))}
+{faqSchema && (
+  <script type="application/ld+json" set:html={JSON.stringify(faqSchema)} />
+)}

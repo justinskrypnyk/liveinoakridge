@@ -1,0 +1,140 @@
+---
+import Base from '@/layouts/Base.astro';
+import { SITE } from '@/data/site';
+---
+
+<Base
+  title="Mortgage Calculator London Ontario | Justin Skrypnyk Real Estate Broker"
+  description="Calculate your mortgage payments for London Ontario home prices. Estimate monthly costs based on purchase price, down payment, amortization, and current rates."
+>
+  <section class="bg-navy py-20 text-white">
+    <div class="container-site">
+      <nav aria-label="Breadcrumb" class="flex items-center gap-2 text-sm text-white/40 mb-8">
+        <a href="/" class="hover:text-gold transition-colors">Home</a>
+        <span>/</span>
+        <a href="/mortgages/" class="hover:text-gold transition-colors">Mortgages</a>
+        <span>/</span>
+        <span class="text-white/70">Calculator</span>
+      </nav>
+      <h1 class="font-serif text-5xl font-bold mb-4">Mortgage Calculator</h1>
+      <div class="gold-divider mb-6"></div>
+      <p class="text-xl text-white/70">Estimate your monthly mortgage payment for a London Ontario home.</p>
+    </div>
+  </section>
+
+  <section class="py-20 bg-cream">
+    <div class="container-site max-w-4xl">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+        <!-- Calculator -->
+        <div class="bg-white rounded-2xl p-8 shadow-card">
+          <h2 class="font-serif text-2xl text-navy mb-6">Calculate Your Payment</h2>
+
+          <div class="space-y-5">
+            <div>
+              <label for="price" class="block text-sm font-medium text-navy/70 mb-1.5">Home Price ($)</label>
+              <input type="number" id="price" value="650000" min="100000" max="5000000" step="5000"
+                class="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm focus:border-gold outline-none focus:ring-2 focus:ring-gold/20" />
+            </div>
+            <div>
+              <label for="downpayment" class="block text-sm font-medium text-navy/70 mb-1.5">Down Payment ($)</label>
+              <input type="number" id="downpayment" value="130000" min="0" step="1000"
+                class="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm focus:border-gold outline-none focus:ring-2 focus:ring-gold/20" />
+              <p id="dp-percent" class="text-xs text-slate mt-1">20.0% down payment</p>
+            </div>
+            <div>
+              <label for="rate" class="block text-sm font-medium text-navy/70 mb-1.5">Interest Rate (%)</label>
+              <input type="number" id="rate" value="5.25" min="0.1" max="20" step="0.05"
+                class="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm focus:border-gold outline-none focus:ring-2 focus:ring-gold/20" />
+            </div>
+            <div>
+              <label for="amortization" class="block text-sm font-medium text-navy/70 mb-1.5">Amortization (years)</label>
+              <select id="amortization" class="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm focus:border-gold outline-none focus:ring-2 focus:ring-gold/20">
+                <option value="10">10 years</option>
+                <option value="15">15 years</option>
+                <option value="20">20 years</option>
+                <option value="25" selected>25 years</option>
+                <option value="30">30 years</option>
+              </select>
+            </div>
+
+            <div class="bg-gold rounded-xl p-6 text-center">
+              <div class="text-sm text-navy/70 font-medium mb-1">Estimated Monthly Payment</div>
+              <div id="monthly-payment" class="font-serif text-4xl text-navy font-bold">$2,847</div>
+              <div class="text-xs text-navy/50 mt-2">Principal & interest only — does not include property tax, insurance, or CMHC premiums.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Info panel -->
+        <div class="space-y-6">
+          <div class="bg-white rounded-2xl p-6 shadow-card">
+            <h3 class="font-serif text-xl text-navy mb-4">What's Not Included</h3>
+            <ul class="space-y-3 text-sm text-slate">
+              <li class="flex gap-2"><span class="text-gold">•</span> Property taxes (varies by municipality and assessment)</li>
+              <li class="flex gap-2"><span class="text-gold">•</span> Home insurance (required by all lenders)</li>
+              <li class="flex gap-2"><span class="text-gold">•</span> CMHC mortgage insurance (required if &lt;20% down)</li>
+              <li class="flex gap-2"><span class="text-gold">•</span> Condo fees (if applicable)</li>
+              <li class="flex gap-2"><span class="text-gold">•</span> Utilities and maintenance costs</li>
+            </ul>
+          </div>
+
+          <div class="bg-navy text-white rounded-2xl p-6">
+            <h3 class="font-serif text-xl mb-3">Minimum Down Payment Rules (Canada)</h3>
+            <div class="space-y-2 text-sm text-white/70">
+              <div class="flex justify-between border-b border-white/10 pb-2">
+                <span>Under $500,000</span>
+                <span class="text-gold font-medium">5% minimum</span>
+              </div>
+              <div class="flex justify-between border-b border-white/10 pb-2">
+                <span>$500,000–$999,999</span>
+                <span class="text-gold font-medium">5% on first $500K + 10% above</span>
+              </div>
+              <div class="flex justify-between">
+                <span>$1,000,000+</span>
+                <span class="text-gold font-medium">20% minimum</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-gold rounded-2xl p-6 text-center">
+            <h3 class="font-serif text-xl text-navy mb-3">Ready to Get Pre-Approved?</h3>
+            <p class="text-navy/70 text-sm mb-5">Justin connects you with trusted London Ontario mortgage professionals who find the best rate for your situation.</p>
+            <a href="/mortgages/pre-approval/" class="btn-secondary w-full justify-center">Start Pre-Approval</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<script>
+  function calculate() {
+    const price = parseFloat((document.getElementById('price') as HTMLInputElement).value) || 0;
+    const down = parseFloat((document.getElementById('downpayment') as HTMLInputElement).value) || 0;
+    const rate = parseFloat((document.getElementById('rate') as HTMLInputElement).value) / 100 / 12 || 0;
+    const years = parseInt((document.getElementById('amortization') as HTMLSelectElement).value) || 25;
+    const n = years * 12;
+    const principal = price - down;
+
+    const dpPercent = price > 0 ? ((down / price) * 100).toFixed(1) : '0.0';
+    const dpEl = document.getElementById('dp-percent');
+    if (dpEl) dpEl.textContent = `${dpPercent}% down payment`;
+
+    const payment = rate > 0
+      ? (principal * rate * Math.pow(1 + rate, n)) / (Math.pow(1 + rate, n) - 1)
+      : principal / n;
+
+    const el = document.getElementById('monthly-payment');
+    if (el) {
+      el.textContent = payment > 0
+        ? `$${payment.toLocaleString('en-CA', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
+        : '$0';
+    }
+  }
+
+  ['price', 'downpayment', 'rate', 'amortization'].forEach((id) => {
+    document.getElementById(id)?.addEventListener('input', calculate);
+  });
+
+  calculate();
+</script>

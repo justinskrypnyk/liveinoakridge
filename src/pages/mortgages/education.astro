@@ -1,0 +1,98 @@
+---
+import Base from '@/layouts/Base.astro';
+---
+
+<Base
+  title="Mortgage Education London Ontario | Understanding Your Options | Justin Skrypnyk"
+  description="Fixed vs variable, amortization, stress test, CMHC insurance — understand all the key mortgage concepts for buying a home in London Ontario."
+>
+  <section class="bg-navy py-20 text-white">
+    <div class="container-site">
+      <nav aria-label="Breadcrumb" class="flex items-center gap-2 text-sm text-white/40 mb-8">
+        <a href="/" class="hover:text-gold transition-colors">Home</a>
+        <span>/</span>
+        <a href="/mortgages/" class="hover:text-gold transition-colors">Mortgages</a>
+        <span>/</span>
+        <span class="text-white/70">Education</span>
+      </nav>
+      <h1 class="font-serif text-5xl font-bold mb-4">Mortgage Education</h1>
+      <div class="gold-divider mb-6"></div>
+      <p class="text-xl text-white/70 max-w-2xl">The plain-language guide to mortgages for London Ontario home buyers — no jargon, no fluff.</p>
+    </div>
+  </section>
+
+  <section class="py-20 bg-cream">
+    <div class="container-site max-w-4xl">
+      <div class="space-y-10">
+        {[
+          {
+            title: 'Fixed vs. Variable Rate Mortgages',
+            icon: '📊',
+            content: [
+              'A **fixed-rate mortgage** locks in your interest rate for the entire term (typically 1–5 years). Your payment never changes, which makes budgeting simple and predictable. Fixed rates are currently popular in Canada due to rate uncertainty.',
+              'A **variable-rate mortgage** fluctuates with the Bank of Canada\'s prime rate. When rates fall, your payment may decrease; when they rise, your payment increases. Variable rates have historically been lower over the long term, but come with more risk in volatile rate environments.',
+              'For most London Ontario buyers in the current environment, a fixed 3- or 5-year term offers a good balance of security and rate.',
+            ],
+          },
+          {
+            title: 'Amortization: The Long Game',
+            icon: '📅',
+            content: [
+              'Amortization is the total length of time it takes to pay off your mortgage — typically 25 or 30 years in Canada.',
+              'A **shorter amortization** means higher monthly payments but significantly less interest paid over the life of the loan. A **longer amortization** reduces monthly payments but costs more in total interest.',
+              'As of 2024, Canada now allows 30-year amortizations for first-time buyers purchasing a new build. For most existing homes, 25 years remains the maximum with an insured mortgage (under 20% down).',
+            ],
+          },
+          {
+            title: 'The Mortgage Stress Test',
+            icon: '🧪',
+            content: [
+              'Before approving your mortgage, Canadian lenders must verify you can afford payments at a higher rate than you\'ll actually pay — this is the "stress test."',
+              'In 2026, the qualifying rate is the greater of: (a) your contracted rate plus 2%, or (b) 5.25%. So if you\'re getting a 5.5% mortgage, you\'ll be tested at 7.5%.',
+              'This reduces the maximum home price you can qualify for, but it protects buyers from overextending if rates rise. Talk to a mortgage professional to understand your exact qualification amount.',
+            ],
+          },
+          {
+            title: 'CMHC Mortgage Insurance',
+            icon: '🛡️',
+            content: [
+              'If your down payment is less than 20% of the home\'s purchase price, you\'re required by Canadian law to purchase mortgage default insurance through CMHC, Sagen, or Canada Guaranty.',
+              'The insurance premium is added to your mortgage balance. Premium rates range from 2.8% to 4.0% of your mortgage amount depending on your down payment percentage.',
+              'While it\'s an added cost, insured mortgages often come with slightly lower interest rates than uninsured mortgages — because the lender\'s risk is reduced.',
+            ],
+          },
+          {
+            title: 'Mortgage Terms vs. Amortization',
+            icon: '🔄',
+            content: [
+              'This is one of the most misunderstood concepts: your **term** and your **amortization** are different things.',
+              'Amortization is how long it takes to fully pay off the mortgage (e.g., 25 years). Your **term** is how long your current rate agreement lasts — typically 1 to 5 years. At the end of each term, you renew at whatever rate is current.',
+              'When your term expires, you\'re free to switch lenders without penalty, which is a great opportunity to shop for better rates.',
+            ],
+          },
+        ].map((section) => (
+          <div class="bg-white rounded-2xl p-8 shadow-card">
+            <div class="flex items-center gap-4 mb-5">
+              <div class="text-3xl">{section.icon}</div>
+              <h2 class="font-serif text-2xl text-navy">{section.title}</h2>
+            </div>
+            <div class="space-y-4">
+              {section.content.map((para) => (
+                <p class="text-slate leading-relaxed text-sm" set:html={para.replace(/\*\*(.*?)\*\*/g, '<strong class="text-navy">$1</strong>')} />
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div class="mt-12 bg-gold rounded-2xl p-8 text-center">
+        <h2 class="font-serif text-2xl text-navy mb-3">Questions About Your Mortgage Options?</h2>
+        <p class="text-navy/70 mb-6">Justin connects London Ontario buyers with trusted mortgage professionals who provide honest, personalized advice.</p>
+        <div class="flex flex-col sm:flex-row gap-3 justify-center">
+          <a href="/mortgages/pre-approval/" class="btn-secondary">Get Pre-Approved</a>
+          <a href="/mortgages/calculator/" class="inline-flex items-center gap-2 bg-navy text-white font-semibold px-7 py-3.5 rounded-lg hover:bg-navy-dark transition-all">Use Calculator</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</Base>

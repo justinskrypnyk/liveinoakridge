@@ -1,0 +1,638 @@
+---
+import Base from '@/layouts/Base.astro';
+import ContactForm from '@/components/ContactForm.astro';
+import { SITE } from '@/data/site';
+
+const schools = [
+  {
+    name: 'John Dearness Public School',
+    category: 'public',
+    categoryLabel: 'Public Elementary',
+    board: 'Thames Valley DSB',
+    address: '555 Sanatorium Rd, London, ON N6H 3W6',
+    grades: 'JK – 8',
+    website: 'https://johndearness.tvdsb.ca',
+    fraserRating: 9.8,
+    fraserLink: 'https://www.compareschoolrankings.org/',
+    fraserNote: '#1 ranked elementary school in London · Top 1% in Ontario',
+    highlight: true,
+  },
+  {
+    name: 'Riverside Public School',
+    category: 'public',
+    categoryLabel: 'Public Elementary',
+    board: 'Thames Valley DSB',
+    address: '550 Pinetree Dr, London, ON N6H 3N1',
+    grades: 'JK – 8',
+    website: 'https://riverside.tvdsb.ca',
+    fraserRating: 8.0,
+    fraserLink: 'https://www.compareschoolrankings.org/',
+    fraserNote: 'Consistently ranked among London\'s top elementary public schools',
+    highlight: false,
+  },
+  {
+    name: 'Notre Dame Catholic School',
+    category: 'catholic',
+    categoryLabel: 'Catholic Elementary',
+    board: 'London District Catholic SB',
+    address: '767 Valetta St, London, ON N6H 4N1',
+    grades: 'JK – 8',
+    website: 'https://dam.ldcsb.ca',
+    fraserRating: 7.3,
+    fraserLink: 'https://www.compareschoolrankings.org/',
+    fraserNote: 'Serving the Oakridge Catholic community since 1969',
+    highlight: false,
+  },
+  {
+    name: 'St. Nicholas Catholic School',
+    category: 'catholic',
+    categoryLabel: 'Catholic Elementary',
+    board: 'London District Catholic SB',
+    address: '1956 Shore Rd, London, ON N6K 0E8',
+    grades: 'JK – 8',
+    website: 'https://nic.ldcsb.ca',
+    fraserRating: null,
+    fraserLink: 'https://www.compareschoolrankings.org/',
+    fraserNote: 'Home of the Nighthawks — see Fraser Institute for rating',
+    highlight: false,
+  },
+  {
+    name: 'Matthews Hall Independent School',
+    category: 'private',
+    categoryLabel: 'Private Independent',
+    board: 'Independent (CIS Ontario / CAIS)',
+    address: '1370 Oxford St W, London, ON N6H 1W2',
+    grades: 'Preschool – 8',
+    website: 'https://matthewshall.ca',
+    fraserRating: null,
+    fraserLink: 'https://www.compareschoolrankings.org/',
+    fraserNote: 'Est. 1918 · Small class sizes of 10–17 · CIS Ontario & CAIS accredited',
+    highlight: false,
+  },
+  {
+    name: 'Oakridge Secondary School',
+    category: 'secondary',
+    categoryLabel: 'Public Secondary',
+    board: 'Thames Valley DSB',
+    address: '1040 Oxford St W, London, ON N6H 1V4',
+    grades: '9 – 12',
+    website: 'https://oakridge.tvdsb.ca',
+    fraserRating: 8.0,
+    fraserLink: 'https://www.compareschoolrankings.org/',
+    fraserNote: '#86 of 747 secondary schools in Ontario · Top 12%',
+    highlight: false,
+  },
+  {
+    name: 'St. Thomas Aquinas Catholic Secondary School',
+    category: 'secondary',
+    categoryLabel: 'Catholic Secondary',
+    board: 'London District Catholic SB',
+    address: '1360 Oxford St W, London, ON',
+    grades: '9 – 12',
+    website: 'https://sta.ldcsb.ca',
+    fraserRating: null,
+    fraserLink: 'https://www.compareschoolrankings.org/',
+    fraserNote: 'Ranked #163 of 746 secondary schools in Ontario (Wikipedia)',
+    highlight: false,
+  },
+  {
+    name: 'West Oaks French Immersion Public School',
+    category: 'french',
+    categoryLabel: 'French Immersion',
+    board: 'Thames Valley DSB',
+    address: '1050 Plantation Rd, London, ON N6H 2Y5',
+    grades: 'JK – 8',
+    website: 'https://westoaks.tvdsb.ca',
+    fraserRating: null,
+    fraserLink: 'https://www.compareschoolrankings.org/',
+    fraserNote: 'Core French immersion program — see Fraser Institute for rating',
+    highlight: false,
+  },
+  {
+    name: 'École élémentaire Marie-Curie',
+    category: 'french',
+    categoryLabel: 'French First Language',
+    board: 'Conseil scolaire Viamonde',
+    address: '40 Hunt Club Drive, London, ON',
+    grades: 'JK – 6',
+    website: 'https://viamonde.ca',
+    fraserRating: null,
+    fraserLink: 'https://www.compareschoolrankings.org/',
+    fraserNote: 'French first-language school — see Fraser Institute for rating',
+    highlight: false,
+  },
+];
+
+const golf = [
+  {
+    name: 'Thames Valley Golf Course',
+    type: 'Public',
+    typeColor: 'bg-emerald-100 text-emerald-800',
+    driveTime: '~5 min',
+    address: '850 Sunninghill Ave, London, ON N6H 3L9',
+    phone: '519-661-4450',
+    website: 'https://london.ca/living-london/parks-facilities/golf-course/thames-valley-golf-course',
+    description: 'London\'s most accessible course — a local favourite tucked along the Thames River, just minutes from Oakridge. Two courses to choose from, ideal for all skill levels.',
+    details: ['18-hole Classic · Par 70 · 6,175 yds', '9-hole Hickory Course', 'Established 1924', 'City of London operated'],
+    icon: '⛳',
+  },
+  {
+    name: 'London Hunt & Country Club',
+    type: 'Private',
+    typeColor: 'bg-slate-100 text-slate-700',
+    driveTime: '~5 min',
+    address: '1431 Oxford St W, London, ON N6H 1W1',
+    phone: '519-471-6430',
+    website: 'https://www.londonhuntclub.com',
+    description: 'One of Canada\'s most historic private clubs — founded in 1885 and sitting right on Oxford Street in the heart of Oakridge. With 275 acres, a championship course, tennis, dining, and over 1,500 members, the Hunt Club is practically in your backyard.',
+    details: ['18 holes · Par 72 · 7,249 yds', 'Course rating 75.1 · Slope 136', 'Founded 1885 · Golf since 1960', '275 acres · Private members club'],
+    icon: '🦌',
+  },
+  {
+    name: 'Oxbow Glen Golf Course',
+    type: 'Public',
+    typeColor: 'bg-emerald-100 text-emerald-800',
+    driveTime: '~12 min',
+    address: '10761 Oxbow Drive W, Komoka, ON N0L 1R0',
+    phone: '519-471-2048',
+    website: 'https://www.oxbowglengolf.com',
+    description: 'A scenic 18-hole course nestled in a picturesque valley in Komoka, just west of London. The layout blends open links-style fairways with lush tree-lined woodland holes, plus a driving range and putting green on site.',
+    details: ['18 holes · Par 73 · 6,400 yds', 'Links fairways & woodland holes', 'Driving range & putting green', 'Walking & riding available'],
+    icon: '🌾',
+  },
+  {
+    name: 'FireRock Golf Club',
+    type: 'Public Championship',
+    typeColor: 'bg-amber-100 text-amber-800',
+    driveTime: '~12 min',
+    address: '10345 Oxbow Drive, Komoka, ON N0L 1R0',
+    phone: '519-471-3473',
+    website: 'https://www.firerockgolf.com',
+    description: 'A championship-calibre Tom McBroom design rated among the best public courses in Southwestern Ontario. Natural grasses, sculpted bunkers, and dramatic landforms make every round memorable.',
+    details: ['18 holes · Par 72', 'Tom McBroom championship design', 'Natural grass fairways & handmade bunkers', 'Online tee time booking'],
+    icon: '🔥',
+  },
+  {
+    name: 'Twin Streams Golf Course',
+    type: 'Public',
+    typeColor: 'bg-emerald-100 text-emerald-800',
+    driveTime: '~15 min',
+    address: 'Longwoods Rd, Delaware, ON',
+    phone: '519-652-5211',
+    website: 'https://www.twinstreams.ca',
+    description: 'A relaxed, park-like course on Longwoods Road just west of London, established in 1957 and expanded to 18 holes in 1966. Tall mature trees line most fairways, providing shade and character on every hole.',
+    details: ['18 holes · Par 65 · 4,090 yds', 'Est. 1957 · Expanded 1966', 'Mature tree-lined fairways', 'Clubhouse restaurant & patio'],
+    icon: '🌊',
+  },
+  {
+    name: 'Echo Valley Golf Club',
+    type: 'Semi-Private',
+    typeColor: 'bg-teal-100 text-teal-800',
+    driveTime: '~15 min',
+    address: '2738 Brigham Rd, London, ON N6P 1P2',
+    phone: '519-472-2760',
+    website: 'https://www.echovalleygolfclub.com',
+    description: 'A well-regarded semi-private course on the southwest edge of London, offering terrific views and a challenging 18-hole layout between Highways 2 and 3 in Komoka.',
+    details: ['18 holes · Par 71 · 6,129 yds', 'Semi-private club', 'Scenic valley views', 'Between Hwy 2 & Hwy 3'],
+    icon: '🏞️',
+  },
+  {
+    name: 'The Oaks Golf Club',
+    type: 'Private',
+    typeColor: 'bg-slate-100 text-slate-700',
+    driveTime: '~15 min',
+    address: '1552 Gideon Drive, Delaware, ON N0L 1E0',
+    phone: '519-652-1760',
+    website: 'https://oaksgolf.com',
+    description: 'A beautifully crafted private club just outside London in Delaware. Designed by René Muylaert on 150 acres, The Oaks features a links-style front nine with open fairways and a dramatic parkland back nine through mature oaks and spring-fed ponds.',
+    details: ['18 holes · Championship layout', 'Designed by René Muylaert', 'Established 1993 · 150 acres', 'Links front + parkland back nine'],
+    icon: '🌳',
+  },
+  {
+    name: 'Sunningdale Golf & Country Club',
+    type: 'Private',
+    typeColor: 'bg-slate-100 text-slate-700',
+    driveTime: '~15 min',
+    address: '465 Sunningdale Rd W, London, ON N6G 5B9',
+    phone: '519-660-8063',
+    website: 'https://sunningdalegolf.com',
+    description: 'One of Ontario\'s most prestigious private clubs, winding through 400 acres of the Medway Valley. The original Stanley Thompson / Robbie Robinson design has hosted national championships.',
+    details: ['36 holes · Par 72 · 7,004 yds (championship)', 'Designed by Stanley Thompson & Robbie Robinson', 'Established 1934', 'Private members club'],
+    icon: '🏆',
+  },
+  {
+    name: 'Pine Knot Golf & Country Club',
+    type: 'Public',
+    typeColor: 'bg-emerald-100 text-emerald-800',
+    driveTime: '~25 min',
+    address: '5421 Hamilton Rd, Dorchester, ON N0L 1G6',
+    phone: '519-268-3352',
+    website: 'https://www.pineknotgolf.com',
+    description: 'A parkland-style gem in Dorchester, designed by John F. Robinson & Associates. 48 well-maintained bunkers, 6 large ponds, and a state-of-the-art driving range make this a must-play for serious golfers east of London.',
+    details: ['18 holes · Par 72 · 4,900–6,500 yds', '48 bunkers · 6 ponds', 'Driving range & short game area', 'Mulligans Pub Restaurant on site'],
+    icon: '🌲',
+  },
+];
+
+const categoryBadge: Record<string, string> = {
+  public: 'bg-blue-100 text-blue-800',
+  catholic: 'bg-purple-100 text-purple-800',
+  french: 'bg-rose-100 text-rose-800',
+  secondary: 'bg-navy/10 text-navy',
+  private: 'bg-indigo-100 text-indigo-800',
+};
+
+function fraserStars(rating: number | null): string {
+  if (rating === null) return '';
+  const full = Math.round(rating);
+  return '★'.repeat(full) + '☆'.repeat(10 - full);
+}
+---
+
+<Base
+  title="Oakridge Community Guide — Schools, Golf & Local Resources | Justin Skrypnyk Real Estate Broker"
+  description="Your complete guide to schools and golf courses near Oakridge, London Ontario. Public, Catholic, and French schools with Fraser Institute ratings, plus top golf courses within 15 minutes."
+>
+
+  <!-- Hero -->
+  <section class="bg-navy py-20 text-white">
+    <div class="container-site">
+      <nav aria-label="Breadcrumb" class="flex items-center gap-2 text-sm text-white/40 mb-8">
+        <a href="/" class="hover:text-gold transition-colors">Home</a>
+        <span>/</span>
+        <span class="text-white/70">Community Guide</span>
+      </nav>
+      <div class="max-w-3xl">
+        <div class="inline-flex items-center gap-2 bg-gold/20 text-gold text-sm font-semibold px-4 py-2 rounded-full mb-6 border border-gold/30">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+          </svg>
+          Oakridge, West London
+        </div>
+        <h1 class="font-serif text-5xl font-bold mb-4 leading-tight">
+          Oakridge Community Guide
+        </h1>
+        <div class="gold-divider mb-6"></div>
+        <p class="text-xl text-white/70 leading-relaxed mb-4">
+          As your neighbourhood expert, I want to give you the information that matters — the schools your kids will attend, the golf courses you'll spend your weekends on, and the community resources that make Oakridge one of West London's best places to live.
+        </p>
+        <p class="text-white/50 text-sm">
+          Schools data sourced from individual school boards and the Fraser Institute's <a href="https://www.compareschoolrankings.org/" target="_blank" rel="noopener noreferrer" class="text-gold hover:text-gold-light underline">Compare School Rankings</a> (2025–2026 report).
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Tab Nav -->
+  <div class="bg-white border-b border-gray-200 sticky top-20 z-40">
+    <div class="container-site">
+      <div class="flex gap-0">
+        <button
+          id="tab-schools"
+          class="community-tab active-tab px-8 py-5 text-sm font-semibold border-b-2 transition-colors"
+          data-tab="schools"
+        >
+          <span class="flex items-center gap-2">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3L1 9l11 6 9-4.91V17h2V9L12 3z"/>
+            </svg>
+            Schools
+          </span>
+        </button>
+        <button
+          id="tab-golf"
+          class="community-tab px-8 py-5 text-sm font-semibold border-b-2 transition-colors"
+          data-tab="golf"
+        >
+          <span class="flex items-center gap-2">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M17 3.34a10 10 0 1 1-14.995 8.984L2 12l.005-.324A10 10 0 0 1 17 3.34zM12 6a1 1 0 0 0-1 1v5.585l-2.293 2.292a1 1 0 0 0 1.414 1.414l2.586-2.585A1 1 0 0 0 13 13V7a1 1 0 0 0-1-1z"/>
+            </svg>
+            Golf Courses
+          </span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCHOOLS TAB -->
+  <div id="content-schools" class="tab-content py-16 bg-cream">
+    <div class="container-site">
+      <div class="mb-10">
+        <h2 class="section-heading">Schools Near Oakridge</h2>
+        <div class="gold-divider mb-4"></div>
+        <p class="section-subheading">
+          Oakridge and the surrounding west London area are served by four school boards — offering public, Catholic, and French programs at the elementary and secondary levels.
+        </p>
+      </div>
+
+      <!-- Filter Buttons -->
+      <div class="flex flex-wrap gap-3 mb-10">
+        <button class="school-filter active-filter px-5 py-2.5 rounded-full text-sm font-semibold transition-all border" data-filter="all">All Schools</button>
+        <button class="school-filter px-5 py-2.5 rounded-full text-sm font-semibold transition-all border" data-filter="public">Public Elementary</button>
+        <button class="school-filter px-5 py-2.5 rounded-full text-sm font-semibold transition-all border" data-filter="catholic">Catholic</button>
+        <button class="school-filter px-5 py-2.5 rounded-full text-sm font-semibold transition-all border" data-filter="french">French Programs</button>
+        <button class="school-filter px-5 py-2.5 rounded-full text-sm font-semibold transition-all border" data-filter="secondary">Secondary</button>
+        <button class="school-filter px-5 py-2.5 rounded-full text-sm font-semibold transition-all border" data-filter="private">Private</button>
+      </div>
+
+      <!-- Board Legend -->
+      <div class="flex flex-wrap gap-4 mb-8 p-4 bg-white rounded-xl border border-gray-200">
+        <span class="text-xs font-semibold text-navy/50 uppercase tracking-wider self-center">School Boards:</span>
+        <span class="flex items-center gap-1.5 text-xs text-navy/70"><span class="w-3 h-3 rounded-full bg-blue-400 inline-block"></span> Thames Valley DSB (Public)</span>
+        <span class="flex items-center gap-1.5 text-xs text-navy/70"><span class="w-3 h-3 rounded-full bg-purple-400 inline-block"></span> London District Catholic SB</span>
+        <span class="flex items-center gap-1.5 text-xs text-navy/70"><span class="w-3 h-3 rounded-full bg-rose-400 inline-block"></span> French Immersion / First Language</span>
+        <span class="flex items-center gap-1.5 text-xs text-navy/70"><span class="w-3 h-3 rounded-full bg-indigo-400 inline-block"></span> Independent / Private</span>
+        <span class="ml-auto text-xs text-slate">Fraser Institute ratings out of 10 · <a href="https://www.compareschoolrankings.org/" target="_blank" rel="noopener noreferrer" class="text-gold hover:underline">compareschoolrankings.org</a></span>
+      </div>
+
+      <!-- School Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6" id="school-grid">
+        {schools.map((school) => (
+          <div
+            class={`school-card flex flex-col relative ${school.highlight ? 'pt-3' : ''}`}
+            data-category={school.category}
+          >
+            {school.highlight && (
+              <div class="absolute top-0 left-4 bg-gold text-navy text-xs font-bold px-3 py-1 rounded-full shadow-sm z-10">
+                #1 in London
+              </div>
+            )}
+
+            <div class={`card p-0 flex flex-col flex-1 ${school.highlight ? 'ring-2 ring-gold' : ''}`}>
+              <!-- Card Header -->
+              <div class="p-6 pb-4 border-b border-gray-100">
+                <div class="flex items-start justify-between gap-3 mb-3">
+                  <span class={`text-xs font-semibold px-3 py-1 rounded-full ${categoryBadge[school.category]}`}>
+                    {school.categoryLabel}
+                  </span>
+                  {school.fraserRating !== null && (
+                    <div class="text-right shrink-0">
+                      <div class="text-gold text-lg font-bold leading-none">{school.fraserRating.toFixed(1)}<span class="text-navy/30 text-xs font-normal">/10</span></div>
+                      <div class="text-gold/60 text-xs tracking-tighter">{fraserStars(school.fraserRating)}</div>
+                    </div>
+                  )}
+                </div>
+                <h3 class="font-serif text-lg text-navy leading-tight mb-1">{school.name}</h3>
+                <p class="text-xs text-slate">{school.board}</p>
+              </div>
+
+              <!-- Card Body -->
+              <div class="p-6 flex flex-col flex-1 gap-3">
+                <div class="flex items-start gap-2.5 text-sm text-navy/70">
+                  <svg class="w-4 h-4 text-gold shrink-0 mt-0.5" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                  </svg>
+                  <span>{school.address}</span>
+                </div>
+
+                <div class="flex items-center gap-2.5 text-sm text-navy/70">
+                  <svg class="w-4 h-4 text-gold shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3L1 9l11 6 9-4.91V17h2V9L12 3z"/>
+                  </svg>
+                  <span>Grades {school.grades}</span>
+                </div>
+
+                <p class="text-xs text-slate italic flex-1">{school.fraserNote}</p>
+
+                <div class="flex items-center gap-3 pt-2 mt-auto border-t border-gray-100">
+                  <a
+                    href={school.website}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="flex-1 text-center text-sm font-semibold text-gold hover:text-gold-light transition-colors py-2.5 border border-gold/30 hover:border-gold rounded-lg"
+                  >
+                    Visit Website →
+                  </a>
+                  <a
+                    href={school.fraserLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="text-sm text-navy/40 hover:text-navy/70 transition-colors py-2.5 px-3 border border-gray-200 rounded-lg whitespace-nowrap"
+                    title="Fraser Institute Rating"
+                  >
+                    Fraser ↗
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <!-- Fraser Institute Note -->
+      <div class="mt-10 p-6 bg-white rounded-xl border border-gray-200">
+        <div class="flex gap-4 items-start">
+          <div class="w-10 h-10 bg-gold/10 rounded-lg flex items-center justify-center shrink-0">
+            <svg class="w-5 h-5 text-gold" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+            </svg>
+          </div>
+          <div>
+            <h4 class="font-semibold text-navy mb-1">About Fraser Institute Ratings</h4>
+            <p class="text-sm text-slate leading-relaxed">
+              The Fraser Institute rates Ontario's 3,000+ schools out of 10 using nine academic indicators from provincial EQAO test results. Ratings reflect academic performance only — not extracurriculars, arts, or community culture. Some French immersion programs are excluded from ratings. Always visit the school and speak with the community before deciding.
+              <a href="https://www.compareschoolrankings.org/" target="_blank" rel="noopener noreferrer" class="text-gold hover:underline ml-1">View all ratings at compareschoolrankings.org →</a>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GOLF TAB -->
+  <div id="content-golf" class="tab-content hidden py-16 bg-cream">
+    <div class="container-site">
+      <div class="mb-10">
+        <h2 class="section-heading">Golf Courses Near Oakridge</h2>
+        <div class="gold-divider mb-4"></div>
+        <p class="section-subheading">
+          Whether you're a weekend warrior or a serious golfer, Oakridge puts you within 15 minutes of some of the best courses in Southwestern Ontario.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 mb-12">
+        {golf.map((course) => (
+          <div class="card flex flex-col p-0 overflow-visible">
+            <!-- Course Header -->
+            <div class="bg-navy rounded-t-card p-6 relative overflow-hidden">
+              <div class="absolute inset-0 opacity-10" style="background: radial-gradient(circle at 70% 50%, #10b981, transparent 70%)"></div>
+              <div class="relative">
+                <div class="flex items-center justify-between mb-3">
+                  <span class={`text-xs font-semibold px-3 py-1 rounded-full ${course.typeColor}`}>{course.type}</span>
+                  <span class="text-2xl">{course.icon}</span>
+                </div>
+                <h3 class="font-serif text-xl text-white leading-tight mb-2">{course.name}</h3>
+                <div class="flex items-center gap-2 text-gold text-sm font-semibold">
+                  <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
+                  </svg>
+                  <span>{course.driveTime} from Oakridge</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Course Body -->
+            <div class="p-6 flex flex-col flex-1 gap-4">
+              <p class="text-sm text-slate leading-relaxed">{course.description}</p>
+
+              <div class="space-y-2">
+                {course.details.map((detail) => (
+                  <div class="flex items-center gap-2 text-sm text-navy/70">
+                    <svg class="w-3.5 h-3.5 text-gold shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    {detail}
+                  </div>
+                ))}
+              </div>
+
+              <div class="border-t border-gray-100 pt-4 mt-auto space-y-2">
+                <div class="flex items-start gap-2 text-xs text-navy/60">
+                  <svg class="w-3.5 h-3.5 text-gold shrink-0 mt-0.5" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                  </svg>
+                  {course.address}
+                </div>
+                <div class="flex items-center gap-2 text-xs text-navy/60">
+                  <svg class="w-3.5 h-3.5 text-gold shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z"/>
+                  </svg>
+                  {course.phone}
+                </div>
+              </div>
+
+              <div class="flex items-center gap-3">
+                <a
+                  href={course.website}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="flex-1 text-center text-sm font-semibold text-gold hover:text-gold-light transition-colors py-2.5 border border-gold/30 hover:border-gold rounded-lg"
+                >
+                  Visit Website →
+                </a>
+                <a
+                  href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(course.address)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="text-sm text-navy/40 hover:text-navy/70 transition-colors py-2.5 px-3 border border-gray-200 rounded-lg whitespace-nowrap"
+                >
+                  Directions ↗
+                </a>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <!-- Golf Callout -->
+      <div class="bg-navy rounded-2xl p-8 text-white relative overflow-hidden">
+        <div class="absolute inset-0 opacity-5" style="background: radial-gradient(circle at 80% 50%, #10b981, transparent 60%)"></div>
+        <div class="relative grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+          <div>
+            <h3 class="font-serif text-2xl mb-3">A Golfer's Location</h3>
+            <div class="gold-divider mb-4"></div>
+            <p class="text-white/70 leading-relaxed">
+              Oakridge residents rarely have to drive more than 15 minutes to get on a course. Whether you want a quick 9 on a weekday morning or a championship round on the weekend, it's all within easy reach. It's one of the reasons so many golfers choose to call this neighbourhood home.
+            </p>
+          </div>
+          <div class="grid grid-cols-3 gap-4">
+            <div class="text-center">
+              <div class="text-3xl font-serif text-gold mb-1">9</div>
+              <div class="text-xs text-white/60 uppercase tracking-wider">Courses<br/>Nearby</div>
+            </div>
+            <div class="text-center">
+              <div class="text-3xl font-serif text-gold mb-1">5<span class="text-lg">min</span></div>
+              <div class="text-xs text-white/60 uppercase tracking-wider">Closest<br/>Course</div>
+            </div>
+            <div class="text-center">
+              <div class="text-3xl font-serif text-gold mb-1">90+</div>
+              <div class="text-xs text-white/60 uppercase tracking-wider">Holes<br/>in Range</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CTA Strip -->
+  <section class="py-16 bg-white">
+    <div class="container-site">
+      <div class="bg-cream rounded-2xl p-10 text-center">
+        <h2 class="font-serif text-3xl text-navy mb-3">Thinking About Moving to Oakridge?</h2>
+        <div class="gold-divider mx-auto mb-4"></div>
+        <p class="text-slate max-w-xl mx-auto mb-8 leading-relaxed">
+          As a local Real Estate Broker who knows every street in this neighbourhood, I can help you find a home near your preferred schools and golf courses. Let's talk.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+          <a href="/areas/oakridge/" class="btn-primary">Explore Oakridge Homes</a>
+          <a href="/contact/" class="btn-secondary">Ask Justin a Question</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</Base>
+
+<style>
+  .community-tab {
+    color: var(--color-slate);
+    border-color: transparent;
+  }
+  .community-tab.active-tab {
+    color: var(--color-gold);
+    border-color: var(--color-gold);
+  }
+  .school-filter {
+    background: white;
+    color: rgba(12, 35, 64, 0.6);
+    border-color: #e5e7eb;
+  }
+  .school-filter.active-filter {
+    background: var(--color-navy);
+    color: white;
+    border-color: var(--color-navy);
+  }
+</style>
+
+<script>
+  const tabs     = document.querySelectorAll<HTMLButtonElement>('.community-tab');
+  const contents = document.querySelectorAll<HTMLElement>('.tab-content');
+
+  function activateTab(tabId: string) {
+    tabs.forEach((t) => t.classList.toggle('active-tab', t.dataset.tab === tabId));
+    contents.forEach((c) => c.classList.toggle('hidden', c.id !== `content-${tabId}`));
+  }
+
+  function tabFromHash() {
+    return window.location.hash.replace('#', '') === 'golf' ? 'golf' : 'schools';
+  }
+
+  // Activate on load and on hash change (covers nav dropdown clicks)
+  activateTab(tabFromHash());
+  window.addEventListener('hashchange', () => activateTab(tabFromHash()));
+
+  // Tab button clicks
+  tabs.forEach((tab) => {
+    tab.addEventListener('click', () => {
+      const target = tab.dataset.tab!;
+      activateTab(target);
+      history.replaceState(null, '', `#${target}`);
+    });
+  });
+
+  // School card filter
+  const filters     = document.querySelectorAll<HTMLButtonElement>('.school-filter');
+  const schoolCards = document.querySelectorAll<HTMLElement>('.school-card');
+
+  filters.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const filter = btn.dataset.filter;
+      filters.forEach((f) => f.classList.remove('active-filter'));
+      btn.classList.add('active-filter');
+      schoolCards.forEach((card) => {
+        card.style.display = (filter === 'all' || card.dataset.category === filter) ? '' : 'none';
+      });
+    });
+  });
+</script>

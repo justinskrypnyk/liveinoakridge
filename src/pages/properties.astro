@@ -1,0 +1,403 @@
+---
+import Base from '@/layouts/Base.astro';
+import { SITE } from '@/data/site';
+import listingsData from '@/data/listings.json';
+
+const listings = listingsData.listings || [];
+const fetchedAt = listingsData.fetchedAt;
+const totalCount = listingsData.totalCount || 0;
+
+function fmt(price: unknown): string {
+  const n = Number(price);
+  if (!n) return 'Price TBD';
+  return new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD', maximumFractionDigits: 0 }).format(n);
+}
+
+function field(listing: Record<string, unknown>, ...keys: string[]): string {
+  for (const k of keys) {
+    const v = listing[k];
+    if (v !== undefined && v !== null && v !== '') return String(v);
+  }
+  return '';
+}
+
+function buildAddress(l: Record<string, unknown>): string {
+  const unparsed = field(l, 'UnparsedAddress');
+  if (unparsed) return unparsed;
+  const parts = [
+    field(l, 'UnitNumber') ? `${field(l, 'UnitNumber')}-` : '',
+    field(l, 'StreetNumber'),
+    field(l, 'StreetName'),
+    field(l, 'StreetSuffix'),
+  ].filter(Boolean);
+  return parts.join(' ') || 'Address not available';
+}
+
+function realtorUrl(l: Record<string, unknown>): string {
+  const id = field(l, 'ListingId', 'ListingKey');
+  if (!id) return 'https://www.realtor.ca';
+  return `https://www.realtor.ca/real-estate/${id}`;
+}
+
+// Neighbourhood slugs for linking to area pages
+const AREA_SLUGS: Record<string, string> = {
+  'Oakridge': 'oakridge', 'Byron': 'byron', 'Westmount': 'westmount',
+  'Lambeth': 'lambeth', 'Hyde Park': 'hyde-park', 'Komoka': 'komoka',
+  'West London': 'west-london', 'Old North': 'old-north', 'Masonville': 'masonville',
+  'Sunningdale': 'sunningdale', 'Fox Hollow': 'fox-hollow', 'River Bend': 'river-bend',
+  'White Oaks': 'white-oaks', 'Medway': 'medway', 'Downtown': 'downtown-london',
+};
+
+// Pre-process listings in frontmatter to avoid type annotation issues in template
+type ListingCard = {
+  address: string; city: string; area: string; price: string; rawPrice: number;
+  beds: string; baths: string; sqft: string; type: string; garage: string;
+  photoUrl: string | null; realtorLink: string; areaSlug: string | null; beds_n: number;
+};
+
+const processedListings: ListingCard[] = listings.map((l) => {
+  const L = l as Record<string, unknown>;
+  const address = buildAddress(L);
+  const city = field(L, 'City');
+  const area = field(L, 'SubdivisionName');
+  const areaSlug = area ? (AREA_SLUGS[area] ?? null) : null;
+  const id = field(L, 'ListingKey', 'ListingId');
+  return {
+    address,
+    city,
+    area,
+    price: fmt(L.ListPrice),
+    rawPrice: Number(L.ListPrice) || 0,
+    beds: field(L, 'BedroomsTotal'),
+    baths: field(L, 'BathroomsTotal'),
+    sqft: field(L, 'BuildingAreaTotal'),
+    type: field(L, 'PropertyType'),
+    garage: field(L, 'GarageSpaces'),
+    photoUrl: (L._photoUrl as string | null) ?? null,
+    realtorLink: id ? `https://www.realtor.ca/real-estate/${id}` : 'https://www.realtor.ca',
+    areaSlug,
+    beds_n: Number(field(L, 'BedroomsTotal')) || 0,
+  };
+});
+---
+
+<Base
+  title="Homes For Sale in West London Ontario | Justin Skrypnyk Real Estate Broker"
+  description="Browse current MLS® listings in Oakridge, Byron, Westmount, Lambeth, West London, Hyde Park, and Komoka. Updated from DDF® before every build. Contact Justin Skrypnyk at 519.639.5176."
+>
+  <!-- Hero -->
+  <section class="bg-navy py-20 text-white">
+    <div class="container-site">
+      <nav aria-label="Breadcrumb" class="flex items-center gap-2 text-sm text-white/40 mb-8">
+        <a href="/" class="hover:text-gold transition-colors">Home</a>
+        <span>/</span>
+        <span class="text-white/70">Properties</span>
+      </nav>
+      <div class="max-w-3xl">
+        <h1 class="font-serif text-5xl font-bold mb-4">Homes For Sale in West London</h1>
+        <div class="gold-divider mb-6"></div>
+        <p class="text-xl text-white/70 leading-relaxed">
+          Active MLS® listings across Oakridge, Byron, Westmount, Lambeth, Hyde Park, and beyond.
+          {totalCount > 0 && <span> {totalCount} homes available.</span>}
+        </p>
+        {fetchedAt && (
+          <p class="text-sm text-white/40 mt-4">
+            Last updated: {new Date(fetchedAt).toLocaleDateString('en-CA', { year: 'numeric', month: 'long', day: 'numeric' })}
+          </p>
+        )}
+      </div>
+    </div>
+  </section>
+
+  <!-- Filter bar (client-side JS) -->
+  <section class="py-6 bg-white border-b border-gray-100 sticky top-20 z-30 shadow-sm">
+    <div class="container-site">
+      <div class="flex flex-wrap gap-2 items-center">
+        <span class="text-sm font-medium text-navy/60 mr-1 shrink-0">Filter:</span>
+        {['All', 'Oakridge', 'Byron', 'Westmount', 'Lambeth', 'Hyde Park', 'Komoka', 'West London'].map((area, i) => (
+          <button
+            data-filter={area === 'All' ? '' : area}
+            class={`filter-btn px-4 py-2 rounded-full text-sm font-medium transition-all ${i === 0 ? 'bg-gold text-navy' : 'bg-cream text-navy/70 hover:bg-gold hover:text-navy border border-gray-200'}`}
+          >
+            {area}
+          </button>
+        ))}
+        {listings.length > 0 && (
+          <span class="ml-auto text-sm text-slate" id="listing-count">{listings.length} listings</span>
+        )}
+      </div>
+
+      <!-- Price + Bed filters -->
+      {listings.length > 0 && (
+        <div class="flex flex-wrap gap-3 mt-3">
+          <select id="filter-price" class="text-sm border border-gray-200 rounded-lg px-3 py-1.5 bg-white text-navy focus:border-gold focus:outline-none">
+            <option value="">Any price</option>
+            <option value="0-500000">Under $500K</option>
+            <option value="500000-700000">$500K – $700K</option>
+            <option value="700000-900000">$700K – $900K</option>
+            <option value="900000-1200000">$900K – $1.2M</option>
+            <option value="1200000-99999999">Over $1.2M</option>
+          </select>
+          <select id="filter-beds" class="text-sm border border-gray-200 rounded-lg px-3 py-1.5 bg-white text-navy focus:border-gold focus:outline-none">
+            <option value="">Any bedrooms</option>
+            <option value="2">2+</option>
+            <option value="3">3+</option>
+            <option value="4">4+</option>
+            <option value="5">5+</option>
+          </select>
+          <select id="filter-type" class="text-sm border border-gray-200 rounded-lg px-3 py-1.5 bg-white text-navy focus:border-gold focus:outline-none">
+            <option value="">Any type</option>
+            <option value="Single Family">Single Family</option>
+            <option value="Townhouse">Townhouse</option>
+            <option value="Condo">Condo / Apartment</option>
+          </select>
+        </div>
+      )}
+    </div>
+  </section>
+
+  <!-- Listings grid -->
+  <section class="py-12 bg-cream">
+    <div class="container-site">
+      {listings.length === 0 ? (
+        <!-- Empty state — DDF not yet connected -->
+        <div class="max-w-2xl mx-auto text-center py-12">
+          <div class="text-6xl mb-6">🏡</div>
+          <h2 class="font-serif text-3xl text-navy mb-4">Live MLS® Listings Coming Soon</h2>
+          <p class="text-slate text-lg leading-relaxed mb-8">
+            Justin's DDF® feed is being configured. In the meantime, contact Justin directly for the latest
+            available listings in Oakridge, Byron, Westmount, Lambeth, Hyde Park, Komoka, and all of West London.
+          </p>
+          <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <a href={`tel:${SITE.phone}`} class="btn-primary">Call {SITE.phoneDisplay}</a>
+            <a href="/contact/" class="btn-secondary">Send a Listing Request</a>
+          </div>
+
+          <!-- Area links -->
+          <div class="mt-14">
+            <h3 class="font-serif text-xl text-navy mb-5">Browse by Neighbourhood</h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {[
+                { name: 'Oakridge', slug: 'oakridge', price: '$650K–$850K' },
+                { name: 'Byron', slug: 'byron', price: '$700K–$950K' },
+                { name: 'Westmount', slug: 'westmount', price: '$550K–$750K' },
+                { name: 'Lambeth', slug: 'lambeth', price: '$700K–$1.1M' },
+                { name: 'West London', slug: 'west-london', price: '$520K–$720K' },
+                { name: 'Hyde Park', slug: 'hyde-park', price: '$700K–$1.05M' },
+                { name: 'Komoka', slug: 'komoka', price: '$600K–$900K' },
+                { name: 'Masonville', slug: 'masonville', price: '$580K–$800K' },
+              ].map((area) => (
+                <a href={`/areas/${area.slug}/buy/`} class="card p-4 hover:border-gold/30 border border-transparent group text-center">
+                  <h4 class="font-serif text-navy group-hover:text-gold transition-colors font-semibold text-sm">{area.name}</h4>
+                  <p class="text-xs text-slate mt-1">{area.price}</p>
+                </a>
+              ))}
+            </div>
+          </div>
+        </div>
+      ) : (
+        <!-- Live listings grid -->
+        <div id="listings-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          {processedListings.map((l) => (
+            <article
+              class="listing-card bg-white rounded-2xl shadow-card overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all border border-gray-100"
+              data-area={l.area || l.city}
+              data-type={l.type}
+              data-price={l.rawPrice}
+              data-beds={l.beds_n}
+            >
+              <!-- Photo -->
+              <div class="aspect-video bg-cream relative overflow-hidden">
+                {l.photoUrl ? (
+                  <img src={l.photoUrl} alt={`${l.address}, ${l.city}`} class="w-full h-full object-cover" loading="lazy" />
+                ) : (
+                  <div class="flex items-center justify-center h-full">
+                    <span class="text-5xl">🏡</span>
+                  </div>
+                )}
+                <div class="absolute top-3 left-3">
+                  <span class="bg-gold text-navy text-xs font-bold px-3 py-1 rounded-full">Active</span>
+                </div>
+                {l.type && (
+                  <div class="absolute top-3 right-3">
+                    <span class="bg-navy/80 text-white text-xs font-medium px-2.5 py-1 rounded-full">{l.type}</span>
+                  </div>
+                )}
+              </div>
+
+              <!-- Details -->
+              <div class="p-5">
+                <div class="font-serif text-2xl text-navy font-bold mb-1">{l.price}</div>
+                <p class="text-slate text-sm leading-snug mb-3">{l.address}{l.city ? `, ${l.city}` : ''}</p>
+
+                {l.area && (
+                  <div class="mb-3">
+                    {l.areaSlug ? (
+                      <a href={`/areas/${l.areaSlug}/`} class="inline-block bg-cream text-gold text-xs font-semibold px-2.5 py-1 rounded-full hover:bg-gold hover:text-navy transition-colors">
+                        {l.area}
+                      </a>
+                    ) : (
+                      <span class="inline-block bg-cream text-gold text-xs font-semibold px-2.5 py-1 rounded-full">{l.area}</span>
+                    )}
+                  </div>
+                )}
+
+                <!-- Stats row -->
+                <div class="flex items-center gap-4 text-sm text-navy/70 border-t border-gray-100 pt-3">
+                  {l.beds && (
+                    <div class="flex items-center gap-1">
+                      <svg class="w-4 h-4 text-gold" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                        <path d="M7 13c1.66 0 3-1.34 3-3S8.66 7 7 7s-3 1.34-3 3 1.34 3 3 3zm12-6h-8v7H3V5H1v15h2v-3h18v3h2v-9c0-2.21-1.79-4-4-4z"/>
+                      </svg>
+                      <span>{l.beds} bed</span>
+                    </div>
+                  )}
+                  {l.baths && (
+                    <div class="flex items-center gap-1">
+                      <svg class="w-4 h-4 text-gold" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                        <path d="M7 6c0-.55.45-1 1-1s1 .45 1 1-.45 1-1 1-1-.45-1-1zm12 7H5V7.58C5.16 7.79 5.31 8 5.5 8c.55 0 1-.45 1-1V5c0-1.1-.9-2-2-2S3 3.9 3 5v13c0 1.1.9 2 2 2s2-.9 2-2v-1h14v1c0 1.1.9 2 2 2s2-.9 2-2v-5c0-1.66-1.34-3-3-3zM21 18H5v-3h14v2h2v1z"/>
+                      </svg>
+                      <span>{l.baths} bath</span>
+                    </div>
+                  )}
+                  {l.sqft && (
+                    <div class="flex items-center gap-1">
+                      <svg class="w-4 h-4 text-gold" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14l-5-5 1.41-1.41L12 14.17l7.59-7.59L21 8l-9 9z"/>
+                      </svg>
+                      <span>{Number(l.sqft).toLocaleString()} sq ft</span>
+                    </div>
+                  )}
+                  {l.garage && l.garage !== '0' && (
+                    <div class="flex items-center gap-1">
+                      <svg class="w-4 h-4 text-gold" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                        <path d="M18 18.5c.83 0 1.5-.67 1.5-1.5s-.67-1.5-1.5-1.5-1.5.67-1.5 1.5.67 1.5 1.5 1.5zm1.5-9l-1.5-4.5H6L4.5 9.5H2.5v2h.5V20H9v-2h6v2h6v-8.5h.5v-2h-2zM6.85 7h10.3l1 3H5.85l1-3zM19 18H5V11.5h14V18z"/>
+                      </svg>
+                      <span>{l.garage} car</span>
+                    </div>
+                  )}
+                </div>
+
+                <!-- Actions -->
+                <div class="flex gap-2 mt-4">
+                  <a href={l.realtorLink} target="_blank" rel="noopener noreferrer"
+                    class="flex-1 bg-navy text-white text-sm font-semibold text-center py-2.5 rounded-lg hover:bg-navy/80 transition-colors">
+                    View on REALTOR.ca
+                  </a>
+                  <a href={`/contact/?listing=${encodeURIComponent(l.address)}`}
+                    class="flex items-center justify-center px-4 py-2.5 border border-gold text-gold rounded-lg hover:bg-gold hover:text-navy transition-all"
+                    aria-label="Ask about this listing">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+                    </svg>
+                  </a>
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+      )}
+    </div>
+  </section>
+
+  {listings.length > 0 && (
+    <!-- Bottom CTA -->
+    <section class="py-16 bg-navy text-white">
+      <div class="container-site">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          <div>
+            <h2 class="font-serif text-3xl mb-4">Don't See What You're Looking For?</h2>
+            <div class="gold-divider mb-6"></div>
+            <p class="text-white/70 leading-relaxed mb-6">
+              Justin has access to listings before they hit public portals, including off-market opportunities in Oakridge, Byron, and across West London. Tell him what you need.
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4">
+              <a href={`tel:${SITE.phone}`} class="btn-primary">Call {SITE.phoneDisplay}</a>
+              <a href="/contact/" class="btn-secondary">Send a Request</a>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            {Object.entries(AREA_SLUGS).slice(0, 8).map(([name, slug]) => (
+              <a href={`/areas/${slug}/buy/`} class="bg-white/5 hover:bg-gold/20 border border-white/10 hover:border-gold/40 text-white/80 hover:text-white text-sm font-medium px-4 py-3 rounded-xl transition-all text-center">
+                {name}
+              </a>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  )}
+</Base>
+
+<script>
+  // Client-side filter logic
+  const grid = document.getElementById('listings-grid');
+  if (grid) {
+    const cards = () => Array.from(grid.querySelectorAll<HTMLElement>('.listing-card'));
+    const countEl = document.getElementById('listing-count');
+
+    let activeArea = '';
+    let minPrice = 0;
+    let maxPrice = Infinity;
+    let minBeds = 0;
+    let typeFilter = '';
+
+    function applyFilters() {
+      let visible = 0;
+      cards().forEach(card => {
+        const area = card.dataset.area || '';
+        const price = Number(card.dataset.price) || 0;
+        const beds = Number(card.dataset.beds) || 0;
+        const type = card.dataset.type || '';
+
+        const areaMatch = !activeArea || area.toLowerCase().includes(activeArea.toLowerCase());
+        const priceMatch = price >= minPrice && price <= maxPrice;
+        const bedsMatch = beds >= minBeds;
+        const typeMatch = !typeFilter || type.toLowerCase().includes(typeFilter.toLowerCase());
+
+        const show = areaMatch && priceMatch && bedsMatch && typeMatch;
+        card.style.display = show ? '' : 'none';
+        if (show) visible++;
+      });
+      if (countEl) countEl.textContent = `${visible} listing${visible !== 1 ? 's' : ''}`;
+    }
+
+    // Area filter buttons
+    document.querySelectorAll<HTMLButtonElement>('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.filter-btn').forEach(b => {
+          b.classList.remove('bg-gold', 'text-navy');
+          b.classList.add('bg-cream', 'text-navy/70');
+        });
+        btn.classList.add('bg-gold', 'text-navy');
+        btn.classList.remove('bg-cream', 'text-navy/70');
+        activeArea = btn.dataset.filter || '';
+        applyFilters();
+      });
+    });
+
+    // Price filter
+    document.getElementById('filter-price')?.addEventListener('change', (e) => {
+      const val = (e.target as HTMLSelectElement).value;
+      if (!val) { minPrice = 0; maxPrice = Infinity; }
+      else {
+        const [lo, hi] = val.split('-').map(Number);
+        minPrice = lo;
+        maxPrice = hi;
+      }
+      applyFilters();
+    });
+
+    // Beds filter
+    document.getElementById('filter-beds')?.addEventListener('change', (e) => {
+      minBeds = Number((e.target as HTMLSelectElement).value) || 0;
+      applyFilters();
+    });
+
+    // Type filter
+    document.getElementById('filter-type')?.addEventListener('change', (e) => {
+      typeFilter = (e.target as HTMLSelectElement).value || '';
+      applyFilters();
+    });
+  }
+</script>

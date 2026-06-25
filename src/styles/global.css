@@ -1,0 +1,78 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+@theme {
+  --color-navy: #0c2340;
+  --color-navy-dark: #071829;
+  --color-navy-light: #14365a;
+  --color-gold: #10b981;
+  --color-gold-light: #34d399;
+  --color-gold-dark: #059669;
+  --color-cream: #f0f9f6;
+  --color-slate: #6b8fa8;
+
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-serif: 'Playfair Display', Georgia, serif;
+
+  --radius-card: 0.75rem;
+
+  --shadow-card: 0 4px 24px rgba(12, 35, 64, 0.10);
+  --shadow-card-hover: 0 8px 40px rgba(12, 35, 64, 0.18);
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    @apply bg-white text-navy font-sans;
+  }
+
+  h1, h2, h3, h4 {
+    @apply font-serif;
+  }
+
+  a {
+    @apply transition-colors duration-200;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .container-site {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center gap-2 bg-gold text-navy font-semibold px-7 py-3.5 rounded-lg hover:bg-gold-light transition-all duration-200 shadow-sm hover:shadow-md;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center gap-2 border-2 border-gold text-gold font-semibold px-7 py-3.5 rounded-lg hover:bg-gold hover:text-navy transition-all duration-200;
+  }
+
+  .btn-white {
+    @apply inline-flex items-center gap-2 bg-white text-navy font-semibold px-7 py-3.5 rounded-lg hover:bg-cream transition-all duration-200 shadow-sm;
+  }
+
+  .section-heading {
+    @apply text-3xl md:text-4xl font-serif text-navy mb-4;
+  }
+
+  .section-subheading {
+    @apply text-lg text-slate max-w-2xl;
+  }
+
+  .card {
+    @apply bg-white rounded-card shadow-card hover:shadow-card-hover transition-shadow duration-300 overflow-hidden;
+  }
+
+  .gold-divider {
+    @apply w-16 h-1 bg-gold rounded-full;
+  }
+}

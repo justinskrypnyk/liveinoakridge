@@ -1,0 +1,455 @@
+---
+import Base from '@/layouts/Base.astro';
+import Schema from '@/components/Schema.astro';
+import ContactForm from '@/components/ContactForm.astro';
+import { SITE } from '@/data/site';
+import { AREAS } from '@/data/areas';
+import { SERVICES } from '@/data/services';
+---
+
+<Base
+  title="Oakridge Real Estate Broker | Justin Skrypnyk | London Ontario"
+  description="Justin Skrypnyk is a Real Estate Broker with Sutton Group Chapman Realty Inc., Brokerage, specializing in Oakridge, Byron, Westmount, Lambeth, and West London. Buying, selling, complimentary home evaluations. Call 519.639.5176."
+  heroOverlap
+>
+  <Fragment slot="head">
+    <Schema type="home" />
+    <script type="application/ld+json" set:html={JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: [
+        {
+          '@type': 'Question',
+          name: 'Who is Justin Skrypnyk?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'Justin Skrypnyk is a licensed Real Estate Broker with Sutton Group Chapman Realty Inc., Brokerage, specializing in Oakridge and West London Ontario. He helps buyers and sellers navigate the London Ontario real estate market with hyper-local expertise. Contact him at 519.639.5176 or visit liveinoakridge.ca.',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: 'What is the best neighbourhood to buy a home in West London Ontario?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'The best neighbourhood depends on your budget and lifestyle. Oakridge and Byron are top choices for established family communities with strong schools. Hyde Park and Sunningdale offer newer construction. Westmount and Medway offer excellent value near Western University. Lambeth is ideal for those wanting a semi-rural feel with upscale homes. Justin Skrypnyk can help match you to the right neighbourhood based on your priorities.',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: 'What is the average home price in London Ontario in 2026?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'The average home price in London Ontario is approximately $625,000–$660,000 as of mid-2026. West-end communities like Oakridge average $650K–$850K, Byron averages $700K–$950K, and more affordable options in West London and White Oaks range from $480K–$720K.',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: 'How do I get a home evaluation in London Ontario?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'Justin Skrypnyk offers complimentary home evaluations for homeowners in London Ontario. He visits your home and provides a detailed, data-backed market value analysis at no cost and with no obligation. Call 519.639.5176 or book online at liveinoakridge.ca/services/home-evaluation/ to schedule yours.',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: 'What areas does Justin Skrypnyk serve?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'Justin Skrypnyk serves all of West London and surrounding communities including Oakridge, Byron, Westmount, Lambeth, Hyde Park, Komoka, West London, Old North, Masonville, Sunningdale, Fox Hollow, River Bend, White Oaks, Medway, and Downtown London Ontario.',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: 'What is the difference between a real estate broker and an agent in Ontario?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'In Ontario, a Real Estate Broker holds an advanced licence that requires additional education, experience, and examinations beyond a salesperson (agent). Brokers can own or manage a brokerage. Justin Skrypnyk is a licensed Broker, meaning he has achieved the highest professional designation available to a real estate registrant in Ontario.',
+          },
+        },
+      ],
+    })} />
+  </Fragment>
+
+  <section class="relative min-h-screen flex items-center justify-center bg-navy overflow-hidden">
+    <div class="absolute inset-0 bg-gradient-to-br from-navy-dark via-navy to-navy-light opacity-90"></div>
+    <div class="absolute top-0 right-0 w-1/2 h-full opacity-5">
+      <div class="w-full h-full bg-gold" style="clip-path: polygon(100% 0, 0 0, 100% 100%)"></div>
+    </div>
+
+    <div class="relative container-site text-center text-white py-32 pt-40">
+      <div class="inline-flex items-center gap-2 bg-gold/20 text-gold text-sm font-medium px-4 py-2 rounded-full mb-8 border border-gold/30">
+        <span class="w-2 h-2 bg-gold rounded-full animate-pulse"></span>
+        West London's Real Estate Broker
+      </div>
+      <h1 class="font-serif text-5xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
+        Oakridge Roots.<br />
+        <span class="text-gold">Oakridge Life.</span>
+      </h1>
+      <p class="text-xl md:text-2xl text-white/70 mb-10 max-w-2xl mx-auto leading-relaxed">
+        Justin Skrypnyk helps families buy and sell homes across Oakridge, Byron, Westmount, Lambeth, and all of West London with local knowledge that no algorithm can match.
+      </p>
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <a href="/services/home-evaluation/" class="btn-primary text-lg py-4 px-8">
+          Get a Complimentary Home Evaluation
+        </a>
+        <a href="/properties/" class="btn-white text-lg py-4 px-8">
+          Browse Listings
+        </a>
+      </div>
+
+      <div class="mt-16 flex flex-wrap justify-center gap-8 text-sm text-white/50">
+        <div class="flex items-center gap-2">
+          <svg class="w-5 h-5 text-gold" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+          </svg>
+          Sutton Group Chapman Realty
+        </div>
+        <div class="flex items-center gap-2">
+          <svg class="w-5 h-5 text-gold" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          Licensed Real Estate Broker
+        </div>
+        <div class="flex items-center gap-2">
+          <svg class="w-5 h-5 text-gold" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+          </svg>
+          West London Local
+        </div>
+      </div>
+    </div>
+
+    <div class="absolute bottom-8 left-1/2 -translate-x-1/2 text-white/30 animate-bounce">
+      <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <path d="M19 9l-7 7-7-7"/>
+      </svg>
+    </div>
+  </section>
+
+  <section class="py-20 bg-cream">
+    <div class="container-site">
+      <div class="text-center mb-12">
+        <h2 class="section-heading">How Justin Helps You</h2>
+        <div class="gold-divider mx-auto mb-4"></div>
+        <p class="section-subheading mx-auto">
+          Whether you are buying your first home, selling your family home, or building a portfolio, there is a tailored approach for every situation.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {SERVICES.slice(0, 4).map((service) => (
+          <a
+            href={`/services/${service.slug}/`}
+            class="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden p-6 group border border-transparent hover:border-gold/30 block"
+          >
+            <div class="text-3xl mb-4">{service.icon}</div>
+            <h3 class="font-serif text-lg text-navy mb-2 group-hover:text-gold transition-colors">{service.name}</h3>
+            <p class="text-sm text-slate leading-relaxed">{service.description}</p>
+            <div class="mt-4 flex items-center gap-1 text-gold text-sm font-medium">
+              Learn more
+              <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M5 12h14M12 5l7 7-7 7"/>
+              </svg>
+            </div>
+          </a>
+        ))}
+      </div>
+
+      <div class="text-center mt-10">
+        <a href="/services/" class="btn-secondary">View All Services</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="py-20 bg-white">
+    <div class="container-site">
+      <div class="text-center mb-12">
+        <h2 class="section-heading">Areas We Serve</h2>
+        <div class="gold-divider mx-auto mb-4"></div>
+        <p class="section-subheading mx-auto">
+          Deep knowledge of West London communities means better advice, better prices, and better outcomes for every client.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {AREAS.map((area) => (
+          <a
+            href={`/areas/${area.slug}/`}
+            class="group relative bg-navy rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 block"
+          >
+            <div class="absolute inset-0 bg-gradient-to-t from-navy-dark via-navy/60 to-transparent z-10"></div>
+            <div class="h-48 bg-gradient-to-br from-navy-light to-navy-dark"></div>
+            <div class="absolute inset-0 flex flex-col justify-end p-5 z-20">
+              <h3 class="font-serif text-xl text-white group-hover:text-gold transition-colors">{area.name}</h3>
+              <p class="text-sm text-white/60 mt-1 line-clamp-2">{area.description}</p>
+              <div class="mt-3 flex items-center gap-1 text-gold text-sm font-medium opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all">
+                Explore {area.shortName}
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <path d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+              </div>
+            </div>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- =========================================================
+       TESTIMONIALS — replace placeholder quotes with real reviews
+       from your Google Business Profile before going live
+       ========================================================= -->
+  <section class="py-20 bg-cream">
+    <div class="container-site">
+      <div class="text-center mb-12">
+        <a
+          href={SITE.social.googleReviews}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-flex items-center gap-2.5 bg-white rounded-full px-5 py-2.5 shadow-sm mb-6 hover:shadow-md transition-shadow"
+        >
+          <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+          </svg>
+          <div class="flex gap-0.5">
+            {[...Array(5)].map(() => (
+              <svg class="w-3.5 h-3.5 text-gold" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+              </svg>
+            ))}
+          </div>
+          <span class="text-sm font-semibold text-navy">5.0 on Google</span>
+        </a>
+
+        <h2 class="section-heading">What Clients Say</h2>
+        <div class="gold-divider mx-auto mb-4"></div>
+        <p class="section-subheading mx-auto">
+          Real feedback from West London buyers and sellers.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {[
+          {
+            text: "Justin made the whole process feel effortless. His knowledge of Oakridge is unmatched — he knew exactly what we needed before we did. We sold for above asking and were done in three weeks.",
+            author: "Sarah M.",
+            date: "April 2026",
+          },
+          {
+            text: "As first-time buyers we were nervous about everything. Justin was patient, honest, and never made us feel pressured. He found us the perfect home in Byron and walked us through every step.",
+            author: "Ryan & Lisa T.",
+            date: "March 2026",
+          },
+          {
+            text: "We have bought and sold with Justin twice now. His pricing strategy is spot on, his communication is excellent, and he always has your best interest at heart. We'll call him again without hesitation.",
+            author: "Mark B.",
+            date: "February 2026",
+          },
+        ].map((review) => (
+          <div class="bg-white rounded-xl p-6 shadow-sm border border-transparent hover:border-gold/20 transition-colors flex flex-col">
+            <div class="flex gap-0.5 mb-4">
+              {[...Array(5)].map(() => (
+                <svg class="w-4 h-4 text-gold" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                </svg>
+              ))}
+            </div>
+            <blockquote class="text-slate text-sm leading-relaxed mb-5 flex-1">
+              &ldquo;{review.text}&rdquo;
+            </blockquote>
+            <div class="flex items-center gap-3 pt-4 border-t border-cream">
+              <div class="w-8 h-8 rounded-full bg-navy flex items-center justify-center text-xs text-gold font-bold shrink-0">
+                {review.author[0]}
+              </div>
+              <div>
+                <div class="text-sm font-semibold text-navy">{review.author}</div>
+                <div class="text-xs text-slate">{review.date} · Google Review</div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div class="text-center mt-10">
+        <a
+          href={SITE.social.googleReviews}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-flex items-center gap-2 btn-secondary"
+        >
+          <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+          </svg>
+          Read all reviews on Google
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section class="py-20 bg-navy text-white">
+    <div class="container-site">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+        <div class="relative">
+          <div class="aspect-[4/5] rounded-2xl bg-navy-light overflow-hidden shadow-2xl max-w-md">
+            <img
+              src="/images/justin-skrypnyk-realtor-london-ontario.webp"
+              alt="Justin Skrypnyk, Real Estate Broker in Oakridge London Ontario"
+              class="w-full h-full object-cover"
+              width="600"
+              height="750"
+              loading="lazy"
+            />
+          </div>
+          <div class="absolute -bottom-6 -right-6 bg-gold text-navy rounded-xl p-6 shadow-xl">
+            <div class="font-serif text-4xl font-bold">100+</div>
+            <div class="text-sm font-semibold mt-1">Families Helped</div>
+          </div>
+        </div>
+
+        <div>
+          <div class="inline-block text-gold text-sm font-semibold tracking-wider uppercase mb-4">About Justin</div>
+          <h2 class="font-serif text-4xl text-white mb-6">
+            A Real Estate Broker Who Actually Lives Here
+          </h2>
+          <div class="gold-divider mb-6"></div>
+          <p class="text-white/70 leading-relaxed mb-6">
+            Justin Skrypnyk is not just selling homes in Oakridge. He lives here. That means he knows which streets have the best school catchments, where the water pressure is strong, and which parks fill up on a Saturday morning.
+          </p>
+          <p class="text-white/70 leading-relaxed mb-8">
+            As a Real Estate Broker with Sutton Group Chapman Realty Inc., Brokerage, Justin combines authentic neighbourhood expertise with a modern marketing approach that gets homes sold and buyers into the right properties.
+          </p>
+          <div class="grid grid-cols-2 gap-6 mb-10">
+            <div>
+              <div class="text-3xl font-serif text-gold font-bold">West London</div>
+              <div class="text-sm text-white/50 mt-1">Market Specialist</div>
+            </div>
+            <div>
+              <div class="text-3xl font-serif text-gold font-bold">Oakridge</div>
+              <div class="text-sm text-white/50 mt-1">Neighbourhood Expert</div>
+            </div>
+          </div>
+          <a href="/about/" class="btn-primary">Meet Justin</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="py-20 bg-gold">
+    <div class="container-site">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+        <div>
+          <h2 class="font-serif text-4xl text-navy mb-4">
+            What Is Your Home Worth Today?
+          </h2>
+          <p class="text-navy/70 text-lg leading-relaxed mb-6">
+            Get a complimentary, no-obligation home valuation from Justin, based on real comparable sales in your specific neighbourhood.
+          </p>
+          <ul class="space-y-3">
+            <li class="flex items-center gap-3 text-navy/80">
+              <svg class="w-5 h-5 text-navy shrink-0" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              Free, no strings attached
+            </li>
+            <li class="flex items-center gap-3 text-navy/80">
+              <svg class="w-5 h-5 text-navy shrink-0" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              Based on actual sold data in your neighbourhood
+            </li>
+            <li class="flex items-center gap-3 text-navy/80">
+              <svg class="w-5 h-5 text-navy shrink-0" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              Written report with supporting comparables
+            </li>
+            <li class="flex items-center gap-3 text-navy/80">
+              <svg class="w-5 h-5 text-navy shrink-0" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              Available for all West London areas
+            </li>
+          </ul>
+        </div>
+
+        <div class="bg-white rounded-2xl p-8 shadow-xl">
+          <h3 class="font-serif text-2xl text-navy mb-6">Request Your Complimentary Evaluation</h3>
+          <ContactForm subject="Complimentary Home Evaluation Request" ctaLabel="Get My Complimentary Evaluation" />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="py-20 bg-cream">
+    <div class="container-site">
+      <div class="flex items-end justify-between mb-12">
+        <div>
+          <h2 class="section-heading">London Ontario Real Estate Insights</h2>
+          <div class="gold-divider mt-4"></div>
+        </div>
+        <a href="/blog/" class="hidden sm:inline-flex btn-secondary text-sm py-2.5">All Posts</a>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        {[
+          {
+            title: 'May 2026 London Ontario Real Estate Market Update',
+            excerpt: 'Spring market activity, sales trends, and what the numbers mean for buyers and sellers right now.',
+            slug: 'may-2026-london-ontario-market-update',
+            date: 'May 31, 2026',
+            category: 'Market Updates',
+          },
+          {
+            title: 'Will Interest Rates Affect London Ontario Home Prices?',
+            excerpt: 'Bank of Canada rate changes, mortgage implications, and how London market is weathering the uncertainty.',
+            slug: 'interest-rates-london-ontario-home-prices',
+            date: 'May 15, 2026',
+            category: 'Mortgage & Rates',
+          },
+          {
+            title: 'What Is the Cheapest Area to Buy a House in London, Ontario?',
+            excerpt: 'A neighbourhood-by-neighbourhood breakdown of the most affordable entry points in the London market.',
+            slug: 'cheapest-area-buy-house-london-ontario',
+            date: 'April 28, 2026',
+            category: 'Neighbourhood Guides',
+          },
+        ].map((post) => (
+          <a href={`/blog/${post.slug}/`} class="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden group block">
+            <div class="h-48 bg-gradient-to-br from-navy-light to-navy flex items-end p-5">
+              <span class="text-xs font-semibold text-gold bg-gold/20 px-3 py-1 rounded-full">{post.category}</span>
+            </div>
+            <div class="p-6">
+              <div class="text-xs text-slate mb-3">{post.date}</div>
+              <h3 class="font-serif text-lg text-navy mb-3 leading-snug group-hover:text-gold transition-colors">{post.title}</h3>
+              <p class="text-sm text-slate leading-relaxed">{post.excerpt}</p>
+              <div class="mt-5 flex items-center gap-1 text-gold text-sm font-medium">
+                Read more
+                <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <path d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+              </div>
+            </div>
+          </a>
+        ))}
+      </div>
+
+      <div class="text-center mt-10 sm:hidden">
+        <a href="/blog/" class="btn-secondary">View All Posts</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="py-16 bg-navy text-white">
+    <div class="container-site text-center">
+      <h2 class="font-serif text-3xl mb-4">Ready to Talk?</h2>
+      <p class="text-white/60 mb-8 max-w-xl mx-auto">No pressure, no pitch. Just an honest conversation about where you are at and how Justin can help.</p>
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <a href={`tel:${SITE.phone}`} class="btn-primary">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z"/>
+          </svg>
+          Call {SITE.phoneDisplay}
+        </a>
+        <a href="/contact/" class="btn-secondary">Send a Message</a>
+      </div>
+    </div>
+  </section>
+</Base>

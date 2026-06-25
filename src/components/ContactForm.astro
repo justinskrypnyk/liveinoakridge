@@ -1,0 +1,131 @@
+---
+interface Props {
+  subject?: string;
+  ctaLabel?: string;
+  dark?: boolean;
+}
+
+const {
+  subject = 'General Inquiry',
+  ctaLabel = 'Send Message',
+  dark = false,
+} = Astro.props;
+
+const inputClass = dark
+  ? 'bg-white/10 border-white/20 text-white placeholder-white/40 focus:border-gold'
+  : 'bg-white border-gray-200 text-navy placeholder-slate/60 focus:border-gold';
+
+const labelClass = dark ? 'text-white/70' : 'text-navy/70';
+---
+
+<form
+  name="contact"
+  method="POST"
+  data-netlify="true"
+  netlify-honeypot="bot-field"
+  class="space-y-5"
+>
+  <input type="hidden" name="form-name" value="contact" />
+  <input type="hidden" name="subject" value={subject} />
+  <p class="hidden">
+    <label>Don't fill this out: <input name="bot-field" /></label>
+  </p>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+    <div>
+      <label for="first-name" class={`block text-sm font-medium mb-1.5 ${labelClass}`}>First Name *</label>
+      <input
+        type="text"
+        id="first-name"
+        name="first-name"
+        required
+        autocomplete="given-name"
+        placeholder="Jane"
+        class={`w-full px-4 py-3 rounded-lg border text-sm transition-colors outline-none focus:ring-2 focus:ring-gold/20 ${inputClass}`}
+      />
+    </div>
+    <div>
+      <label for="last-name" class={`block text-sm font-medium mb-1.5 ${labelClass}`}>Last Name *</label>
+      <input
+        type="text"
+        id="last-name"
+        name="last-name"
+        required
+        autocomplete="family-name"
+        placeholder="Smith"
+        class={`w-full px-4 py-3 rounded-lg border text-sm transition-colors outline-none focus:ring-2 focus:ring-gold/20 ${inputClass}`}
+      />
+    </div>
+  </div>
+
+  <div>
+    <label for="email" class={`block text-sm font-medium mb-1.5 ${labelClass}`}>Email Address *</label>
+    <input
+      type="email"
+      id="email"
+      name="email"
+      required
+      autocomplete="email"
+      placeholder="jane@example.com"
+      class={`w-full px-4 py-3 rounded-lg border text-sm transition-colors outline-none focus:ring-2 focus:ring-gold/20 ${inputClass}`}
+    />
+  </div>
+
+  <div>
+    <label for="phone" class={`block text-sm font-medium mb-1.5 ${labelClass}`}>Phone Number</label>
+    <input
+      type="tel"
+      id="phone"
+      name="phone"
+      autocomplete="tel"
+      placeholder="519-555-0100"
+      class={`w-full px-4 py-3 rounded-lg border text-sm transition-colors outline-none focus:ring-2 focus:ring-gold/20 ${inputClass}`}
+    />
+  </div>
+
+  <div>
+    <label for="service" class={`block text-sm font-medium mb-1.5 ${labelClass}`}>I'm interested in...</label>
+    <select
+      id="service"
+      name="service"
+      class={`w-full px-4 py-3 rounded-lg border text-sm transition-colors outline-none focus:ring-2 focus:ring-gold/20 ${inputClass}`}
+    >
+      <option value="">Select a service</option>
+      <option value="buying">Buying a Home</option>
+      <option value="selling">Selling My Home</option>
+      <option value="evaluation">Complimentary Home Evaluation</option>
+      <option value="first-time">First-Time Buyer Guidance</option>
+      <option value="downsizing">Downsizing</option>
+      <option value="upsizing">Upsizing</option>
+      <option value="relocation">Relocation to London</option>
+      <option value="investment">Investment Properties</option>
+      <option value="mortgage">Mortgage Pre-Approval</option>
+      <option value="other">General Question</option>
+    </select>
+  </div>
+
+  <div>
+    <label for="message" class={`block text-sm font-medium mb-1.5 ${labelClass}`}>Your Message</label>
+    <textarea
+      id="message"
+      name="message"
+      rows="4"
+      placeholder="Tell me a bit about your situation or what you're looking for..."
+      class={`w-full px-4 py-3 rounded-lg border text-sm transition-colors outline-none focus:ring-2 focus:ring-gold/20 resize-none ${inputClass}`}
+    ></textarea>
+  </div>
+
+  <button
+    type="submit"
+    class="btn-primary w-full justify-center text-base py-4"
+  >
+    {ctaLabel}
+    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M5 12h14M12 5l7 7-7 7"/>
+    </svg>
+  </button>
+
+  <p class={`text-xs text-center ${dark ? 'text-white/40' : 'text-slate'}`}>
+    By submitting, you agree to our <a href="/privacy-policy/" class="underline hover:text-gold transition-colors">Privacy Policy</a>. We never share your information.
+  </p>
+</form>

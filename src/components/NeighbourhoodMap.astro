@@ -1,0 +1,288 @@
+---
+import { AREAS } from '@/data/areas';
+const areaIndex = Object.fromEntries(AREAS.map(a => [a.slug, { name: a.name, price: a.avgPrice, desc: a.description }]));
+---
+
+<section class="py-24 bg-white overflow-hidden">
+  <div class="container-site">
+    <div class="flex flex-col-reverse lg:flex-row gap-10 lg:gap-14 items-center">
+
+      <!-- SVG Map -->
+      <div class="w-full lg:w-3/5 select-none">
+        <svg
+          id="london-map-svg"
+          viewBox="-12 0 604 470"
+          class="w-full h-auto"
+          xmlns="http://www.w3.org/2000/svg"
+          aria-label="Interactive map of London Ontario neighbourhoods"
+        >
+          <!-- Outer city boundary -->
+          <path d="M 142,52 L 505,52 L 562,92 L 562,442 L 540,462 L 148,462 L 70,418 L 70,100 Z" fill="#071829"/>
+          <!-- Komoka satellite blob -->
+          <path d="M 5,268 L 65,262 L 68,368 L 5,375 Z" fill="#071829"/>
+          <!-- Connector line -->
+          <line x1="65" y1="315" x2="70" y2="315" stroke="rgba(255,255,255,0.25)" stroke-width="1.5" stroke-dasharray="3,3"/>
+
+          <!-- ── Non-interactive fills ── -->
+          <polygon points="328,52 370,52 370,120 328,120" class="bg-area" fill="#0c2a45"/>
+          <text x="349" y="88" class="lbl-sm" text-anchor="middle" font-size="8">UPLANDS</text>
+
+          <polygon points="370,52 422,52 422,128 370,128" class="bg-area" fill="#0c2a45"/>
+          <text x="396" y="92" class="lbl-sm" text-anchor="middle" font-size="8">STONEY CREEK</text>
+
+          <polygon points="422,68 508,68 508,152 422,152" class="bg-area" fill="#0c2a45"/>
+          <text x="465" y="112" class="lbl-sm" text-anchor="middle" font-size="8">STONEYBROOK</text>
+
+          <polygon points="502,95 562,95 562,178 502,178" class="bg-area" fill="#0c2a45"/>
+          <text x="532" y="138" class="lbl-sm" text-anchor="middle" font-size="8">HURON<tspan x="532" dy="10">HEIGHTS</tspan></text>
+
+          <polygon points="378,122 462,122 462,215 378,215" class="bg-area" fill="#0e3055"/>
+          <text x="420" y="172" class="lbl-sm" text-anchor="middle" font-size="9">CARLING</text>
+
+          <polygon points="458,172 562,172 562,262 458,262" class="bg-area" fill="#0e3055"/>
+          <text x="510" y="220" class="lbl-sm" text-anchor="middle" font-size="9">ARGYLE</text>
+
+          <polygon points="458,262 562,262 562,358 458,358" class="bg-area" fill="#0e3055"/>
+          <text x="510" y="312" class="lbl-sm" text-anchor="middle" font-size="9">HAMILTON<tspan x="510" dy="10">ROAD</tspan></text>
+
+          <polygon points="250,292 322,292 322,360 250,360" class="bg-area" fill="#0e3055"/>
+          <text x="286" y="328" class="lbl-sm" text-anchor="middle" font-size="9">SOUTHCREST</text>
+
+          <polygon points="272,350 350,348 350,412 272,412" class="bg-area" fill="#0e3055"/>
+          <text x="312" y="382" class="lbl-sm" text-anchor="middle" font-size="8">HIGHLAND</text>
+
+          <polygon points="430,298 458,295 458,398 430,398" class="bg-area" fill="#0e3055"/>
+          <text x="444" y="350" class="lbl-sm" text-anchor="middle" font-size="7.5">GLEN<tspan x="444" dy="10">CAIRN</tspan></text>
+
+          <polygon points="458,325 562,325 562,442 458,442" class="bg-area" fill="#0e3055"/>
+          <text x="510" y="385" class="lbl-sm" text-anchor="middle" font-size="9">JACKSON</text>
+
+          <polygon points="228,362 295,360 295,422 228,422" class="bg-area" fill="#0e3055"/>
+          <text x="262" y="394" class="lbl-sm" text-anchor="middle" font-size="8">BOSTWICK</text>
+
+          <polygon points="70,415 155,412 155,462 70,462" class="bg-area" fill="#0e3055"/>
+          <text x="112" y="440" class="lbl-sm" text-anchor="middle" font-size="8">TALBOT</text>
+
+          <polygon points="295,408 355,405 355,462 295,462" class="bg-area" fill="#0e3055"/>
+          <text x="325" y="436" class="lbl-sm" text-anchor="middle" font-size="8">LONGWOODS</text>
+
+          <polygon points="422,398 548,395 548,462 422,462" class="bg-area" fill="#0e3055"/>
+          <text x="486" y="432" class="lbl-sm" text-anchor="middle" font-size="9">WESTMINSTER</text>
+
+          <!-- ── Thames River ── -->
+          <path d="M 70,268 C 108,260 152,258 198,262 S 250,270 298,270 S 348,275 390,272 S 436,268 480,272 L 562,270"
+            fill="none" stroke="#4f9ec4" stroke-width="5" stroke-linecap="round" opacity="0.75"/>
+
+          <!-- ── Interactive neighbourhood polygons ── -->
+
+          <!-- Fox Hollow -->
+          <a href="/areas/fox-hollow/" class="map-area" data-slug="fox-hollow" data-name="Fox Hollow" data-price="$600,000–$900,000" data-desc="Quiet northwest London neighbourhood with newer homes, ravine and river trail access, and a close-knit community feel.">
+            <polygon points="70,100 142,100 142,188 70,188" class="area-path"/>
+            <text x="106" y="148" class="area-label" text-anchor="middle" font-size="9.5" pointer-events="none">FOX HOLLOW</text>
+          </a>
+
+          <!-- Sunningdale -->
+          <a href="/areas/sunningdale/" class="map-area" data-slug="sunningdale" data-name="Sunningdale" data-price="$650,000–$1,000,000" data-desc="One of London's fastest-growing north-end family communities — modern homes, great schools, and conservation land nearby.">
+            <polygon points="142,52 248,52 248,162 200,168 142,162" class="area-path"/>
+            <text x="196" y="108" class="area-label" text-anchor="middle" font-size="10" pointer-events="none">SUNNINGDALE</text>
+          </a>
+
+          <!-- Masonville -->
+          <a href="/areas/masonville/" class="map-area" data-slug="masonville" data-name="Masonville" data-price="$650,000–$950,000" data-desc="North London's upscale hub — Masonville Place mall, newer construction, proximity to Western University and the hospital corridor.">
+            <polygon points="248,52 322,52 322,162 248,162" class="area-path"/>
+            <text x="285" y="108" class="area-label" text-anchor="middle" font-size="10" pointer-events="none">MASONVILLE</text>
+          </a>
+
+          <!-- Hyde Park -->
+          <a href="/areas/hyde-park/" class="map-area" data-slug="hyde-park" data-name="Hyde Park" data-price="$700,000–$1,050,000" data-desc="Northwest London's premier growth community — new builds, great schools, and a family-friendly atmosphere.">
+            <polygon points="120,188 200,188 200,280 120,280" class="area-path"/>
+            <text x="160" y="238" class="area-label" text-anchor="middle" font-size="11" pointer-events="none">HYDE PARK</text>
+          </a>
+
+          <!-- Medway -->
+          <a href="/areas/medway/" class="map-area" data-slug="medway" data-name="Medway" data-price="$520,000–$760,000" data-desc="Established west London neighbourhood with mature streets, Medway Creek trails, and great access to Western University.">
+            <polygon points="200,162 322,162 322,242 200,242" class="area-path"/>
+            <text x="262" y="206" class="area-label" text-anchor="middle" font-size="11" pointer-events="none">MEDWAY</text>
+          </a>
+
+          <!-- River Bend -->
+          <a href="/areas/river-bend/" class="map-area" data-slug="river-bend" data-name="River Bend" data-price="$580,000–$850,000" data-desc="Northwest London along the North Thames River — newer homes, exceptional trail access, and a quiet community feel.">
+            <polygon points="70,252 120,248 122,330 70,334" class="area-path"/>
+            <text x="96" y="294" class="area-label" text-anchor="middle" font-size="8.5" pointer-events="none">RIVER<tspan x="96" dy="11">BEND</tspan></text>
+          </a>
+
+          <!-- Old North -->
+          <a href="/areas/old-north/" class="map-area" data-slug="old-north" data-name="Old North" data-price="$600,000–$950,000" data-desc="London's most storied heritage district — Victorian homes, Richmond Row dining, and steps from Western University.">
+            <polygon points="322,112 380,112 378,215 322,215" class="area-path"/>
+            <text x="350" y="165" class="area-label" text-anchor="middle" font-size="10" pointer-events="none">OLD NORTH</text>
+          </a>
+
+          <!-- West London -->
+          <a href="/areas/west-london/" class="map-area" data-slug="west-london" data-name="West London" data-price="$520,000–$720,000" data-desc="Established and genuinely liveable — Cherry Hill Mall, mature tree-lined streets, and easy access everywhere.">
+            <polygon points="228,240 322,240 322,292 228,292" class="area-path"/>
+            <text x="275" y="269" class="area-label" text-anchor="middle" font-size="9.5" pointer-events="none">WEST LONDON</text>
+          </a>
+
+          <!-- Downtown -->
+          <a href="/areas/downtown/" class="map-area" data-slug="downtown" data-name="Downtown London" data-price="$350,000–$700,000" data-desc="London's vibrant urban core — Budweiser Gardens, Dundas Place, Richmond Row, and a growing condo market.">
+            <polygon points="322,215 382,215 382,292 322,292" class="area-path"/>
+            <text x="352" y="257" class="area-label" text-anchor="middle" font-size="9" pointer-events="none">DOWN<tspan x="352" dy="11">TOWN</tspan></text>
+          </a>
+
+          <!-- East London -->
+          <a href="/areas/east-london/" class="map-area" data-slug="east-london" data-name="East London" data-price="$400,000–$620,000" data-desc="Established east London neighbourhood — affordable entry points, diverse community, and strong investment potential.">
+            <polygon points="382,215 458,215 458,298 382,298" class="area-path"/>
+            <text x="420" y="259" class="area-label" text-anchor="middle" font-size="9.5" pointer-events="none">EAST LONDON</text>
+          </a>
+
+          <!-- Oakridge -->
+          <a href="/areas/oakridge/" class="map-area" data-slug="oakridge" data-name="Oakridge" data-price="$650,000–$850,000" data-desc="London's most established west-end neighbourhood — mature trees, large lots, top-rated schools, and genuine community.">
+            <polygon points="188,280 228,280 228,362 188,362" class="area-path"/>
+            <text x="208" y="324" class="area-label" text-anchor="middle" font-size="9" pointer-events="none">OAK<tspan x="208" dy="11">RIDGE</tspan></text>
+          </a>
+
+          <!-- Byron -->
+          <a href="/areas/byron/" class="map-area" data-slug="byron" data-name="Byron" data-price="$700,000–$950,000" data-desc="Trails, parks, and timeless community in southwest London — Springbank Park is right at your doorstep.">
+            <polygon points="70,292 188,290 188,415 70,418" class="area-path"/>
+            <text x="128" y="355" class="area-label" text-anchor="middle" font-size="13" pointer-events="none">BYRON</text>
+          </a>
+
+          <!-- Westmount -->
+          <a href="/areas/westmount/" class="map-area" data-slug="westmount" data-name="Westmount" data-price="$550,000–$750,000" data-desc="West London's urban-suburban sweet spot — diverse housing, Wonderland Road shopping, close to Western University.">
+            <polygon points="188,362 292,360 292,398 188,400" class="area-path"/>
+            <text x="240" y="382" class="area-label" text-anchor="middle" font-size="10" pointer-events="none">WESTMOUNT</text>
+          </a>
+
+          <!-- South London -->
+          <a href="/areas/south-london/" class="map-area" data-slug="south-london" data-name="South London" data-price="$490,000–$700,000" data-desc="Established south-end living — post-war bungalows, growing infill, and minutes to White Oaks Mall and Hwy 401.">
+            <polygon points="322,292 382,292 382,352 322,352" class="area-path"/>
+            <text x="352" y="325" class="area-label" text-anchor="middle" font-size="8.5" pointer-events="none">SOUTH<tspan x="352" dy="11">LONDON</tspan></text>
+          </a>
+
+          <!-- White Oaks -->
+          <a href="/areas/white-oaks/" class="map-area" data-slug="white-oaks" data-name="White Oaks" data-price="$460,000–$680,000" data-desc="South London's complete family community — White Oaks Mall, diverse housing, and every amenity within reach.">
+            <polygon points="340,338 448,335 450,445 340,445" class="area-path"/>
+            <text x="395" y="393" class="area-label" text-anchor="middle" font-size="10" pointer-events="none">WHITE OAKS</text>
+          </a>
+
+          <!-- Lambeth -->
+          <a href="/areas/lambeth/" class="map-area" data-slug="lambeth" data-name="Lambeth" data-price="$700,000–$1,100,000" data-desc="Suburban calm with a small-town heart — estate homes, excellent schools, and direct Hwy 401/402 access.">
+            <polygon points="188,398 295,395 295,462 188,462" class="area-path"/>
+            <text x="242" y="432" class="area-label" text-anchor="middle" font-size="11" pointer-events="none">LAMBETH</text>
+          </a>
+
+          <!-- Komoka (satellite) -->
+          <a href="/areas/komoka/" class="map-area" data-slug="komoka" data-name="Komoka" data-price="$600,000–$900,000" data-desc="Small-town charm 10 minutes from London — Komoka Provincial Park, large lots, and a strong community spirit.">
+            <polygon points="5,268 65,262 68,368 5,375" class="area-path"/>
+            <text x="36" y="318" class="area-label" text-anchor="middle" font-size="9" pointer-events="none">KOMOKA</text>
+          </a>
+
+        </svg>
+      </div>
+
+      <!-- Right panel -->
+      <div class="w-full lg:w-2/5">
+        <div class="text-gold text-xs font-semibold tracking-widest uppercase mb-4">Neighbourhoods</div>
+        <h2 class="font-serif text-4xl md:text-5xl text-navy leading-tight mb-3">
+          Explore<br/>All of London
+        </h2>
+        <div class="gold-divider mb-6"></div>
+
+        <!-- Default -->
+        <div id="map-default-panel">
+          <p class="text-slate leading-relaxed mb-8">
+            Click any neighbourhood on the map to explore homes, schools, and local highlights. Justin serves buyers and sellers across all of London Ontario.
+          </p>
+          <a href="/areas/" class="btn-secondary inline-flex">
+            View All Neighbourhoods
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </a>
+        </div>
+
+        <!-- Hover state -->
+        <div id="map-area-panel" class="hidden">
+          <h3 id="map-area-name" class="font-serif text-2xl text-navy mb-1"></h3>
+          <div id="map-area-price" class="text-gold text-sm font-semibold mb-4"></div>
+          <p id="map-area-desc" class="text-slate text-sm leading-relaxed mb-6"></p>
+          <a id="map-area-link" href="#" class="btn-primary text-sm py-2.5 inline-flex">
+            <span id="map-area-link-text">Explore this area</span>
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </a>
+          <div class="mt-4">
+            <a href="/areas/" class="text-slate/70 text-sm hover:text-gold transition-colors">← All neighbourhoods</a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<style>
+  .area-path {
+    fill: #1a4270;
+    stroke: rgba(255,255,255,0.2);
+    stroke-width: 1;
+    transition: fill 0.2s ease;
+    cursor: pointer;
+  }
+  .area-label {
+    fill: rgba(255,255,255,0.82);
+    font-family: Georgia, serif;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    transition: fill 0.2s ease;
+  }
+  .lbl-sm {
+    fill: rgba(255,255,255,0.5);
+    font-family: Georgia, serif;
+    font-weight: 500;
+    letter-spacing: 0.8px;
+    pointer-events: none;
+  }
+  .bg-area {
+    stroke: rgba(255,255,255,0.12);
+    stroke-width: 1;
+  }
+  .map-area:hover .area-path,
+  .map-area.is-active .area-path {
+    fill: #10b981;
+  }
+  .map-area:hover .area-label,
+  .map-area.is-active .area-label {
+    fill: #071829;
+  }
+</style>
+
+<script>
+  const mapSvg = document.getElementById('london-map-svg');
+  const defaultPanel = document.getElementById('map-default-panel');
+  const areaPanel = document.getElementById('map-area-panel');
+  const areaName = document.getElementById('map-area-name');
+  const areaPrice = document.getElementById('map-area-price');
+  const areaDesc = document.getElementById('map-area-desc');
+  const areaLink = document.getElementById('map-area-link') as HTMLAnchorElement | null;
+  const areaLinkText = document.getElementById('map-area-link-text');
+  const areas = document.querySelectorAll<SVGAElement>('.map-area');
+
+  function showArea(el: SVGAElement) {
+    defaultPanel?.classList.add('hidden');
+    areaPanel?.classList.remove('hidden');
+    if (areaName) areaName.textContent = el.dataset.name ?? '';
+    if (areaPrice) areaPrice.textContent = `Avg. ${el.dataset.price ?? ''}`;
+    if (areaDesc) areaDesc.textContent = el.dataset.desc ?? '';
+    if (areaLink) areaLink.href = el.getAttribute('href') ?? '#';
+    if (areaLinkText) areaLinkText.textContent = `Explore ${el.dataset.name}`;
+    areas.forEach(a => a.classList.remove('is-active'));
+    el.classList.add('is-active');
+  }
+
+  function resetMap() {
+    defaultPanel?.classList.remove('hidden');
+    areaPanel?.classList.add('hidden');
+    areas.forEach(a => a.classList.remove('is-active'));
+  }
+
+  areas.forEach(a => a.addEventListener('mouseenter', () => showArea(a)));
+  mapSvg?.addEventListener('mouseleave', resetMap);
+</script>

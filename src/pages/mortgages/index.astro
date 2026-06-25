@@ -1,0 +1,111 @@
+---
+import Base from '@/layouts/Base.astro';
+import Schema from '@/components/Schema.astro';
+import ContactForm from '@/components/ContactForm.astro';
+import { SITE } from '@/data/site';
+---
+
+<Base
+  title="Mortgage Services London Ontario | Justin Skrypnyk Real Estate Broker"
+  description="Mortgage education, calculator, and pre-approval support for London Ontario home buyers. Justin connects you with trusted local mortgage professionals."
+>
+  <Fragment slot="head">
+    <Schema type="service" serviceName="Mortgage Services" description="Mortgage education, calculator, and pre-approval support for London Ontario buyers." />
+  </Fragment>
+
+  <section class="bg-navy py-20 text-white">
+    <div class="container-site">
+      <nav aria-label="Breadcrumb" class="flex items-center gap-2 text-sm text-white/40 mb-8">
+        <a href="/" class="hover:text-gold transition-colors">Home</a>
+        <span>/</span>
+        <span class="text-white/70">Mortgages</span>
+      </nav>
+      <div class="max-w-3xl">
+        <h1 class="font-serif text-5xl font-bold mb-4">Mortgages in London Ontario</h1>
+        <div class="gold-divider mb-6"></div>
+        <p class="text-xl text-white/70 leading-relaxed">
+          Understanding your mortgage options is the first step to buying with confidence. Justin connects London Ontario buyers with trusted, local mortgage professionals who make the process straightforward.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Mortgage Options -->
+  <section class="py-20 bg-cream">
+    <div class="container-site">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+        <a href="/mortgages/education/" class="card p-8 group text-center hover:border-gold/30 border border-transparent">
+          <div class="text-4xl mb-4">📚</div>
+          <h2 class="font-serif text-xl text-navy mb-3 group-hover:text-gold transition-colors">Mortgage Education</h2>
+          <p class="text-slate text-sm leading-relaxed mb-5">Fixed vs. variable, amortization, stress test — understand all the key mortgage concepts before you buy.</p>
+          <span class="text-gold text-sm font-medium">Learn more →</span>
+        </a>
+        <a href="/mortgages/calculator/" class="card p-8 group text-center hover:border-gold/30 border border-transparent">
+          <div class="text-4xl mb-4">🧮</div>
+          <h2 class="font-serif text-xl text-navy mb-3 group-hover:text-gold transition-colors">Mortgage Calculator</h2>
+          <p class="text-slate text-sm leading-relaxed mb-5">Estimate your monthly payments based on purchase price, down payment, and current London Ontario rates.</p>
+          <span class="text-gold text-sm font-medium">Calculate now →</span>
+        </a>
+        <a href="/mortgages/pre-approval/" class="card p-8 group text-center hover:border-gold/30 border border-transparent">
+          <div class="text-4xl mb-4">✅</div>
+          <h2 class="font-serif text-xl text-navy mb-3 group-hover:text-gold transition-colors">Get Pre-Approved</h2>
+          <p class="text-slate text-sm leading-relaxed mb-5">A pre-approval letter gives you a concrete budget and shows sellers you're a serious buyer. Start today.</p>
+          <span class="text-gold text-sm font-medium">Get started →</span>
+        </a>
+      </div>
+
+      <!-- First-Time Buyer Programs -->
+      <div class="bg-white rounded-2xl p-10 shadow-card">
+        <h2 class="font-serif text-3xl text-navy mb-2">First-Time Buyer Programs in Canada</h2>
+        <div class="gold-divider mb-8"></div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {[
+            {
+              title: 'First Home Savings Account (FHSA)',
+              body: 'Contribute up to $8,000/year (lifetime max $40,000) and deduct contributions from your income. Grow the funds tax-free and withdraw tax-free for your first home.',
+            },
+            {
+              title: 'RRSP Home Buyers\' Plan',
+              body: 'Withdraw up to $35,000 from your RRSP tax-free to use toward your first home. Repay over 15 years — or treat as income if you don\'t.',
+            },
+            {
+              title: 'First-Time Home Buyers\' Tax Credit',
+              body: 'Claim up to $1,500 in federal tax savings in the year you purchase your first qualifying home.',
+            },
+            {
+              title: 'Ontario Land Transfer Tax Rebate',
+              body: 'First-time buyers in Ontario may receive a rebate of up to $4,000 on the provincial land transfer tax.',
+            },
+          ].map((item) => (
+            <div class="flex gap-4 p-5 bg-cream rounded-xl">
+              <svg class="w-5 h-5 text-gold shrink-0 mt-1" viewBox="0 0 24 24" fill="currentColor"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              <div>
+                <h3 class="font-semibold text-navy mb-1 text-sm">{item.title}</h3>
+                <p class="text-xs text-slate leading-relaxed">{item.body}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Contact -->
+  <section class="py-16 bg-gold">
+    <div class="container-site">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <div>
+          <h2 class="font-serif text-3xl text-navy mb-4">Connect with a Trusted London Ontario Mortgage Professional</h2>
+          <p class="text-navy/70 leading-relaxed mb-6">Justin works with a trusted network of local mortgage brokers and specialists who provide competitive rates and personalized advice. Tell us your situation and we'll connect you with the right person.</p>
+          <a href={`tel:${SITE.phone}`} class="inline-flex items-center gap-2 bg-navy text-white font-semibold px-7 py-3.5 rounded-lg hover:bg-navy-dark transition-all">
+            Call {SITE.phoneDisplay}
+          </a>
+        </div>
+        <div class="bg-white rounded-2xl p-8 shadow-xl">
+          <h3 class="font-serif text-xl text-navy mb-5">Request a Mortgage Referral</h3>
+          <ContactForm subject="Mortgage Referral Request" ctaLabel="Get Connected" />
+        </div>
+      </div>
+    </div>
+  </section>
+</Base>

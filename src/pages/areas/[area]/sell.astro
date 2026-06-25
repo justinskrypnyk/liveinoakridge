@@ -1,0 +1,145 @@
+---
+import Base from '@/layouts/Base.astro';
+import Schema from '@/components/Schema.astro';
+import GoogleMap from '@/components/GoogleMap.astro';
+import ContactForm from '@/components/ContactForm.astro';
+import { AREAS } from '@/data/areas';
+import { SITE } from '@/data/site';
+
+export function getStaticPaths() {
+  return AREAS.map((area) => ({
+    params: { area: area.slug },
+    props: { area },
+  }));
+}
+
+const { area } = Astro.props;
+
+const title = `Sell Your Home in ${area.name}, London Ontario | Justin Skrypnyk Real Estate Broker`;
+const description = `Selling your home in ${area.name}? Justin Skrypnyk delivers top-dollar results with professional marketing and hyper-local pricing. Complimentary evaluation available. Call ${SITE.phoneDisplay}.`;
+---
+
+<Base title={title} description={description}>
+  <Fragment slot="head">
+    <Schema
+      type="area-service"
+      areaName={area.name}
+      serviceName="Home Selling"
+      description={description}
+      pageUrl={`${SITE.url}/areas/${area.slug}/sell/`}
+    />
+  </Fragment>
+
+  <!-- Hero -->
+  <section class="bg-navy py-20 text-white">
+    <div class="container-site">
+      <nav aria-label="Breadcrumb" class="flex items-center gap-2 text-sm text-white/40 mb-8 flex-wrap">
+        <a href="/" class="hover:text-gold transition-colors">Home</a>
+        <span>/</span>
+        <a href="/areas/" class="hover:text-gold transition-colors">Areas We Serve</a>
+        <span>/</span>
+        <a href={`/areas/${area.slug}/`} class="hover:text-gold transition-colors">{area.name}</a>
+        <span>/</span>
+        <span class="text-white/70">Sell</span>
+      </nav>
+      <div class="max-w-3xl">
+        <h1 class="font-serif text-4xl md:text-5xl font-bold mb-4">
+          Sell Your Home in {area.name}, London Ontario
+        </h1>
+        <div class="gold-divider mb-6"></div>
+        <p class="text-xl text-white/70 leading-relaxed">
+          Get maximum value for your {area.name} home. Justin Skrypnyk combines hyper-local pricing expertise, professional marketing, and relentless negotiation to deliver the results you deserve.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="py-20 bg-cream">
+    <div class="container-site">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
+        <div class="lg:col-span-2 space-y-10">
+          <div>
+            <h2 class="font-serif text-2xl text-navy mb-4">Selling in {area.name}: The Market Advantage</h2>
+            <p class="text-slate leading-relaxed mb-4">
+              {area.name} homes are in demand. Buyers are actively searching for properties in this neighbourhood, and with the right pricing and marketing strategy, your home can command top dollar in any market condition.
+            </p>
+            <p class="text-slate leading-relaxed">
+              Justin Skrypnyk's deep knowledge of {area.name} means your home is priced based on real street-level data — not neighbourhood averages that lump multiple market segments together. This precision creates confidence in buyers and stronger offers at the table.
+            </p>
+          </div>
+
+          <div>
+            <h2 class="font-serif text-2xl text-navy mb-4">What's Included When You List with Justin</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {[
+                { icon: '📸', title: 'Professional Photography', body: 'High-quality images that showcase every feature of your home.' },
+                { icon: '🎯', title: 'Strategic Pricing', body: `Data-driven pricing based on actual ${area.name} comparable sales.` },
+                { icon: '📱', title: 'Digital Marketing', body: 'Targeted campaigns on MLS®, social media, and digital platforms.' },
+                { icon: '🏡', title: 'Staging Consultation', body: 'Free staging advice to maximize buyer appeal and perceived value.' },
+                { icon: '🤝', title: 'Open Houses', body: 'Professionally managed open houses that attract qualified buyers.' },
+                { icon: '💬', title: 'Offer Negotiation', body: 'Rigorous negotiation to protect your price, timeline, and terms.' },
+              ].map((item) => (
+                <div class="bg-white rounded-xl p-5 shadow-card flex gap-4">
+                  <div class="text-2xl shrink-0">{item.icon}</div>
+                  <div>
+                    <h3 class="font-semibold text-navy mb-1 text-sm">{item.title}</h3>
+                    <p class="text-xs text-slate leading-relaxed">{item.body}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <h2 class="font-serif text-2xl text-navy mb-4">Why Sellers Choose Justin in {area.name}</h2>
+            <ul class="space-y-3">
+              <li class="flex items-start gap-3">
+                <svg class="w-5 h-5 text-gold shrink-0 mt-0.5" viewBox="0 0 24 24" fill="currentColor"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <span class="text-navy/80">He lives and works in West London — no learning curve on your neighbourhood</span>
+              </li>
+              <li class="flex items-start gap-3">
+                <svg class="w-5 h-5 text-gold shrink-0 mt-0.5" viewBox="0 0 24 24" fill="currentColor"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <span class="text-navy/80">Professional photography and full marketing package included — no à la carte fees</span>
+              </li>
+              <li class="flex items-start gap-3">
+                <svg class="w-5 h-5 text-gold shrink-0 mt-0.5" viewBox="0 0 24 24" fill="currentColor"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <span class="text-navy/80">Honest pricing — Justin won't inflate your evaluation just to win your listing</span>
+              </li>
+              <li class="flex items-start gap-3">
+                <svg class="w-5 h-5 text-gold shrink-0 mt-0.5" viewBox="0 0 24 24" fill="currentColor"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <span class="text-navy/80">Regular market updates so you always know how your listing is performing</span>
+              </li>
+            </ul>
+          </div>
+
+          <GoogleMap query={area.mapEmbedId} title={`${area.name}, London Ontario`} height="300px" />
+        </div>
+
+        <aside class="space-y-6">
+          <div class="bg-gold rounded-2xl p-6">
+            <h3 class="font-serif text-xl text-navy mb-2">What's Your {area.shortName} Home Worth?</h3>
+            <p class="text-navy/70 text-sm mb-5">Get a complimentary, no-obligation market valuation — based on real comparable sales in {area.name}.</p>
+            <a href={`/areas/${area.slug}/home-evaluation/`} class="btn-secondary w-full justify-center text-sm">
+              Book Complimentary Evaluation
+            </a>
+          </div>
+
+          <div class="bg-white rounded-2xl p-6 shadow-card">
+            <h3 class="font-serif text-xl text-navy mb-4">Get in Touch</h3>
+            <ContactForm subject={`Sell in ${area.name} - Inquiry`} ctaLabel="Request Callback" />
+          </div>
+
+          <div class="bg-cream rounded-2xl p-6 border border-gray-100">
+            <h3 class="font-semibold text-navy mb-3 text-sm">Related Pages</h3>
+            <ul class="space-y-2">
+              <li><a href={`/areas/${area.slug}/`} class="text-sm text-slate hover:text-gold transition-colors">↗ {area.name} Overview</a></li>
+              <li><a href={`/areas/${area.slug}/buy/`} class="text-sm text-slate hover:text-gold transition-colors">↗ Buying in {area.name}</a></li>
+              <li><a href={`/areas/${area.slug}/home-evaluation/`} class="text-sm text-slate hover:text-gold transition-colors">↗ Complimentary Home Evaluation</a></li>
+              <li><a href="/services/selling/" class="text-sm text-slate hover:text-gold transition-colors">↗ Our Selling Process</a></li>
+            </ul>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </section>
+</Base>

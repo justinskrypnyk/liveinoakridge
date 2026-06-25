@@ -1,0 +1,225 @@
+---
+import Base from '@/layouts/Base.astro';
+import Schema from '@/components/Schema.astro';
+import { SITE } from '@/data/site';
+---
+
+<Base
+  title="About Justin Skrypnyk | Real Estate Broker | London Ontario"
+  description="Meet Justin Skrypnyk — Oakridge resident, Real Estate Broker with Sutton Group Chapman Realty Inc., Brokerage, and community builder. Local market knowledge, honest advice, and genuine West London expertise."
+>
+  <Fragment slot="head">
+    <Schema type="home" />
+  </Fragment>
+
+  <!-- Hero -->
+  <section class="bg-navy py-24 text-white">
+    <div class="container-site">
+      <nav aria-label="Breadcrumb" class="flex items-center gap-2 text-sm text-white/40 mb-8">
+        <a href="/" class="hover:text-gold transition-colors">Home</a>
+        <span>/</span>
+        <span class="text-white/70">About</span>
+      </nav>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+        <div>
+          <h1 class="font-serif text-5xl font-bold mb-4">Meet Justin Skrypnyk</h1>
+          <div class="gold-divider mb-6"></div>
+          <p class="text-xl text-white/70 leading-relaxed">
+            Third-generation Oakridge resident. West London Real Estate Broker. Community builder. Justin's family has called Oakridge home since 1959 — and that kind of history shows in every conversation, every valuation, and every deal.
+          </p>
+        </div>
+        <div class="relative">
+          <div class="aspect-[4/5] rounded-2xl bg-navy-light overflow-hidden max-w-md mx-auto">
+            <img
+              src="/images/justin-skrypnyk-realtor-london-ontario.webp"
+              alt="Justin Skrypnyk, Real Estate Broker at Sutton Group Chapman Realty, London Ontario"
+              class="w-full h-full object-cover"
+              width="500"
+              height="625"
+              loading="eager"
+            />
+          </div>
+          <div class="absolute -bottom-4 -right-4 bg-gold text-navy rounded-xl p-5 shadow-xl">
+            <div class="font-serif text-3xl font-bold">Broker</div>
+            <div class="text-xs font-semibold mt-1">Sutton Group Chapman Realty</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Story -->
+  <section class="py-20 bg-cream">
+    <div class="container-site max-w-4xl">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
+        <div>
+          <h2 class="font-serif text-3xl text-navy mb-4">Who We Are</h2>
+          <div class="gold-divider mb-6"></div>
+          <div class="prose prose-slate max-w-none space-y-4 text-slate leading-relaxed">
+            <p>
+              Justin Skrypnyk's family has called Oakridge home since 1959. His grandparents were among the neighbourhood's early residents. His parents were raised here. And Justin was born and raised here too — a third-generation Oakridge resident whose connection to this community goes far deeper than any sales territory.
+            </p>
+            <p>
+              As a Real Estate Broker with Sutton Group Chapman Realty Inc., Brokerage, Justin has watched Oakridge change across decades — not as an outside observer, but as someone who lived through it. That history gives him a perspective on value, character, and long-term trajectory that no amount of market data can replicate.
+            </p>
+            <p>
+              Justin's clients often describe working with him as refreshingly honest: no inflated evaluations to win a listing, no pressure to buy the most expensive home in a search range, and no disappearing after closing day.
+            </p>
+          </div>
+        </div>
+        <div>
+          <h2 class="font-serif text-3xl text-navy mb-4">What We Do</h2>
+          <div class="gold-divider mb-6"></div>
+          <div class="space-y-4 text-slate leading-relaxed">
+            <p>
+              From first-time buyers navigating the FHSA to families downsizing after thirty years in the same home — Justin handles every type of transaction with the same level of attention and care.
+            </p>
+            <p>
+              Services include buying, selling, complimentary home evaluations, first-time buyer guidance, upsizing, downsizing, relocation, and investment property acquisitions — all backed by a professional marketing system and a deep local network.
+            </p>
+          </div>
+
+          <div class="mt-8 grid grid-cols-2 gap-4">
+            <div class="bg-white rounded-xl p-5 shadow-card text-center">
+              <div class="font-serif text-3xl text-gold font-bold">Since 1959</div>
+              <div class="text-xs text-slate mt-1 font-medium">Family in Oakridge</div>
+            </div>
+            <div class="bg-white rounded-xl p-5 shadow-card text-center">
+              <div class="font-serif text-3xl text-gold font-bold">3rd Gen</div>
+              <div class="text-xs text-slate mt-1 font-medium">Oakridge Resident</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Generational Roots & Community -->
+  <section class="py-20 bg-white">
+    <div class="container-site max-w-4xl">
+      <div class="text-center mb-14">
+        <h2 class="section-heading">Three Generations Deep</h2>
+        <div class="gold-divider mx-auto mb-4"></div>
+        <p class="section-subheading mx-auto">
+          Most agents work in a neighbourhood. Justin's family helped build one.
+        </p>
+      </div>
+
+      <!-- Timeline -->
+      <div class="relative mb-16">
+        <div class="absolute left-6 md:left-1/2 md:-translate-x-px top-0 bottom-0 w-px bg-gold/30"></div>
+
+        <div class="space-y-10">
+          <!-- 1959 -->
+          <div class="relative grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-16 items-center">
+            <div class="md:text-right pl-14 md:pl-0">
+              <div class="absolute left-4 md:left-1/2 md:-translate-x-1/2 top-1 w-4 h-4 rounded-full bg-gold border-4 border-white shadow"></div>
+              <div class="text-gold font-serif text-2xl font-bold mb-1">1959</div>
+              <h3 class="font-serif text-xl text-navy mb-2">The Skrypnyks Arrive</h3>
+              <p class="text-slate text-sm leading-relaxed">Justin's grandparents settled in Oakridge when the neighbourhood was still taking shape — among the early families who helped define what it would become.</p>
+            </div>
+            <div class="hidden md:block"></div>
+          </div>
+
+          <!-- Parents -->
+          <div class="relative grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-16 items-center">
+            <div class="hidden md:block"></div>
+            <div class="pl-14 md:pl-10">
+              <div class="absolute left-4 md:left-1/2 md:-translate-x-1/2 top-1 w-4 h-4 rounded-full bg-gold border-4 border-white shadow"></div>
+              <div class="text-gold font-serif text-2xl font-bold mb-1">2nd Generation</div>
+              <h3 class="font-serif text-xl text-navy mb-2">Raised Here</h3>
+              <p class="text-slate text-sm leading-relaxed">Justin's parents grew up in Oakridge, attended local schools, and chose to stay — raising their own family on the same streets, in the same parks, in the same community.</p>
+            </div>
+          </div>
+
+          <!-- Justin -->
+          <div class="relative grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-16 items-center">
+            <div class="md:text-right pl-14 md:pl-0">
+              <div class="absolute left-4 md:left-1/2 md:-translate-x-1/2 top-1 w-4 h-4 rounded-full bg-gold border-4 border-white shadow"></div>
+              <div class="text-gold font-serif text-2xl font-bold mb-1">Today</div>
+              <h3 class="font-serif text-xl text-navy mb-2">Justin — 3rd Generation</h3>
+              <p class="text-slate text-sm leading-relaxed">Born and raised in Oakridge, Justin now helps other families find their place in the same community his family has called home for over 60 years.</p>
+            </div>
+            <div class="hidden md:block"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Optimist Club -->
+      <div class="bg-cream rounded-2xl p-8 flex flex-col sm:flex-row items-start gap-6">
+        <div class="w-14 h-14 bg-gold rounded-xl flex items-center justify-center shrink-0">
+          <svg class="w-7 h-7 text-navy" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
+          </svg>
+        </div>
+        <div>
+          <div class="text-xs font-semibold text-gold tracking-wider uppercase mb-1">Community Volunteer</div>
+          <h3 class="font-serif text-2xl text-navy mb-2">Optimist Club of Oakridge Acres — VP of Sport</h3>
+          <p class="text-slate leading-relaxed">
+            The Optimist Club of Oakridge Acres has served this community since 1957. Justin is currently the club's Vice-President of Sport — helping oversee the baseball and soccer programs that support more than 2,000 local youth each year, and contributing to the ongoing development of Oakridge Optimist Community Park. Giving back to the neighbourhood his family has called home for generations isn't an afterthought — it's just what you do.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Our 'Hood -->
+  <section class="py-20 bg-navy text-white">
+    <div class="container-site max-w-4xl">
+      <div class="text-center mb-12">
+        <h2 class="font-serif text-4xl mb-4">Our 'Hood</h2>
+        <div class="gold-divider mx-auto mb-6"></div>
+        <p class="text-white/70 text-lg leading-relaxed">
+          Oakridge sits between Wonderland Road and Sanatorium Road in West London. Most homes were built between the 1950s and 1980s — mature trees, large lots, and a genuine neighbourhood feel that newer developments rarely replicate.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+        {[
+          { emoji: '🌳', label: 'Mature Trees', sub: 'Decades of growth' },
+          { emoji: '🏫', label: 'Great Schools', sub: 'Top-rated catchments' },
+          { emoji: '🛤️', label: 'Sifton Bog', sub: 'Nature reserve nearby' },
+          { emoji: '🛍️', label: 'Oxford & Hyde Park', sub: 'Shops & services' },
+          { emoji: '🏡', label: 'Large Lots', sub: 'Space to breathe' },
+          { emoji: '🤝', label: 'Community Spirit', sub: 'Neighbours who know you' },
+        ].map((item) => (
+          <div class="bg-white/5 border border-white/10 rounded-xl p-5 text-center">
+            <div class="text-3xl mb-2">{item.emoji}</div>
+            <div class="font-semibold text-white text-sm">{item.label}</div>
+            <div class="text-xs text-white/40 mt-1">{item.sub}</div>
+          </div>
+        ))}
+      </div>
+
+      <div class="text-center mt-10">
+        <a href="/areas/oakridge/" class="btn-primary">Explore Oakridge</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Values -->
+  <section class="py-20 bg-cream">
+    <div class="container-site max-w-3xl text-center">
+      <h2 class="section-heading">The Way Justin Works</h2>
+      <div class="gold-divider mx-auto mb-12"></div>
+
+      <div class="space-y-8 text-left">
+        {[
+          { title: 'Honest First', body: 'If your home isn\'t worth what you hope it is, Justin will tell you — and show you why with real data. Inflating evaluations to win listings is a disservice to clients and the market.' },
+          { title: 'Local Always', body: 'Justin doesn\'t work from an office building on the other side of the city and guess at your neighbourhood. He walks these streets, knows these schools, and understands what makes West London valuable.' },
+          { title: 'Responsive Every Time', body: 'Real estate moves fast. Justin responds to clients same-day, every day — because missing a question or a showing is never acceptable.' },
+          { title: 'Whole-Person Thinking', body: 'A home purchase or sale is never just a transaction. Justin takes time to understand what\'s happening in a client\'s life and tailors his approach accordingly.' },
+        ].map((item) => (
+          <div class="bg-white rounded-2xl p-8 shadow-card">
+            <h3 class="font-serif text-xl text-navy mb-3">{item.title}</h3>
+            <p class="text-slate leading-relaxed">{item.body}</p>
+          </div>
+        ))}
+      </div>
+
+      <div class="mt-12">
+        <a href="/contact/" class="btn-primary text-lg py-4 px-10">Work With Justin</a>
+      </div>
+    </div>
+  </section>
+</Base>

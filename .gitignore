@@ -1,0 +1,15 @@
+# Environment variables — never commit
+.env
+
+# Build output
+dist/
+.astro/
+
+# Dependencies
+node_modules/
+
+# OS
+.DS_Store
+
+# Logs
+*.log

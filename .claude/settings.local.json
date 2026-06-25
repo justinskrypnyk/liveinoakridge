@@ -1,0 +1,39 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:www.liveinoakridge.ca)",
+      "WebSearch",
+      "Bash(npm create *)",
+      "Bash(npm install *)",
+      "Bash(npx astro *)",
+      "Bash(awk 'NR==83' /Users/justinskrypnyk/Desktop/london-realtor/src/pages/index.astro)",
+      "Bash(python3 *)",
+      "Bash(node *)",
+      "Bash(gtimeout 15 npx astro dev)",
+      "Bash(kill %1)",
+      "Bash(wait)",
+      "Skill(run)",
+      "Bash(npm run *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:4321/)",
+      "Bash(npm list *)",
+      "Bash(grep -v \".astro:[0-9]*:.*//\\\\|\\\\.ts:[0-9]*:.*$//\")",
+      "WebFetch(domain:www.realtor.ca)",
+      "Bash(curl -L -o /tmp/justin-photo.jpg \"https://static.wixstatic.com/media/2273a2_dbef8744d32a4d9faebec4f046ed35c4~mv2.jpg/v1/fill/w_600,h_621,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/2023_010_Oct_Justin_Skrypnyk_3%20copy.jpg\" -w \"%{http_code}\")",
+      "WebFetch(domain:unsplash.com)",
+      "Bash(curl -s http://localhost:4321/community/)",
+      "Bash(curl -s http://localhost:4322/community/)",
+      "Bash(grep -v \"^[[:space:]]*$\")",
+      "WebFetch(domain:remarkfreshmarkets.com)",
+      "Bash(curl -s http://localhost:4322/)",
+      "Bash(npm init *)",
+      "Bash(xargs sed -i '' 's/Sutton Group Preferred Realty/Sutton Group Chapman Realty/g')",
+      "Bash(xargs sed -i '' -e 's/Free Home Evaluation/Complimentary Home Evaluation/g' -e 's/free home evaluation/complimentary home evaluation/g' -e 's/Free Evaluation/Complimentary Evaluation/g' -e 's/free evaluation/complimentary evaluation/g' -e 's/Get My Free/Get My Complimentary/g' -e 's/Book Free/Book Complimentary/g' -e 's/free home evaluations/complimentary home evaluations/g' -e 's/free, no obligation/complimentary, no obligation/g' -e 's/free, no-obligation/complimentary, no-obligation/g' -e 's/Completely free — no obligation/Complimentary — no obligation/g' -e 's/no fee for the evaluation/no charge for the evaluation/g')",
+      "Bash(curl -s -v -u eemrskVUaMA340QZ36Ed8Pyw:7mUOGysegatcJrtvvrrqSH74 'https://data.crea.ca/Search.svc/Search?SearchType=Property&Class=Property&QueryType=DMQL2&Count=1&Format=COMPACT-DECODED&Limit=1&Offset=1&Query=\\(ListPrice=1%2B\\)')",
+      "Bash(curl *)",
+      "Bash(gh auth *)",
+      "Bash(git init *)",
+      "Bash(git add *)",
+      "Bash(git commit *)"
+    ]
+  }
+}

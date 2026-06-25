@@ -1,0 +1,89 @@
+---
+import Base from '@/layouts/Base.astro';
+import Schema from '@/components/Schema.astro';
+import { BLOG_POSTS } from '@/data/blog';
+
+const categories = ['All', 'Market Updates', 'Neighbourhood Guides', 'Mortgage & Rates', 'Market Analysis', 'Buying Tips', 'Selling Tips'];
+---
+
+<Base
+  title="London Ontario Real Estate Blog | Justin Skrypnyk Real Estate Broker"
+  description="Market updates, neighbourhood guides, buying and selling tips, and mortgage insights for London Ontario real estate from Real Estate Broker Justin Skrypnyk."
+>
+  <Fragment slot="head">
+    <Schema type="blog" />
+  </Fragment>
+
+  <section class="bg-navy py-20 text-white">
+    <div class="container-site">
+      <nav aria-label="Breadcrumb" class="flex items-center gap-2 text-sm text-white/40 mb-8">
+        <a href="/" class="hover:text-gold transition-colors">Home</a>
+        <span>/</span>
+        <span class="text-white/70">Blog</span>
+      </nav>
+      <div class="max-w-3xl">
+        <h1 class="font-serif text-5xl font-bold mb-4">London Ontario Real Estate Insights</h1>
+        <div class="gold-divider mb-6"></div>
+        <p class="text-xl text-white/70 leading-relaxed">
+          Market updates, neighbourhood guides, mortgage tips, and buying and selling advice from a West London Real Estate Broker who lives the market every day.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="py-20 bg-cream">
+    <div class="container-site">
+      <div class="flex flex-wrap gap-2 mb-12">
+        {categories.map((cat, i) => (
+          <button class={`px-4 py-2 rounded-full text-sm font-medium transition-all ${i === 0 ? 'bg-gold text-navy' : 'bg-white text-navy/70 hover:bg-gold hover:text-navy border border-gray-200'}`}>
+            {cat}
+          </button>
+        ))}
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {BLOG_POSTS.map((post, i) => (
+          <a href={`/blog/${post.slug}/`} class={`bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden group ${i === 0 ? 'md:col-span-2' : ''}`}>
+            <div class={`bg-gradient-to-br from-navy-light to-navy flex items-end p-6 ${i === 0 ? 'h-64' : 'h-48'}`}>
+              <div class="flex items-center gap-3">
+                <span class="text-xs font-semibold text-gold bg-gold/20 px-3 py-1 rounded-full border border-gold/30">{post.category}</span>
+                <span class="text-xs text-white/40">{post.readTime}</span>
+              </div>
+            </div>
+            <div class="p-6">
+              <div class="text-xs text-slate mb-3">{post.dateDisplay}</div>
+              <h2 class={`font-serif text-navy mb-3 leading-snug group-hover:text-gold transition-colors ${i === 0 ? 'text-2xl' : 'text-lg'}`}>
+                {post.title}
+              </h2>
+              <p class="text-sm text-slate leading-relaxed">{post.description}</p>
+              <div class="mt-5 flex items-center gap-1 text-gold text-sm font-medium">
+                Read article
+                <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <path d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+              </div>
+            </div>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="py-16 bg-navy text-white">
+    <div class="container-site max-w-2xl text-center">
+      <h2 class="font-serif text-3xl mb-4">Stay Ahead of the London Ontario Market</h2>
+      <p class="text-white/60 mb-8">Get monthly market updates, neighbourhood insights, and real estate tips delivered to your inbox.</p>
+      <form name="newsletter" method="POST" data-netlify="true" class="flex gap-3 max-w-md mx-auto">
+        <input type="hidden" name="form-name" value="newsletter" />
+        <input
+          type="email"
+          name="email"
+          placeholder="your@email.com"
+          required
+          class="flex-1 px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/40 text-sm outline-none focus:border-gold"
+        />
+        <button type="submit" class="btn-primary text-sm py-3 px-6 shrink-0">Subscribe</button>
+      </form>
+    </div>
+  </section>
+</Base>

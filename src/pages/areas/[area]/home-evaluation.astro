@@ -1,0 +1,169 @@
+---
+import Base from '@/layouts/Base.astro';
+import Schema from '@/components/Schema.astro';
+import ContactForm from '@/components/ContactForm.astro';
+import { AREAS } from '@/data/areas';
+import { SITE } from '@/data/site';
+
+export function getStaticPaths() {
+  return AREAS.map((area) => ({
+    params: { area: area.slug },
+    props: { area },
+  }));
+}
+
+const { area } = Astro.props;
+
+const title = `Complimentary Home Evaluation in ${area.name}, London Ontario | Justin Skrypnyk`;
+const description = `Find out what your ${area.name} home is worth in today's market. Free, no-obligation home evaluation from Real Estate Broker Justin Skrypnyk. Hyper-local ${area.name} pricing. Call ${SITE.phoneDisplay}.`;
+---
+
+<Base title={title} description={description}>
+  <Fragment slot="head">
+    <Schema
+      type="area-service"
+      areaName={area.name}
+      serviceName="Complimentary Home Evaluation"
+      description={description}
+      pageUrl={`${SITE.url}/areas/${area.slug}/home-evaluation/`}
+    />
+    <script type="application/ld+json" set:html={JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'HowTo',
+      name: `How to Get a Complimentary Home Evaluation in ${area.name}, London Ontario`,
+      description: `Step-by-step guide to getting a free, no-obligation home valuation in ${area.name} from Real Estate Broker Justin Skrypnyk.`,
+      estimatedCost: { '@type': 'MonetaryAmount', currency: 'CAD', value: '0' },
+      totalTime: 'PT48H',
+      step: [
+        {
+          '@type': 'HowToStep',
+          position: 1,
+          name: 'Contact Justin',
+          text: `Call ${SITE.phoneDisplay} or fill out the online form at liveinoakridge.ca to request your evaluation. Justin will confirm a convenient time within 24 hours.`,
+        },
+        {
+          '@type': 'HowToStep',
+          position: 2,
+          name: 'In-Home Visit',
+          text: `Justin visits your ${area.name} home to assess condition, upgrades, lot, and features that automated tools miss. The walkthrough typically takes 30–45 minutes.`,
+        },
+        {
+          '@type': 'HowToStep',
+          position: 3,
+          name: 'Market Analysis',
+          text: `Justin prepares a Comparative Market Analysis (CMA) using recent ${area.name} sales, active listings, and current market conditions to establish your home's accurate market value.`,
+        },
+        {
+          '@type': 'HowToStep',
+          position: 4,
+          name: 'Review Your Results',
+          text: 'Justin walks you through the findings, answers your questions, and discusses your options — with zero pressure and no obligation to list.',
+        },
+      ],
+    })} />
+  </Fragment>
+
+  <!-- Hero -->
+  <section class="bg-gold py-20">
+    <div class="container-site">
+      <nav aria-label="Breadcrumb" class="flex items-center gap-2 text-sm text-navy/50 mb-8 flex-wrap">
+        <a href="/" class="hover:text-navy transition-colors">Home</a>
+        <span>/</span>
+        <a href="/areas/" class="hover:text-navy transition-colors">Areas We Serve</a>
+        <span>/</span>
+        <a href={`/areas/${area.slug}/`} class="hover:text-navy transition-colors">{area.name}</a>
+        <span>/</span>
+        <span class="text-navy/70">Complimentary Home Evaluation</span>
+      </nav>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <div>
+          <h1 class="font-serif text-4xl md:text-5xl font-bold text-navy mb-4">
+            What Is Your {area.name} Home Worth?
+          </h1>
+          <div class="w-16 h-1 bg-navy rounded-full mb-6"></div>
+          <p class="text-xl text-navy/70 leading-relaxed mb-8">
+            Get a complimentary, no-obligation home valuation from Justin Skrypnyk — built on real comparable sales in {area.name}, not a national algorithm that ignores your street.
+          </p>
+          <ul class="space-y-3">
+            {[
+              'Complimentary — no obligation or pressure',
+              `Priced using actual ${area.name} comparable sales`,
+              'Written report with supporting market data',
+              'Available within 48 hours of your request',
+            ].map((item) => (
+              <li class="flex items-center gap-3 text-navy/80">
+                <svg class="w-5 h-5 text-navy shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                {item}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div class="bg-white rounded-2xl p-8 shadow-2xl">
+          <h2 class="font-serif text-2xl text-navy mb-6">Book Your Complimentary Evaluation</h2>
+          <ContactForm subject={`Complimentary Home Evaluation - ${area.name}`} ctaLabel="Get My Complimentary Evaluation" />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Why local matters -->
+  <section class="py-20 bg-cream">
+    <div class="container-site max-w-4xl">
+      <div class="text-center mb-12">
+        <h2 class="section-heading">Why a {area.name}-Specific Evaluation Matters</h2>
+        <div class="gold-divider mx-auto mb-4"></div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        {[
+          {
+            icon: '🎯',
+            title: 'Street-Level Accuracy',
+            body: `${area.name} has micro-markets within micro-markets. Justin prices based on your specific street, lot size, and condition — not a neighbourhood average.`,
+          },
+          {
+            icon: '📊',
+            title: 'Real Market Data',
+            body: 'Justin pulls directly from MLS® sold data, not public aggregators. You get the same information a listing Broker would use — before you sign anything.',
+          },
+          {
+            icon: '🤝',
+            title: 'No Sales Pitch',
+            body: 'This evaluation is designed to give you honest, useful information. Whether you list in 30 days or 3 years, Justin gives you the real number.',
+          },
+        ].map((item) => (
+          <div class="text-center bg-white rounded-2xl p-8 shadow-card">
+            <div class="text-4xl mb-4">{item.icon}</div>
+            <h3 class="font-serif text-lg text-navy mb-3">{item.title}</h3>
+            <p class="text-sm text-slate leading-relaxed">{item.body}</p>
+          </div>
+        ))}
+      </div>
+
+      <div class="mt-12 bg-navy text-white rounded-2xl p-8 text-center">
+        <h3 class="font-serif text-2xl mb-4">Call Justin Directly</h3>
+        <p class="text-white/70 mb-6">Prefer to talk? Justin is available to discuss your {area.name} home's market value any time.</p>
+        <a href={`tel:${SITE.phone}`} class="btn-primary text-lg py-4 px-8">{SITE.phoneDisplay}</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Related Links -->
+  <section class="py-12 bg-white border-t border-gray-100">
+    <div class="container-site">
+      <div class="flex flex-wrap gap-3">
+        <span class="text-sm text-slate">Related:</span>
+        <a href={`/areas/${area.slug}/`} class="text-sm text-gold hover:underline">{area.name} Overview</a>
+        <span class="text-slate">·</span>
+        <a href={`/areas/${area.slug}/sell/`} class="text-sm text-gold hover:underline">Selling in {area.name}</a>
+        <span class="text-slate">·</span>
+        <a href="/services/home-evaluation/" class="text-sm text-gold hover:underline">About Home Evaluations</a>
+        <span class="text-slate">·</span>
+        <a href="/services/selling/" class="text-sm text-gold hover:underline">Our Selling Process</a>
+      </div>
+    </div>
+  </section>
+</Base>

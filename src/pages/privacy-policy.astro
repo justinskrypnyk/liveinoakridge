@@ -1,0 +1,45 @@
+---
+import Base from '@/layouts/Base.astro';
+import { SITE } from '@/data/site';
+---
+
+<Base
+  title="Privacy Policy | Live In Oakridge | Justin Skrypnyk Real Estate Broker"
+  description="Privacy policy for liveinoakridge.ca — how Justin Skrypnyk, Real Estate Broker, collects, uses, and protects your personal information."
+  noindex
+>
+  <section class="bg-navy py-16 text-white">
+    <div class="container-site max-w-3xl">
+      <h1 class="font-serif text-4xl font-bold mb-4">Privacy Policy</h1>
+      <div class="gold-divider mb-4"></div>
+      <p class="text-white/60 text-sm">Last updated: June 2026</p>
+    </div>
+  </section>
+
+  <section class="py-16 bg-cream">
+    <div class="container-site max-w-3xl">
+      <div class="bg-white rounded-2xl p-10 shadow-card prose prose-slate max-w-none">
+        <h2>Information We Collect</h2>
+        <p>When you submit a contact form, newsletter signup, or home evaluation request on this website, we collect the information you provide — including your name, email address, phone number, and any message content.</p>
+
+        <h2>How We Use Your Information</h2>
+        <p>Information you provide is used solely to respond to your inquiry and provide real estate services. We do not sell, rent, or share your personal information with third parties for marketing purposes.</p>
+
+        <h2>Cookies & Analytics</h2>
+        <p>This website uses cookies and analytics tools to understand how visitors find and use the site. This may include anonymized usage data such as pages viewed, time on site, and referral source.</p>
+
+        <h2>Advertising Pixels & Remarketing</h2>
+        <p>This website uses the Meta Pixel (Facebook Pixel), a tracking technology provided by Meta Platforms, Inc. The Meta Pixel may collect information about your visit — such as pages viewed and actions taken — and use it to deliver relevant advertising on Facebook, Instagram, and related platforms. This is used for remarketing purposes only. You can opt out of interest-based advertising through your Facebook ad preferences or visit <a href="https://www.youradchoices.ca" target="_blank" rel="noopener noreferrer">youradchoices.ca</a>.</p>
+
+        <h2>Third-Party Services</h2>
+        <p>This website uses Google Maps embeds for neighbourhood location information. Please review Google's Privacy Policy for information on how they handle data. Lead inquiries submitted through contact forms on this website may be followed up via email or phone.</p>
+
+        <h2>Data Security</h2>
+        <p>We take reasonable steps to protect your personal information from unauthorized access, use, or disclosure.</p>
+
+        <h2>Contact</h2>
+        <p>If you have questions about this privacy policy or how we handle your information, please contact Justin Skrypnyk at <a href={`mailto:${SITE.email}`}>{SITE.email}</a> or {SITE.phoneDisplay}.</p>
+      </div>
+    </div>
+  </section>
+</Base>

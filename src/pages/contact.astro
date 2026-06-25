@@ -1,0 +1,128 @@
+---
+import Base from '@/layouts/Base.astro';
+import Schema from '@/components/Schema.astro';
+import ContactForm from '@/components/ContactForm.astro';
+import GoogleMap from '@/components/GoogleMap.astro';
+import { SITE } from '@/data/site';
+---
+
+<Base
+  title="Contact Justin Skrypnyk | Real Estate Broker | London Ontario | 519.639.5176"
+  description="Contact Justin Skrypnyk, Real Estate Broker with Sutton Group Chapman Realty Inc., Brokerage. Buying, selling, complimentary home evaluations, and all London Ontario real estate needs. Call 519.639.5176."
+>
+  <Fragment slot="head">
+    <Schema type="contact" />
+  </Fragment>
+
+  <!-- Hero -->
+  <section class="bg-navy py-20 text-white">
+    <div class="container-site">
+      <nav aria-label="Breadcrumb" class="flex items-center gap-2 text-sm text-white/40 mb-8">
+        <a href="/" class="hover:text-gold transition-colors">Home</a>
+        <span>/</span>
+        <span class="text-white/70">Contact</span>
+      </nav>
+      <div class="max-w-2xl">
+        <h1 class="font-serif text-5xl font-bold mb-4">Let's Talk</h1>
+        <div class="gold-divider mb-6"></div>
+        <p class="text-xl text-white/70 leading-relaxed">
+          Whether you're buying, selling, or just curious — Justin is always happy to have a no-pressure conversation about where you're at and how he can help.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Contact Content -->
+  <section class="py-20 bg-cream">
+    <div class="container-site">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-16">
+
+        <!-- Form -->
+        <div class="bg-white rounded-2xl p-8 shadow-card">
+          <h2 class="font-serif text-2xl text-navy mb-6">Send Justin a Message</h2>
+          <ContactForm subject="Contact Page Inquiry" ctaLabel="Send Message" />
+        </div>
+
+        <!-- Contact Info + Map -->
+        <div class="space-y-8">
+          <div>
+            <h2 class="font-serif text-2xl text-navy mb-6">Get in Touch Directly</h2>
+            <div class="space-y-5">
+              <a href={`tel:${SITE.phone}`} class="flex items-center gap-4 group">
+                <div class="w-12 h-12 bg-gold rounded-xl flex items-center justify-center shrink-0">
+                  <svg class="w-5 h-5 text-navy" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z"/>
+                  </svg>
+                </div>
+                <div>
+                  <div class="text-xs text-slate font-medium uppercase tracking-wider">Call or Text</div>
+                  <div class="font-semibold text-navy group-hover:text-gold transition-colors text-lg">{SITE.phoneDisplay}</div>
+                </div>
+              </a>
+
+              <a href={`mailto:${SITE.email}`} class="flex items-center gap-4 group">
+                <div class="w-12 h-12 bg-gold rounded-xl flex items-center justify-center shrink-0">
+                  <svg class="w-5 h-5 text-navy" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+                  </svg>
+                </div>
+                <div>
+                  <div class="text-xs text-slate font-medium uppercase tracking-wider">Email</div>
+                  <div class="font-semibold text-navy group-hover:text-gold transition-colors">{SITE.email}</div>
+                </div>
+              </a>
+
+              <div class="flex items-center gap-4">
+                <div class="w-12 h-12 bg-gold rounded-xl flex items-center justify-center shrink-0">
+                  <svg class="w-5 h-5 text-navy" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                  </svg>
+                </div>
+                <div>
+                  <div class="text-xs text-slate font-medium uppercase tracking-wider">Brokerage</div>
+                  <div class="font-semibold text-navy">{SITE.brokerage}</div>
+                  <div class="text-sm text-slate">London, Ontario, Canada</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Social -->
+            <div class="mt-8 flex gap-4">
+              <a href={SITE.social.instagram} target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 bg-white hover:bg-gold hover:text-navy text-navy/70 text-sm font-medium px-5 py-3 rounded-lg transition-all shadow-card border border-gray-100">
+                Instagram
+              </a>
+              <a href={SITE.social.youtube} target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 bg-white hover:bg-gold hover:text-navy text-navy/70 text-sm font-medium px-5 py-3 rounded-lg transition-all shadow-card border border-gray-100">
+                YouTube
+              </a>
+            </div>
+          </div>
+
+          <!-- Map -->
+          <div>
+            <h3 class="font-serif text-xl text-navy mb-4">Service Area</h3>
+            <GoogleMap query="Oakridge,London,Ontario,Canada" title="Justin Skrypnyk service area — West London" height="280px" />
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Quick Links -->
+  <section class="py-12 bg-white border-t border-gray-100">
+    <div class="container-site">
+      <h3 class="font-serif text-xl text-navy mb-6">Common Requests</h3>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {[
+          { label: 'Complimentary Home Evaluation', href: '/services/home-evaluation/' },
+          { label: 'Browse Properties', href: '/properties/' },
+          { label: 'First-Time Buyer Guide', href: '/services/first-time-buyers/' },
+          { label: 'Mortgage Pre-Approval', href: '/mortgages/pre-approval/' },
+        ].map((item) => (
+          <a href={item.href} class="bg-cream hover:bg-gold hover:text-navy text-navy/80 text-sm font-medium p-4 rounded-xl text-center transition-all border border-gray-100 hover:border-gold">
+            {item.label}
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+</Base>

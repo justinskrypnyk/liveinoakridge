@@ -1,0 +1,69 @@
+---
+import Base from '@/layouts/Base.astro';
+import Schema from '@/components/Schema.astro';
+import { SERVICES } from '@/data/services';
+import { SITE } from '@/data/site';
+---
+
+<Base
+  title="Real Estate Services in London Ontario | Justin Skrypnyk Real Estate Broker"
+  description="Buying, selling, home evaluations, first-time buyers, downsizing, upsizing, relocation, and investment properties — full-service real estate in West London, Ontario."
+>
+  <Fragment slot="head">
+    <Schema type="home" />
+    <script type="application/ld+json" set:html={JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'ItemList',
+      name: 'Real Estate Services in London Ontario — Justin Skrypnyk',
+      description: 'Full-service real estate in West London Ontario: buying, selling, home evaluations, first-time buyers, downsizing, upsizing, relocation, and investment properties.',
+      url: `${SITE.url}/services/`,
+      numberOfItems: SERVICES.length,
+      itemListElement: SERVICES.map((svc, i) => ({
+        '@type': 'ListItem',
+        position: i + 1,
+        name: svc.name,
+        url: `${SITE.url}/services/${svc.slug}/`,
+        description: svc.description,
+      })),
+    })} />
+  </Fragment>
+
+  <section class="bg-navy py-20 text-white">
+    <div class="container-site">
+      <nav aria-label="Breadcrumb" class="flex items-center gap-2 text-sm text-white/40 mb-8">
+        <a href="/" class="hover:text-gold transition-colors">Home</a>
+        <span>/</span>
+        <span class="text-white/70">Services</span>
+      </nav>
+      <div class="max-w-3xl">
+        <h1 class="font-serif text-5xl font-bold mb-4">Real Estate Services</h1>
+        <div class="gold-divider mb-6"></div>
+        <p class="text-xl text-white/70 leading-relaxed">
+          Whatever your real estate situation, Justin Skrypnyk brings local knowledge, professional marketing, and honest advice. Explore every service below.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="py-20 bg-cream">
+    <div class="container-site">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {SERVICES.map((service) => (
+          <a href={`/services/${service.slug}/`} class="card p-8 flex gap-6 group hover:border-gold/30 border border-transparent">
+            <div class="text-4xl shrink-0">{service.icon}</div>
+            <div class="flex-1">
+              <h2 class="font-serif text-xl text-navy mb-2 group-hover:text-gold transition-colors">{service.name}</h2>
+              <p class="text-slate text-sm leading-relaxed mb-4">{service.description}</p>
+              <div class="flex items-center gap-1 text-gold text-sm font-medium">
+                {service.ctaText}
+                <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+              </div>
+            </div>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+</Base>

@@ -1,0 +1,69 @@
+---
+import Base from '@/layouts/Base.astro';
+import ContactForm from '@/components/ContactForm.astro';
+import { SITE } from '@/data/site';
+---
+
+<Base
+  title="Mortgage Pre-Approval London Ontario | Justin Skrypnyk Real Estate Broker"
+  description="Get mortgage pre-approved before you shop for a London Ontario home. Justin Skrypnyk connects you with local mortgage specialists for fast, competitive pre-approvals."
+>
+  <section class="bg-navy py-20 text-white">
+    <div class="container-site">
+      <nav aria-label="Breadcrumb" class="flex items-center gap-2 text-sm text-white/40 mb-8">
+        <a href="/" class="hover:text-gold transition-colors">Home</a>
+        <span>/</span>
+        <a href="/mortgages/" class="hover:text-gold transition-colors">Mortgages</a>
+        <span>/</span>
+        <span class="text-white/70">Pre-Approval</span>
+      </nav>
+      <h1 class="font-serif text-5xl font-bold mb-4">Get Mortgage Pre-Approved</h1>
+      <div class="gold-divider mb-6"></div>
+      <p class="text-xl text-white/70 leading-relaxed max-w-2xl">A mortgage pre-approval is your competitive advantage in the London Ontario market. Know your budget, shop with confidence, and move fast when the right home appears.</p>
+    </div>
+  </section>
+
+  <section class="py-20 bg-cream">
+    <div class="container-site">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
+        <div>
+          <h2 class="font-serif text-3xl text-navy mb-4">Why Get Pre-Approved First?</h2>
+          <div class="gold-divider mb-8"></div>
+          <ul class="space-y-4 mb-10">
+            {[
+              { title: 'Know Your Real Budget', body: 'Online calculators are estimates. A pre-approval from a lender gives you a firm, confirmed maximum — so you shop for homes you can actually afford.' },
+              { title: 'Move Fast on Offers', body: 'In a competitive London Ontario market, sellers prefer buyers who are already approved. A pre-approval letter can make your offer stand out.' },
+              { title: 'Lock In Today\'s Rate', body: 'Many lenders offer rate holds of 90–120 days from your pre-approval date. If rates rise while you shop, you\'re protected.' },
+              { title: 'Identify Issues Early', body: 'If there\'s a credit or income issue that could affect your mortgage, better to discover it before you\'re in love with a home.' },
+            ].map((item) => (
+              <li class="flex gap-4 bg-white rounded-xl p-5 shadow-card">
+                <svg class="w-5 h-5 text-gold shrink-0 mt-1" viewBox="0 0 24 24" fill="currentColor"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <div>
+                  <h3 class="font-semibold text-navy text-sm mb-1">{item.title}</h3>
+                  <p class="text-xs text-slate leading-relaxed">{item.body}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
+
+          <div class="bg-navy text-white rounded-2xl p-6">
+            <h3 class="font-serif text-xl mb-3">What You'll Need</h3>
+            <ul class="space-y-2 text-sm text-white/70">
+              <li class="flex gap-2"><span class="text-gold">•</span> Government-issued photo ID</li>
+              <li class="flex gap-2"><span class="text-gold">•</span> Last 2 years of Notice of Assessments (T1 generals)</li>
+              <li class="flex gap-2"><span class="text-gold">•</span> Last 2 pay stubs (if employed)</li>
+              <li class="flex gap-2"><span class="text-gold">•</span> 90-day bank statements showing down payment</li>
+              <li class="flex gap-2"><span class="text-gold">•</span> Consent for credit check</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-8 shadow-card">
+          <h2 class="font-serif text-2xl text-navy mb-6">Request Your Pre-Approval Referral</h2>
+          <p class="text-slate text-sm mb-6">Justin will connect you with a trusted London Ontario mortgage professional who will guide you through the pre-approval process — at no cost to you.</p>
+          <ContactForm subject="Mortgage Pre-Approval Referral" ctaLabel="Connect Me with a Mortgage Pro" />
+        </div>
+      </div>
+    </div>
+  </section>
+</Base>
