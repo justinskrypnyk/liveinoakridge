@@ -97,7 +97,7 @@ const { post } = Astro.props;
     )}
   </Fragment>
 
-  <section class="bg-navy py-16 text-white">
+  <section class="bg-navy py-10 md:py-16 text-white">
     <div class="container-site max-w-4xl">
       <nav aria-label="Breadcrumb" class="flex items-center gap-2 text-sm text-white/40 mb-8">
         <a href="/" class="hover:text-gold transition-colors">Home</a>
@@ -125,7 +125,7 @@ const { post } = Astro.props;
     </div>
   </section>
 
-  <article class="py-16 bg-cream">
+  <article class="py-8 md:py-16 bg-cream">
     <div class="container-site max-w-4xl">
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
         <div class="lg:col-span-2">
@@ -141,10 +141,10 @@ const { post } = Astro.props;
               />
             </div>
           )}
-          <div class="bg-white rounded-2xl p-10 shadow-sm prose prose-slate prose-headings:font-serif prose-headings:text-navy prose-a:text-gold prose-strong:text-navy max-w-none" set:html={post.content} />
+          <div class="bg-white rounded-2xl p-5 sm:p-8 lg:p-10 shadow-sm prose prose-slate prose-headings:font-serif prose-headings:text-navy prose-a:text-gold prose-strong:text-navy max-w-none" set:html={post.content} />
 
           {post.faqs && post.faqs.length > 0 && (
-            <div class="mt-8 bg-white rounded-2xl p-10 shadow-sm">
+            <div class="mt-8 bg-white rounded-2xl p-5 sm:p-8 lg:p-10 shadow-sm">
               <h2 class="font-serif text-2xl text-navy mb-8">Frequently Asked Questions</h2>
               <div class="space-y-6">
                 {post.faqs.map(faq => (

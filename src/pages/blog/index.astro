@@ -14,7 +14,7 @@ const categories = ['All', 'Market Updates', 'Neighbourhood Guides', 'Mortgage &
     <Schema type="blog" />
   </Fragment>
 
-  <section class="bg-navy py-20 text-white">
+  <section class="bg-navy py-12 md:py-20 text-white">
     <div class="container-site">
       <nav aria-label="Breadcrumb" class="flex items-center gap-2 text-sm text-white/40 mb-8">
         <a href="/" class="hover:text-gold transition-colors">Home</a>
@@ -22,7 +22,7 @@ const categories = ['All', 'Market Updates', 'Neighbourhood Guides', 'Mortgage &
         <span class="text-white/70">Blog</span>
       </nav>
       <div class="max-w-3xl">
-        <h1 class="font-serif text-5xl font-bold mb-4">London Ontario Real Estate Insights</h1>
+        <h1 class="font-serif text-3xl md:text-5xl font-bold mb-4">London Ontario Real Estate Insights</h1>
         <div class="gold-divider mb-6"></div>
         <p class="text-xl text-white/70 leading-relaxed">
           Market updates, neighbourhood guides, mortgage tips, and buying and selling advice from a West London Real Estate Broker who lives the market every day.
@@ -31,7 +31,7 @@ const categories = ['All', 'Market Updates', 'Neighbourhood Guides', 'Mortgage &
     </div>
   </section>
 
-  <section class="py-20 bg-cream">
+  <section class="py-10 md:py-20 bg-cream">
     <div class="container-site">
       <div class="flex flex-wrap gap-2 mb-12">
         {categories.map((cat, i) => (
@@ -73,7 +73,7 @@ const categories = ['All', 'Market Updates', 'Neighbourhood Guides', 'Mortgage &
     <div class="container-site max-w-2xl text-center">
       <h2 class="font-serif text-3xl mb-4">Stay Ahead of the London Ontario Market</h2>
       <p class="text-white/60 mb-8">Get monthly market updates, neighbourhood insights, and real estate tips delivered to your inbox.</p>
-      <form name="newsletter" method="POST" data-netlify="true" class="flex gap-3 max-w-md mx-auto">
+      <form name="newsletter" method="POST" data-netlify="true" class="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
         <input type="hidden" name="form-name" value="newsletter" />
         <input
           type="email"

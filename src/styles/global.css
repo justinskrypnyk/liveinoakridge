@@ -76,3 +76,10 @@
     @apply w-16 h-1 bg-gold rounded-full;
   }
 }
+
+/* Make tables inside blog prose horizontally scrollable on mobile */
+.prose table {
+  display: block;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
