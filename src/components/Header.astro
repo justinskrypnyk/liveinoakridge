@@ -126,23 +126,35 @@ const pathname = Astro.url.pathname;
     </nav>
   </div>
 
-  <!-- Mobile Menu -->
-  <div id="mobile-menu" class="lg:hidden hidden bg-navy-dark border-t border-white/10">
+  <!-- Mobile Menu — scrollable, sub-menus collapsed by default -->
+  <div id="mobile-menu" class="lg:hidden hidden bg-navy-dark border-t border-white/10 overflow-y-auto max-h-[calc(100vh-5rem)]">
     <div class="container-site py-4 space-y-1">
       {navItems.map((item) => (
-        <div>
-          <a
-            href={item.href}
-            class="block px-4 py-3 text-white/90 hover:text-gold hover:bg-white/5 rounded-lg transition-colors font-medium"
-          >
-            {item.label}
-          </a>
+        <div class="mobile-nav-item">
+          <div class="flex items-center">
+            <a
+              href={item.href}
+              class="flex-1 px-4 py-3 text-white/90 hover:text-gold hover:bg-white/5 rounded-lg transition-colors font-medium block"
+            >
+              {item.label}
+            </a>
+            {item.children && (
+              <button
+                class="mobile-submenu-toggle px-4 py-3 text-white/50 hover:text-gold transition-colors"
+                aria-label={`Show ${item.label} links`}
+              >
+                <svg class="w-4 h-4 transition-transform duration-200" viewBox="0 0 12 12" fill="currentColor">
+                  <path d="M6 8L2 4h8L6 8z"/>
+                </svg>
+              </button>
+            )}
+          </div>
           {item.children && (
-            <div class="ml-4 mt-1 space-y-1">
+            <div class="mobile-submenu hidden ml-2 mt-1 space-y-0.5 border-l border-white/10 pl-3">
               {item.children.map((child) => (
                 <a
                   href={child.href}
-                  class="block px-4 py-2 text-sm text-white/60 hover:text-gold hover:bg-white/5 rounded-lg transition-colors"
+                  class="block px-3 py-2 text-sm text-white/60 hover:text-gold hover:bg-white/5 rounded-lg transition-colors"
                 >
                   {child.label}
                 </a>
@@ -175,12 +187,24 @@ const pathname = Astro.url.pathname;
     }
   }, { passive: true });
 
-  // Mobile toggle
+  // Mobile menu open/close
   btn?.addEventListener('click', () => {
     const isOpen = menu?.classList.contains('hidden');
     menu?.classList.toggle('hidden', !isOpen);
     btn.setAttribute('aria-expanded', String(isOpen));
     menuIcon?.classList.toggle('hidden', isOpen ?? false);
     closeIcon?.classList.toggle('hidden', !(isOpen ?? false));
+  });
+
+  // Sub-menu accordion toggles
+  document.querySelectorAll('.mobile-submenu-toggle').forEach((toggle) => {
+    toggle.addEventListener('click', () => {
+      const item = toggle.closest('.mobile-nav-item');
+      const submenu = item?.querySelector('.mobile-submenu');
+      const icon = toggle.querySelector('svg');
+      const isHidden = submenu?.classList.contains('hidden');
+      submenu?.classList.toggle('hidden', !isHidden);
+      icon?.classList.toggle('rotate-180', isHidden ?? false);
+    });
   });
 </script>
