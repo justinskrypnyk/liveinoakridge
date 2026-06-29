@@ -387,6 +387,119 @@ export const AREAS: Area[] = [
       'Westmount London Ontario homes for sale. Justin Skrypnyk helps buyers and sellers navigate this diverse West London neighbourhood. Complimentary home evaluation available.',
   },
   {
+    slug: 'riverbend',
+    name: 'Riverbend',
+    shortName: 'Riverbend',
+    headline: 'Southwest London\'s Premier New-Build Community — Golf Course Living Along the Thames',
+    description:
+      'Riverbend is one of London\'s most coveted new developments — a gated golf community by Sifton Properties with Thames River access, premium homes, and a new school opening in 2027.',
+    longDescription:
+      'Riverbend sits at the southwest edge of London, adjacent to Byron and anchored by the Riverbend Golf Club and Sifton Properties\' landmark Riverbend Golf Community. Sifton broke ground on this development in the 2010s and has been building ever since — the community will ultimately include 400+ homes ranging from single-family detached to luxury estates, all set within and around the 18-hole golf course. The Thames River traces the southern and western boundary of the neighbourhood, giving residents trail access through the river valley and into Springbank Park. Riverbend attracts buyers who want new construction quality, executive finishes, and a community built from scratch to a single design vision — rather than the mix of eras that defines most established London neighbourhoods.',
+    mapEmbedId: 'Riverbend+Golf+Community,+London,+Ontario,+Canada',
+    geo: { lat: 42.9350, lng: -81.3050 },
+    image: '/images/areas/riverbend-neighbourhood-london-ontario.webp',
+    imageAlt: 'Riverbend Golf Community homes in southwest London Ontario',
+    highlights: [
+      'Riverbend Golf Community — 400+ premium homes by Sifton Properties',
+      'Thames River valley access and trails to Springbank Park',
+      'New Riverbend Public School (1000 Upperpoint Ave, opening September 2027)',
+      'Saunders Secondary School — largest in TVDSB, serves the west-end catchment',
+      'Golf course settings with executive finishes and new-build quality',
+      'Quiet, gated-community character adjacent to Byron',
+    ],
+    avgPrice: '$730,000–$900,000+',
+    homingTypes: ['Detached', 'Executive Homes', 'Townhomes'],
+    schools: ['Riverbend Public School (opening Sept 2027)', 'Saunders Secondary School', 'St. Thomas Aquinas Catholic Secondary'],
+    nearbyAmenities: ['Riverbend Golf Club', 'Thames Valley Parkway', 'Springbank Park', 'Commissioners Road Village (Byron)'],
+    localBusinesses: [
+      {
+        name: 'Riverbend Golf Club',
+        category: 'Golf & Recreation',
+        icon: '⛳',
+        description:
+          'The 18-hole Riverbend Golf Club is the centrepiece of the community — winding through the neighbourhood and defining the layout of Sifton\'s residential development. Residents of the golf community have the course as their literal backyard. For buyers, the combination of a private golf course setting with full city amenities minutes away is the defining appeal of this neighbourhood.',
+        highlight: 'Live on the fairway — 18-hole course winding through the community',
+      },
+      {
+        name: 'Thames Valley Parkway',
+        category: 'Trails & Nature',
+        icon: '🛤️',
+        description:
+          'The Thames River forms the western and southern boundary of Riverbend, giving residents direct access to the Thames Valley Parkway trail system. Cyclists and walkers connect directly to Springbank Park and beyond — the same trail that Byron residents prize, but with even more direct river valley access from the southwest edge.',
+        highlight: 'Thames River trail access at the edge of the neighbourhood',
+      },
+      {
+        name: 'Sifton Properties\' Riverbend Golf Community',
+        category: 'New Home Development',
+        icon: '🏗️',
+        description:
+          '400+ new single-family and executive homes by Sifton Properties — one of London\'s most respected developers. The Riverbend Golf Community at 1200 Sandy Somerville Drive represents Sifton\'s flagship west London project: new construction quality, coordinated streetscapes, and a cohesive community identity built to last. For buyers, this is as close to purpose-built luxury as the London market offers.',
+        highlight: 'Sifton\'s flagship west London project — 400+ homes, new-build quality',
+      },
+    ],
+    schoolsData: {
+      elementary: [
+        { name: 'Riverbend Public School', address: '1000 Upperpoint Avenue', grades: 'JK–8', board: 'TVDSB', notes: 'New $27.1M school — opening September 2027, consolidating Byron Northview, Somerset, and Southwood PS' },
+        { name: 'St. Nicholas Catholic School', address: '1956 Shore Road', grades: 'JK–8', board: 'LDCSB' },
+      ],
+      secondary: [
+        { name: 'Saunders Secondary School', address: '941 Viscount Road', grades: '9–12', board: 'TVDSB', notes: 'Largest school in TVDSB (~2,000 students) — serves Byron, Westmount, Riverbend, Lambeth' },
+        { name: 'St. Thomas Aquinas Catholic Secondary School', address: '1360 Oxford Street West', grades: '9–12', board: 'LDCSB' },
+      ],
+    },
+    parksData: {
+      parks: [
+        {
+          name: 'Riverbend Golf Club',
+          address: '1200 Sandy Somerville Drive',
+          amenities: ['18-hole golf course', 'Clubhouse', 'Golf community setting', 'Cart paths throughout'],
+          highlight: 'The defining feature of the neighbourhood — homes back directly onto the fairways',
+        },
+        {
+          name: 'Thames Valley Parkway (Riverbend Access)',
+          address: 'Thames River — Riverbend western boundary',
+          amenities: ['Multi-use trail', 'Thames River valley', 'Connection to Springbank Park', 'Cycling & walking'],
+          highlight: 'Direct river trail access from the neighbourhood — connects to the full Thames Valley system',
+        },
+      ],
+    },
+    demographicsData: {
+      stats: [
+        { label: 'Development Type', value: 'New Construction', note: 'Sifton Properties — ongoing build-out since 2010s' },
+        { label: 'Home Count', value: '400+ Homes', note: 'At full build-out of Riverbend Golf Community' },
+        { label: 'New School', value: 'Opening Sept 2027', note: 'Riverbend Public School — $27.1M investment at 1000 Upperpoint Ave' },
+        { label: 'Thames River', value: 'Direct Access', note: 'River valley trails connecting to Springbank Park' },
+      ],
+      buildingTrends: [
+        'Active new-construction neighbourhood — Sifton Properties continues building 400+ homes at 1200 Sandy Somerville Drive',
+        'New Riverbend Public School (1000 Upperpoint Ave, $27.1M) ranked among London\'s top 2025 building permits — opening September 2027',
+        'London issued a record 5,462 new residential units citywide in 2025 (+48% year-over-year) — Riverbend is among the most active residential sites in the west end',
+        'Premium pricing ($731K–$868K+) reflects new-build quality, golf course setting, and river valley access — one of London\'s highest-value residential addresses',
+      ],
+    },
+    faqs: [
+      {
+        q: 'Are there homes for sale in Riverbend, London Ontario?',
+        a: 'Riverbend has active inventory from both new construction (Sifton Properties\' Riverbend Golf Community at 1200 Sandy Somerville Drive) and resales within the existing community. New builds range from $731,000 to $868,500 and up. Contact Justin Skrypnyk for current Riverbend listings.',
+      },
+      {
+        q: 'How much do homes cost in Riverbend, London Ontario?',
+        a: 'Riverbend homes typically range from $730,000 to $900,000 for detached properties, with executive homes on premium golf course lots exceeding $1 million. Pricing reflects new-build quality, Sifton\'s build standards, Thames River proximity, and the golf community setting.',
+      },
+      {
+        q: 'What schools serve Riverbend, London Ontario?',
+        a: 'Elementary-aged children will attend the new Riverbend Public School (1000 Upperpoint Avenue, opening September 2027) — a brand-new $27.1M TVDSB school. Secondary students attend Saunders Secondary School (941 Viscount Road). Catholic families are served by St. Nicholas Catholic School (elementary) and St. Thomas Aquinas Catholic Secondary School.',
+      },
+      {
+        q: 'Is Riverbend a good place to buy a new home in London Ontario?',
+        a: 'Riverbend is one of London\'s most distinctive residential communities — a purpose-built golf course development by Sifton Properties with Thames River access, new-build quality throughout, and a new public school opening in 2027. For buyers who want executive finishes and a cohesive community feel, Riverbend is a compelling option in the west end.',
+      },
+    ],
+    metaTitle: 'Riverbend London Ontario Real Estate | Justin Skrypnyk Real Estate Broker',
+    metaDescription:
+      'Riverbend London Ontario homes for sale. New-build golf community by Sifton Properties with Thames River access and new school opening 2027. Contact Real Estate Broker Justin Skrypnyk.',
+  },
+  {
     slug: 'lambeth',
     name: 'Lambeth',
     shortName: 'Lambeth',
