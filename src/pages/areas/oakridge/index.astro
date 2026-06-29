@@ -285,6 +285,69 @@ const subNeighbourhoods = [
     </section>
   )}
 
+  <!-- Demographics & Building Trends -->
+  {area.demographicsData && (
+    <section id="demographics" class="py-20 bg-navy text-white">
+      <div class="container-site">
+        <div class="text-center mb-12">
+          <h2 class="font-serif text-4xl text-white mb-4">By the Numbers — Oakridge</h2>
+          <div class="gold-divider mx-auto mb-4"></div>
+          <p class="text-white/60 text-lg max-w-2xl mx-auto">
+            Neighbourhood demographics and building activity for Oakridge, London Ontario.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+          {area.demographicsData.stats && area.demographicsData.stats.length > 0 && (
+            <div>
+              <h3 class="font-serif text-xl text-white mb-5 flex items-center gap-3">
+                <span class="w-7 h-7 bg-gold rounded-md flex items-center justify-center shrink-0">
+                  <svg class="w-4 h-4 text-navy" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm7 13H5v-.23c0-.62.28-1.2.76-1.58C7.47 15.82 9.64 15 12 15s4.53.82 6.24 2.19c.48.38.76.97.76 1.58V19z"/>
+                  </svg>
+                </span>
+                Neighbourhood Profile
+              </h3>
+              <div class="grid grid-cols-2 gap-4">
+                {area.demographicsData.stats.map((stat) => (
+                  <div class="bg-white/5 border border-white/10 rounded-xl p-5">
+                    <div class="text-gold text-xs font-semibold uppercase tracking-wider mb-1">{stat.label}</div>
+                    <div class="font-serif text-2xl text-white mb-1">{stat.value}</div>
+                    {stat.note && <div class="text-white/50 text-xs leading-snug">{stat.note}</div>}
+                  </div>
+                ))}
+              </div>
+              {area.demographicsData.statsSource && (
+                <p class="text-white/30 text-xs mt-4">Source: {area.demographicsData.statsSource}</p>
+              )}
+            </div>
+          )}
+
+          <div>
+            <h3 class="font-serif text-xl text-white mb-5 flex items-center gap-3">
+              <span class="w-7 h-7 bg-gold rounded-md flex items-center justify-center shrink-0">
+                <svg class="w-4 h-4 text-navy" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+                </svg>
+              </span>
+              Building Activity
+            </h3>
+            <div class="space-y-4">
+              {area.demographicsData.buildingTrends.map((trend) => (
+                <div class="flex items-start gap-3">
+                  <div class="w-5 h-5 rounded-full bg-gold/20 border border-gold/40 flex items-center justify-center shrink-0 mt-0.5">
+                    <div class="w-1.5 h-1.5 rounded-full bg-gold"></div>
+                  </div>
+                  <p class="text-white/75 text-sm leading-relaxed">{trend}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  )}
+
   <!-- Sub-neighbourhood Sections -->
   <section class="py-20 bg-white">
     <div class="container-site max-w-4xl">

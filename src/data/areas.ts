@@ -36,6 +36,18 @@ export interface ParksData {
   parks: ParkEntry[];
 }
 
+export interface StatCard {
+  label: string;
+  value: string;
+  note?: string;
+}
+
+export interface DemographicsData {
+  stats?: StatCard[];
+  statsSource?: string;
+  buildingTrends: string[];
+}
+
 export interface Area {
   slug: string;
   name: string;
@@ -55,6 +67,7 @@ export interface Area {
   localBusinesses?: LocalBusiness[];
   schoolsData?: SchoolsData;
   parksData?: ParksData;
+  demographicsData?: DemographicsData;
   faqs: AreaFaq[];
   metaTitle: string;
   metaDescription: string;
@@ -153,6 +166,21 @@ export const AREAS: Area[] = [
       secondary: [
         { name: 'Oakridge Secondary School', address: '1040 Oxford Street West', grades: '9–12', board: 'TVDSB' },
         { name: 'St. Thomas Aquinas Catholic Secondary School', address: '1360 Oxford Street West', grades: '9–12', board: 'LDCSB' },
+      ],
+    },
+    demographicsData: {
+      stats: [
+        { label: 'Population', value: '16,730', note: 'City of London Neighbourhood Profile' },
+        { label: 'Homeownership Rate', value: '89%', note: 'vs. 58% London-wide average' },
+        { label: 'Median Household Income', value: '$89,679', note: 'vs. $76,500 London-wide average' },
+        { label: 'Total Households', value: '6,310', note: 'Predominantly single-family detached' },
+      ],
+      statsSource: 'City of London Neighbourhood Profile (Statistics Canada Census data)',
+      buildingTrends: [
+        'Established neighbourhood — most permit activity is renovations, additions, and basement conversions on existing lots rather than new builds',
+        'New Riverbend Public School (1000 Upperpoint Ave, $27.1M) ranked among London\'s top 2025 building permits — opening September 2027, serving the west-end catchment',
+        'London issued a record 5,462 new residential units citywide in 2025 — a 48% increase over 2024 — strengthening demand for established addresses like Oakridge',
+        'Sifton Properties\' Riverbend Golf Community (400+ new homes, 1200 Sandy Somerville Drive) adds premium inventory to the adjacent west-end market',
       ],
     },
     parksData: {
@@ -530,6 +558,20 @@ export const AREAS: Area[] = [
         { name: 'St. Thomas Aquinas Catholic Secondary School', address: '1360 Oxford Street West', grades: '9–12', board: 'LDCSB' },
       ],
     },
+    demographicsData: {
+      stats: [
+        { label: 'Housing Era', value: '1970s–80s', note: 'Predominantly single-family detached and split-levels' },
+        { label: 'Elementary Schools', value: '3 In-Boundary', note: 'Emily Carr, Wilfrid Jury, St. Marguerite d\'Youville — all within the neighbourhood' },
+        { label: 'Aquatic Centre', value: 'Steps Away', note: 'Canada Games Aquatic Centre at 1045 Wonderland Rd N — London\'s largest indoor pool' },
+        { label: 'Neighbourhood Stats', value: 'City of London Dashboard', note: 'Full 2021 census demographics at london.ca/neighbourhood-profiles' },
+      ],
+      buildingTrends: [
+        'Wastell Homes is actively building new homes in the northwest London corridor adjacent to Whitehills — new-build pricing supports value in established surrounding stock',
+        'City of London\'s Whitehills Neighbourhood Connectivity Plan is improving pedestrian infrastructure — active public investment in the neighbourhood\'s walkability',
+        'London issued a record 5,462 new residential units citywide in 2025 (+48% year-over-year) — city-wide growth supports long-term value across northwest London',
+        '1970s–80s detached homes increasingly appeal to buyers priced out of new construction — Whitehills offers mature lot sizes and amenity access at accessible price points',
+      ],
+    },
     parksData: {
       parks: [
         {
@@ -652,6 +694,21 @@ export const AREAS: Area[] = [
         { name: 'St. Thomas Aquinas Catholic Secondary School', address: '1360 Oxford Street West', grades: '9–12', board: 'LDCSB' },
       ],
       sectionNote: 'Byron Northview, Byron Somerset, and Byron Southwood public schools are consolidating into the new Riverbend Public School at 1000 Upperpoint Avenue, expected to open September 2027.',
+    },
+    demographicsData: {
+      stats: [
+        { label: 'Population', value: '25,144', note: 'Statistics Canada' },
+        { label: 'Median Age', value: '34.8 years', note: 'Below London average of 40.7 — a comparatively younger community' },
+        { label: 'Married Couples', value: '64%', note: 'Of all households — above the London-wide average' },
+        { label: 'Families with Children', value: '34%', note: 'Children at home — strong family-oriented character' },
+      ],
+      statsSource: 'Statistics Canada (via AreaVibes)',
+      buildingTrends: [
+        'Established mature neighbourhood — permit activity centres on renovations and value-add improvements to existing 1960s–80s housing stock',
+        'New Riverbend Public School (1000 Upperpoint Ave, $27.1M) ranked among London\'s top 2025 building permits — serves the West London and Byron catchment, opening September 2027',
+        'Sifton Properties\' Riverbend Golf Community (400+ new homes at 1200 Sandy Somerville Drive) expanding premium west-end inventory in the adjacent market',
+        'London\'s 2025 record of $2.71 billion in total construction value signals strong long-term confidence in the city — supporting demand for value plays in established corridors like West London',
+      ],
     },
     parksData: {
       parks: [
