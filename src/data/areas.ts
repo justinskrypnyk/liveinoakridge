@@ -11,6 +11,31 @@ export interface AreaFaq {
   a: string;
 }
 
+export interface SchoolEntry {
+  name: string;
+  address: string;
+  grades: string;
+  board: 'TVDSB' | 'LDCSB';
+  notes?: string;
+}
+
+export interface SchoolsData {
+  elementary: SchoolEntry[];
+  secondary: SchoolEntry[];
+  sectionNote?: string;
+}
+
+export interface ParkEntry {
+  name: string;
+  address: string;
+  amenities: string[];
+  highlight?: string;
+}
+
+export interface ParksData {
+  parks: ParkEntry[];
+}
+
 export interface Area {
   slug: string;
   name: string;
@@ -28,6 +53,8 @@ export interface Area {
   schools: string[];
   nearbyAmenities: string[];
   localBusinesses?: LocalBusiness[];
+  schoolsData?: SchoolsData;
+  parksData?: ParksData;
   faqs: AreaFaq[];
   metaTitle: string;
   metaDescription: string;
@@ -57,7 +84,7 @@ export const AREAS: Area[] = [
     ],
     avgPrice: '$650,000–$850,000',
     homingTypes: ['Detached', 'Semi-Detached', 'Townhomes', 'Bungalows'],
-    schools: ['Oakridge Public School', 'Mother Teresa Catholic Elementary', 'Oakridge Secondary School'],
+    schools: ['Clara Brenton PS', 'John Dearness PS', 'St. Paul Catholic School', 'Oakridge Secondary School', 'St. Thomas Aquinas Catholic Secondary'],
     nearbyAmenities: ['Remark Fresh Markets', 'Chopped Leaf', 'Gordon\'s Gold Jewellers', 'Starbucks', 'Shoppers Drug Mart', 'Sifton Bog Conservation Area'],
     localBusinesses: [
       {
@@ -117,6 +144,45 @@ export const AREAS: Area[] = [
         highlight: '2,000+ youth served annually — the true heart of Oakridge',
       },
     ],
+    schoolsData: {
+      elementary: [
+        { name: 'Clara Brenton Public School', address: '1025 St. Croix Avenue', grades: 'JK–8', board: 'TVDSB' },
+        { name: 'John Dearness Public School', address: '555 Sanatorium Road', grades: 'JK–8', board: 'TVDSB' },
+        { name: 'St. Paul Catholic School', address: '1090 Guildwood Boulevard', grades: 'JK–8', board: 'LDCSB', notes: 'Serves Oak Park, Oakridge Acres, Huntington, and Hunt Club' },
+      ],
+      secondary: [
+        { name: 'Oakridge Secondary School', address: '1040 Oxford Street West', grades: '9–12', board: 'TVDSB' },
+        { name: 'St. Thomas Aquinas Catholic Secondary School', address: '1360 Oxford Street West', grades: '9–12', board: 'LDCSB' },
+      ],
+    },
+    parksData: {
+      parks: [
+        {
+          name: 'Oakridge Optimist Community Park',
+          address: '825 Valetta Street',
+          amenities: ['2 baseball diamonds', 'Batting cage', 'Outdoor pool', 'Spray pad', '2 tennis courts', 'Pickleball courts', 'Arena (1 ice pad)', '2 play structures', 'Swing set', 'Recreation centre', 'Washrooms', 'Accessible'],
+          highlight: 'Community hub run by the Optimist Club since 1957 — 2,000+ youth served annually',
+        },
+        {
+          name: 'Sifton Bog Conservation Area',
+          address: 'Oxford Street West (west of Hyde Park Road)',
+          amenities: ['2.8 km walking trail', '370 m boardwalk', 'Viewing platform', 'Birdwatching', 'Nature education'],
+          highlight: 'Most southerly large acidic bog in Canada — carnivorous plants, migratory birds, and rare ecosystems',
+        },
+        {
+          name: 'Hazelden Park',
+          address: '430 Hyde Park Road',
+          amenities: ['Baseball diamond', 'Soccer field', 'Play structure', 'Swings', 'Parking'],
+          highlight: 'Neighbourhood park serving the Hazelden pocket of Oakridge',
+        },
+        {
+          name: 'Thames Valley Golf Course',
+          address: '1287 Oxford Street West',
+          amenities: ['18-hole public course', '9-hole public course', 'Thames River valley setting', 'Clubhouse'],
+          highlight: 'Public golf along the Thames River — established 1924, one of London\'s most scenic courses',
+        },
+      ],
+    },
     faqs: [
       {
         q: 'Are there homes for sale in Oakridge, London Ontario right now?',
@@ -373,6 +439,154 @@ export const AREAS: Area[] = [
       'Buy or sell a home in Lambeth, London Ontario with Real Estate Broker Justin Skrypnyk. Estate communities, great schools, and quick highway access. Contact us for a complimentary evaluation.',
   },
   {
+    slug: 'whitehills',
+    name: 'Whitehills',
+    shortName: 'Whitehills',
+    headline: 'Northwest London Family Living — Three Schools, Five Parks, and London\'s Best Aquatic Centre at Your Doorstep',
+    description:
+      'Whitehills is an established northwest London neighbourhood where three in-boundary elementary schools, a 12-acre park, and the Canada Games Aquatic Centre make it one of the most family-complete communities in the city.',
+    longDescription:
+      'Whitehills developed through the 1970s and 1980s along the Wonderland Road North and Fanshawe Park corridor, and it has the lived-in character of a neighbourhood that knows what it is. The housing stock is primarily 1970s-era bungalows, split-levels, and two-storey homes on well-kept lots, alongside newer townhouse developments that attract buyers looking for lower-maintenance options at accessible prices. Three elementary schools — Emily Carr Public School, Wilfrid Jury Public School, and St. Marguerite d\'Youville Catholic School — sit within the neighbourhood boundaries, meaning most families never put their kids on a bus for elementary school. For recreation, Whitehills punches above its weight: the Canada Games Aquatic Centre at 1045 Wonderland Road North houses London\'s largest indoor pool, Medway Park brings a spray pad and the Medway-Kiwanis Skate Bowls, and Jaycee Park\'s 12.6 acres deliver a baseball diamond, soccer field, multi-sport court, and proper walking trails. The Fox Hollow Ravine corridor connects residents directly to the Medway Valley Heritage Forest — one of London\'s most significant Carolinian forest systems — without ever leaving the neighbourhood on foot.',
+    mapEmbedId: 'Whitehills,+London,+Ontario,+Canada',
+    geo: { lat: 42.998, lng: -81.279 },
+    image: '/images/areas/whitehills-neighbourhood-london-ontario.webp',
+    imageAlt: 'Residential street in Whitehills, northwest London Ontario',
+    highlights: [
+      'Three elementary schools within the neighbourhood — Emily Carr, Wilfrid Jury, St. Marguerite d\'Youville',
+      'Canada Games Aquatic Centre — London\'s largest indoor pool at 1045 Wonderland Road North',
+      'Jaycee Park: 12.6 acres with baseball diamond, soccer field, multi-sport court, and trails',
+      'Medway Park: spray pad, Medway-Kiwanis Skate Bowls, community centre, and arena',
+      'Norwest Optimist Park: baseball, soccer, playgrounds next to Emily Carr PS',
+      'Fox Hollow Ravine trail access to Medway Valley Heritage Forest',
+      'Sherwood Forest Mall with London Public Library branch at the southern edge',
+      '1970s–80s detached homes at strong value with newer townhouse options',
+    ],
+    avgPrice: '$520,000–$720,000',
+    homingTypes: ['Detached Bungalows', 'Split-Levels', 'Two-Storeys', 'Townhomes'],
+    schools: [
+      'Emily Carr Public School (JK–8) — 44 Hawthorne Rd',
+      'Wilfrid Jury Public School (JK–8) — 950 Lawson Rd',
+      'St. Marguerite d\'Youville Catholic School (JK–8) — 170 Hawthorne Rd',
+      'Sir Frederick Banting Secondary School — 125 Sherwood Forest Square',
+    ],
+    nearbyAmenities: [
+      'Canada Games Aquatic Centre (1045 Wonderland Rd N)',
+      'Medway Community Centre & Skate Bowls',
+      'Jaycee Park (1830 Aldersbrook Rd)',
+      'Norwest Optimist Park (48 Hawthorn Rd)',
+      'Sherwood Forest Mall',
+      'Medway Valley Heritage Forest Trails',
+    ],
+    localBusinesses: [
+      {
+        name: 'Canada Games Aquatic Centre',
+        category: 'Aquatics & Recreation',
+        icon: '🏊',
+        description:
+          'The Canada Games Aquatic Centre at 1045 Wonderland Road North is London\'s largest indoor pool facility — and it sits steps from Medway Park, right in the heart of the Whitehills neighbourhood. Competitive lanes, recreational swimming, diving boards, swimming lessons, aquatic fitness classes, and facilities for swim meets make this the most complete aquatic centre in the city. For Whitehills families, having London\'s top pool as a neighbourhood amenity is a daily quality-of-life advantage that most communities can only wish for.',
+        highlight: 'London\'s largest indoor pool — a Whitehills neighbourhood amenity',
+      },
+      {
+        name: 'Medway Park & Skate Bowls',
+        category: 'Parks & Recreation',
+        icon: '🛹',
+        description:
+          'Medway Park on Wonderland Road North brings together a spray pad, a large playground, and the Medway-Kiwanis Skate Bowls — an intermediate-to-advanced skate facility with waves, a pump track, bowled corners, and a generous deck area. The adjacent Medway Community Centre at 119 Sherwood Forest Square houses the Ray Lanctin Memorial Arena with one ice surface, heated spectator seating, and public skating through the winter season. One corner of Wonderland Road North covers most of what a Whitehills family needs for active recreation.',
+        highlight: 'Skate park, spray pad, arena, and community centre — all in one complex',
+      },
+      {
+        name: 'Jaycee Park',
+        category: 'Parks & Recreation',
+        icon: '⚽',
+        description:
+          'Jaycee Park at 1830 Aldersbrook Road is Whitehills\' largest neighbourhood green space — 12.6 acres with a baseball diamond, soccer field, multi-sport court, playground, and well-maintained walking and running trails. The park is dog-friendly, fully accessible, and free year-round. For families who want an active outdoor life from their front door rather than a drive to a conservation area, Jaycee\'s size and variety of sports infrastructure delivers real value.',
+        highlight: '12.6 acres — baseball, soccer, multi-sport court, and trails',
+      },
+      {
+        name: 'Norwest Optimist Park',
+        category: 'Parks & Recreation',
+        icon: '🏟️',
+        description:
+          'Norwest Optimist Park at 48 Hawthorn Road sits directly beside Emily Carr Public School — a practical detail that makes after-school time seamless for local families. The park features baseball diamond(s), soccer fields, a treehouse-themed big-kid playground, a toddler playground, 4 standard swings and 2 baby swings, and a large open green valley ideal for tobogganing in winter. It\'s an unpretentious, well-used neighbourhood park that earns its place as one of Whitehills\' daily gathering spots.',
+        highlight: 'Right beside Emily Carr PS — baseball, soccer, and playgrounds for every age',
+      },
+      {
+        name: 'Medway Valley Heritage Forest',
+        category: 'Parks & Nature',
+        icon: '🌲',
+        description:
+          'The Medway Valley Heritage Forest is one of London\'s most significant natural areas — a mature Carolinian forest system with kilometres of trail accessible directly from Whitehills residential streets via the Fox Hollow Ravine corridor. Wildlife habitat, birding, and peaceful trail walking are part of the daily routine for residents who choose to use it. In a city where most neighbourhoods have to drive to reach serious nature, Whitehills residents can lace up and walk in.',
+        highlight: 'Carolinian forest trail access — walking distance from Whitehills homes',
+      },
+    ],
+    schoolsData: {
+      elementary: [
+        { name: 'Emily Carr Public School', address: '44 Hawthorne Road', grades: 'JK–8', board: 'TVDSB' },
+        { name: 'Wilfrid Jury Public School', address: '950 Lawson Road', grades: 'JK–8', board: 'TVDSB' },
+        { name: 'St. Marguerite d\'Youville Catholic School', address: '170 Hawthorne Road', grades: 'JK–8', board: 'LDCSB' },
+      ],
+      secondary: [
+        { name: 'Sir Frederick Banting Secondary School', address: '125 Sherwood Forest Square', grades: '9–12', board: 'TVDSB' },
+        { name: 'St. Thomas Aquinas Catholic Secondary School', address: '1360 Oxford Street West', grades: '9–12', board: 'LDCSB' },
+      ],
+    },
+    parksData: {
+      parks: [
+        {
+          name: 'Norwest Optimist Park',
+          address: '48 Hawthorn Road',
+          amenities: ['Baseball diamond', 'Soccer fields', 'Big-kid treehouse playground', 'Toddler playground', '4 standard swings', '2 baby swings', 'Toboggan hill (winter)', 'Open green space'],
+          highlight: 'Right beside Emily Carr Public School — the daily gathering point for Whitehills families',
+        },
+        {
+          name: 'Jaycee Park',
+          address: '1830 Aldersbrook Road',
+          amenities: ['Baseball diamond', 'Mini soccer field', 'Multi-sport court', 'Playground', 'Walking & biking paths', 'Open fields', 'Parking'],
+          highlight: '12.6-acre park with trails — Whitehills\' largest green space',
+        },
+        {
+          name: 'Medway Park & Medway-Kiwanis Skate Bowls',
+          address: 'Wonderland Road North',
+          amenities: ['Spray pad', 'Playground', 'Intermediate skate facility', 'Pump track', 'Skate bowls', 'Bench seating area'],
+          highlight: 'Spray pad, skate park, and playground in one complex — adjacent to Medway Community Centre and arena',
+        },
+        {
+          name: 'Canada Games Aquatic Centre',
+          address: '1045 Wonderland Road North',
+          amenities: ['Indoor pool (London\'s largest)', 'Competitive lanes', 'Recreational swimming', 'Diving boards', 'Swim lessons', 'Aquatic fitness classes', 'Parking'],
+          highlight: 'London\'s top aquatic facility — steps from Medway Park in the heart of Whitehills',
+        },
+        {
+          name: 'Medway Valley Heritage Forest',
+          address: 'Via Fox Hollow Ravine corridor',
+          amenities: ['Multi-km trail system', 'Carolinian forest', 'Wildlife habitat', 'Birdwatching', 'Off-leash dog area'],
+          highlight: 'One of London\'s most significant natural areas — walk-in access from Whitehills residential streets',
+        },
+      ],
+    },
+    faqs: [
+      {
+        q: 'Are there homes for sale in Whitehills, London Ontario?',
+        a: 'Whitehills has consistent inventory throughout the year — detached bungalows, two-storeys, split-levels, and townhomes across a range of price points. The neighbourhood\'s combination of three in-boundary elementary schools and strong recreation infrastructure makes it a steady choice for families. Contact Justin for current Whitehills listings.',
+      },
+      {
+        q: 'How much do homes cost in Whitehills, London Ontario?',
+        a: 'Whitehills home prices generally range from approximately $520,000 to $720,000 for detached properties, with townhomes available at more accessible price points. The neighbourhood offers real value in the northwest end — solid 1970s and 1980s construction on good lots, with some of London\'s best recreation infrastructure within walking distance.',
+      },
+      {
+        q: 'What schools are in Whitehills, London Ontario?',
+        a: 'Three elementary schools sit within the Whitehills neighbourhood boundaries: Emily Carr Public School (JK–8) at 44 Hawthorne Road, Wilfrid Jury Public School (JK–8) at 950 Lawson Road, and St. Marguerite d\'Youville Catholic School (JK–8) at 170 Hawthorne Road. High school students attend Sir Frederick Banting Secondary School at 125 Sherwood Forest Square. Having three elementary schools within walking distance is one of Whitehills\' most practical family advantages.',
+      },
+      {
+        q: 'What parks are in Whitehills, London Ontario?',
+        a: 'Whitehills has five significant parks and recreation assets: Jaycee Park (1830 Aldersbrook Rd — 12.6 acres with baseball, soccer, multi-sport court, and trails), Norwest Optimist Park (48 Hawthorn Rd — baseball, soccer, and playgrounds beside Emily Carr PS), Medway Park on Wonderland Road North (spray pad, skate facility), Gainsborough Meadows Park, and Thistledown Park. The Canada Games Aquatic Centre at 1045 Wonderland Road North — London\'s largest indoor pool — is also within the neighbourhood.',
+      },
+    ],
+    metaTitle: 'Whitehills London Ontario Real Estate | Justin Skrypnyk Real Estate Broker',
+    metaDescription:
+      'Whitehills London Ontario homes for sale. Northwest London neighbourhood with three in-boundary schools, the Canada Games Aquatic Centre, and five parks. Contact Real Estate Broker Justin Skrypnyk.',
+  },
+  {
     slug: 'west-london',
     name: 'West London',
     shortName: 'West London',
@@ -423,6 +637,56 @@ export const AREAS: Area[] = [
         highlight: 'Daily essentials within walking distance — a true neighbourhood corridor',
       },
     ],
+    schoolsData: {
+      elementary: [
+        { name: 'Byron Northview Public School', address: '1370 Commissioners Road West', grades: 'JK–8', board: 'TVDSB', notes: 'Consolidating into Riverbend Public School (Sept 2027)' },
+        { name: 'Byron Somerset Public School', address: '175 Whisperwood Avenue', grades: 'JK–8', board: 'TVDSB', notes: 'Consolidating into Riverbend Public School (Sept 2027)' },
+        { name: 'Byron Southwood Public School', address: '1379 Lola Street', grades: 'JK–8', board: 'TVDSB', notes: 'Consolidating into Riverbend Public School (Sept 2027)' },
+        { name: 'Westmount Public School', address: '1011 Viscount Road', grades: 'JK–8', board: 'TVDSB' },
+        { name: 'St. George Catholic School', address: '375 Lynden Crescent', grades: 'JK–8', board: 'LDCSB', notes: 'Serves Byron east of Boler Road and Lambeth' },
+        { name: 'St. Theresa Catholic School', address: '1164 Commissioners Road West', grades: 'JK–8', board: 'LDCSB' },
+        { name: 'St. Nicholas Catholic School', address: '1956 Shore Road', grades: 'JK–8', board: 'LDCSB' },
+      ],
+      secondary: [
+        { name: 'Saunders Secondary School', address: '941 Viscount Road', grades: '9–12', board: 'TVDSB', notes: 'Serves Byron, Westmount, Lambeth, Riverbend — largest school in TVDSB (~2,000 students)' },
+        { name: 'St. Thomas Aquinas Catholic Secondary School', address: '1360 Oxford Street West', grades: '9–12', board: 'LDCSB' },
+      ],
+      sectionNote: 'Byron Northview, Byron Somerset, and Byron Southwood public schools are consolidating into the new Riverbend Public School at 1000 Upperpoint Avenue, expected to open September 2027.',
+    },
+    parksData: {
+      parks: [
+        {
+          name: 'Springbank Park',
+          address: '1085 Commissioners Road West',
+          amenities: ['30+ km Thames River trails', '4 mini soccer pitches', 'Picnic shelters', 'Bandshell & pavilion', 'Skate park', 'Playground', 'Wading pool', 'Storybook Gardens (paid admission)', 'BBQ stoves (bookable)', 'Parking'],
+          highlight: 'London\'s largest park at 140 hectares — trails, picnics, and Storybook Gardens along the Thames River',
+        },
+        {
+          name: 'Basil Grover Park',
+          address: '555 Wharncliffe Road South',
+          amenities: ['Skateboard park', 'Junior play structure', 'Senior play structure', 'Accessible swing seat', 'Soccer & open fields', 'Washrooms', 'Parking'],
+          highlight: 'District park at Wharncliffe & Commissioners — skate park and accessible playground for all ages',
+        },
+        {
+          name: 'Reservoir Park',
+          address: '869 Commissioners Road West',
+          amenities: ['2 mini soccer fields', 'Walking paths', 'Open green space', 'Parking'],
+          highlight: 'Neighbourhood green space anchoring the Commissioners corridor',
+        },
+        {
+          name: 'Westmount Lions Park',
+          address: '784 Viscount Road',
+          amenities: ['Full-size soccer field', 'Playground', 'Swings', 'Walking paths', 'Parking'],
+          highlight: 'Community park in the heart of Westmount — field space and family-friendly amenities',
+        },
+        {
+          name: 'Westmount Park',
+          address: '196 McMaster Drive',
+          amenities: ['Baseball diamond', 'Open green space'],
+          highlight: 'Neighbourhood diamond park serving the Westmount residential streets',
+        },
+      ],
+    },
     faqs: [
       {
         q: 'What is the cheapest area to buy a house in West London Ontario?',

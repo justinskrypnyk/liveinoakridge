@@ -3,35 +3,38 @@ import Base from '@/layouts/Base.astro';
 import Schema from '@/components/Schema.astro';
 import GoogleMap from '@/components/GoogleMap.astro';
 import ContactForm from '@/components/ContactForm.astro';
-import { AREAS } from '@/data/areas';
+import { getArea, AREAS } from '@/data/areas';
 import { SITE } from '@/data/site';
 
-const DEPRECATED_SLUGS = new Set([
-  'masonville', 'old-north', 'sunningdale', 'fox-hollow',
-  'downtown', 'south-london', 'river-bend', 'medway',
-  'komoka', 'hyde-park', 'lambeth',
-]);
-
-export function getStaticPaths() {
-  return AREAS
-    .filter((area) => area.slug !== 'oakridge')
-    .map((area) => ({
-      params: { area: area.slug },
-      props: { area },
-    }));
-}
-
-const { area } = Astro.props;
-const isDeprecated = DEPRECATED_SLUGS.has(area.slug);
+const area = getArea('oakridge')!;
 
 const areaServices = [
-  { label: 'Buy in ' + area.shortName, href: `/areas/${area.slug}/buy/`, icon: '🏡' },
-  { label: 'Sell in ' + area.shortName, href: `/areas/${area.slug}/sell/`, icon: '📈' },
-  { label: 'Home Evaluation', href: `/areas/${area.slug}/home-evaluation/`, icon: '📋' },
+  { label: 'Buy in Oakridge', href: '/areas/oakridge/buy/', icon: '🏡' },
+  { label: 'Sell in Oakridge', href: '/areas/oakridge/sell/', icon: '📈' },
+  { label: 'Home Evaluation', href: '/areas/oakridge/home-evaluation/', icon: '📋' },
+];
+
+const subNeighbourhoods = [
+  {
+    id: 'oakridge-acres',
+    name: 'Oakridge Acres',
+  },
+  {
+    id: 'hunt-club',
+    name: 'Hunt Club',
+  },
+  {
+    id: 'hazelden',
+    name: 'Hazelden',
+  },
+  {
+    id: 'oakridge-park',
+    name: 'Oakridge Park',
+  },
 ];
 ---
 
-<Base title={area.metaTitle} description={area.metaDescription} noindex={isDeprecated}>
+<Base title={area.metaTitle} description={area.metaDescription}>
   <Fragment slot="head">
     <Schema
       type="area"
@@ -51,17 +54,16 @@ const areaServices = [
         <span>/</span>
         <a href="/areas/" class="hover:text-gold transition-colors">Areas We Serve</a>
         <span>/</span>
-        <span class="text-white/70">{area.name}</span>
+        <span class="text-white/70">Oakridge</span>
       </nav>
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
         <div>
           <h1 class="font-serif text-5xl font-bold mb-4">
-            {area.name}, London Ontario
+            Oakridge, London Ontario
           </h1>
           <div class="gold-divider mb-6"></div>
           <p class="text-xl text-white/70 leading-relaxed mb-8">{area.headline}</p>
 
-          <!-- Quick service links -->
           <div class="flex flex-wrap gap-3">
             {areaServices.map((svc) => (
               <a href={svc.href} class="flex items-center gap-2 bg-white/10 hover:bg-gold hover:text-navy text-white text-sm font-medium px-5 py-3 rounded-lg transition-all border border-white/10 hover:border-gold">
@@ -72,7 +74,6 @@ const areaServices = [
           </div>
         </div>
 
-        <!-- Stats -->
         <div class="grid grid-cols-2 gap-4">
           <div class="bg-white/10 rounded-xl p-6 border border-white/10">
             <div class="text-gold text-sm font-semibold uppercase tracking-wider mb-2">Avg. Price Range</div>
@@ -91,12 +92,29 @@ const areaServices = [
     </div>
   </section>
 
+  <!-- Sub-neighbourhood Anchor Nav -->
+  <nav aria-label="Oakridge sub-neighbourhoods" class="sticky top-20 z-30 bg-white border-b border-gray-200 shadow-sm">
+    <div class="container-site">
+      <div class="flex items-center gap-1 overflow-x-auto py-3 no-scrollbar">
+        <span class="text-xs font-semibold text-navy/40 uppercase tracking-wider shrink-0 mr-3 hidden sm:block">Oakridge:</span>
+        {subNeighbourhoods.map((sub) => (
+          <a
+            href={`#${sub.id}`}
+            class="shrink-0 px-4 py-2 text-sm font-medium text-navy/70 hover:text-gold hover:bg-gold/10 rounded-lg transition-colors whitespace-nowrap"
+          >
+            {sub.name}
+          </a>
+        ))}
+      </div>
+    </div>
+  </nav>
+
   <!-- About + Map -->
   <section class="py-20 bg-cream">
     <div class="container-site">
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-16">
         <div>
-          <h2 class="section-heading">About {area.name}</h2>
+          <h2 class="section-heading">About Oakridge</h2>
           <div class="gold-divider mb-6"></div>
           <p class="text-slate leading-relaxed text-lg mb-8">{area.longDescription}</p>
 
@@ -114,10 +132,10 @@ const areaServices = [
         </div>
 
         <div class="space-y-6">
-          <GoogleMap query={area.mapEmbedId} title={`${area.name}, London Ontario`} height="380px" />
+          <GoogleMap query={area.mapEmbedId} title="Oakridge, London Ontario" height="380px" />
 
           <div class="bg-white rounded-xl p-6 shadow-card">
-            <h3 class="font-serif text-xl text-navy mb-4">Schools in {area.name}</h3>
+            <h3 class="font-serif text-xl text-navy mb-4">Schools in Oakridge</h3>
             <ul class="space-y-2">
               {area.schools.map((school) => (
                 <li class="flex items-center gap-2 text-navy/70 text-sm">
@@ -139,10 +157,10 @@ const areaServices = [
     <section id="schools" class="py-20 bg-cream">
       <div class="container-site">
         <div class="text-center mb-12">
-          <h2 class="section-heading">Schools in {area.name}</h2>
+          <h2 class="section-heading">Schools in Oakridge</h2>
           <div class="gold-divider mx-auto mb-4"></div>
           <p class="section-subheading mx-auto">
-            In-boundary elementary and secondary schools for families buying in {area.name}, London Ontario.
+            In-boundary elementary and secondary schools for families buying in Oakridge, London Ontario.
           </p>
         </div>
 
@@ -204,12 +222,6 @@ const areaServices = [
           </div>
         </div>
 
-        {area.schoolsData.sectionNote && (
-          <div class="bg-gold/10 border border-gold/30 rounded-xl p-5 mb-8">
-            <p class="text-sm text-navy/80 leading-relaxed">{area.schoolsData.sectionNote}</p>
-          </div>
-        )}
-
         <p class="text-center text-sm text-slate/60 leading-relaxed">
           Catchment boundaries change. Always verify your address using the{' '}
           <a href="https://www.tvdsb.ca/en/schools/find-my-local-school.aspx" class="text-gold hover:underline" target="_blank" rel="noopener noreferrer">TVDSB school locator</a>
@@ -225,10 +237,10 @@ const areaServices = [
     <section id="parks" class="py-20 bg-white">
       <div class="container-site">
         <div class="text-center mb-12">
-          <h2 class="section-heading">Parks in {area.name}</h2>
+          <h2 class="section-heading">Parks in Oakridge</h2>
           <div class="gold-divider mx-auto mb-4"></div>
           <p class="section-subheading mx-auto">
-            Parks, trails, and outdoor amenities for families and active residents in {area.name}, London Ontario.
+            Parks, trails, and outdoor amenities for families and active residents in Oakridge, London Ontario.
           </p>
         </div>
 
@@ -273,15 +285,104 @@ const areaServices = [
     </section>
   )}
 
+  <!-- Sub-neighbourhood Sections -->
+  <section class="py-20 bg-white">
+    <div class="container-site max-w-4xl">
+      <div class="text-center mb-16">
+        <h2 class="section-heading">Inside Oakridge — Four Distinct Communities</h2>
+        <div class="gold-divider mx-auto mb-4"></div>
+        <p class="section-subheading mx-auto">
+          Oakridge is not one neighbourhood — it is four. Each pocket has its own character, its own streets, and its own reason to call it home.
+        </p>
+      </div>
+
+      <!-- Oakridge Acres -->
+      <div id="oakridge-acres" class="scroll-mt-32 mb-20 pb-20 border-b border-gray-100">
+        <div class="flex items-center gap-4 mb-6">
+          <div class="w-1 h-12 bg-gold rounded-full shrink-0"></div>
+          <h2 class="font-serif text-3xl text-navy">Oakridge Acres</h2>
+        </div>
+        <div class="space-y-5 text-slate leading-relaxed">
+          <p>
+            Oakridge Acres is the original — the heart of what "Oakridge" means to London. Sifton Properties broke ground here on October 12, 1950, building 1,649 homes across 74 acres in what would become the defining residential development of West London's postwar era. The street names carry a deliberate Irish identity — Dolway, Donegal, Dunedin, Kildare, Solway — and they give the neighbourhood a cohesive character that still feels intentional seven decades later. The Optimist Club of Oakridge Acres was chartered in 1957, just seven years into the neighbourhood's life, and has been the organizational heartbeat of community life here ever since.
+          </p>
+          <p>
+            The homes south of Oxford Street are the original Sifton builds — 1950s and 1960s single-family detached homes on genuinely wide lots with the spatial logic that came standard in that era: large basements, deep backyards, proper street setbacks, and room to live. Bungalows, cape-cods, and split-levels are the dominant styles. Many have been substantially updated over the decades while maintaining their footprints and lot lines. What buyers find here is the combination that is hard to manufacture in newer developments: established character on large land at prices that still represent real value in the West London market.
+          </p>
+          <p>
+            The community anchor is Oakridge Optimist Community Park at 825 Valetta Street — one of the most complete neighbourhood parks in London. The park has two baseball diamonds with a batting cage, an outdoor pool, a spray pad, tennis and pickleball courts, a renovated arena, and playground structures for all ages. The Optimist Club runs baseball and soccer programs serving over 2,000 youth each year, making it one of the most active neighbourhood clubs in the city. For nature, Sifton Bog ESA sits on the south side of Oxford Street west of Hyde Park Road: 2.8 kilometres of trail with a 370-metre boardwalk to a viewing platform over Redmond's Pond. Formed 13,000 years ago as the last glacier retreated, Sifton Bog is the most southerly large acidic bog in Canada — home to carnivorous plants and rare ecosystems found almost nowhere else in southwestern Ontario.
+          </p>
+        </div>
+      </div>
+
+      <!-- Hunt Club -->
+      <div id="hunt-club" class="scroll-mt-32 mb-20 pb-20 border-b border-gray-100">
+        <div class="flex items-center gap-4 mb-6">
+          <div class="w-1 h-12 bg-gold rounded-full shrink-0"></div>
+          <h2 class="font-serif text-3xl text-navy">Hunt Club</h2>
+        </div>
+        <div class="space-y-5 text-slate leading-relaxed">
+          <p>
+            Hunt Club sits at the northwest corner of Oakridge, bordering the London Hunt and Country Club — one of Canada's oldest private golf clubs, established in 1885. The neighbourhood takes its name and character directly from that adjacency. This is where some of London's quietest and most coveted streets meet genuinely distinctive real estate: homes with fairway views, mature canopy trees, and a privacy that is rare within a city of this size.
+          </p>
+          <p>
+            Hunt Club divides naturally into two pockets. Old Hunt Club — the southern portion — carries the best of the original postwar stock: 1950s single-family homes on large, mature-treed lots with the hushed street character that buyers spend years looking for. Promenade Hunt Club, Kingspark Crescent, Fitzwilliam Boulevard, and Northumberland Road back directly onto the golf course, making them among the most unique residential addresses in London. The northern portion of Hunt Club offers late-20th-century detached homes and townhouses — newer construction with the same prestigious address at more accessible price points.
+          </p>
+          <p>
+            Two neighbourhood parks serve Hunt Club directly: Oak Park and Cheltenham Park, each offering playgrounds, swings, and walking paths suited to the community's family character. The London Hunt and Country Club itself — with its private 18-hole course, tennis courts, and large clubhouse — has defined this neighbourhood's identity for 140 years and anchors its western edge. Elementary students attend Clara Brenton, John Dearness, or St. Paul Catholic elementary schools; French immersion is available at École élémentaire Marie-Curie. Secondary students attend Oakridge Secondary or St. Thomas Aquinas Catholic Secondary School.
+          </p>
+        </div>
+      </div>
+
+      <!-- Hazelden -->
+      <div id="hazelden" class="scroll-mt-32 mb-20 pb-20 border-b border-gray-100">
+        <div class="flex items-center gap-4 mb-6">
+          <div class="w-1 h-12 bg-gold rounded-full shrink-0"></div>
+          <h2 class="font-serif text-3xl text-navy">Hazelden</h2>
+        </div>
+        <div class="space-y-5 text-slate leading-relaxed">
+          <p>
+            Hazelden is the smallest and most quietly prestigious of Oakridge's four communities. It occupies the southeast corner of the broader neighbourhood, tucked between the Thames River Valley and the established residential streets around Riverside Drive. Riverside Drive itself acts as a natural dividing line: the older section to the south carries the original character of the area, while newer streets to the north reflect development that followed as the neighbourhood filled in through the latter half of the 20th century. The result is a community that feels curated rather than planned — intimate, mature, and unhurried.
+          </p>
+          <p>
+            The homes in Hazelden skew toward mid-century modern and postwar construction — the same era as Oakridge Acres, but with a different architectural feel given the topography and lot configurations closer to the river valley. The standout property in the area is Hazelden Manor at 1132 St. Anthony Road: a heritage-designated residence built in 1892 that predates the surrounding neighbourhood by decades. Its presence gives Hazelden a historical depth that the other Oakridge pockets do not share. Buyers in Hazelden are typically looking for something quieter and more private than the more active street life of Oakridge Acres — and they find it here.
+          </p>
+          <p>
+            Two parks anchor Hazelden's green space: St. Anthony's Park at Hampton Crescent, which features a tennis court and open space, and Hazelden Park, which has a baseball diamond, soccer field, playground structures, and swings. The Thames River Valley trail network is accessible from the southern edges of the neighbourhood, offering off-road walking and cycling into the broader Sifton Bog and Thames Valley system. For daily conveniences, residents are well placed between two commercial nodes: Boler Road at Commissioners Road to the south, and Hyde Park Road at Oxford Street to the north.
+          </p>
+        </div>
+      </div>
+
+      <!-- Oakridge Park -->
+      <div id="oakridge-park" class="scroll-mt-32">
+        <div class="flex items-center gap-4 mb-6">
+          <div class="w-1 h-12 bg-gold rounded-full shrink-0"></div>
+          <h2 class="font-serif text-3xl text-navy">Oakridge Park</h2>
+        </div>
+        <div class="space-y-5 text-slate leading-relaxed">
+          <p>
+            Oakridge Park developed in the early 1960s as a natural continuation of the Oakridge Acres build-out, filling in the land north and west as the original Sifton project was completed. It carries the same foundational DNA: low-density single-family residential, consistent lot sizes, and a street-level calm that reflects the design priorities of postwar suburban London. The distinction from Oakridge Acres is modest but real — the homes here are slightly newer, and the tree canopy, while established, is a decade younger. For buyers, Oakridge Park offers the same fundamental value proposition of Oakridge Acres at a sometimes more accessible entry point.
+          </p>
+          <p>
+            The dominant home style is the same mix of bungalows, split-levels, and two-storeys that defines the broader Oakridge neighbourhood — detached, owner-occupied, and well-maintained. Oakridge Park has not been heavily redeveloped and retains its original residential scale. Lot coverage remains modest, gardens are deep, and the neighbourhood has the feel of a community where people have lived for decades rather than one that turns over constantly. First-time buyers who have been priced out of areas farther east often find that Oakridge Park represents their best opportunity to get into a genuinely established West London neighbourhood.
+          </p>
+          <p>
+            Oakridge Park shares the Oakridge Optimist Community Park at 825 Valetta Street — the neighbourhood's most complete recreational anchor, with its arena, pool, spray pad, baseball diamonds, and tennis and pickleball courts. For golf, Thames Valley Golf Course sits at the southern boundary of the broader Oakridge area: established in 1924, it offers an 18-hole course and a 9-hole course running along the Thames River, and it is one of the few public golf facilities in London with genuine natural character. The combination of Optimist Park's organized sports programming and the Thames River Valley trail network gives Oakridge Park unusually good access to active outdoor life for a neighbourhood this close to the urban core.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- Local Amenities -->
   {area.localBusinesses && area.localBusinesses.length > 0 && (
     <section class="py-20 bg-navy text-white">
       <div class="container-site">
         <div class="text-center mb-12">
-          <h2 class="font-serif text-4xl text-white mb-4">Life in {area.shortName}</h2>
+          <h2 class="font-serif text-4xl text-white mb-4">Life in Oakridge</h2>
           <div class="gold-divider mx-auto mb-4"></div>
           <p class="text-white/60 text-lg max-w-2xl mx-auto">
-            The amenities, parks, and local businesses that make {area.name} worth living in — not just worth buying in.
+            The amenities, parks, and local businesses that make Oakridge worth living in — not just worth buying in.
           </p>
         </div>
 
@@ -313,41 +414,41 @@ const areaServices = [
     </section>
   )}
 
-  <!-- Services in this area -->
+  <!-- Services in Oakridge -->
   <section class="py-20 bg-white">
     <div class="container-site">
       <div class="text-center mb-12">
-        <h2 class="section-heading">Services in {area.name}</h2>
+        <h2 class="section-heading">Services in Oakridge</h2>
         <div class="gold-divider mx-auto mb-4"></div>
         <p class="section-subheading mx-auto">
-          Justin provides full-service real estate guidance specific to the {area.name} market.
+          Justin provides full-service real estate guidance specific to the Oakridge market.
         </p>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <a href={`/areas/${area.slug}/buy/`} class="card p-8 group text-center hover:border-gold/30 border border-transparent">
+        <a href="/areas/oakridge/buy/" class="card p-8 group text-center hover:border-gold/30 border border-transparent">
           <div class="w-16 h-16 bg-cream rounded-2xl flex items-center justify-center text-3xl mx-auto mb-5">🏡</div>
-          <h3 class="font-serif text-xl text-navy mb-3 group-hover:text-gold transition-colors">Buy in {area.shortName}</h3>
+          <h3 class="font-serif text-xl text-navy mb-3 group-hover:text-gold transition-colors">Buy in Oakridge</h3>
           <p class="text-slate text-sm leading-relaxed mb-5">
-            Find your perfect home in {area.name} with a local guide who knows every street.
+            Find your perfect home in Oakridge with a local guide who knows every street.
           </p>
           <span class="btn-primary text-sm py-2.5 px-6">Search Homes</span>
         </a>
 
-        <a href={`/areas/${area.slug}/sell/`} class="card p-8 group text-center hover:border-gold/30 border border-transparent">
+        <a href="/areas/oakridge/sell/" class="card p-8 group text-center hover:border-gold/30 border border-transparent">
           <div class="w-16 h-16 bg-cream rounded-2xl flex items-center justify-center text-3xl mx-auto mb-5">📈</div>
-          <h3 class="font-serif text-xl text-navy mb-3 group-hover:text-gold transition-colors">Sell in {area.shortName}</h3>
+          <h3 class="font-serif text-xl text-navy mb-3 group-hover:text-gold transition-colors">Sell in Oakridge</h3>
           <p class="text-slate text-sm leading-relaxed mb-5">
-            Get top dollar for your {area.name} home with Justin's proven marketing system.
+            Get top dollar for your Oakridge home with Justin's proven marketing system.
           </p>
           <span class="btn-primary text-sm py-2.5 px-6">Get a Quote</span>
         </a>
 
-        <a href={`/areas/${area.slug}/home-evaluation/`} class="card p-8 group text-center hover:border-gold/30 border border-transparent">
+        <a href="/areas/oakridge/home-evaluation/" class="card p-8 group text-center hover:border-gold/30 border border-transparent">
           <div class="w-16 h-16 bg-cream rounded-2xl flex items-center justify-center text-3xl mx-auto mb-5">📋</div>
           <h3 class="font-serif text-xl text-navy mb-3 group-hover:text-gold transition-colors">Complimentary Home Evaluation</h3>
           <p class="text-slate text-sm leading-relaxed mb-5">
-            Find out what your {area.name} home is worth in today's market — complimentary, no obligation.
+            Find out what your Oakridge home is worth in today's market — complimentary, no obligation.
           </p>
           <span class="btn-primary text-sm py-2.5 px-6">Book Evaluation</span>
         </a>
@@ -361,7 +462,7 @@ const areaServices = [
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
         <div>
           <h2 class="font-serif text-4xl mb-4">
-            Ready to Make a Move in {area.name}?
+            Ready to Make a Move in Oakridge?
           </h2>
           <div class="gold-divider mb-6"></div>
           <p class="text-white/70 leading-relaxed text-lg mb-8">
@@ -386,7 +487,7 @@ const areaServices = [
         <div class="bg-white/5 border border-white/10 rounded-2xl p-8">
           <h3 class="font-serif text-2xl text-white mb-6">Send Justin a Message</h3>
           <ContactForm
-            subject={`${area.name} Real Estate Inquiry`}
+            subject="Oakridge Real Estate Inquiry"
             ctaLabel="Send Message"
             dark
           />
@@ -402,11 +503,11 @@ const areaServices = [
         <div class="text-center mb-12">
           <h2 class="section-heading">Frequently Asked Questions</h2>
           <div class="gold-divider mx-auto mb-4"></div>
-          <p class="section-subheading mx-auto">Common questions about buying and selling in {area.name}, London Ontario.</p>
+          <p class="section-subheading mx-auto">Common questions about buying and selling in Oakridge, London Ontario.</p>
         </div>
         <div class="space-y-4">
-          {area.faqs.map((faq, i) => (
-            <details class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden group" name={`faq-${area.slug}`}>
+          {area.faqs.map((faq) => (
+            <details class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden group" name="faq-oakridge">
               <summary class="flex items-center justify-between gap-4 p-6 cursor-pointer list-none font-semibold text-navy hover:text-gold transition-colors">
                 <span>{faq.q}</span>
                 <svg class="w-5 h-5 shrink-0 text-gold transition-transform group-open:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -427,12 +528,12 @@ const areaServices = [
     </section>
   )}
 
-  <!-- Internal linking to other areas -->
+  <!-- Internal linking -->
   <section class="py-16 bg-cream">
     <div class="container-site">
       <h2 class="font-serif text-2xl text-navy mb-6">Explore Other West London Neighbourhoods</h2>
       <div class="flex flex-wrap gap-3">
-        {AREAS.filter((a) => a.slug !== area.slug).map((a) => (
+        {AREAS.filter((a) => a.slug !== 'oakridge').map((a) => (
           <a href={`/areas/${a.slug}/`} class="bg-white border border-gray-200 hover:border-gold hover:text-gold text-navy/70 text-sm font-medium px-4 py-2 rounded-lg transition-all">
             {a.name}
           </a>

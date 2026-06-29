@@ -9,7 +9,7 @@ import { SERVICES } from '@/data/services';
 
 <Base
   title="Oakridge Real Estate Broker | Justin Skrypnyk | London Ontario"
-  description="Justin Skrypnyk is a Real Estate Broker with Sutton Group Chapman Realty Inc., Brokerage, specializing in Oakridge, Byron, Westmount, Lambeth, and West London. Buying, selling, complimentary home evaluations. Call 519.639.5176."
+  description="Justin Skrypnyk is a Real Estate Broker with Sutton Group Chapman Realty Inc., Brokerage, specializing in Oakridge, West London, and Whitehills. Buying, selling, and complimentary home evaluations. Call 519.639.5176."
   heroOverlap
 >
   <Fragment slot="head">
@@ -55,7 +55,7 @@ import { SERVICES } from '@/data/services';
           name: 'What areas does Justin Skrypnyk serve?',
           acceptedAnswer: {
             '@type': 'Answer',
-            text: 'Justin Skrypnyk serves all of West London and surrounding communities including Oakridge, Byron, Westmount, Lambeth, Hyde Park, Komoka, West London, Old North, Masonville, Sunningdale, Fox Hollow, River Bend, White Oaks, Medway, and Downtown London Ontario.',
+            text: 'Justin Skrypnyk specializes in Oakridge, West London, and Whitehills — and also serves Byron and Westmount. Based in Oakridge since 1959, his family\'s deep roots in the neighbourhood give him local knowledge no algorithm can match.',
           },
         },
         {
@@ -79,14 +79,14 @@ import { SERVICES } from '@/data/services';
     <div class="relative container-site text-center text-white py-20 pt-32 md:py-32 md:pt-40">
       <div class="inline-flex items-center gap-2 bg-gold/20 text-gold text-sm font-medium px-4 py-2 rounded-full mb-8 border border-gold/30">
         <span class="w-2 h-2 bg-gold rounded-full animate-pulse"></span>
-        West London's Real Estate Broker
+        Oakridge, West London and Whitehills Real Estate Broker
       </div>
       <h1 class="font-serif text-5xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
         Oakridge Roots.<br />
         <span class="text-gold">Oakridge Life.</span>
       </h1>
       <p class="text-xl md:text-2xl text-white/70 mb-10 max-w-2xl mx-auto leading-relaxed">
-        Justin Skrypnyk helps families buy and sell homes across Oakridge, Byron, Westmount, Lambeth, and all of West London with local knowledge that no algorithm can match.
+        Justin Skrypnyk has deep roots in Oakridge — his family has called this neighbourhood home since 1959. That kind of local knowledge changes everything when you are buying or selling here.
       </p>
       <div class="flex flex-col sm:flex-row gap-4 justify-center">
         <a href="/services/home-evaluation/" class="btn-primary text-lg py-4 px-8">
@@ -171,8 +171,8 @@ import { SERVICES } from '@/data/services';
         </p>
       </div>
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {AREAS.map((area) => (
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+        {AREAS.filter((area) => ['oakridge', 'west-london', 'whitehills'].includes(area.slug)).map((area) => (
           <a
             href={`/areas/${area.slug}/`}
             class="group relative bg-navy rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 block"
@@ -192,6 +192,7 @@ import { SERVICES } from '@/data/services';
           </a>
         ))}
       </div>
+      <p class="text-center text-sm text-slate mt-6">Also serving Byron and Westmount.</p>
     </div>
   </section>
 
