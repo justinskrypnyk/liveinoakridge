@@ -48,6 +48,25 @@ export interface DemographicsData {
   buildingTrends: string[];
 }
 
+export interface HistoryEntry {
+  title: string;
+  year?: string;
+  body: string;
+}
+
+export interface HistoryPhoto {
+  src: string;
+  alt: string;
+  caption: string;
+  year?: string;
+}
+
+export interface HistoryData {
+  intro?: string;
+  entries: HistoryEntry[];
+  photos?: HistoryPhoto[];
+}
+
 export interface Area {
   slug: string;
   name: string;
@@ -68,6 +87,7 @@ export interface Area {
   schoolsData?: SchoolsData;
   parksData?: ParksData;
   demographicsData?: DemographicsData;
+  historyData?: HistoryData;
   faqs: AreaFaq[];
   metaTitle: string;
   metaDescription: string;
@@ -200,7 +220,7 @@ export const AREAS: Area[] = [
         {
           name: 'Hazelden Park',
           address: '430 Hyde Park Road',
-          amenities: ['Baseball diamond', 'Soccer field', 'Play structure', 'Swings', 'Parking'],
+          amenities: ['Baseball diamond', 'Full-size soccer field', '2 mid-size soccer fields', 'Play structure', 'Swing set', 'Parking'],
           highlight: 'Neighbourhood park serving the Hazelden pocket of Oakridge',
         },
         {
@@ -208,6 +228,59 @@ export const AREAS: Area[] = [
           address: '1287 Oxford Street West',
           amenities: ['18-hole public course', '9-hole public course', 'Thames River valley setting', 'Clubhouse'],
           highlight: 'Public golf along the Thames River — established 1924, one of London\'s most scenic courses',
+        },
+        {
+          name: 'Arthur Ford Park',
+          address: '671 Viscount Road',
+          amenities: ['Tennis court', '2 pickleball courts', 'Play structure', 'Swing set', 'Walking paths'],
+          highlight: 'Neighbourhood park with tennis and pickleball off Viscount Road',
+        },
+        {
+          name: 'Thistledown Park',
+          address: '996 Thistledown Way',
+          amenities: ['Regulation baseball diamond', 'Peewee baseball diamond', 'Open green space'],
+          highlight: 'Quiet residential park in Oakridge Acres with two ball diamonds',
+        },
+        {
+          name: 'Cresthaven Park',
+          address: '104 Parks Edge Crescent',
+          amenities: ['Full-size soccer field', 'Half-court basketball', 'Play structure', 'Swing set', 'Walking paths'],
+          highlight: 'Multi-sport neighbourhood park in the Cresthaven pocket of Oakridge',
+        },
+      ],
+    },
+    historyData: {
+      intro: 'Oakridge sits on land with deep roots in West London history. The street names here preserve stories that shaped the neighbourhood long before the first bungalows were built.',
+      entries: [
+        {
+          title: 'Hazelden Lane',
+          year: 'circa 1890s',
+          body: 'Most street names in London honour people — Hazelden Lane honours a house. "Hazelden" (now 1132 St. Anthony Road) was the gracious summer retreat of the Little family, surrounded by hazel trees and set amid sweeping lawns. It was a landmark neighbours and visitors knew by name, and when the street was named, it was the house they chose to remember.',
+        },
+        {
+          title: 'Sanatorium Road',
+          year: 'circa 1900',
+          body: "At the turn of the 20th century, tuberculosis was the leading cause of death in Ontario. Organizations formed across the province to build sanatoria — facilities where patients recovered through fresh air, rest, and treatment. Sanatorium Road takes its name from the facility built here on London's western edge, where open countryside offered the conditions doctors prescribed. The sanatorium is gone; the road remains.",
+        },
+      ],
+      photos: [
+        {
+          src: '/images/history/oakridge-park-model-homes-1960s.webp',
+          alt: 'The New Oakridge Park model homes entrance sign standing in an empty field, early 1960s, London Ontario',
+          caption: '"The New Oakridge Park — Model Homes Entrance." Sifton\'s billboard for the second phase of development, standing in open farmland. Behind it: a barn, utility poles, and nothing else.',
+          year: 'circa 1961',
+        },
+        {
+          src: '/images/history/oakridge-acres-aerial-1942.webp',
+          alt: 'Eastman Topographic aerial photograph of the Oakridge area in 1942, showing farmland and the Sifton Bog before development, London Ontario',
+          caption: 'Eastman Topographic aerial, 1942. The entire Oakridge footprint is open farmland. The dark circular mass at centre is the Sifton Bog — surrounded by fields eight years before the first homes were built.',
+          year: '1942',
+        },
+        {
+          src: '/images/history/oakridge-acres-aerial-1978.webp',
+          alt: 'Northway Survey Corporation aerial photograph of Oakridge, London Ontario, April 25 1978, showing completed residential development',
+          caption: 'Northway Survey Corporation aerial, April 25, 1978. Oakridge is nearly fully built out — curved residential streets, the Sifton Bog visible at centre, the Thames River and Byron along the lower left.',
+          year: '1978',
         },
       ],
     },
@@ -284,6 +357,65 @@ export const AREAS: Area[] = [
         highlight: 'A real neighbourhood main street — walkable, local, and complete',
       },
     ],
+    parksData: {
+      parks: [
+        {
+          name: 'Springbank Park',
+          address: '1085 Commissioners Road West',
+          amenities: ['140+ hectares', 'Thames River trails', 'Storybook Gardens', '4 mini soccer pitches', 'Skate park', 'Picnic shelters', 'Bandshell & pavilion', 'Wading pool', 'Playground', 'Parking'],
+          highlight: 'London\'s largest park — 140 hectares of river valley, trails, and Storybook Gardens at Byron\'s doorstep',
+        },
+        {
+          name: 'Jorgenson Park',
+          address: '1308 Norman Avenue',
+          amenities: ['Baseball diamond', 'Mini soccer field', '2 tennis courts', 'Pickleball court', 'Byron Community Pool (outdoor)', 'Community centre & meeting rooms', 'Play structure', 'Swing set', 'Washrooms', 'Parking'],
+          highlight: 'Byron\'s community park hub — outdoor pool, tennis, baseball, and a busy community centre',
+        },
+        {
+          name: 'A.L. Furanna Park',
+          address: '100 Wychwood Park',
+          amenities: ['2 tennis courts', 'Picnic tables', 'Benches', 'Open green space'],
+          highlight: 'Tucked-away park with tennis courts in the established Byron residential core',
+        },
+        {
+          name: 'Warbler Woods ESA',
+          address: '1560 Commissioners Road West',
+          amenities: ['40+ hectares of natural forest', 'Walking trails', 'Paved pathway', 'Wildlife habitat', 'Birdwatching'],
+          highlight: 'Environmentally Significant Area with 40+ hectares of protected Carolinian forest along Byron\'s western boundary',
+        },
+        {
+          name: 'Byron View Park',
+          address: '2225 Colonel Talbot Road',
+          amenities: ['Large open green space', 'Natural setting', 'Quiet neighbourhood parkland'],
+          highlight: 'Expansive natural parkland along Colonel Talbot Road — one of Byron\'s most peaceful open spaces',
+        },
+      ],
+    },
+    historyData: {
+      intro: "Byron's past runs deeper than its modern streetscape suggests. The roads residents travel every day trace routes used by settlers, millers, landowners, and governors who shaped London's early history.",
+      entries: [
+        {
+          title: "Hall's Mill Road — Byron's First Name",
+          year: '1830s',
+          body: "Before it was Byron, this neighbourhood was known as Hall's Mills — a post office hamlet in the former Westminster Township. In the 1830s, Burleigh Hunt built a dam, gristmill, and a carding and fulling mill along the Thames River. The mills drew settlers and commerce, establishing the first community here at the river's edge. Hall's Mill Road still runs north from Commissioners Road toward the Thames, tracing the original route millers and farmers travelled.",
+        },
+        {
+          title: 'Springbank Drive — The Spring Mill',
+          year: 'circa 1845',
+          body: "Around 1845, Charles Coombs purchased McEwen's grist mill — known as the Spring Mill — roughly where Storybook Gardens stands today. The mill was powered by springs flowing from the hillside into the Thames River, a natural hydraulic advantage that made this bend in the river a hub of early industry. Springbank Drive preserves that name: the springs along the bank. The mill is gone, but the park that replaced it has become London's most beloved outdoor destination.",
+        },
+        {
+          title: 'Colonel Talbot Road',
+          year: '1771–1853',
+          body: "Colonel Thomas Talbot was one of Upper Canada's most eccentric and powerful landowners — a former aide-de-camp to Lieutenant-Governor Simcoe who eventually controlled over 65,000 acres through the Talbot Settlement. Unpredictable and fiercely independent, Talbot nevertheless placed hundreds of settler families on productive land across southwestern Ontario. The road bearing his name runs north from Byron's Baseline Road, honouring the man whose land grant defined much of this region's early settlement history.",
+        },
+        {
+          title: 'Commissioners Road — A Trail Before a Road',
+          year: '1793',
+          body: "When Lieutenant-Governor John Graves Simcoe journeyed from Niagara to Detroit in 1793, he followed a Native trail that passed through what is now South and West London. The trail was widened, improved, and eventually formalized as Commissioners Road — named for the Crown Commissioners responsible for maintaining early colonial infrastructure. The road that anchors Byron's commercial strip today is the same corridor Simcoe travelled over 230 years ago.",
+        },
+      ],
+    },
     faqs: [
       {
         q: 'Are there homes for sale in Byron, London Ontario right now?',
@@ -364,6 +496,38 @@ export const AREAS: Area[] = [
         highlight: 'Canada\'s top university — neighbour, employer, and economic engine',
       },
     ],
+    parksData: {
+      parks: [
+        {
+          name: 'Jesse Davidson Park',
+          address: '731 Viscount Road',
+          amenities: ['2 full-size soccer fields', '2 mid-size soccer fields', 'Peewee baseball diamond', 'Half-court basketball', 'Spray pad', 'Play structure', '2 swing sets', 'Walking trail', 'Paved pathway', 'Parking', 'Washrooms', 'Accessible'],
+          highlight: 'Westmount\'s most active park — four soccer pitches, spray pad, and walking paths all in one complex',
+        },
+        {
+          name: 'Westmount Lions Park',
+          address: '784 Viscount Road',
+          amenities: ['Full-size soccer field', 'Baseball diamond', 'Play structure', 'Walking trail', 'Parking', 'Washrooms', 'Accessible'],
+          highlight: 'Community soccer and baseball park in the heart of Westmount',
+        },
+        {
+          name: 'Westmount Park',
+          address: '196 McMaster Drive',
+          amenities: ['Baseball diamond', 'Walking trail', 'Paved pathway', 'Open green space'],
+          highlight: 'Neighbourhood ball diamond park serving the Westmount residential streets',
+        },
+      ],
+    },
+    historyData: {
+      intro: "Westmount's identity as one of London's most established communities is backed by layers of history — visible today in its heritage buildings and the stories behind its streets.",
+      entries: [
+        {
+          title: 'Grosvenor Lodge — 1017 Western Road',
+          year: '1835',
+          body: "For over 120 years, Grosvenor Lodge served as home to one of London's pioneer families. Samuel and Anne Peters left their native Devon, England, for Canada in 1835. Samuel's civil engineering background helped him establish himself in the growing community, and the family built Grosvenor Lodge as their long-term home. Described as an outstanding example of Tudor Gothic architecture, it is one of the most distinctive heritage buildings remaining from London's earliest residential era. The City of London now stewards the property as a designated heritage site.",
+        },
+      ],
+    },
     faqs: [
       {
         q: 'Are there homes for sale in Westmount, London Ontario?',
@@ -461,6 +625,12 @@ export const AREAS: Area[] = [
           amenities: ['Multi-use trail', 'Thames River valley', 'Connection to Springbank Park', 'Cycling & walking'],
           highlight: 'Direct river trail access from the neighbourhood — connects to the full Thames Valley system',
         },
+        {
+          name: 'Riverbend Park',
+          address: '1585 Riverbend Road',
+          amenities: ['2 full-size soccer fields', 'Peewee baseball diamond', 'Multi-use pad', 'Spray pad', '2 play structures', 'Swing set', 'Full-court basketball', 'Walking trail', 'Paved pathway', 'Picnic shelter', 'Washrooms', 'Accessible'],
+          highlight: 'Riverbend\'s community park — soccer, spray pad, and playground serving the growing golf community',
+        },
       ],
     },
     demographicsData: {
@@ -475,6 +645,20 @@ export const AREAS: Area[] = [
         'New Riverbend Public School (1000 Upperpoint Ave, $27.1M) ranked among London\'s top 2025 building permits — opening September 2027',
         'London issued a record 5,462 new residential units citywide in 2025 (+48% year-over-year) — Riverbend is among the most active residential sites in the west end',
         'Premium pricing ($731K–$868K+) reflects new-build quality, golf course setting, and river valley access — one of London\'s highest-value residential addresses',
+      ],
+    },
+    historyData: {
+      intro: 'Riverbend is a new community by name, but the land it stands on carries history that reaches back to the earliest farming settlements west of London.',
+      entries: [
+        {
+          title: 'Kains Road — An Early West London Farm',
+          year: 'circa 1825',
+          body: 'Kains Road takes its name from Archibald Kains, born in Quebec in 1825. After farming near Exeter and running a distillery with his brother in St. Thomas, Kains eventually settled on a farm west of London. His land sat along what was then the edge of the city, and the road that once ran from Commissioners Road to the Kains farm has survived all the development around it. Today it runs from the Oxford Street extension directly into the Riverbend community — still carrying the family name.',
+        },
+        {
+          title: "Sandy Somerville Drive — A Golfer's Legacy",
+          body: "Sandy Somerville was one of Canada's most accomplished amateur golfers — a London native who won the U.S. Amateur Championship in 1932 and represented Canada in international competition for years. When Sifton Properties developed the RiverBend Golf Community, the private 18-hole course at its heart was built on land with deep sporting roots, and Sandy Somerville Drive — skirting the course — was named in his honour. The connection between the golf course, the street name, and London's amateur golf history is not coincidental: it is the identity the community was built around.",
+        },
       ],
     },
     faqs: [
@@ -689,14 +873,14 @@ export const AREAS: Area[] = [
       parks: [
         {
           name: 'Norwest Optimist Park',
-          address: '48 Hawthorn Road',
-          amenities: ['Baseball diamond', 'Soccer fields', 'Big-kid treehouse playground', 'Toddler playground', '4 standard swings', '2 baby swings', 'Toboggan hill (winter)', 'Open green space'],
+          address: '48 Hawthorne Road',
+          amenities: ['Peewee baseball diamond', 'Mini soccer field', '2 play structures', '3 swing sets', 'Community garden', 'Open green space'],
           highlight: 'Right beside Emily Carr Public School — the daily gathering point for Whitehills families',
         },
         {
           name: 'Jaycee Park',
           address: '1830 Aldersbrook Road',
-          amenities: ['Baseball diamond', 'Mini soccer field', 'Multi-sport court', 'Playground', 'Walking & biking paths', 'Open fields', 'Parking'],
+          amenities: ['Peewee baseball diamond', 'Mini soccer field', '2 play structures', '2 swing sets', 'Community garden', 'Walking & biking paths', 'Open fields', 'Parking'],
           highlight: '12.6-acre park with trails — Whitehills\' largest green space',
         },
         {
@@ -716,6 +900,16 @@ export const AREAS: Area[] = [
           address: 'Via Fox Hollow Ravine corridor',
           amenities: ['Multi-km trail system', 'Carolinian forest', 'Wildlife habitat', 'Birdwatching', 'Off-leash dog area'],
           highlight: 'One of London\'s most significant natural areas — walk-in access from Whitehills residential streets',
+        },
+      ],
+    },
+    historyData: {
+      intro: "Whitehills takes its name from the gentle rises along the Wonderland Road corridor — and that corridor carries more history than most residents know.",
+      entries: [
+        {
+          title: 'Wonderland Road — The Summer Gardens',
+          year: '1935',
+          body: "In May 1935, the Wonderland Summer Gardens opened along Wonderland Road and quickly became one of London's most popular entertainment destinations. Brothers Charles and Wilford Jones ran the facility, offering indoor and outdoor dancing, swimming, and fine dining. For decades it drew Londoners from across the city for summer evenings out. The gardens are long gone, but the road that brought people here still runs north through Whitehills, carrying the name of London's best-remembered summer destination.",
         },
       ],
     },
@@ -834,8 +1028,8 @@ export const AREAS: Area[] = [
         {
           name: 'Basil Grover Park',
           address: '555 Wharncliffe Road South',
-          amenities: ['Skateboard park', 'Junior play structure', 'Senior play structure', 'Accessible swing seat', 'Soccer & open fields', 'Washrooms', 'Parking'],
-          highlight: 'District park at Wharncliffe & Commissioners — skate park and accessible playground for all ages',
+          amenities: ['Skateboard park', 'Disc golf course', '2 play structures', 'Swing set', 'Open green space', 'Washrooms', 'Parking'],
+          highlight: 'District park at Wharncliffe & Commissioners — skate park, disc golf, and playgrounds for all ages',
         },
         {
           name: 'Reservoir Park',
@@ -854,6 +1048,21 @@ export const AREAS: Area[] = [
           address: '196 McMaster Drive',
           amenities: ['Baseball diamond', 'Open green space'],
           highlight: 'Neighbourhood diamond park serving the Westmount residential streets',
+        },
+      ],
+    },
+    historyData: {
+      intro: "West London sits along the Commissioners Road corridor — a route that predates the city itself and connects the neighbourhood to the earliest chapters of London's settlement history.",
+      entries: [
+        {
+          title: "Commissioners Road — Simcoe's Trail",
+          year: '1793',
+          body: "Commissioners Road follows a path older than the city it runs through. When Lieutenant-Governor John Graves Simcoe journeyed from Niagara to Detroit in 1793, he followed a Native trail that cut south of the Thames River through this part of the province. The trail was widened and improved by Crown Commissioners — the officials responsible for colonial road infrastructure — and the name has persisted ever since. The road West London residents commute on today is the same corridor Simcoe travelled over 230 years ago.",
+        },
+        {
+          title: 'Brick Street Cemetery — 370 Commissioners Road West',
+          year: '1813',
+          body: "One of the oldest cemeteries in the London area sits on Commissioners Road West at 370 — a designated Ontario Heritage Site. Established in 1813, it served the pioneer families of Westminster Township, the rural municipality that predated the City of London and covered most of what is now West London and the surrounding areas. The cemetery is a direct connection to the earliest European settlers in this region and remains a protected heritage site within the neighbourhood.",
         },
       ],
     },
