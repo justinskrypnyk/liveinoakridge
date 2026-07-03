@@ -229,24 +229,6 @@ export const AREAS: Area[] = [
           amenities: ['18-hole public course', '9-hole public course', 'Thames River valley setting', 'Clubhouse'],
           highlight: 'Public golf along the Thames River — established 1924, one of London\'s most scenic courses',
         },
-        {
-          name: 'Arthur Ford Park',
-          address: '671 Viscount Road',
-          amenities: ['Tennis court', '2 pickleball courts', 'Play structure', 'Swing set', 'Walking paths'],
-          highlight: 'Neighbourhood park with tennis and pickleball off Viscount Road',
-        },
-        {
-          name: 'Thistledown Park',
-          address: '996 Thistledown Way',
-          amenities: ['Regulation baseball diamond', 'Peewee baseball diamond', 'Open green space'],
-          highlight: 'Quiet residential park in Oakridge Acres with two ball diamonds',
-        },
-        {
-          name: 'Cresthaven Park',
-          address: '104 Parks Edge Crescent',
-          amenities: ['Full-size soccer field', 'Half-court basketball', 'Play structure', 'Swing set', 'Walking paths'],
-          highlight: 'Multi-sport neighbourhood park in the Cresthaven pocket of Oakridge',
-        },
       ],
     },
     historyData: {
