@@ -17,66 +17,78 @@ export interface BlogPost {
 export const BLOG_POSTS: BlogPost[] = [
   {
     slug: 'june-2026-london-ontario-market-update',
-    title: 'June 2026 London Ontario Real Estate Market Update',
-    description: 'Summer 2026 market conditions across West London — what buyers and sellers need to know right now in Oakridge, Byron, Hyde Park, and beyond.',
-    date: '2026-06-25',
-    dateDisplay: 'June 25, 2026',
+    title: 'June 2026 London Ontario Real Estate Market Update: What It Means for Oakridge',
+    description: "See how Oakridge outperformed London's June 2026 housing market with faster sales and rising over-asking offers. Full stats inside.",
+    date: '2026-06-30',
+    dateDisplay: 'June 30, 2026',
     category: 'Market Updates',
     author: 'Justin Skrypnyk',
     readTime: '5 min read',
+    image: '/images/june-2026-london-ontario-market-update.png',
+    imageAlt: 'June 2026 London Ontario real estate market update — Oakridge summer market conditions',
     content: `
-      <p>The London Ontario real estate market in June 2026 is active, balanced, and favouring well-prepared buyers and accurately priced sellers. Transaction volume is running approximately 6% ahead of the same period last year, and West London neighbourhoods continue to lead in buyer demand. Here is a frank look at what the data shows and what it means for you right now.</p>
+      <p>London's market cooled off in June while Oakridge held firm. Here's the full breakdown, and what it means if you're thinking about buying or selling this summer.</p>
 
-      <h2>Sales Volume Remains Active</h2>
-      <p>London Ontario transaction volume year-to-date in 2026 is running approximately 6% ahead of the same period last year. <a href="/areas/oakridge/">Oakridge</a>, <a href="/areas/byron/">Byron</a>, and <a href="/areas/lambeth/">Lambeth</a> continue to lead West London in buyer demand, with well-priced listings moving in 14 to 21 days. <a href="/areas/hyde-park/">Hyde Park</a> new construction in the $750,000–$950,000 range is also seeing strong activity from upsizing families.</p>
+      <h2>June 2026 at a Glance: London vs. Oakridge</h2>
+      <table>
+        <thead>
+          <tr><th>Metric</th><th>London (City-Wide)</th><th>Oakridge</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Average Price</td><td>$594,008 (-7.1% MoM, -8.2% YoY)</td><td>$715,753 (-7.2% MoM, +5.9% YoY)</td></tr>
+          <tr><td>Median Price</td><td>$550,000 (-5.2% MoM)</td><td>$664,000 (-4.9% MoM, +6.0% YoY)</td></tr>
+          <tr><td>Sales Volume</td><td>501 (-7.7% MoM)</td><td>35 (flat MoM, +6.1% YoY)</td></tr>
+          <tr><td>Median Days on Market</td><td>24</td><td>19 (down from 27 in May)</td></tr>
+          <tr><td>Avg. Sale Price / List Price</td><td>97.9%</td><td>97.8%</td></tr>
+          <tr><td>Homes Sold Above List</td><td>18.6%</td><td>22.9% (up from 17.1% in May)</td></tr>
+          <tr><td>Terminations</td><td>529 (+30.6% MoM)</td><td>27 (+42.1% MoM)</td></tr>
+        </tbody>
+      </table>
 
-      <h2>Average Prices: June 2026</h2>
-      <p>The London Ontario average home price sits in the $625,000 to $660,000 range heading into summer. Premium west-end neighbourhoods like <a href="/areas/oakridge/">Oakridge</a> and <a href="/areas/byron/">Byron</a> are trading 10 to 20 percent above the city average. <a href="/areas/west-london/">West London</a> near the Commissioners corridor remains one of the most accessible entry points for established-neighbourhood buyers, with detached homes in the $540,000 to $700,000 range.</p>
+      <h2>What Happened in the London Ontario Real Estate Market in June 2026?</h2>
+      <p>London's average sale price dropped to $594,008 in June, down 7.1% from May and 8.2% from June of last year. Days on market stretched to 39 on average, up from 33 the month before.</p>
+      <p>The slowdown lines up with what's been building all year. Inventory has grown steadily, which has <a href="https://wowa.ca/london-housing-market" target="_blank" rel="noopener noreferrer">put more negotiating power in buyers' hands across the city</a>, and June's numbers reflect that shift playing out in real time. Sales volume dipped to 501 transactions, down almost 8% from May, and terminations jumped over 30%, a sign that more sellers listed at prices the market wasn't ready to support and pulled back rather than negotiate down.</p>
+      <p>None of this is unique to London. The broader Ontario picture has looked similar for months, with <a href="https://www.nesto.ca/home-buying/london-housing-market-outlook/" target="_blank" rel="noopener noreferrer">buyers gaining room to negotiate as supply builds and prices hold flat</a> rather than climbing or crashing. London is moving with that current, not against it.</p>
 
-      <h2>The Rate Environment</h2>
-      <p>The <a href="https://www.bankofcanada.ca/core-functions/monetary-policy/key-interest-rate/" target="_blank" rel="noopener noreferrer">Bank of Canada overnight rate</a> has stabilized in 2026, and 5-year fixed mortgage rates are generally available in the 4.50% to 5.25% range for well-qualified buyers. For a deeper look at how rates affect London Ontario prices, read our <a href="/blog/interest-rates-london-ontario-home-prices/">interest rate analysis</a>.</p>
+      <h2>How Did Oakridge Perform Compared to the Rest of London?</h2>
+      <p>Oakridge told a different story. Thirty-five homes sold in June, matching May's pace, and the average price landed at $715,753. That's down slightly from May but still up 5.9% from June of last year, which is the opposite direction of the citywide trend.</p>
+      <p>The clearest signal is speed. The median days on market in Oakridge dropped to 19, down from 27 in May, while London as a whole slowed to a 39-day average. Homes here are still moving quickly even as the wider market takes longer to close deals. Detached homes led the way with 19 sales at an average of $867,548, and condo townhouses saw steady activity too with 7 sales averaging $549,564.</p>
+      <p>We've also seen multiple offer situations on homes in and around the neighbourhood this month. That tracks with the data: 22.9% of Oakridge homes sold above asking in June, up from 17.1% in May, well ahead of the citywide rate of 18.6%. Summer tends to pull some buyer and seller attention toward vacation plans, but homes are still being listed and still selling here, often quickly and sometimes with competition.</p>
+      <p>For a closer look at the neighbourhood, see our <a href="/areas/oakridge/">Oakridge neighbourhood guide</a>.</p>
 
-      <h2>What Buyers Should Know</h2>
-      <p>Summer typically brings slightly reduced competition compared to the April–May peak. Well-priced properties in desirable west-end areas are still generating multiple offers, but buyers who are <a href="/services/buying/">pre-approved and ready to act</a> have more room to breathe. <a href="/services/first-time-buyers/">First-time buyers</a> may find summer a helpful window to navigate without peak spring pressure.</p>
+      <h2>Is Now a Good Time to Sell in Oakridge?</h2>
+      <p>If your home is priced right, yes. The combination of a 19-day median time on market and a rising share of over-asking sales points to genuine buyer demand for well-positioned Oakridge listings, even while the rest of the city slows down.</p>
+      <p>The termination numbers are worth paying attention to as well. Twenty-seven Oakridge listings were pulled from the market in June, up sharply from 19 in May. That usually points to homes priced ahead of what buyers are willing to pay, not a lack of buyers altogether. The homes actually selling here are selling fast and often above list, which tells you demand hasn't gone anywhere, it's just unforgiving of overpricing.</p>
+      <p>Summer brings a natural dip in urgency since some buyers and sellers are focused on travel rather than house hunting. That hasn't stopped serious activity in Oakridge this month, and homes that are priced to the current market are still finding multiple interested buyers.</p>
+      <p>Thinking about selling nearby? Take a look at our <a href="/areas/west-london/">West London neighbourhood guide</a>.</p>
 
-      <h2>What Sellers Should Know</h2>
-      <p>Motivated buyers who need to be settled before the fall school year are active through July and August. If you are considering <a href="/services/selling/">selling your home</a> this summer, a well-prepared listing can still generate strong results. Start with a <a href="/services/home-evaluation/">complimentary home evaluation</a> to understand exactly what your home is worth today.</p>
+      <h2>Is Now a Good Time to Buy in Oakridge?</h2>
+      <p>It depends on what you're looking for. Buyers citywide have more room to negotiate than they've had in years, and borrowing costs have stayed steady rather than climbing, with <a href="https://www.bankofcanada.ca/core-functions/monetary-policy/key-interest-rate/" target="_blank" rel="noopener noreferrer">the Bank of Canada holding its policy rate at 2.25% through its June announcement</a>. That stability, combined with rising inventory, is real leverage for buyers in most of London.</p>
+      <p>In Oakridge specifically, that leverage is thinner. With homes moving in a median of 19 days and nearly a quarter selling above asking, buyers here should expect to move decisively on the right property rather than count on a long negotiation window. The upside is that Oakridge has held its value better than the city average, so buying here now means buying into a pocket of the market that isn't following the broader softening trend.</p>
+      <p>Buyers weighing nearby areas may also want to read our <a href="/areas/whitehills/">Whitehills neighbourhood guide</a>.</p>
 
-      <h2>Area Snapshot — June 2026</h2>
-      <ul>
-        <li><strong><a href="/areas/oakridge/">Oakridge</a></strong> — Balanced-to-sellers market. Detached homes in the $680K–$850K range moving well.</li>
-        <li><strong><a href="/areas/byron/">Byron</a></strong> — Premium prices maintained. Executive homes above $900K still finding qualified buyers.</li>
-        <li><strong><a href="/areas/lambeth/">Lambeth</a></strong> — Estate communities and new builds in the $750K–$1.1M range performing strongly.</li>
-        <li><strong><a href="/areas/hyde-park/">Hyde Park</a></strong> — New construction demand active. Resale moving competitively.</li>
-        <li><strong><a href="/areas/westmount/">Westmount</a></strong> — Condo and semi sector active; investors and professionals watching closely.</li>
-        <li><strong><a href="/areas/west-london/">West London</a></strong> — Best value in the west end. Entry-level detached generating attention.</li>
-      </ul>
+      <h2>What Does the Rise in Terminations Mean?</h2>
+      <p>Terminations climbed both citywide (up 30.6%) and in Oakridge (up 42.1%) in June. A termination means a listing was pulled from the market rather than sold, and a rising termination rate is usually a sign that more sellers tested the market at an ambitious price and then stepped back rather than negotiate.</p>
+      <p>The difference is what happens to the homes that don't get pulled. Citywide, the homes that do sell are taking longer to do it. In Oakridge, the homes that are priced to the current market are still selling in under three weeks, often with competition. The lesson for sellers is the same one it always is: an accurate price gets results, an ambitious one gets a termination.</p>
+      <p>For more context on where the market stood the month before, see our <a href="/blog/may-2026-london-ontario-market-update/">May 2026 London Ontario Real Estate Market Update</a>.</p>
     `,
     faqs: [
       {
-        question: 'What is the average home price in London Ontario in June 2026?',
-        answer: 'The London Ontario average home price is approximately $625,000–$660,000 as of June 2026, depending on property type and neighbourhood. Premium west-end areas like Oakridge and Byron are trading 10–20% above the city average, while West London near the Commissioners corridor offers more accessible entry points.',
+        question: 'Is London Ontario a buyer\'s or seller\'s market right now?',
+        answer: 'London is leaning toward a buyer\'s market, with rising inventory and longer days on market giving buyers more negotiating room. Oakridge is the exception, where fast sales and over-asking offers still favour well-priced sellers.',
       },
       {
-        question: 'Is it a buyer\'s or seller\'s market in London Ontario right now?',
-        answer: 'West London in June 2026 is a balanced-to-sellers market in well-priced neighbourhoods. Properties priced accurately in Oakridge, Byron, and Lambeth are selling in 14–21 days, sometimes with multiple offers. Overpriced listings are sitting significantly longer.',
+        question: 'Are home prices dropping in London Ontario?',
+        answer: 'Citywide average prices fell 7.1% month over month and 8.2% year over year in June. Oakridge prices dipped slightly month over month but remain up 5.9% from a year ago.',
       },
       {
-        question: 'How long does it take to sell a house in London Ontario in summer 2026?',
-        answer: 'Well-priced homes in desirable West London neighbourhoods are selling in approximately 14 to 21 days on average in summer 2026. Properties that are overpriced relative to comparable sales are taking considerably longer and often require price reductions.',
+        question: 'How long does it take to sell a house in Oakridge right now?',
+        answer: 'The median time on market in Oakridge was 19 days in June, down from 27 in May and well ahead of the citywide median of 24 days.',
       },
       {
-        question: 'What are current mortgage rates in London Ontario?',
-        answer: 'As of June 2026, 5-year fixed mortgage rates are generally available in the 4.50%–5.25% range for well-qualified buyers. Variable rates are comparable or slightly lower depending on the lender and your financial profile. A mortgage broker can access rates across multiple lenders to find your best option.',
+        question: 'Is Oakridge a good neighbourhood to buy or sell in this summer?',
+        answer: 'Yes for both, with different expectations. Sellers with accurately priced homes are seeing fast sales and multiple offers, while buyers should be ready to act quickly on the right property rather than expect a long negotiation.',
       },
-      {
-        question: 'Is now a good time to buy a home in London Ontario?',
-        answer: 'Summer 2026 offers a reasonable entry window for prepared buyers. Competition is slightly lower than the spring peak, giving buyers more time to make informed decisions. If you are pre-approved, have clarity on your target neighbourhoods, and are working with a local broker, summer is a practical time to buy.',
-      },
-    ],
-    sources: [
-      { label: 'Bank of Canada — Key Interest Rate', url: 'https://www.bankofcanada.ca/core-functions/monetary-policy/key-interest-rate/' },
-      { label: 'London and St. Thomas Association of REALTORS® (LSTAR)', url: 'https://www.lstar.ca' },
     ],
   },
   {
