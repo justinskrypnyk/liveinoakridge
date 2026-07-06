@@ -3,7 +3,25 @@ import Base from '@/layouts/Base.astro';
 import Schema from '@/components/Schema.astro';
 import ContactForm from '@/components/ContactForm.astro';
 import { SITE } from '@/data/site';
-import { AREAS } from '@/data/areas';
+import { AREAS, getArea } from '@/data/areas';
+
+const oakridge = getArea('oakridge')!;
+const rootsTimeline = [
+  ...oakridge.historyData!.photos
+    .map((p) => ({
+      year: p.year,
+      src: p.src,
+      alt: p.alt,
+      caption: p.caption,
+    }))
+    .sort((a, b) => parseInt(a.year.match(/\d{4}/)![0]) - parseInt(b.year.match(/\d{4}/)![0])),
+  {
+    year: '2026',
+    src: '/images/oakridge-aerial-drone-2026-thumb.webp',
+    alt: "Aerial drone view of Oakridge's mature tree canopy today, London Ontario",
+    caption: "Today. The farmland is gone, the model homes have grown up — decades of maple and oak canopy now cover the streets Justin's family has called home since 1959.",
+  },
+];
 import { SERVICES } from '@/data/services';
 ---
 
@@ -71,10 +89,16 @@ import { SERVICES } from '@/data/services';
   </Fragment>
 
   <section class="relative min-h-screen flex items-center justify-center bg-navy overflow-hidden">
-    <div class="absolute inset-0 bg-gradient-to-br from-navy-dark via-navy to-navy-light opacity-90"></div>
-    <div class="absolute top-0 right-0 w-1/2 h-full opacity-5">
-      <div class="w-full h-full bg-gold" style="clip-path: polygon(100% 0, 0 0, 100% 100%)"></div>
-    </div>
+    <img
+      src="/images/oakridge-aerial-drone-2026.webp"
+      alt="Aerial drone view of Oakridge's mature tree canopy at golden hour, London Ontario"
+      class="absolute inset-0 w-full h-full object-cover"
+      width="2400"
+      height="1350"
+      fetchpriority="high"
+    />
+    <div class="absolute inset-0 bg-gradient-to-t from-navy-dark via-navy/85 to-navy/50"></div>
+    <div class="absolute inset-0 bg-gradient-to-r from-navy-dark/60 via-transparent to-navy-dark/60"></div>
 
     <div class="relative container-site text-center text-white py-20 pt-32 md:py-32 md:pt-40">
       <div class="inline-flex items-center gap-2 bg-gold/20 text-gold text-sm font-medium px-4 py-2 rounded-full mb-8 border border-gold/30">
@@ -123,6 +147,42 @@ import { SERVICES } from '@/data/services';
       <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
         <path d="M19 9l-7 7-7-7"/>
       </svg>
+    </div>
+  </section>
+
+  <section class="py-12 md:py-20 bg-navy-dark text-white">
+    <div class="container-site">
+      <div class="text-center mb-12">
+        <div class="inline-block text-gold text-sm font-semibold tracking-wider uppercase mb-4">1959 — 2026</div>
+        <h2 class="font-serif text-3xl md:text-4xl mb-4">Oakridge, Then and Now</h2>
+        <div class="gold-divider mx-auto mb-4"></div>
+        <p class="text-white/60 max-w-2xl mx-auto text-lg">
+          Justin's family has called Oakridge home since 1959 — through farmland, first construction, and the tree canopy it's known for today.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+        {rootsTimeline.map((frame) => (
+          <div class="relative rounded-xl overflow-hidden shadow-lg flex flex-col bg-navy-light">
+            <div class="aspect-[4/5] relative">
+              <img
+                src={frame.src}
+                alt={frame.alt}
+                class="w-full h-full object-cover"
+                loading="lazy"
+              />
+              <div class="absolute inset-0 bg-gradient-to-t from-navy-dark/90 via-navy-dark/10 to-transparent"></div>
+              <div class="absolute top-3 left-3 bg-gold text-navy text-xs font-bold px-2.5 py-1 rounded-full">
+                {frame.year}
+              </div>
+            </div>
+            <p class="p-3 text-xs text-white/70 leading-relaxed line-clamp-3">
+              {frame.caption}
+            </p>
+          </div>
+        ))}
+      </div>
+      <p class="text-center text-white/40 text-sm mt-6">Full history on the <a href="/areas/oakridge/" class="text-gold hover:underline">Oakridge area page</a></p>
     </div>
   </section>
 
@@ -193,6 +253,49 @@ import { SERVICES } from '@/data/services';
         ))}
       </div>
       <p class="text-center text-sm text-slate mt-6">Also serving Byron, Westmount and Riverbend.</p>
+    </div>
+  </section>
+
+  <section class="py-12 md:py-20 bg-navy-dark text-white">
+    <div class="container-site">
+      <div class="text-center mb-12">
+        <div class="inline-block text-gold text-sm font-semibold tracking-wider uppercase mb-4">This Is Oakridge</div>
+        <h2 class="font-serif text-3xl md:text-4xl mb-4">Sifton Bog</h2>
+        <div class="gold-divider mx-auto mb-4"></div>
+        <p class="text-white/60 max-w-2xl mx-auto text-lg">
+          One of the rarest natural features in any Canadian city — a genuine kettle bog with carnivorous plants and migratory birds, minutes from most Oakridge homes. Photographed by Justin.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="rounded-2xl overflow-hidden shadow-2xl md:col-span-2 md:row-span-2">
+          <img
+            src="/images/areas/sifton-bog-sunrise-skyline-oakridge.webp"
+            alt="Sunrise over Sifton Bog with the London Ontario downtown skyline in the distance"
+            class="w-full h-full object-cover aspect-[4/3] md:aspect-auto"
+            loading="lazy"
+          />
+        </div>
+        <div class="rounded-2xl overflow-hidden shadow-xl">
+          <img
+            src="/images/areas/sifton-bog-sunset-oakridge.webp"
+            alt="Golden hour sunset over Sifton Bog, Oakridge, London Ontario"
+            class="w-full h-full object-cover aspect-[4/3]"
+            loading="lazy"
+          />
+        </div>
+        <div class="rounded-2xl overflow-hidden shadow-xl">
+          <img
+            src="/images/areas/sifton-bog-aerial-square-oakridge.webp"
+            alt="Top-down aerial view of Sifton Bog's kettle bog waters and surrounding forest"
+            class="w-full h-full object-cover aspect-[4/3]"
+            loading="lazy"
+          />
+        </div>
+      </div>
+      <p class="text-center text-white/40 text-sm mt-6">
+        More on the <a href="/areas/oakridge/#parks" class="text-gold hover:underline">Oakridge area page</a>
+      </p>
     </div>
   </section>
 

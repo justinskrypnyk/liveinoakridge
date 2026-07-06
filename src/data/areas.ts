@@ -30,6 +30,8 @@ export interface ParkEntry {
   address: string;
   amenities: string[];
   highlight?: string;
+  image?: string;
+  imageAlt?: string;
 }
 
 export interface ParksData {
@@ -216,6 +218,8 @@ export const AREAS: Area[] = [
           address: 'Oxford Street West (west of Hyde Park Road)',
           amenities: ['2.8 km walking trail', '370 m boardwalk', 'Viewing platform', 'Birdwatching', 'Nature education'],
           highlight: 'Most southerly large acidic bog in Canada — carnivorous plants, migratory birds, and rare ecosystems',
+          image: '/images/areas/sifton-bog-aerial-square-oakridge.webp',
+          imageAlt: "Top-down aerial drone photo of Sifton Bog's kettle bog waters, Oakridge, London Ontario",
         },
         {
           name: 'Hazelden Park',
