@@ -236,7 +236,7 @@ export const AREAS: Area[] = [
       ],
     },
     historyData: {
-      intro: 'Oakridge sits on land with deep roots in West London history. The street names here preserve stories that shaped the neighbourhood long before the first bungalows were built.',
+      intro: 'Oakridge sits on land with deep roots in West London history — street names that preserve forgotten stories, and a golf course where Canadian champions once played.',
       entries: [
         {
           title: 'Hazelden Lane',
@@ -247,6 +247,21 @@ export const AREAS: Area[] = [
           title: 'Sanatorium Road',
           year: 'circa 1900',
           body: "At the turn of the 20th century, tuberculosis was the leading cause of death in Ontario. Organizations formed across the province to build sanatoria — facilities where patients recovered through fresh air, rest, and treatment. Sanatorium Road takes its name from the facility built here on London's western edge, where open countryside offered the conditions doctors prescribed. The sanatorium is gone; the road remains.",
+        },
+        {
+          title: 'Thames Valley Golf Course Is Born',
+          year: '1924',
+          body: "Thames Valley exists because E.V. Buchanan, general manager of London's Public Utilities Commission, came home from a trip to England impressed by the public golf courses he'd seen on riverfront public land. The Commission owned 100 acres along the Thames — originally acquired for the city's water supply wells, not recreation — and Buchanan saw no reason the land couldn't do both jobs. No public funds were ever spent to build or operate it. The course was designed, built, and run by John Innes, a wounded WWI veteran and PGA of Canada professional with no prior course-design credentials, who opened it as six holes on June 15, 1924.",
+        },
+        {
+          title: 'Opening Day of the Classic Course',
+          year: 'July 29, 1933',
+          body: "By 1933, Innes had grown Thames Valley into a 6,110-yard championship 18-hole layout, financed by an extra 26 acres bought from local farmers for $10,784. Its grand opening drew four of the biggest names in golf: Sandy Somerville — the London-born U.S. Amateur champion — Jack Nash, Joe Kirkwood, and Gene Sarazen, all playing an exhibition match in front of one of the largest galleries the region had seen. Oakridge's own Thames Valley Golf Course had arrived as a genuine championship venue, a title it holds to this day.",
+        },
+        {
+          title: 'Flood, War, and a Course Reborn',
+          year: '1937–1946',
+          body: "Thames Valley's early success survived a battering. The Great Flood of 1937 sent the Thames over its banks, submerging the pump house and much of the course. Three years later, with Canada at war, the Department of National Defence took over the grounds as a training camp — by 1942, more than 5,000 soldiers trained there and golf became impossible. The course didn't reopen until 1946. Much of the camp's original infrastructure never left: the water fountain beside the 5th tee on the Classic course still runs through pipes the army laid in 1940.",
         },
       ],
       photos: [
@@ -267,6 +282,24 @@ export const AREAS: Area[] = [
           alt: 'Northway Survey Corporation aerial photograph of Oakridge, London Ontario, April 25 1978, showing completed residential development',
           caption: 'Northway Survey Corporation aerial, April 25, 1978. Oakridge is nearly fully built out — curved residential streets, the Sifton Bog visible at centre, the Thames River and Byron along the lower left.',
           year: '1978',
+        },
+        {
+          src: '/images/history/thames-valley-golf-course-aerial-1930s.webp',
+          alt: 'Aerial photograph of the Thames Valley Golf Course clubhouse, putting green, and parking lot in Oakridge, London Ontario, circa 1930s',
+          caption: "Thames Valley's original clubhouse and practice green from the air. Built on Public Utilities Commission land along the Thames River — acquired for the city's water supply wells, not recreation. Photo courtesy London & Area Golf History (londonandareagolfhistory.com), sourced from \"From Rough to Fairway\" by John Cowie.",
+          year: 'circa 1930s',
+        },
+        {
+          src: '/images/history/thames-valley-golf-course-opening-day-1933.webp',
+          alt: 'Golfers Jack Nash, Sandy Somerville, Joe Kirkwood, and Gene Sarazen at the opening of the Thames Valley Classic course, Oakridge, London Ontario, July 29 1933',
+          caption: 'Jack Nash, Sandy Somerville, Joe Kirkwood, and Gene Sarazen — four of the biggest names in golf — at Thames Valley\'s championship opening day. Photo courtesy London & Area Golf History (londonandareagolfhistory.com).',
+          year: 'July 29, 1933',
+        },
+        {
+          src: '/images/history/thames-valley-golf-course-flood-1937.webp',
+          alt: 'Flooded pump house at Thames Valley Golf Course during the Great Flood in Oakridge, London Ontario, 1937',
+          caption: 'The Thames River overflowed its banks in the Great Flood of 1937, submerging the pump house and much of the course. Photo courtesy London & Area Golf History (londonandareagolfhistory.com).',
+          year: '1937',
         },
       ],
     },

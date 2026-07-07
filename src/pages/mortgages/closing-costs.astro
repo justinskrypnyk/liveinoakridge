@@ -1,0 +1,367 @@
+---
+import Base from '@/layouts/Base.astro';
+import Schema from '@/components/Schema.astro';
+import { SITE } from '@/data/site';
+
+const faqs = [
+  {
+    q: 'How much are closing costs when buying a home in London Ontario?',
+    a: 'Closing costs for buyers in London Ontario typically total 1.5% to 3% of the purchase price, including Ontario Land Transfer Tax, legal fees ($1,200–$1,800), title insurance ($200–$400), a home inspection ($450–$600), and moving costs. First-time buyers can reduce their Land Transfer Tax by up to $4,000 through the provincial rebate.',
+  },
+  {
+    q: 'Do sellers pay Land Transfer Tax in Ontario?',
+    a: 'No. Land Transfer Tax is paid only by the buyer on closing. Sellers instead pay real estate commission (plus HST), legal fees, and — if applicable — a mortgage discharge fee to pay out their existing mortgage.',
+  },
+  {
+    q: 'How much is the Ontario first-time home buyer Land Transfer Tax rebate?',
+    a: 'Eligible first-time buyers in Ontario receive a rebate of up to $4,000 off their provincial Land Transfer Tax, which fully eliminates the tax on homes purchased for approximately $368,333 or less.',
+  },
+  {
+    q: 'Is there a municipal Land Transfer Tax in London Ontario?',
+    a: 'No. Unlike Toronto, London Ontario only charges the provincial Land Transfer Tax — there is no additional municipal land transfer tax on top of it.',
+  },
+];
+---
+
+<Base
+  title="Closing Costs Calculator London Ontario | Land Transfer Tax, Legal Fees & More"
+  description="Estimate your buying or selling closing costs in London Ontario — Land Transfer Tax, legal fees, title insurance, commission, and moving costs — before you commit."
+>
+  <Fragment slot="head">
+    <Schema
+      type="service"
+      serviceName="Closing Costs Calculator"
+      description="Estimate buying and selling closing costs in London Ontario, including Ontario Land Transfer Tax, legal fees, title insurance, commission, and moving costs."
+      faqs={faqs}
+    />
+  </Fragment>
+
+  <section class="bg-navy py-20 text-white">
+    <div class="container-site">
+      <nav aria-label="Breadcrumb" class="flex items-center gap-2 text-sm text-white/40 mb-8">
+        <a href="/" class="hover:text-gold transition-colors">Home</a>
+        <span>/</span>
+        <a href="/mortgages/" class="hover:text-gold transition-colors">Mortgages</a>
+        <span>/</span>
+        <span class="text-white/70">Closing Costs Calculator</span>
+      </nav>
+      <h1 class="font-serif text-5xl font-bold mb-4">Closing Costs Calculator</h1>
+      <div class="gold-divider mb-6"></div>
+      <p class="text-xl text-white/70 max-w-2xl">Know what you're in for. Estimate Land Transfer Tax, legal fees, and every other cost buyers and sellers pay on closing day in London Ontario.</p>
+    </div>
+  </section>
+
+  <section class="py-20 bg-cream">
+    <div class="container-site max-w-5xl">
+      <!-- Mode Toggle -->
+      <div class="flex justify-center mb-10">
+        <div class="inline-flex rounded-full bg-white border border-navy/10 p-1 shadow-card">
+          <button id="tab-buying" type="button" class="px-8 py-2.5 rounded-full text-sm font-semibold transition-colors bg-gold text-navy" aria-pressed="true">
+            I'm Buying
+          </button>
+          <button id="tab-selling" type="button" class="px-8 py-2.5 rounded-full text-sm font-semibold transition-colors text-navy/50 hover:text-navy" aria-pressed="false">
+            I'm Selling
+          </button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+        <!-- Calculator -->
+        <div class="bg-white rounded-2xl p-8 shadow-card">
+          <!-- Buying Fields -->
+          <div id="buying-fields" class="space-y-5">
+            <h2 class="font-serif text-2xl text-navy mb-2">Buying Costs</h2>
+            <div>
+              <label for="b-price" class="block text-sm font-medium text-navy/70 mb-1.5">Purchase Price ($)</label>
+              <input type="number" id="b-price" value="650000" min="50000" max="5000000" step="5000"
+                class="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm focus:border-gold outline-none focus:ring-2 focus:ring-gold/20" />
+            </div>
+            <label class="flex items-center gap-2.5 cursor-pointer">
+              <input type="checkbox" id="b-first-time" class="w-4 h-4 accent-gold" />
+              <span class="text-sm text-navy/70">I'm a first-time home buyer</span>
+            </label>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label for="b-legal" class="block text-sm font-medium text-navy/70 mb-1.5">Legal Fees ($)</label>
+                <input type="number" id="b-legal" value="1500" min="500" max="5000" step="50"
+                  class="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm focus:border-gold outline-none focus:ring-2 focus:ring-gold/20" />
+              </div>
+              <div>
+                <label for="b-title" class="block text-sm font-medium text-navy/70 mb-1.5">Title Insurance ($)</label>
+                <input type="number" id="b-title" value="300" min="100" max="1000" step="25"
+                  class="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm focus:border-gold outline-none focus:ring-2 focus:ring-gold/20" />
+              </div>
+              <div>
+                <label for="b-inspection" class="block text-sm font-medium text-navy/70 mb-1.5">Home Inspection ($)</label>
+                <input type="number" id="b-inspection" value="500" min="0" max="2000" step="25"
+                  class="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm focus:border-gold outline-none focus:ring-2 focus:ring-gold/20" />
+              </div>
+              <div>
+                <label for="b-moving" class="block text-sm font-medium text-navy/70 mb-1.5">Moving Costs ($)</label>
+                <input type="number" id="b-moving" value="2000" min="0" max="10000" step="100"
+                  class="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm focus:border-gold outline-none focus:ring-2 focus:ring-gold/20" />
+              </div>
+            </div>
+
+            <div class="pt-2 space-y-2 text-sm">
+              <div class="flex justify-between text-navy/70">
+                <span>Ontario Land Transfer Tax</span>
+                <span id="b-ltt" class="font-medium text-navy">$0</span>
+              </div>
+              <div id="b-rebate-row" class="flex justify-between text-navy/70">
+                <span>First-Time Buyer Rebate</span>
+                <span id="b-rebate" class="font-medium text-green-700">−$0</span>
+              </div>
+              <div class="flex justify-between text-navy/70">
+                <span>Legal Fees</span>
+                <span id="b-legal-out" class="font-medium text-navy">$0</span>
+              </div>
+              <div class="flex justify-between text-navy/70">
+                <span>Title Insurance</span>
+                <span id="b-title-out" class="font-medium text-navy">$0</span>
+              </div>
+              <div class="flex justify-between text-navy/70">
+                <span>Home Inspection</span>
+                <span id="b-inspection-out" class="font-medium text-navy">$0</span>
+              </div>
+              <div class="flex justify-between text-navy/70 border-b border-gray-100 pb-2">
+                <span>Moving Costs</span>
+                <span id="b-moving-out" class="font-medium text-navy">$0</span>
+              </div>
+            </div>
+
+            <div class="bg-gold rounded-xl p-6 text-center">
+              <div class="text-sm text-navy/70 font-medium mb-1">Estimated Total Closing Costs</div>
+              <div id="b-total" class="font-serif text-4xl text-navy font-bold">$0</div>
+              <div class="text-xs text-navy/50 mt-2">In addition to your down payment.</div>
+            </div>
+          </div>
+
+          <!-- Selling Fields -->
+          <div id="selling-fields" class="space-y-5 hidden">
+            <h2 class="font-serif text-2xl text-navy mb-2">Selling Costs</h2>
+            <div>
+              <label for="s-price" class="block text-sm font-medium text-navy/70 mb-1.5">Sale Price ($)</label>
+              <input type="number" id="s-price" value="650000" min="50000" max="5000000" step="5000"
+                class="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm focus:border-gold outline-none focus:ring-2 focus:ring-gold/20" />
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label for="s-commission" class="block text-sm font-medium text-navy/70 mb-1.5">Commission Rate (%)</label>
+                <input type="number" id="s-commission" value="4.0" min="0" max="10" step="0.1"
+                  class="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm focus:border-gold outline-none focus:ring-2 focus:ring-gold/20" />
+              </div>
+              <div>
+                <label for="s-legal" class="block text-sm font-medium text-navy/70 mb-1.5">Legal Fees ($)</label>
+                <input type="number" id="s-legal" value="1250" min="500" max="3000" step="50"
+                  class="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm focus:border-gold outline-none focus:ring-2 focus:ring-gold/20" />
+              </div>
+            </div>
+            <div>
+              <label for="s-moving" class="block text-sm font-medium text-navy/70 mb-1.5">Moving Costs ($)</label>
+              <input type="number" id="s-moving" value="2000" min="0" max="10000" step="100"
+                class="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm focus:border-gold outline-none focus:ring-2 focus:ring-gold/20" />
+            </div>
+            <label class="flex items-center gap-2.5 cursor-pointer">
+              <input type="checkbox" id="s-has-mortgage" class="w-4 h-4 accent-gold" checked />
+              <span class="text-sm text-navy/70">I still have a mortgage to pay out</span>
+            </label>
+            <div id="s-mortgage-fields">
+              <label for="s-balance" class="block text-sm font-medium text-navy/70 mb-1.5">Remaining Mortgage Balance ($)</label>
+              <input type="number" id="s-balance" value="400000" min="0" max="5000000" step="5000"
+                class="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm focus:border-gold outline-none focus:ring-2 focus:ring-gold/20" />
+            </div>
+
+            <div class="pt-2 space-y-2 text-sm">
+              <div class="flex justify-between text-navy/70">
+                <span>Commission (incl. HST)</span>
+                <span id="s-commission-out" class="font-medium text-navy">$0</span>
+              </div>
+              <div class="flex justify-between text-navy/70">
+                <span>Legal Fees</span>
+                <span id="s-legal-out" class="font-medium text-navy">$0</span>
+              </div>
+              <div id="s-discharge-row" class="flex justify-between text-navy/70">
+                <span>Mortgage Discharge Fee</span>
+                <span id="s-discharge-out" class="font-medium text-navy">$0</span>
+              </div>
+              <div class="flex justify-between text-navy/70 border-b border-gray-100 pb-2">
+                <span>Moving Costs</span>
+                <span id="s-moving-out" class="font-medium text-navy">$0</span>
+              </div>
+            </div>
+
+            <div class="bg-gold rounded-xl p-6 text-center">
+              <div class="text-sm text-navy/70 font-medium mb-1">Estimated Total Selling Costs</div>
+              <div id="s-total" class="font-serif text-4xl text-navy font-bold">$0</div>
+            </div>
+            <div class="bg-navy rounded-xl p-6 text-center">
+              <div class="text-sm text-white/60 font-medium mb-1">Estimated Net Proceeds</div>
+              <div id="s-net" class="font-serif text-3xl text-gold font-bold">$0</div>
+              <div class="text-xs text-white/40 mt-2">Sale price minus selling costs and mortgage payout.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Info panel -->
+        <div class="space-y-6">
+          <div class="bg-white rounded-2xl p-6 shadow-card">
+            <h3 class="font-serif text-xl text-navy mb-4">Ontario Land Transfer Tax Rates</h3>
+            <div class="space-y-2 text-sm text-slate">
+              <div class="flex justify-between border-b border-gray-100 pb-2">
+                <span>Up to $55,000</span>
+                <span class="font-medium text-navy">0.5%</span>
+              </div>
+              <div class="flex justify-between border-b border-gray-100 pb-2">
+                <span>$55,000–$250,000</span>
+                <span class="font-medium text-navy">1.0%</span>
+              </div>
+              <div class="flex justify-between border-b border-gray-100 pb-2">
+                <span>$250,000–$400,000</span>
+                <span class="font-medium text-navy">1.5%</span>
+              </div>
+              <div class="flex justify-between border-b border-gray-100 pb-2">
+                <span>$400,000–$2,000,000</span>
+                <span class="font-medium text-navy">2.0%</span>
+              </div>
+              <div class="flex justify-between">
+                <span>Over $2,000,000</span>
+                <span class="font-medium text-navy">2.5%</span>
+              </div>
+            </div>
+            <p class="text-xs text-slate mt-4">London Ontario has no municipal land transfer tax — only the provincial rate applies, unlike Toronto.</p>
+          </div>
+
+          <div class="bg-navy text-white rounded-2xl p-6">
+            <h3 class="font-serif text-xl mb-3">First-Time Buyer Rebate</h3>
+            <p class="text-sm text-white/70 leading-relaxed">Eligible first-time buyers in Ontario receive up to <span class="text-gold font-medium">$4,000</span> back on Land Transfer Tax — enough to fully eliminate the tax on homes up to roughly $368,333.</p>
+          </div>
+
+          <div class="bg-gold rounded-2xl p-6 text-center">
+            <h3 class="font-serif text-xl text-navy mb-3">Want an Exact Number?</h3>
+            <p class="text-navy/70 text-sm mb-5">These are estimates. Justin will walk you through your exact closing costs based on your specific purchase or sale.</p>
+            <a href="/contact/" class="btn-secondary w-full justify-center">Talk to Justin</a>
+          </div>
+
+          <p class="text-xs text-slate leading-relaxed">Figures are estimates for general planning purposes only and not legal, tax, or financial advice. Confirm exact amounts with your real estate lawyer and mortgage professional before closing.</p>
+        </div>
+      </div>
+
+      <!-- FAQ -->
+      <div class="mt-16 bg-white rounded-2xl p-10 shadow-card">
+        <h2 class="font-serif text-3xl text-navy mb-2">Closing Costs FAQ</h2>
+        <div class="gold-divider mb-8"></div>
+        <div class="space-y-6">
+          {faqs.map((faq) => (
+            <div>
+              <h3 class="font-semibold text-navy mb-1.5">{faq.q}</h3>
+              <p class="text-sm text-slate leading-relaxed">{faq.a}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<script>
+  function calcLTT(price: number): number {
+    let tax = 0;
+    if (price > 0) tax += Math.min(price, 55000) * 0.005;
+    if (price > 55000) tax += (Math.min(price, 250000) - 55000) * 0.01;
+    if (price > 250000) tax += (Math.min(price, 400000) - 250000) * 0.015;
+    if (price > 400000) tax += (Math.min(price, 2000000) - 400000) * 0.02;
+    if (price > 2000000) tax += (price - 2000000) * 0.025;
+    return tax;
+  }
+
+  function fmt(n: number): string {
+    return `$${Math.round(n).toLocaleString('en-CA')}`;
+  }
+
+  function num(id: string): number {
+    return parseFloat((document.getElementById(id) as HTMLInputElement)?.value) || 0;
+  }
+
+  function setText(id: string, value: string) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = value;
+  }
+
+  function calcBuying() {
+    const price = num('b-price');
+    const firstTime = (document.getElementById('b-first-time') as HTMLInputElement)?.checked;
+    const legal = num('b-legal');
+    const title = num('b-title');
+    const inspection = num('b-inspection');
+    const moving = num('b-moving');
+
+    const ltt = calcLTT(price);
+    const rebate = firstTime ? Math.min(ltt, 4000) : 0;
+    const netLtt = ltt - rebate;
+    const total = netLtt + legal + title + inspection + moving;
+
+    setText('b-ltt', fmt(ltt));
+    setText('b-rebate', `−${fmt(rebate)}`);
+    setText('b-legal-out', fmt(legal));
+    setText('b-title-out', fmt(title));
+    setText('b-inspection-out', fmt(inspection));
+    setText('b-moving-out', fmt(moving));
+    setText('b-total', fmt(total));
+  }
+
+  function calcSelling() {
+    const price = num('s-price');
+    const rate = num('s-commission');
+    const legal = num('s-legal');
+    const moving = num('s-moving');
+    const hasMortgage = (document.getElementById('s-has-mortgage') as HTMLInputElement)?.checked;
+    const balance = hasMortgage ? num('s-balance') : 0;
+    const discharge = hasMortgage ? 300 : 0;
+
+    const commission = price * (rate / 100) * 1.13;
+    const total = commission + legal + discharge + moving;
+    const net = price - total - balance;
+
+    const mortgageFields = document.getElementById('s-mortgage-fields');
+    mortgageFields?.classList.toggle('hidden', !hasMortgage);
+
+    setText('s-commission-out', fmt(commission));
+    setText('s-legal-out', fmt(legal));
+    setText('s-discharge-out', fmt(discharge));
+    setText('s-moving-out', fmt(moving));
+    setText('s-total', fmt(total));
+    setText('s-net', fmt(net));
+  }
+
+  const buyingIds = ['b-price', 'b-first-time', 'b-legal', 'b-title', 'b-inspection', 'b-moving'];
+  const sellingIds = ['s-price', 's-commission', 's-legal', 's-moving', 's-has-mortgage', 's-balance'];
+
+  buyingIds.forEach((id) => document.getElementById(id)?.addEventListener('input', calcBuying));
+  sellingIds.forEach((id) => document.getElementById(id)?.addEventListener('input', calcSelling));
+
+  const tabBuying = document.getElementById('tab-buying');
+  const tabSelling = document.getElementById('tab-selling');
+  const buyingFields = document.getElementById('buying-fields');
+  const sellingFields = document.getElementById('selling-fields');
+
+  function setMode(mode: 'buying' | 'selling') {
+    const isBuying = mode === 'buying';
+    buyingFields?.classList.toggle('hidden', !isBuying);
+    sellingFields?.classList.toggle('hidden', isBuying);
+    tabBuying?.classList.toggle('bg-gold', isBuying);
+    tabBuying?.classList.toggle('text-navy', isBuying);
+    tabBuying?.classList.toggle('text-navy/50', !isBuying);
+    tabSelling?.classList.toggle('bg-gold', !isBuying);
+    tabSelling?.classList.toggle('text-navy', !isBuying);
+    tabSelling?.classList.toggle('text-navy/50', isBuying);
+    tabBuying?.setAttribute('aria-pressed', String(isBuying));
+    tabSelling?.setAttribute('aria-pressed', String(!isBuying));
+  }
+
+  tabBuying?.addEventListener('click', () => setMode('buying'));
+  tabSelling?.addEventListener('click', () => setMode('selling'));
+
+  calcBuying();
+  calcSelling();
+</script>
