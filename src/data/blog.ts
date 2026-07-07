@@ -16,6 +16,236 @@ export interface BlogPost {
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    slug: 'moving-from-toronto-to-london-ontario',
+    title: 'Moving from Toronto to London Ontario: What You Actually Need to Know',
+    description: "Thinking about leaving the GTA for London Ontario? Here's a plain-English look at the price gap, the commute, and which neighbourhood to land in.",
+    date: '2026-07-08',
+    dateDisplay: 'July 8, 2026',
+    category: 'Buyer Guides',
+    author: 'Justin Skrypnyk',
+    readTime: '7 min read',
+    image: '/images/areas/sifton-bog-sunset-oakridge.webp',
+    imageAlt: 'Sunset aerial view over Sifton Bog and the surrounding West London Ontario neighbourhood',
+    content: `
+      <p>A lot of people leaving Toronto right now aren't leaving because they want to — they're leaving because the math stopped working. London Ontario has quietly become one of the top landing spots for that exact group: close enough to stay connected to the GTA, far enough that your money actually buys a house. Here's what the move really looks like, without the sales pitch.</p>
+
+      <h2>The Price Gap Is the Whole Story</h2>
+      <p>As of June 2026, the average home price in London was $594,008. The GTA's benchmark price regularly sits above $1.1 million. That's not a small difference — it's the gap between renting forever in Toronto and owning a detached home with a yard in London.</p>
+      <table>
+        <thead>
+          <tr><th>Market</th><th>Average Home Price</th><th>What It Buys You</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>GTA / Toronto</td><td>$1.1M+</td><td>Often a condo or a starter semi</td></tr>
+          <tr><td>London (city-wide)</td><td>$594,008</td><td>A detached home is realistic</td></tr>
+          <tr><td>Oakridge, London</td><td>$715,753</td><td>One of London's strongest neighbourhoods, median 19 days on market</td></tr>
+        </tbody>
+      </table>
+      <p>In west-end pockets like <a href="/areas/oakridge/">Oakridge</a>, you're getting one of London's strongest neighbourhoods for less than two-thirds of what a comparable GTA property would cost. For the full picture on where prices stand right now, see our <a href="/blog/june-2026-london-ontario-market-update/">June 2026 market update</a>.</p>
+
+      <h2>How Far Is London From Toronto, Really?</h2>
+      <p>About 190 kilometres. Here's how the two main options compare:</p>
+      <table>
+        <thead>
+          <tr><th>Method</th><th>Travel Time</th><th>Best For</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Highway 401 (driving)</td><td>~2 hours</td><td>Flexibility, moving belongings, occasional trips</td></tr>
+          <tr><td>Via Rail</td><td>Just under 2 hours</td><td>Working or relaxing during the trip, no traffic stress</td></tr>
+        </tbody>
+      </table>
+      <p>That's a genuinely doable commute for people who only need to be in Toronto occasionally, and an easy trip for visiting family or friends who stayed behind. It's not a same-day-every-day commute, and if your job requires you in a Toronto office five days a week, be honest with yourself about whether that's sustainable long-term. But for hybrid workers, remote employees, or anyone who can make the trip a couple of times a month, London puts real distance between you and GTA prices without cutting you off.</p>
+
+      <h2>What You're Trading For What</h2>
+      <p>You give up some things leaving the GTA — the sheer size of the job market, the density of options for dining and culture, being twenty minutes from almost anything. What you get back: a mortgage payment that doesn't eat half your income, a yard, a quieter pace, and a city that isn't short on its own anchors. Western University and London Health Sciences Centre are both major employers in their own right, and London's economy has been steadily diversifying beyond its manufacturing roots. It's not Toronto with lower prices — it's a genuinely different kind of city. Most people who make the move say the trade was worth it. Some miss the GTA and go back. Knowing which one you'll be usually comes down to how much of your life was actually tied to being physically in Toronto versus just... near it.</p>
+
+      <h2>Which Neighbourhood Should You Land In?</h2>
+      <p>This is where a lot of relocating buyers waste time — touring neighbourhoods that don't actually fit their life. A quick starting point:</p>
+      <table>
+        <thead>
+          <tr><th>Neighbourhood</th><th>Best For</th><th>Why</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><a href="/areas/oakridge/">Oakridge</a></td><td>Families, default recommendation</td><td>Central, walkable, strong schools, established community</td></tr>
+          <tr><td><a href="/areas/byron/">Byron</a></td><td>Outdoor lifestyle</td><td>Village-like feel, anchored by Springbank Park and the Thames River</td></tr>
+          <tr><td>Hyde Park &amp; Lambeth</td><td>Newer construction</td><td>Modern builds over character homes</td></tr>
+          <tr><td><a href="/areas/westmount/">Westmount</a></td><td>Flexibility &amp; investors</td><td>Widest price range, close to Western University</td></tr>
+        </tbody>
+      </table>
+      <p>Our full <a href="/blog/oakridge-vs-byron-west-london-neighbourhoods/">Oakridge vs. Byron comparison</a> and <a href="/blog/london-ontario-neighbourhood-guide-2026/">London Ontario neighbourhood guide</a> both go deeper if you want to compare more areas before you commit to a tour day.</p>
+
+      <h2>Selling in the GTA While Buying in London</h2>
+      <p>Timing two transactions in two different markets is the part that trips people up. The two common approaches: sell first and rent short-term while you find the right London home, or buy first with a bridge loan or conditional offer if your GTA home is already listed. Neither is automatically better — it depends on how much certainty you need versus how much flexibility you want to shop. This is exactly the kind of decision worth talking through before you list anything, not after.</p>
+
+      <h2>You Don't Need to Waste Multiple Trips</h2>
+      <p>You don't need to burn a weekend every few weeks driving back and forth to see houses that don't work out. A better approach: a detailed video call to narrow down neighbourhoods and budget, a shortlist built around your actual priorities, then one focused tour day when you're in town — followed by remote support for the offer, inspection, and closing if needed. That's the process outlined on our <a href="/services/relocation/">relocation services page</a>, built specifically for out-of-town buyers.</p>
+
+      <h2>One Small Bonus: Closing Costs</h2>
+      <p>Toronto charges both a provincial and a municipal Land Transfer Tax on residential purchases. London only charges the provincial one — there's no municipal tax stacked on top here. On a $700,000 purchase, that difference looks like this:</p>
+      <table>
+        <thead>
+          <tr><th></th><th>London</th><th>Toronto</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Provincial Land Transfer Tax</td><td>$10,475</td><td>$10,475</td></tr>
+          <tr><td>Municipal Land Transfer Tax</td><td>—</td><td>$10,475</td></tr>
+          <tr><td><strong>Total Land Transfer Tax</strong></td><td><strong>$10,475</strong></td><td><strong>$20,950</strong></td></tr>
+        </tbody>
+      </table>
+      <p>Toronto's municipal tax mirrors the provincial brackets almost exactly, which means buying the same-priced home in Toronto instead of London roughly doubles your Land Transfer Tax bill. It's a small detail next to the overall price gap, but it adds up. Our <a href="/blog/closing-costs-real-estate-london-ontario/">full closing costs breakdown</a> covers everything else you'll pay on closing day.</p>
+
+      <p>Thinking about making the move? <a href="/contact/">Reach out to Justin</a> for a straightforward conversation about timing, neighbourhoods, and what your budget actually gets you here — no pressure, no sales pitch.</p>
+    `,
+    faqs: [
+      {
+        question: 'Is it actually cheaper to live in London Ontario than Toronto?',
+        answer: "Substantially. As of June 2026, London's average home price was $594,008 against a GTA benchmark price regularly above $1.1 million. Day-to-day costs — groceries, services, parking — run lower too, though the gap isn't as dramatic as housing. Housing is where the real savings are.",
+      },
+      {
+        question: 'Do I need to sell my Toronto home before buying in London?',
+        answer: "Not necessarily. Some buyers sell first and rent short-term while they house-hunt in London; others buy first using a bridge loan or a conditional offer tied to their GTA sale. Which approach fits depends on how much certainty you need versus how much flexibility you want — worth discussing before you list either property.",
+      },
+      {
+        question: "What's the commute like if I still need to be in Toronto sometimes?",
+        answer: "London is about 190 km from Toronto — roughly 2 hours by car via Highway 401, or just under 2 hours by Via Rail. It works well for hybrid schedules or occasional trips. It is not a realistic daily commute if your job requires you in a Toronto office five days a week.",
+      },
+      {
+        question: 'Which London Ontario neighbourhood is best for someone relocating from Toronto?',
+        answer: 'Oakridge and Byron are the most common recommendations for relocating families, thanks to strong schools and established community character. Hyde Park and Lambeth suit buyers who prefer newer construction. Westmount offers the most flexibility on price and property type, including investment options near Western University.',
+      },
+      {
+        question: 'Can I buy a home in London Ontario without making multiple trips from Toronto?',
+        answer: 'Yes. A detailed video consultation narrows down neighbourhoods and budget, then a single focused tour day covers the shortlist in person. From there, offers, inspection review, and closing can typically be handled remotely, which is how most relocating buyers complete the process without repeat trips.',
+      },
+    ],
+    sources: [
+      { label: 'Via Rail — Toronto to London Schedules', url: 'https://www.viarail.ca' },
+      { label: 'Bank of Canada — Key Interest Rate', url: 'https://www.bankofcanada.ca/core-functions/monetary-policy/key-interest-rate/' },
+      { label: 'The Habistat Analytics Platform in partnership with PropTx — London Ontario Residential Data', url: 'https://www.habistat.com' },
+    ],
+  },
+  {
+    slug: 'closing-costs-real-estate-london-ontario',
+    title: "Closing Costs: The Real Estate Bill Nobody Warns You About",
+    description: "Everyone budgets for a down payment. Almost nobody budgets for closing costs. Here's a plain-English breakdown of what buyers and sellers actually pay in London Ontario.",
+    date: '2026-07-07',
+    dateDisplay: 'July 7, 2026',
+    category: 'Real Estate Education',
+    author: 'Justin Skrypnyk',
+    readTime: '6 min read',
+    image: '/images/closing-costs-real-estate-london-ontario.jpg',
+    imageAlt: 'A SOLD sign in front of a London Ontario home, representing closing day on a real estate transaction',
+    content: `
+      <p>Ask most buyers what a home is going to cost them, and they'll tell you the purchase price. Maybe the down payment too. Almost nobody mentions closing costs — the pile of smaller fees and taxes due on closing day that sit on top of everything else. It's not a small oversight either. On a $650,000 home, that pile can easily run $10,000 to $16,000. Sellers have their own version of this surprise: watching commission, legal fees, and a few other deductions come off the top before they see their actual proceeds. Here's what's really involved, in plain English.</p>
+
+      <h2>What Are Closing Costs?</h2>
+      <p>Closing costs are everything you pay to actually complete the sale, separate from the price of the home itself. They're due on closing day — usually 30 to 90 days after your offer becomes firm. Buyers pay one set of costs, sellers pay a different set, and almost none of it gets talked about upfront the way the purchase price does.</p>
+
+      <h2>What Buyers Actually Pay</h2>
+      <table>
+        <thead>
+          <tr><th>Cost</th><th>Typical Amount</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Ontario Land Transfer Tax</td><td>See breakdown below</td></tr>
+          <tr><td>Legal fees</td><td>$1,200 – $1,800</td></tr>
+          <tr><td>Title insurance</td><td>$200 – $400</td></tr>
+          <tr><td>Home inspection</td><td>$450 – $600</td></tr>
+          <tr><td>CMHC mortgage insurance (if under 20% down)</td><td>2.8% – 4% of the mortgage, usually rolled into it</td></tr>
+          <tr><td>Property tax and utility adjustments</td><td>Varies — you're reimbursing the seller for anything they prepaid</td></tr>
+          <tr><td>Moving costs</td><td>$1,000 – $3,000</td></tr>
+        </tbody>
+      </table>
+      <p>As a rough rule of thumb: budget 1.5% to 2.5% of the purchase price if you're putting 20% or more down, and closer to 3% to 4% if you're using CMHC-insured financing. That's real cash you need on hand, separate from your down payment.</p>
+
+      <h2>Land Transfer Tax: The Big One</h2>
+      <p>This is the largest single cost buyers pay, and it's not a flat percentage — it's calculated in brackets:</p>
+      <table>
+        <thead>
+          <tr><th>Purchase Price</th><th>Rate on That Portion</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Up to $55,000</td><td>0.5%</td></tr>
+          <tr><td>$55,000 – $250,000</td><td>1.0%</td></tr>
+          <tr><td>$250,000 – $400,000</td><td>1.5%</td></tr>
+          <tr><td>$400,000 – $2,000,000</td><td>2.0%</td></tr>
+          <tr><td>Over $2,000,000</td><td>2.5%</td></tr>
+        </tbody>
+      </table>
+      <p>On a $650,000 home, that works out to roughly $9,725. One nice thing about buying in London instead of Toronto: there's no extra municipal land transfer tax stacked on top here, only the provincial one. See the <a href="https://www.ontario.ca/document/land-transfer-tax/calculating-land-transfer-tax" target="_blank" rel="noopener noreferrer">official Ontario rate schedule</a> if you want to check the exact math yourself.</p>
+
+      <h2>The Rebate a Lot of First-Time Buyers Don't Realize They're Owed</h2>
+      <p>If it's your first home, Ontario gives you back up to $4,000 of that Land Transfer Tax. That's enough to wipe out the tax completely on homes around $368,000 or less, and it knocks a real chunk off anything above that. On our $650,000 example, it drops the bill from $9,725 to $5,725. It's not automatic, though — your lawyer has to apply for it at closing, so make sure whoever's handling your file knows you qualify.</p>
+
+      <h2>What Sellers Actually Pay</h2>
+      <table>
+        <thead>
+          <tr><th>Cost</th><th>Typical Amount</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Real estate commission (plus HST)</td><td>Negotiated with your broker — commonly 4–5% total with HST</td></tr>
+          <tr><td>Legal fees</td><td>$1,000 – $1,500</td></tr>
+          <tr><td>Mortgage discharge fee</td><td>~$300, if you still have a mortgage to pay out</td></tr>
+          <tr><td>Moving costs</td><td>$1,000 – $3,000</td></tr>
+        </tbody>
+      </table>
+      <p>Sellers catch a break in one way — no Land Transfer Tax, and lighter legal work than buyers deal with. But commission is the big one. On a $650,000 sale at 4–5% including HST, that's $26,000 to $32,500 coming off the top before you see a dollar of proceeds. It's exactly why getting the price and the deal right matters so much. More on that in our <a href="/blog/how-to-sell-your-home-london-ontario/">guide to selling your home in London Ontario</a>.</p>
+
+      <h2>The Costs People Forget About</h2>
+      <ul>
+        <li><strong>Property tax and utility adjustments</strong> — If the seller prepaid taxes or a utility bill that covers time past closing day, you reimburse them their share. Shows up on your lawyer's Statement of Adjustments, usually a few hundred to a couple thousand dollars.</li>
+        <li><strong>Condo status certificate fee</strong> — Buying a condo adds a roughly $100 fee for the status certificate your lawyer has to review.</li>
+        <li><strong>HST on new construction</strong> — Buying a newly built home instead of resale? HST applies to the price, partly offset by a rebate. Talk to your builder and lawyer early — it's a different math problem entirely.</li>
+        <li><strong>Appraisal fee</strong> — Some lenders want an independent appraisal ($300–$500), though plenty of straightforward deals skip this.</li>
+        <li><strong>Mortgage discharge fee</strong> — If you're selling and still have a mortgage, your lender usually charges around $300 to release it.</li>
+      </ul>
+
+      <h2>A Real Example</h2>
+      <p>Say you're a first-time buyer picking up a $650,000 home in London with 20% down ($130,000):</p>
+      <ul>
+        <li>Land Transfer Tax after rebate: $5,725</li>
+        <li>Legal fees: $1,500</li>
+        <li>Title insurance: $300</li>
+        <li>Home inspection: $500</li>
+        <li>Moving costs: $2,000</li>
+      </ul>
+      <p>Total: about $10,025, on top of your $130,000 down payment. That's cash you need sitting ready on closing day — not something to figure out the week before.</p>
+
+      <h2>How to Actually Budget for This</h2>
+      <p>Don't wait until you've found a home to think about this. Build it into your budget from day one. Our <a href="/mortgages/closing-costs/">closing costs calculator</a> lets you plug in your own numbers — purchase price, whether you're a first-time buyer, financing details — and see exactly what you're looking at. Pair that with a <a href="/mortgages/pre-approval/">mortgage pre-approval</a> and you'll have a real, complete picture of what you can afford, not just what a lender says you qualify for.</p>
+      <p>Just starting to plan a purchase? Our <a href="/blog/first-time-home-buyer-london-ontario-guide/">first-time buyer guide</a> walks through the whole process. Thinking about selling and want to know your real take-home number? Start with a <a href="/services/home-evaluation/">complimentary home evaluation</a>.</p>
+
+      <p>Want to run your specific numbers with someone who'll give it to you straight? <a href="/contact/">Reach out to Justin</a> — this is exactly the kind of conversation worth having before you're already under contract.</p>
+    `,
+    faqs: [
+      {
+        question: 'How much are closing costs when buying a home in Ontario?',
+        answer: "Budget 1.5% to 2.5% of the purchase price if you're putting 20% or more down, or 3% to 4% if you need CMHC mortgage insurance. That covers Ontario Land Transfer Tax, legal fees ($1,200–$1,800), title insurance ($200–$400), a home inspection ($450–$600), and moving costs. On a $650,000 home, that's roughly $10,000 to $16,000 above your down payment.",
+      },
+      {
+        question: 'Do sellers pay Land Transfer Tax in Ontario?',
+        answer: "No, only buyers pay it. Sellers instead pay real estate commission (typically 4–5% with HST), legal fees ($1,000–$1,500), and a mortgage discharge fee (around $300) if they still have a mortgage to pay out.",
+      },
+      {
+        question: "How much is the Ontario first-time buyer Land Transfer Tax rebate?",
+        answer: "Up to $4,000 off. That's enough to fully wipe out the tax on homes around $368,000 or less, and it still knocks a meaningful amount off the tax on anything pricier. Your lawyer applies for it directly at closing — it's not automatic.",
+      },
+      {
+        question: 'Is there a municipal land transfer tax in London Ontario?',
+        answer: "No. Toronto charges both a provincial and a municipal land transfer tax — London only has the provincial one. That difference alone can save a London buyer thousands compared to buying the same home in the GTA.",
+      },
+      {
+        question: 'What closing costs do people forget to plan for?',
+        answer: "Property tax and utility adjustments (reimbursing the seller for anything they prepaid), condo status certificate fees, HST on new construction, and mortgage discharge fees for sellers. These don't show up on generic checklists because they only apply in certain situations, which is exactly why people get blindsided by them.",
+      },
+    ],
+    sources: [
+      { label: 'Ontario.ca — Calculating Land Transfer Tax', url: 'https://www.ontario.ca/document/land-transfer-tax/calculating-land-transfer-tax' },
+      { label: 'CMHC — Mortgage Loan Insurance', url: 'https://www.cmhc-schl.gc.ca/consumers/home-buying/mortgage-loan-insurance-for-consumers' },
+      { label: 'Real Estate Council of Ontario (RECO)', url: 'https://www.reco.on.ca' },
+    ],
+  },
+  {
     slug: 'june-2026-london-ontario-market-update',
     title: 'June 2026 London Ontario Real Estate Market Update: What It Means for Oakridge',
     description: "See how Oakridge outperformed London's June 2026 housing market with faster sales and rising over-asking offers. Full stats inside.",
@@ -213,6 +443,8 @@ export const BLOG_POSTS: BlogPost[] = [
     category: 'Neighbourhood Guides',
     author: 'Justin Skrypnyk',
     readTime: '7 min read',
+    image: '/images/oakridge-aerial-drone-2026.webp',
+    imageAlt: 'Aerial drone view of tree-lined streets in Oakridge, West London Ontario',
     content: `
       <p>Oakridge and Byron are West London's two most established, desirable neighbourhoods — and choosing between them is one of the most common decisions buyers face. Both offer mature streets, strong schools, and genuine community character. But they are meaningfully different places to live. This comparison covers the factors that actually matter: price, schools, outdoor lifestyle, daily convenience, and fit.</p>
 
@@ -277,6 +509,8 @@ export const BLOG_POSTS: BlogPost[] = [
     category: 'Buyer Guides',
     author: 'Justin Skrypnyk',
     readTime: '10 min read',
+    image: '/images/services/first-time-home-buyers-london-ontario.webp',
+    imageAlt: 'Bright, welcoming living room in a London Ontario home, representing the first-time buyer journey',
     content: `
       <p>Buying your first home in London Ontario involves government programs worth thousands of dollars, closing costs most buyers underestimate, and neighbourhood decisions that will shape your daily life for years. This guide walks you through every step — from calculating your true budget to getting the keys — so you know exactly what to expect.</p>
 
@@ -367,6 +601,8 @@ export const BLOG_POSTS: BlogPost[] = [
     category: 'Seller Guides',
     author: 'Justin Skrypnyk',
     readTime: '8 min read',
+    image: '/images/services/selling-home-london-ontario.webp',
+    imageAlt: 'A charming London Ontario home being prepared for sale, with fresh flowers by the front porch',
     content: `
       <p>Selling your home in London Ontario is one of the largest financial transactions of your life — and the difference between a well-executed sale and a poorly managed one can be tens of thousands of dollars. This guide covers everything you need to know, from timing your listing to negotiating the best possible price, based on how the London Ontario market actually works in 2026.</p>
 
@@ -437,6 +673,8 @@ export const BLOG_POSTS: BlogPost[] = [
     category: 'Real Estate Education',
     author: 'Justin Skrypnyk',
     readTime: '5 min read',
+    image: '/images/real-estate-broker-vs-agent-ontario.webp',
+    imageAlt: 'Justin Skrypnyk, a licensed Real Estate Broker serving London Ontario',
     content: `
       <p>In Ontario, the terms "real estate agent," "salesperson," and "broker" are often used interchangeably — but they are not the same credential. Understanding the difference helps you make a more informed decision about who you trust with the largest financial transaction of your life.</p>
 
@@ -498,6 +736,8 @@ export const BLOG_POSTS: BlogPost[] = [
     category: 'Mortgage & Rates',
     author: 'Justin Skrypnyk',
     readTime: '7 min read',
+    image: '/images/services/buying-home-london-ontario.webp',
+    imageAlt: 'A brick two-storey home in London Ontario on a sunny day, representing home financing decisions',
     content: `
       <p>Interest rates are the single biggest lever on housing affordability — and the question every London Ontario buyer and seller is asking in 2026 is: should I wait for rates to drop? The short answer is that waiting for rates is a strategy that frequently backfires. Here is the full picture.</p>
 
@@ -552,6 +792,8 @@ export const BLOG_POSTS: BlogPost[] = [
     category: 'Neighbourhood Guides',
     author: 'Justin Skrypnyk',
     readTime: '6 min read',
+    image: '/images/services/free-home-evaluation-london-ontario.webp',
+    imageAlt: 'A street of affordable starter bungalows in a London Ontario subdivision',
     content: `
       <p>East London offers London's most affordable detached home prices, starting in the $400,000–$550,000 range. In the west end, West London near Commissioners Road delivers the best balance of price and established neighbourhood quality. Here is a frank neighbourhood-by-neighbourhood breakdown of where you can buy a house in London Ontario at the lowest price points — without sacrificing liveability.</p>
 
@@ -610,6 +852,8 @@ export const BLOG_POSTS: BlogPost[] = [
     category: 'Market Analysis',
     author: 'Justin Skrypnyk',
     readTime: '8 min read',
+    image: '/images/areas/sifton-bog-sunrise-skyline-oakridge.webp',
+    imageAlt: 'Aerial sunset view over Sifton Bog with the London Ontario skyline on the horizon',
     content: `
       <p>London Ontario home prices have stabilized following the 2022 peak and 2023 correction, and current data points to modest appreciation ahead. The city\'s fundamental demand drivers — population growth, constrained supply, and relative GTA affordability — remain intact. Here is what the evidence actually shows.</p>
 
@@ -664,6 +908,8 @@ export const BLOG_POSTS: BlogPost[] = [
     category: 'Neighbourhood Guides',
     author: 'Justin Skrypnyk',
     readTime: '12 min read',
+    image: '/images/services/relocation-london-ontario.webp',
+    imageAlt: 'A leafy, tree-lined residential street in a London Ontario neighbourhood',
     content: `
       <p>London Ontario spans over a dozen distinct communities, each with its own character, price range, and lifestyle. The right neighbourhood depends on your budget, school priorities, commute, and what daily life should feel like. This guide gives you a frank, neighbourhood-by-neighbourhood breakdown — written by someone who actually lives and works here.</p>
 
