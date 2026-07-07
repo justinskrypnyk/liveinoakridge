@@ -497,7 +497,7 @@ export const BLOG_POSTS: BlogPost[] = [
     sources: [
       { label: 'Thames Valley District School Board (TVDSB)', url: 'https://www.tvdsb.ca' },
       { label: 'London District Catholic School Board (LDCSB)', url: 'https://www.ldcsb.ca' },
-      { label: 'City of London — Springbank Park', url: 'https://london.ca/parks-nature/parks/springbank-park' },
+      { label: 'Springbank Park — London, Ontario', url: 'https://en.wikipedia.org/wiki/Springbank_Park' },
     ],
   },
   {
@@ -532,7 +532,7 @@ export const BLOG_POSTS: BlogPost[] = [
         <li><strong>First Home Savings Account (FHSA)</strong> — A registered account allowing contributions up to $8,000 per year ($40,000 lifetime) tax-free toward your first home purchase. Qualifying withdrawals are also tax-free. Learn more from the <a href="https://www.canada.ca/en/revenue-agency/services/tax/individuals/topics/first-home-savings-account.html" target="_blank" rel="noopener noreferrer">Canada Revenue Agency FHSA page</a>.</li>
         <li><strong>Home Buyers' Plan (RRSP)</strong> — Withdraw up to $35,000 from your RRSP ($70,000 per couple) tax-free for a qualifying first home purchase. Must be repaid over 15 years. See the <a href="https://www.canada.ca/en/revenue-agency/services/tax/individuals/topics/rrsps-related-plans/what-home-buyers-plan.html" target="_blank" rel="noopener noreferrer">Home Buyers' Plan on Canada.ca</a>.</li>
         <li><strong>First-Time Home Buyers' Tax Credit</strong> — A $10,000 federal non-refundable tax credit that reduces your taxes owing by up to $1,500.</li>
-        <li><strong>GST/HST New Housing Rebate</strong> — If you are buying new construction in London Ontario, you may qualify for a partial rebate of HST paid. Learn more through <a href="https://www.canada.ca/en/revenue-agency/services/tax/businesses/topics/gst-hst-businesses/charge-gst-hst/real-property/new-housing.html" target="_blank" rel="noopener noreferrer">Canada Revenue Agency</a>.</li>
+        <li><strong>GST/HST New Housing Rebate</strong> — If you are buying new construction in London Ontario, you may qualify for a partial rebate of HST paid. Learn more through <a href="https://www.canada.ca/en/revenue-agency/services/forms-publications/publications/rc4028/gst-hst-new-housing-rebate.html" target="_blank" rel="noopener noreferrer">Canada Revenue Agency</a>.</li>
       </ul>
 
       <h2>Step 3: Get Pre-Approved (Not Just Pre-Qualified)</h2>
@@ -660,7 +660,7 @@ export const BLOG_POSTS: BlogPost[] = [
     ],
     sources: [
       { label: 'London and St. Thomas Association of REALTORS® (LSTAR)', url: 'https://www.lstar.ca' },
-      { label: 'Real Estate Council of Ontario (RECO) — Selling a Home', url: 'https://www.reco.on.ca/consumers/selling-a-home/' },
+      { label: 'Real Estate Council of Ontario (RECO) — Information for Sellers', url: 'https://www.reco.on.ca/consumers/information-for-sellers' },
       { label: 'Realtor.ca — MLS® Listings', url: 'https://www.realtor.ca' },
     ],
   },
@@ -679,7 +679,7 @@ export const BLOG_POSTS: BlogPost[] = [
       <p>In Ontario, the terms "real estate agent," "salesperson," and "broker" are often used interchangeably — but they are not the same credential. Understanding the difference helps you make a more informed decision about who you trust with the largest financial transaction of your life.</p>
 
       <h2>Who Regulates Real Estate in Ontario?</h2>
-      <p>All real estate professionals in Ontario are regulated by the <a href="https://www.reco.on.ca" target="_blank" rel="noopener noreferrer">Real Estate Council of Ontario (RECO)</a> under the Trust in Real Estate Services Act (TRESA), which came into force in 2023. RECO licenses all salespeople, brokers, and brokerages, and enforces professional standards and consumer protection rules. If you are working with a professional in Ontario, you can verify their license through <a href="https://www.reco.on.ca/consumers/find-a-realtor/" target="_blank" rel="noopener noreferrer">RECO's public registry</a>.</p>
+      <p>All real estate professionals in Ontario are regulated by the <a href="https://www.reco.on.ca" target="_blank" rel="noopener noreferrer">Real Estate Council of Ontario (RECO)</a> under the Trust in Real Estate Services Act (TRESA), which came into force in 2023. RECO licenses all salespeople, brokers, and brokerages, and enforces professional standards and consumer protection rules. If you are working with a professional in Ontario, you can verify their license through <a href="https://www.reco.on.ca/consumers/make-sure-your-real-estate-agent-is-registered" target="_blank" rel="noopener noreferrer">RECO's public registry</a>.</p>
 
       <h2>Real Estate Salesperson vs. Real Estate Broker: The Difference</h2>
       <p>In Ontario:</p>
@@ -722,9 +722,9 @@ export const BLOG_POSTS: BlogPost[] = [
     ],
     sources: [
       { label: 'Real Estate Council of Ontario (RECO)', url: 'https://www.reco.on.ca' },
-      { label: 'RECO — Find a REALTOR® (Public Registry)', url: 'https://www.reco.on.ca/consumers/find-a-realtor/' },
+      { label: 'RECO — Make Sure Your Real Estate Agent Is Registered', url: 'https://www.reco.on.ca/consumers/make-sure-your-real-estate-agent-is-registered' },
       { label: 'Ontario — Trust in Real Estate Services Act (TRESA)', url: 'https://www.ontario.ca/laws/statute/02r30' },
-      { label: 'Humber College — Real Estate Education', url: 'https://realestate.humber.ca' },
+      { label: 'Humber College — Real Estate Education', url: 'https://humber.ca' },
     ],
   },
   {
@@ -861,7 +861,7 @@ export const BLOG_POSTS: BlogPost[] = [
       <p>The London Ontario average home price is currently around $620,000 to $650,000, below the 2022 peak but well above pre-pandemic levels. The correction has softened, and we are seeing balanced-to-slight seller market conditions in desirable West London neighbourhoods like <a href="/areas/oakridge/">Oakridge</a>, <a href="/areas/byron/">Byron</a>, and <a href="/areas/lambeth/">Lambeth</a>.</p>
 
       <h2>Signals Pointing to Modest Price Growth</h2>
-      <p>Several fundamentals support modest price appreciation in 2026–2027. Population growth driven by immigration is maintaining housing demand. <a href="https://www.cmhc-schl.gc.ca/en/housing-observer-online/2024-housing-observer/housing-supply-report" target="_blank" rel="noopener noreferrer">CMHC supply reports</a> confirm that supply remains constrained across Ontario. Interest rates have eased from peak levels. And London's economic base continues to diversify and grow, anchored by Western University, London Health Sciences Centre, and an expanding tech sector.</p>
+      <p>Several fundamentals support modest price appreciation in 2026–2027. Population growth driven by immigration is maintaining housing demand. <a href="https://www.cmhc-schl.gc.ca/observer" target="_blank" rel="noopener noreferrer">CMHC supply reports</a> confirm that supply remains constrained across Ontario. Interest rates have eased from peak levels. And London's economic base continues to diversify and grow, anchored by Western University, London Health Sciences Centre, and an expanding tech sector.</p>
 
       <h2>The Counterweights</h2>
       <p>Affordability remains stretched relative to local incomes, which limits how much prices can rise without commensurate income growth. Inventory is slowly improving as more sellers who delayed listing during rate uncertainty finally come to market. Buyers who are looking for value should look at <a href="/areas/west-london/">West London</a>, <a href="/areas/westmount/">Westmount</a>, and <a href="/areas/medway/">Medway</a> as strong candidates for appreciation that hasn't yet been fully priced in.</p>
@@ -893,7 +893,7 @@ export const BLOG_POSTS: BlogPost[] = [
       },
     ],
     sources: [
-      { label: 'CMHC — Housing Supply Report', url: 'https://www.cmhc-schl.gc.ca/en/housing-observer-online/2024-housing-observer/housing-supply-report' },
+      { label: 'CMHC — Housing Supply Report', url: 'https://www.cmhc-schl.gc.ca/observer' },
       { label: 'Bank of Canada — Monetary Policy Report', url: 'https://www.bankofcanada.ca/publications/mpr/' },
       { label: 'London and St. Thomas Association of REALTORS® (LSTAR)', url: 'https://www.lstar.ca' },
       { label: 'Statistics Canada — Population Growth Data', url: 'https://www.statcan.gc.ca/en/subjects-start/population_and_demography' },
@@ -1005,7 +1005,7 @@ export const BLOG_POSTS: BlogPost[] = [
       { label: 'Thames Valley District School Board (TVDSB)', url: 'https://www.tvdsb.ca' },
       { label: 'London District Catholic School Board (LDCSB)', url: 'https://www.ldcsb.ca' },
       { label: 'London and St. Thomas Association of REALTORS® (LSTAR)', url: 'https://www.lstar.ca' },
-      { label: 'City of London — Neighbourhood Profiles', url: 'https://london.ca/living-london/neighbourhoods' },
+      { label: 'City of London — Living in London', url: 'https://london.ca/living-london' },
     ],
   },
 ];
