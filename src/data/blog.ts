@@ -121,7 +121,7 @@ export const BLOG_POSTS: BlogPost[] = [
     sources: [
       { label: 'Via Rail — Toronto to London Schedules', url: 'https://www.viarail.ca' },
       { label: 'Bank of Canada — Key Interest Rate', url: 'https://www.bankofcanada.ca/core-functions/monetary-policy/key-interest-rate/' },
-      { label: 'The Habistat Analytics Platform in partnership with PropTx — London Ontario Residential Data', url: 'https://www.habistat.com' },
+      { label: 'London and St. Thomas Association of REALTORS® (LSTAR)', url: 'https://www.lstar.ca' },
     ],
   },
   {
@@ -352,7 +352,7 @@ export const BLOG_POSTS: BlogPost[] = [
           <tr><td>Total Dollar Volume</td><td>$346,875,205</td><td>+33.5%</td><td>+9.9%</td></tr>
         </tbody>
       </table>
-      <p><em>Source: The Habistat Analytics Platform in partnership with PropTx. Data covers all residential property types across London East, London North, and London South (Middlesex). Generated June 16, 2026. Subject to change.</em></p>
+      <p><em>Source: London and St. Thomas Association of REALTORS® (LSTAR) MLS® data. Data covers all residential property types across London East, London North, and London South (Middlesex). Generated June 16, 2026. Subject to change.</em></p>
 
       <h2>How Many Homes Sold in London Ontario in May 2026?</h2>
       <p>543 homes sold in London in May 2026 — up 11.3% compared to May 2025 (488 sales) and up 26.0% from April 2026 (431 sales). That month-over-month jump is the clearest signal yet that London's spring market has arrived. It was the strongest single month of 2026 so far.</p>
@@ -429,9 +429,9 @@ export const BLOG_POSTS: BlogPost[] = [
       },
     ],
     sources: [
-      { label: 'The Habistat Analytics Platform in partnership with PropTx — London Ontario Residential Data, June 16, 2026', url: 'https://www.habistat.com' },
-      { label: 'Bank of Canada — Key Interest Rate', url: 'https://www.bankofcanada.ca/core-functions/monetary-policy/key-interest-rate/' },
       { label: 'London and St. Thomas Association of REALTORS® (LSTAR)', url: 'https://www.lstar.ca' },
+      { label: 'Bank of Canada — Key Interest Rate', url: 'https://www.bankofcanada.ca/core-functions/monetary-policy/key-interest-rate/' },
+      { label: 'CMHC — Housing Market Outlook', url: 'https://www.cmhc-schl.gc.ca/en/housing-observer-online' },
     ],
   },
   {
