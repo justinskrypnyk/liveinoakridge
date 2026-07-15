@@ -1,0 +1,176 @@
+---
+import Base from '@/layouts/Base.astro';
+import { AREAS } from '@/data/areas';
+
+const areas = AREAS.filter((a) => a.geo).map((a) => ({
+  name: a.name,
+  slug: a.slug,
+  lat: a.geo!.lat,
+  lng: a.geo!.lng,
+}));
+
+const quickPicks = [
+  { label: 'Downtown London', lat: 42.9836, lng: -81.2497 },
+  { label: 'Western University', lat: 43.0096, lng: -81.2737 },
+  { label: 'Victoria Hospital (LHSC)', lat: 42.9667, lng: -81.2422 },
+  { label: 'Fanshawe College', lat: 43.0187, lng: -81.1897 },
+  { label: 'Highway 401 & Wonderland Rd', lat: 42.9346, lng: -81.2951 },
+];
+---
+
+<Base
+  title="Commute Time Calculator | Which London Ontario Neighbourhood Fits Your Commute?"
+  description="Estimate the drive time from Oakridge, Byron, Westmount, Riverbend, Lambeth, West London, and Whitehills to your workplace, school, or hospital in London Ontario."
+>
+  <section class="bg-navy py-20 text-white">
+    <div class="container-site">
+      <nav aria-label="Breadcrumb" class="flex items-center gap-2 text-sm text-white/40 mb-8">
+        <a href="/" class="hover:text-gold transition-colors">Home</a>
+        <span>/</span>
+        <span class="text-white/70">Commute Calculator</span>
+      </nav>
+      <h1 class="font-serif text-5xl font-bold mb-4">Commute Time Calculator</h1>
+      <div class="gold-divider mb-6"></div>
+      <p class="text-xl text-white/70 max-w-2xl">
+        Relocating and trying to figure out which neighbourhood keeps your commute reasonable? Enter where you need to drive to and see an estimated drive time from each area Justin serves.
+      </p>
+    </div>
+  </section>
+
+  <section class="py-20 bg-cream">
+    <div class="container-site max-w-3xl">
+      <div class="bg-white rounded-2xl p-8 shadow-card mb-10">
+        <h2 class="font-serif text-2xl text-navy mb-2">Where do you need to commute to?</h2>
+        <p class="text-sm text-slate mb-6">Pick a common destination, or type any London-area address.</p>
+
+        <div class="flex flex-wrap gap-2 mb-6" id="quick-picks">
+          {quickPicks.map((q) => (
+            <button
+              type="button"
+              class="quick-pick-btn inline-flex items-center justify-center min-h-[44px] px-4 py-2 rounded-full text-sm font-medium border border-gray-200 text-navy/70 hover:bg-gold hover:text-navy hover:border-gold transition-all"
+              data-lat={q.lat}
+              data-lng={q.lng}
+              data-label={q.label}
+            >
+              {q.label}
+            </button>
+          ))}
+        </div>
+
+        <form id="address-form" class="flex flex-col sm:flex-row gap-3">
+          <label for="address-input" class="sr-only">Address to calculate commute times to</label>
+          <input
+            type="text"
+            id="address-input"
+            placeholder="e.g. 100 Dundas St, London ON"
+            class="flex-1 px-4 py-3 rounded-lg border border-gray-200 text-navy placeholder-slate/50 text-sm outline-none focus:border-gold"
+          />
+          <button type="submit" class="btn-primary text-sm py-3 px-6 shrink-0">Calculate</button>
+        </form>
+        <p id="status-msg" class="text-sm text-slate mt-3 hidden" aria-live="polite"></p>
+      </div>
+
+      <div id="results" class="hidden" aria-live="polite">
+        <h3 class="font-serif text-xl text-navy mb-1" id="results-heading" tabindex="-1"></h3>
+        <p class="text-xs text-slate/60 mb-5">
+          Estimated drive times based on straight-line distance with a road-network adjustment — not live traffic data. Actual drive times will vary.
+        </p>
+        <div class="space-y-3" id="results-list"></div>
+      </div>
+
+      <p class="text-center text-sm text-slate/60 mt-10">
+        Not sure which neighbourhood is the right fit beyond just commute time? <a href="/contact/" class="text-gold hover:underline">Reach out to Justin</a> or explore <a href="/areas/" class="text-gold hover:underline">all areas we serve</a>.
+      </p>
+    </div>
+  </section>
+</Base>
+
+<script define:vars={{ areas }}>
+  const EARTH_RADIUS_KM = 6371;
+  const ROAD_NETWORK_FACTOR = 1.3; // real roads aren't straight lines
+  const AVG_SPEED_KMH = 38; // blended city/arterial average, not highway
+
+  function haversineKm(lat1, lng1, lat2, lng2) {
+    const toRad = (deg) => (deg * Math.PI) / 180;
+    const dLat = toRad(lat2 - lat1);
+    const dLng = toRad(lng2 - lng1);
+    const a =
+      Math.sin(dLat / 2) ** 2 +
+      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+    return EARTH_RADIUS_KM * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  }
+
+  function renderResults(destLabel, destLat, destLng) {
+    const resultsSection = document.getElementById('results');
+    const resultsHeading = document.getElementById('results-heading');
+    const resultsList = document.getElementById('results-list');
+
+    const computed = areas
+      .map((area) => {
+        const straightKm = haversineKm(area.lat, area.lng, destLat, destLng);
+        const roadKm = straightKm * ROAD_NETWORK_FACTOR;
+        const minutes = Math.round((roadKm / AVG_SPEED_KMH) * 60);
+        return { ...area, km: roadKm, minutes };
+      })
+      .sort((a, b) => a.minutes - b.minutes);
+
+    resultsHeading.textContent = `Estimated drive times to ${destLabel}`;
+    resultsList.innerHTML = '';
+
+    computed.forEach((area, i) => {
+      const row = document.createElement('a');
+      row.href = `/areas/${area.slug}/`;
+      row.className =
+        'flex items-center justify-between bg-white rounded-xl p-4 shadow-card hover:shadow-lg transition-shadow';
+      row.innerHTML = `
+        <div class="flex items-center gap-3">
+          <span class="w-7 h-7 rounded-full bg-gold/20 text-gold text-xs font-bold flex items-center justify-center shrink-0">${i + 1}</span>
+          <span class="font-serif text-navy">${area.name}</span>
+        </div>
+        <div class="text-right">
+          <div class="text-navy font-semibold">${area.minutes} min</div>
+          <div class="text-xs text-slate/60">~${area.km.toFixed(1)} km</div>
+        </div>
+      `;
+      resultsList.appendChild(row);
+    });
+
+    resultsSection.classList.remove('hidden');
+    resultsHeading.focus();
+  }
+
+  document.getElementById('quick-picks').addEventListener('click', (e) => {
+    const btn = e.target.closest('.quick-pick-btn');
+    if (!btn) return;
+    renderResults(btn.dataset.label, parseFloat(btn.dataset.lat), parseFloat(btn.dataset.lng));
+    document.getElementById('status-msg').classList.add('hidden');
+  });
+
+  document.getElementById('address-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const input = document.getElementById('address-input');
+    const statusMsg = document.getElementById('status-msg');
+    const query = input.value.trim();
+    if (!query) return;
+
+    statusMsg.textContent = 'Looking up that address...';
+    statusMsg.classList.remove('hidden');
+
+    try {
+      const searchQuery = /london/i.test(query) ? query : `${query}, London, Ontario`;
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&limit=1`
+      );
+      const data = await res.json();
+      if (!data.length) {
+        statusMsg.textContent = "Couldn't find that address. Try adding a street number or nearby cross street.";
+        return;
+      }
+      const { lat, lon, display_name } = data[0];
+      statusMsg.classList.add('hidden');
+      renderResults(display_name.split(',').slice(0, 2).join(','), parseFloat(lat), parseFloat(lon));
+    } catch (err) {
+      statusMsg.textContent = 'Something went wrong looking up that address. Please try again.';
+    }
+  });
+</script>

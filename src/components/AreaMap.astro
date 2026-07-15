@@ -1,0 +1,168 @@
+---
+import type { ParkEntry, SchoolEntry } from '@/data/areas';
+
+interface AreaHub {
+  name: string;
+  slug: string;
+  geo: { lat: number; lng: number };
+}
+
+interface Props {
+  parks?: ParkEntry[];
+  schools?: SchoolEntry[];
+  areaHubs?: AreaHub[];
+  height?: string;
+  showToggles?: boolean;
+}
+
+const { parks = [], schools = [], areaHubs = [], height = '420px', showToggles = false } = Astro.props;
+
+const geoParks = parks.filter(
+  (p): p is ParkEntry & { geo: { lat: number; lng: number } } => !!p.geo
+);
+const geoSchools = schools.filter(
+  (s): s is SchoolEntry & { geo: { lat: number; lng: number } } => !!s.geo
+);
+const mapId = `area-map-${Math.random().toString(36).slice(2, 9)}`;
+
+const layers = [
+  { key: 'areas', label: 'Neighbourhoods', icon: '🏘️', count: areaHubs.length },
+  { key: 'parks', label: 'Parks', icon: '🌳', count: geoParks.length },
+  { key: 'schools', label: 'Schools', icon: '🎓', count: geoSchools.length },
+].filter((l) => l.count > 0);
+---
+
+{layers.length > 0 && (
+  <div>
+    <div class="rounded-2xl overflow-hidden shadow-card border border-gray-100">
+      <div
+        id={mapId}
+        style={`height: ${height}`}
+        role="region"
+        aria-label={`Interactive map showing ${layers.map((l) => l.label.toLowerCase()).join(', ')}. The same information is also listed in the cards on this page.`}
+      ></div>
+    </div>
+
+    {showToggles && layers.length > 1 ? (
+      <div class="flex items-center justify-center flex-wrap gap-2 mt-3" id={`${mapId}-toggles`}>
+        {layers.map((l, i) => (
+          <button
+            type="button"
+            data-layer={l.key}
+            aria-pressed="true"
+            class="map-toggle-btn flex items-center justify-center gap-1.5 min-h-[44px] text-xs font-medium px-3 py-1.5 rounded-full border border-gray-200 bg-white text-navy/70 hover:border-gold transition-colors"
+            data-active="true"
+          >
+            <span class="text-sm" aria-hidden="true">{l.icon}</span> {l.label} ({l.count})
+          </button>
+        ))}
+      </div>
+    ) : (
+      <div class="flex items-center justify-center gap-6 mt-3 text-xs text-slate/60">
+        {layers.map((l) => (
+          <span class="flex items-center gap-1.5">
+            <span class="text-base">{l.icon}</span> {l.label}
+          </span>
+        ))}
+      </div>
+    )}
+  </div>
+
+  <script define:vars={{ mapId, geoParks, geoSchools, areaHubs, showToggles }}>
+    function initAreaMap() {
+      const map = L.map(mapId, { scrollWheelZoom: false });
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        maxZoom: 19,
+      }).addTo(map);
+
+      const makeIcon = (emoji, size) =>
+        L.divIcon({
+          html: `<div style="font-size:${size}px;line-height:1;transform:translateY(-2px);">${emoji}</div>`,
+          className: '',
+          iconSize: [size + 6, size + 6],
+          iconAnchor: [(size + 6) / 2, (size + 6) / 2],
+        });
+
+      const areaIcon = makeIcon('🏘️', 26);
+      const parkIcon = makeIcon('🌳', 22);
+      const schoolIcon = makeIcon('🎓', 22);
+
+      const areaLayer = L.layerGroup(
+        areaHubs.map((area) =>
+          L.marker([area.geo.lat, area.geo.lng], { icon: areaIcon }).bindPopup(
+            `<strong>${area.name}</strong><br><a href="/areas/${area.slug}/" style="color:#b8860b">View area →</a>`
+          )
+        )
+      );
+      const parkLayer = L.layerGroup(
+        geoParks.map((park) =>
+          L.marker([park.geo.lat, park.geo.lng], { icon: parkIcon }).bindPopup(
+            `<strong>${park.name}</strong><br>${park.address}`
+          )
+        )
+      );
+      const schoolLayer = L.layerGroup(
+        geoSchools.map((school) =>
+          L.marker([school.geo.lat, school.geo.lng], { icon: schoolIcon }).bindPopup(
+            `<strong>${school.name}</strong><br>${school.address}<br><span style="color:#666">${school.grades} · ${school.board}</span>`
+          )
+        )
+      );
+
+      const layerMap = { areas: areaLayer, parks: parkLayer, schools: schoolLayer };
+      Object.values(layerMap).forEach((layer) => {
+        if (layer.getLayers().length > 0) layer.addTo(map);
+      });
+
+      const allMarkers = [...areaLayer.getLayers(), ...parkLayer.getLayers(), ...schoolLayer.getLayers()];
+      if (allMarkers.length > 0) {
+        const bounds = L.featureGroup(allMarkers).getBounds();
+        map.fitBounds(bounds.pad(0.2));
+      }
+
+      if (showToggles) {
+        const toggleWrap = document.getElementById(`${mapId}-toggles`);
+        if (toggleWrap) {
+          toggleWrap.querySelectorAll('.map-toggle-btn').forEach((btn) => {
+            btn.addEventListener('click', () => {
+              const key = btn.dataset.layer;
+              const layer = layerMap[key];
+              if (!layer) return;
+              const isActive = btn.dataset.active === 'true';
+              if (isActive) {
+                map.removeLayer(layer);
+                btn.dataset.active = 'false';
+                btn.setAttribute('aria-pressed', 'false');
+                btn.classList.add('opacity-40');
+              } else {
+                layer.addTo(map);
+                btn.dataset.active = 'true';
+                btn.setAttribute('aria-pressed', 'true');
+                btn.classList.remove('opacity-40');
+              }
+            });
+          });
+        }
+      }
+    }
+
+    if (window.L) {
+      initAreaMap();
+    } else {
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+      link.integrity = 'sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H';
+      link.crossOrigin = 'anonymous';
+      document.head.appendChild(link);
+
+      const script = document.createElement('script');
+      script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+      script.integrity = 'sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH';
+      script.crossOrigin = 'anonymous';
+      script.onload = initAreaMap;
+      document.body.appendChild(script);
+    }
+  </script>
+)}

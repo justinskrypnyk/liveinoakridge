@@ -1,0 +1,165 @@
+---
+interface Props {
+  title: string;
+  color?: string;
+  labels: string[];
+  values: number[];
+  valueSuffix?: string;
+  height?: number;
+}
+
+const {
+  title,
+  color = '#059669',
+  labels,
+  values,
+  valueSuffix = '',
+  height = 220,
+} = Astro.props;
+
+const width = 700;
+const padding = { top: 24, right: 16, bottom: 28, left: 16 };
+const plotW = width - padding.left - padding.right;
+const plotH = height - padding.top - padding.bottom;
+
+const min = Math.min(...values);
+const max = Math.max(...values);
+const range = max - min || 1;
+const yPad = range * 0.15;
+const yMin = min - yPad;
+const yMax = max + yPad;
+
+const xStep = plotW / (labels.length - 1);
+const points = values.map((v, i) => {
+  const x = padding.left + i * xStep;
+  const y = padding.top + plotH - ((v - yMin) / (yMax - yMin)) * plotH;
+  return { x, y, v, label: labels[i] };
+});
+
+const linePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
+
+const gridLines = 4;
+const gridYs = Array.from({ length: gridLines + 1 }, (_, i) => padding.top + (plotH / gridLines) * i);
+
+const chartId = `trend-chart-${Math.random().toString(36).slice(2, 9)}`;
+---
+
+<div class="trend-chart-wrap">
+  <p class="text-sm font-semibold text-navy mb-2">{title}</p>
+  <div class="relative">
+    <svg
+      id={chartId}
+      viewBox={`0 0 ${width} ${height}`}
+      class="w-full h-auto"
+      role="img"
+      aria-label={`${title} trend chart. Full values are listed in the table below.`}
+    >
+      {gridYs.map((gy) => (
+        <line x1={padding.left} y1={gy} x2={width - padding.right} y2={gy} stroke="#e5e7eb" stroke-width="1" />
+      ))}
+
+      <path d={linePath} fill="none" stroke={color} stroke-width="2" stroke-linejoin="round" stroke-linecap="round" />
+
+      {points.map((p, i) => (
+        <circle
+          cx={p.x}
+          cy={p.y}
+          r={i === points.length - 1 ? 5 : 4}
+          fill={color}
+          stroke="white"
+          stroke-width="2"
+          class="chart-point"
+          data-label={p.label}
+          data-value={`${p.v}${valueSuffix}`}
+        />
+      ))}
+
+      <text
+        x={points[points.length - 1].x}
+        y={points[points.length - 1].y - 12}
+        text-anchor="end"
+        class="fill-navy text-[13px] font-semibold"
+      >
+        {values[values.length - 1]}{valueSuffix}
+      </text>
+
+      {labels.map((l, i) => (
+        (i % 2 === 0 || i === labels.length - 1) && (
+          <text
+            x={points[i].x}
+            y={height - 6}
+            text-anchor={i === labels.length - 1 ? 'end' : 'middle'}
+            class="fill-slate text-[10px]"
+          >
+            {l}
+          </text>
+        )
+      ))}
+
+      <line class="chart-crosshair" x1="0" y1={padding.top} x2="0" y2={padding.top + plotH} stroke="#9ca3af" stroke-width="1" style="opacity:0" />
+    </svg>
+
+    <div class="chart-tooltip hidden absolute pointer-events-none bg-navy text-white text-xs rounded-lg px-3 py-2 shadow-lg whitespace-nowrap z-10">
+      <div class="font-semibold" data-tooltip-label></div>
+      <div class="text-white/80" data-tooltip-value></div>
+    </div>
+  </div>
+</div>
+
+<script define:vars={{ chartId }}>
+  (function () {
+    const svg = document.getElementById(chartId);
+    if (!svg) return;
+    const wrap = svg.closest('.trend-chart-wrap');
+    const tooltip = wrap.querySelector('.chart-tooltip');
+    const crosshair = svg.querySelector('.chart-crosshair');
+    const points = Array.from(svg.querySelectorAll('.chart-point'));
+
+    function showPoint(pt) {
+      const cx = parseFloat(pt.getAttribute('cx'));
+      crosshair.setAttribute('x1', cx);
+      crosshair.setAttribute('x2', cx);
+      crosshair.style.opacity = '1';
+
+      tooltip.querySelector('[data-tooltip-label]').textContent = pt.dataset.label;
+      tooltip.querySelector('[data-tooltip-value]').textContent = pt.dataset.value;
+      tooltip.classList.remove('hidden');
+
+      const svgRect = svg.getBoundingClientRect();
+      const scaleX = svgRect.width / svg.viewBox.baseVal.width;
+      const cy = parseFloat(pt.getAttribute('cy'));
+      const scaleY = svgRect.height / svg.viewBox.baseVal.height;
+      tooltip.style.left = `${cx * scaleX}px`;
+      tooltip.style.top = `${cy * scaleY - 12}px`;
+      tooltip.style.transform = 'translate(-50%, -100%)';
+    }
+
+    function hideAll() {
+      crosshair.style.opacity = '0';
+      tooltip.classList.add('hidden');
+    }
+
+    svg.addEventListener('pointermove', (e) => {
+      const svgRect = svg.getBoundingClientRect();
+      const relX = e.clientX - svgRect.left;
+      let nearest = points[0];
+      let nearestDist = Infinity;
+      for (const pt of points) {
+        const cx = (parseFloat(pt.getAttribute('cx')) / svg.viewBox.baseVal.width) * svgRect.width;
+        const dist = Math.abs(cx - relX);
+        if (dist < nearestDist) {
+          nearestDist = dist;
+          nearest = pt;
+        }
+      }
+      showPoint(nearest);
+    });
+    svg.addEventListener('pointerleave', hideAll);
+
+    points.forEach((pt) => {
+      pt.addEventListener('focus', () => showPoint(pt));
+      pt.setAttribute('tabindex', '0');
+    });
+    svg.addEventListener('focusout', hideAll);
+  })();
+</script>

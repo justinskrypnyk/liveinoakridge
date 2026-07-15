@@ -1,0 +1,242 @@
+---
+import Base from '@/layouts/Base.astro';
+import { getArea } from '@/data/areas';
+
+const areaSlugs = ['oakridge', 'byron', 'westmount', 'riverbend', 'lambeth', 'whitehills', 'west-london'];
+const areaSummaries = areaSlugs.map((slug) => {
+  const a = getArea(slug)!;
+  return {
+    slug: a.slug,
+    name: a.name,
+    headline: a.headline,
+    description: a.description,
+    avgPrice: a.avgPrice,
+    image: a.image,
+    imageAlt: a.imageAlt,
+  };
+});
+
+const questions = [
+  {
+    prompt: "What's your budget range for a home?",
+    options: [
+      { label: 'Under $600,000', scores: { 'west-london': 3, whitehills: 3, westmount: 2 } },
+      { label: '$600,000 – $800,000', scores: { oakridge: 3, byron: 1, westmount: 1 } },
+      { label: '$800,000 – $1,000,000', scores: { byron: 2, riverbend: 2, lambeth: 2 } },
+      { label: '$1,000,000+', scores: { riverbend: 2, lambeth: 3 } },
+    ],
+  },
+  {
+    prompt: 'What matters most to you day-to-day?',
+    options: [
+      { label: 'Walkable shops, cafes, everyday convenience', scores: { oakridge: 3, westmount: 2 } },
+      { label: 'Outdoor lifestyle — parks, trails, river access', scores: { byron: 3, riverbend: 2, whitehills: 1 } },
+      { label: 'New construction and modern finishes', scores: { riverbend: 3, lambeth: 3 } },
+      { label: 'Quick highway access for commuting elsewhere', scores: { lambeth: 2, westmount: 1 } },
+    ],
+  },
+  {
+    prompt: 'Which best describes your household?',
+    options: [
+      { label: 'Young family — schools are the #1 priority', scores: { oakridge: 2, whitehills: 3, byron: 1 } },
+      { label: 'Empty nesters or downsizing', scores: { westmount: 2, 'west-london': 2 } },
+      { label: 'Investor — rental income potential matters', scores: { westmount: 3 } },
+      { label: 'Move-up buyer looking for an executive home', scores: { riverbend: 3, lambeth: 2, byron: 1 } },
+    ],
+  },
+  {
+    prompt: 'What kind of street do you picture living on?',
+    options: [
+      { label: 'Mature, tree-lined, established', scores: { oakridge: 3, byron: 2, 'west-london': 2 } },
+      { label: 'Golf-course or river-valley views', scores: { riverbend: 3, byron: 1 } },
+      { label: 'Small-town main-street charm', scores: { byron: 2, lambeth: 2 } },
+      { label: 'Quiet 1970s–80s family streets', scores: { whitehills: 3, 'west-london': 1 } },
+    ],
+  },
+  {
+    prompt: 'How close to downtown London do you want to be?',
+    options: [
+      { label: 'Very close', scores: { 'west-london': 3, westmount: 2, oakridge: 1 } },
+      { label: 'A reasonable drive is fine', scores: { oakridge: 2, byron: 1, whitehills: 1 } },
+      { label: "Doesn't matter — I want space and quiet", scores: { riverbend: 2, lambeth: 3 } },
+    ],
+  },
+];
+---
+
+<Base
+  title="Which London Ontario Neighbourhood Fits You? | Justin Skrypnyk"
+  description="Answer 5 quick questions and find out whether Oakridge, Byron, Westmount, Riverbend, Lambeth, Whitehills, or West London fits your budget and lifestyle best."
+>
+  <section class="bg-navy py-20 text-white">
+    <div class="container-site">
+      <nav aria-label="Breadcrumb" class="flex items-center gap-2 text-sm text-white/40 mb-8">
+        <a href="/" class="hover:text-gold transition-colors">Home</a>
+        <span>/</span>
+        <span class="text-white/70">Neighbourhood Quiz</span>
+      </nav>
+      <h1 class="font-serif text-5xl font-bold mb-4">Which Neighbourhood Fits You?</h1>
+      <div class="gold-divider mb-6"></div>
+      <p class="text-xl text-white/70 max-w-2xl">
+        Five quick questions. See which of the areas Justin serves actually matches your budget, priorities, and lifestyle — not just the ones you've already heard of.
+      </p>
+    </div>
+  </section>
+
+  <section class="py-20 bg-cream">
+    <div class="container-site max-w-2xl">
+      <div id="quiz-card" class="bg-white rounded-2xl p-8 shadow-card">
+        <div class="flex items-center justify-between mb-6">
+          <span id="quiz-progress" aria-live="polite" class="text-xs font-semibold text-navy/40 uppercase tracking-wider">Question 1 of {questions.length}</span>
+          <button id="quiz-restart" class="text-xs text-gold hover:underline hidden">Start Over</button>
+        </div>
+        <div id="quiz-pin-trail" class="flex items-center gap-2 mb-8" aria-hidden="true">
+          {questions.map((_, i) => (
+            <>
+              <svg class="quiz-pin w-5 h-5 shrink-0 transition-all duration-300" data-index={i} viewBox="0 0 24 24" fill={i === 0 ? '#059669' : 'none'} stroke={i === 0 ? 'none' : '#d1d5db'} stroke-width="2">
+                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+              </svg>
+              {i < questions.length - 1 && <div class="quiz-pin-connector flex-1 h-0.5 bg-gray-200 transition-colors duration-300" data-index={i}></div>}
+            </>
+          ))}
+        </div>
+
+        <div id="quiz-question" aria-live="polite">
+          <h2 id="quiz-prompt" class="font-serif text-2xl text-navy mb-6" tabindex="-1"></h2>
+          <div id="quiz-options" class="space-y-3" role="group" aria-labelledby="quiz-prompt"></div>
+        </div>
+      </div>
+
+      <div id="quiz-result" class="hidden" aria-live="polite">
+        <div class="text-center mb-10">
+          <div class="inline-block text-gold text-sm font-semibold tracking-wider uppercase mb-3">Your Best Match</div>
+          <h2 class="font-serif text-3xl text-navy" id="result-name" tabindex="-1"></h2>
+        </div>
+
+        <a id="result-card-link" href="#" class="block bg-white rounded-2xl overflow-hidden shadow-card hover:shadow-lg transition-shadow mb-6">
+          <img id="result-image" src="" alt="" class="w-full h-56 object-cover" />
+          <div class="p-6">
+            <h3 class="font-serif text-xl text-navy mb-2" id="result-headline"></h3>
+            <p class="text-slate text-sm mb-3" id="result-description"></p>
+            <div class="flex items-center justify-between">
+              <span class="text-sm text-navy/60">Avg. price range</span>
+              <span class="font-serif text-lg text-navy" id="result-price"></span>
+            </div>
+          </div>
+        </a>
+
+        <div id="result-runner-up-wrap" class="mb-8">
+          <p class="text-xs text-slate/60 uppercase tracking-wider mb-2">Also worth a look</p>
+          <a id="result-runner-up-link" href="#" class="flex items-center justify-between bg-white rounded-xl p-4 shadow-card hover:shadow-lg transition-shadow">
+            <span class="font-serif text-navy" id="result-runner-up-name"></span>
+            <span class="text-gold text-sm font-semibold">View area →</span>
+          </a>
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-3 justify-center">
+          <a href="/contact/" class="btn-primary text-center">Talk to Justin About This</a>
+          <button id="quiz-retake" class="btn-white text-center border border-gray-200">Retake Quiz</button>
+        </div>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<script define:vars={{ questions, areaSummaries }}>
+  let currentQuestion = 0;
+  const totals = {};
+
+  function resetQuiz() {
+    currentQuestion = 0;
+    Object.keys(totals).forEach((k) => delete totals[k]);
+    document.getElementById('quiz-card').classList.remove('hidden');
+    document.getElementById('quiz-result').classList.add('hidden');
+    document.getElementById('quiz-restart').classList.add('hidden');
+    renderQuestion(true);
+  }
+
+  function renderQuestion(moveFocus) {
+    const q = questions[currentQuestion];
+    document.getElementById('quiz-progress').textContent = `Question ${currentQuestion + 1} of ${questions.length}`;
+
+    document.querySelectorAll('.quiz-pin').forEach((pin) => {
+      const i = parseInt(pin.dataset.index, 10);
+      if (i <= currentQuestion) {
+        pin.setAttribute('fill', '#059669');
+        pin.setAttribute('stroke', 'none');
+      } else {
+        pin.setAttribute('fill', 'none');
+        pin.setAttribute('stroke', '#d1d5db');
+      }
+    });
+    document.querySelectorAll('.quiz-pin-connector').forEach((line) => {
+      const i = parseInt(line.dataset.index, 10);
+      line.classList.toggle('bg-gray-200', i >= currentQuestion);
+      line.classList.toggle('bg-emerald-600', i < currentQuestion);
+    });
+    const promptEl = document.getElementById('quiz-prompt');
+    promptEl.textContent = q.prompt;
+
+    const optionsEl = document.getElementById('quiz-options');
+    optionsEl.innerHTML = '';
+    q.options.forEach((opt) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className =
+        'w-full text-left px-5 py-4 rounded-xl border border-gray-200 text-navy/80 hover:border-gold hover:bg-gold/5 transition-all';
+      btn.textContent = opt.label;
+      btn.addEventListener('click', () => selectOption(opt));
+      optionsEl.appendChild(btn);
+    });
+
+    document.getElementById('quiz-restart').classList.toggle('hidden', currentQuestion === 0);
+    if (moveFocus) promptEl.focus();
+  }
+
+  function selectOption(opt) {
+    Object.entries(opt.scores).forEach(([slug, pts]) => {
+      totals[slug] = (totals[slug] || 0) + pts;
+    });
+
+    if (currentQuestion < questions.length - 1) {
+      currentQuestion++;
+      renderQuestion(true);
+    } else {
+      showResult();
+    }
+  }
+
+  function showResult() {
+    const ranked = Object.entries(totals).sort((a, b) => b[1] - a[1]);
+    const topSlug = ranked[0][0];
+    const runnerUpSlug = ranked[1] ? ranked[1][0] : null;
+
+    const top = areaSummaries.find((a) => a.slug === topSlug);
+    const runnerUp = runnerUpSlug ? areaSummaries.find((a) => a.slug === runnerUpSlug) : null;
+
+    document.getElementById('result-name').textContent = top.name;
+    document.getElementById('result-card-link').href = `/areas/${top.slug}/`;
+    document.getElementById('result-image').src = top.image;
+    document.getElementById('result-image').alt = top.imageAlt;
+    document.getElementById('result-headline').textContent = top.headline;
+    document.getElementById('result-description').textContent = top.description;
+    document.getElementById('result-price').textContent = top.avgPrice;
+
+    if (runnerUp) {
+      document.getElementById('result-runner-up-wrap').classList.remove('hidden');
+      document.getElementById('result-runner-up-link').href = `/areas/${runnerUp.slug}/`;
+      document.getElementById('result-runner-up-name').textContent = runnerUp.name;
+    } else {
+      document.getElementById('result-runner-up-wrap').classList.add('hidden');
+    }
+
+    document.getElementById('quiz-card').classList.add('hidden');
+    document.getElementById('quiz-result').classList.remove('hidden');
+    document.getElementById('result-name').focus();
+  }
+
+  document.getElementById('quiz-restart').addEventListener('click', resetQuiz);
+  document.getElementById('quiz-retake').addEventListener('click', resetQuiz);
+
+  renderQuestion(false);
+</script>

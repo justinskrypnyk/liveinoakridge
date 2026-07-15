@@ -1,0 +1,52 @@
+---
+import Base from '@/layouts/Base.astro';
+import AreaMap from '@/components/AreaMap.astro';
+import { AREAS } from '@/data/areas';
+import { SCHOOLS } from '@/data/schools';
+
+const areaHubs = AREAS.filter((a) => a.geo).map((a) => ({
+  name: a.name,
+  slug: a.slug,
+  geo: a.geo!,
+}));
+
+const allParks = AREAS.flatMap((a) => a.parksData?.parks ?? []);
+---
+
+<Base
+  title="Explore the Territory | Interactive Map of Oakridge, Byron, Westmount & More"
+  description="One interactive map of every neighbourhood, park, and school across the areas Justin Skrypnyk serves in West London Ontario — Oakridge, Byron, Westmount, Riverbend, Lambeth, Whitehills, and West London."
+>
+  <section class="bg-navy py-20 text-white">
+    <div class="container-site">
+      <nav aria-label="Breadcrumb" class="flex items-center gap-2 text-sm text-white/40 mb-8">
+        <a href="/" class="hover:text-gold transition-colors">Home</a>
+        <span>/</span>
+        <span class="text-white/70">Explore the Territory</span>
+      </nav>
+      <h1 class="font-serif text-5xl font-bold mb-4">Explore the Territory</h1>
+      <div class="gold-divider mb-6"></div>
+      <p class="text-xl text-white/70 max-w-2xl">
+        Every neighbourhood, park, and school Justin covers in West London — on one map. Toggle layers on and off, click a pin for details, or click a neighbourhood to see its full area page.
+      </p>
+    </div>
+  </section>
+
+  <section class="py-20 bg-cream">
+    <div class="container-site max-w-5xl">
+      <AreaMap areaHubs={areaHubs} parks={allParks} schools={SCHOOLS} height="600px" showToggles={true} />
+
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-12">
+        {areaHubs.map((a) => (
+          <a href={`/areas/${a.slug}/`} class="bg-white rounded-xl p-4 text-center shadow-card hover:shadow-lg transition-shadow">
+            <span class="font-serif text-navy">{a.name}</span>
+          </a>
+        ))}
+      </div>
+
+      <p class="text-center text-sm text-slate/60 mt-10">
+        Not sure which neighbourhood fits you best? Try the <a href="/neighbourhood-quiz/" class="text-gold hover:underline">neighbourhood quiz</a> or the <a href="/commute-calculator/" class="text-gold hover:underline">commute calculator</a>, or <a href="/contact/" class="text-gold hover:underline">reach out to Justin</a> directly.
+      </p>
+    </div>
+  </section>
+</Base>

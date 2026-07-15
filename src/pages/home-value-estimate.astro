@@ -1,0 +1,175 @@
+---
+import Base from '@/layouts/Base.astro';
+import { AREAS } from '@/data/areas';
+
+const areaOptions = AREAS.filter((a) => a.avgPrice).map((a) => {
+  const matches = a.avgPrice.match(/[\d,]+/g) || ['0', '0'];
+  const low = parseInt(matches[0].replace(/,/g, ''), 10);
+  const high = parseInt((matches[1] ?? matches[0]).replace(/,/g, ''), 10);
+  return { slug: a.slug, name: a.name, mid: (low + high) / 2 };
+});
+
+const propertyTypes = [
+  { value: 'detached', label: 'Detached', multiplier: 1.0 },
+  { value: 'bungalow', label: 'Bungalow', multiplier: 0.95 },
+  { value: 'semi', label: 'Semi-Detached', multiplier: 0.88 },
+  { value: 'townhome', label: 'Townhome', multiplier: 0.78 },
+  { value: 'condo', label: 'Condo / Apartment', multiplier: 0.65 },
+];
+---
+
+<Base
+  title="Home Value Estimate | Ballpark Range for London Ontario Homes | Justin Skrypnyk"
+  description="Get a rough, automated ballpark estimate for your London Ontario home based on neighbourhood averages — then request Justin's complimentary in-person evaluation for an accurate number."
+>
+  <section class="bg-navy py-20 text-white">
+    <div class="container-site">
+      <nav aria-label="Breadcrumb" class="flex items-center gap-2 text-sm text-white/40 mb-8">
+        <a href="/" class="hover:text-gold transition-colors">Home</a>
+        <span>/</span>
+        <span class="text-white/70">Home Value Estimate</span>
+      </nav>
+      <h1 class="font-serif text-5xl font-bold mb-4">What's My Home Worth?</h1>
+      <div class="gold-divider mb-6"></div>
+      <p class="text-xl text-white/70 max-w-2xl">
+        Get an instant ballpark range based on neighbourhood averages. This is a starting point for curiosity, not a real number — for that, Justin will walk your home in person, free of charge.
+      </p>
+    </div>
+  </section>
+
+  <section class="py-20 bg-cream">
+    <div class="container-site max-w-2xl">
+      <div id="estimate-form-card" class="bg-white rounded-2xl p-8 shadow-card">
+        <h2 class="font-serif text-2xl text-navy mb-6">Tell Us About Your Home</h2>
+
+        <div class="space-y-5">
+          <div>
+            <label for="area-select" class="block text-sm font-medium text-navy/70 mb-1.5">Neighbourhood</label>
+            <select id="area-select" class="w-full px-4 py-3 rounded-lg border border-gray-200 text-navy text-sm outline-none focus:border-gold">
+              {areaOptions.map((a) => (
+                <option value={a.slug} data-mid={a.mid}>{a.name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label for="type-select" class="block text-sm font-medium text-navy/70 mb-1.5">Property Type</label>
+            <select id="type-select" class="w-full px-4 py-3 rounded-lg border border-gray-200 text-navy text-sm outline-none focus:border-gold">
+              {propertyTypes.map((t) => (
+                <option value={t.value} data-mult={t.multiplier}>{t.label}</option>
+              ))}
+            </select>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label for="sqft-input" class="block text-sm font-medium text-navy/70 mb-1.5">Approx. Square Footage</label>
+              <input type="number" id="sqft-input" value="1650" min="500" max="8000" step="50" class="w-full px-4 py-3 rounded-lg border border-gray-200 text-navy text-sm outline-none focus:border-gold" />
+            </div>
+            <div>
+              <label for="beds-input" class="block text-sm font-medium text-navy/70 mb-1.5">Bedrooms</label>
+              <input type="number" id="beds-input" value="3" min="1" max="8" step="1" class="w-full px-4 py-3 rounded-lg border border-gray-200 text-navy text-sm outline-none focus:border-gold" />
+            </div>
+          </div>
+
+          <label class="flex items-center gap-2.5 text-sm text-navy/70">
+            <input type="checkbox" id="basement-check" class="w-4 h-4 rounded border-gray-300 text-gold focus:ring-gold" />
+            Finished basement
+          </label>
+
+          <button type="button" id="calculate-btn" class="btn-primary w-full justify-center text-base py-4">
+            Get My Rough Estimate
+          </button>
+        </div>
+      </div>
+
+      <div id="estimate-result" class="hidden mt-8" aria-live="polite">
+        <div class="bg-amber-50 border border-amber-200 rounded-xl p-5 mb-6" tabindex="-1" id="estimate-disclaimer">
+          <p class="text-sm text-amber-900 leading-relaxed">
+            <strong>This is not what your home is worth.</strong> This number is a rough, automated estimate based on neighbourhood averages only — it does not know your home's condition, upgrades, lot, renovations, or anything a real comparable-sales analysis would account for. Treat it as a starting point for curiosity, not a number to rely on.
+          </p>
+        </div>
+
+        <div class="bg-white rounded-2xl p-8 shadow-card text-center mb-8">
+          <p class="text-sm text-slate/60 mb-2">Rough estimated range</p>
+          <p class="font-serif text-4xl text-navy mb-1" id="estimate-range"></p>
+          <p class="text-xs text-slate/50">Based on <span id="estimate-area-name"></span> neighbourhood averages — not your specific property</p>
+        </div>
+
+        <div class="bg-white rounded-2xl p-8 shadow-card">
+          <h3 class="font-serif text-xl text-navy mb-2">Want a Number You Can Actually Trust?</h3>
+          <p class="text-sm text-slate mb-6">Justin will walk your home in person, look at real comparable sales, and give you an accurate valuation — completely free, no obligation.</p>
+
+          <form name="home-value-lead" method="POST" data-netlify="true" netlify-honeypot="bot-field" class="space-y-4">
+            <input type="hidden" name="form-name" value="home-value-lead" />
+            <input type="hidden" name="rough-estimate-range" id="hidden-estimate-range" />
+            <input type="hidden" name="neighbourhood" id="hidden-area" />
+            <input type="hidden" name="property-type" id="hidden-type" />
+            <input type="hidden" name="sqft" id="hidden-sqft" />
+            <input type="hidden" name="bedrooms" id="hidden-beds" />
+            <input type="hidden" name="finished-basement" id="hidden-basement" />
+            <p class="hidden"><label>Don't fill this out: <input name="bot-field" /></label></p>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <input type="text" name="name" required placeholder="Your Name" class="px-4 py-3 rounded-lg border border-gray-200 text-navy placeholder-slate/50 text-sm outline-none focus:border-gold" />
+              <input type="email" name="email" required placeholder="Email Address" class="px-4 py-3 rounded-lg border border-gray-200 text-navy placeholder-slate/50 text-sm outline-none focus:border-gold" />
+            </div>
+            <input type="tel" name="phone" placeholder="Phone Number" class="w-full px-4 py-3 rounded-lg border border-gray-200 text-navy placeholder-slate/50 text-sm outline-none focus:border-gold" />
+            <input type="text" name="address" placeholder="Property Address (optional)" class="w-full px-4 py-3 rounded-lg border border-gray-200 text-navy placeholder-slate/50 text-sm outline-none focus:border-gold" />
+
+            <button type="submit" class="btn-primary w-full justify-center text-base py-4">
+              Request My Free In-Person Evaluation
+            </button>
+            <p class="text-xs text-center text-slate">
+              By submitting, you agree to our <a href="/privacy-policy/" class="underline hover:text-gold transition-colors">Privacy Policy</a>. We never share your information.
+            </p>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<script>
+  const BASELINE_SQFT = 1650;
+  const BASELINE_BEDS = 3;
+  const SQFT_STEP_VALUE = 180; // $ per sqft above/below baseline
+  const BED_ADJUST = 0.04; // 4% per bedroom above/below baseline
+  const BASEMENT_ADJUST = 0.06; // 6% bump for finished basement
+
+  document.getElementById('calculate-btn').addEventListener('click', () => {
+    const areaSelect = document.getElementById('area-select');
+    const typeSelect = document.getElementById('type-select');
+    const sqft = parseFloat(document.getElementById('sqft-input').value) || BASELINE_SQFT;
+    const beds = parseFloat(document.getElementById('beds-input').value) || BASELINE_BEDS;
+    const hasBasement = document.getElementById('basement-check').checked;
+
+    const areaOpt = areaSelect.options[areaSelect.selectedIndex];
+    const typeOpt = typeSelect.options[typeSelect.selectedIndex];
+    const mid = parseFloat(areaOpt.dataset.mid);
+    const multiplier = parseFloat(typeOpt.dataset.mult);
+
+    let estimate = mid * multiplier;
+    estimate += (sqft - BASELINE_SQFT) * SQFT_STEP_VALUE;
+    estimate *= 1 + (beds - BASELINE_BEDS) * BED_ADJUST;
+    if (hasBasement) estimate *= 1 + BASEMENT_ADJUST;
+
+    const low = Math.round((estimate * 0.9) / 1000) * 1000;
+    const high = Math.round((estimate * 1.1) / 1000) * 1000;
+    const fmt = (n) => `$${n.toLocaleString('en-CA')}`;
+    const rangeText = `${fmt(low)} – ${fmt(high)}`;
+
+    document.getElementById('estimate-range').textContent = rangeText;
+    document.getElementById('estimate-area-name').textContent = areaOpt.textContent;
+    document.getElementById('hidden-estimate-range').value = rangeText;
+    document.getElementById('hidden-area').value = areaOpt.textContent;
+    document.getElementById('hidden-type').value = typeOpt.textContent;
+    document.getElementById('hidden-sqft').value = sqft;
+    document.getElementById('hidden-beds').value = beds;
+    document.getElementById('hidden-basement').value = hasBasement ? 'Yes' : 'No';
+
+    document.getElementById('estimate-result').classList.remove('hidden');
+    document.getElementById('estimate-result').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    document.getElementById('estimate-disclaimer').focus();
+  });
+</script>

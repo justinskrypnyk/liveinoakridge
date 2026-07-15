@@ -1,127 +1,11 @@
 ---
 import Base from '@/layouts/Base.astro';
 import ContactForm from '@/components/ContactForm.astro';
+import AreaMap from '@/components/AreaMap.astro';
 import { SITE } from '@/data/site';
+import { SCHOOLS } from '@/data/schools';
 
-const schools = [
-  {
-    name: 'John Dearness Public School',
-    category: 'public',
-    categoryLabel: 'Public Elementary',
-    board: 'Thames Valley DSB',
-    address: '555 Sanatorium Rd, London, ON N6H 3W6',
-    grades: 'JK – 8',
-    website: 'https://johndearness.tvdsb.ca',
-    fraserRating: 9.8,
-    fraserLink: 'https://www.compareschoolrankings.org/',
-    fraserNote: '#1 ranked elementary school in London · Top 1% in Ontario',
-    highlight: true,
-  },
-  {
-    name: 'Riverside Public School',
-    category: 'public',
-    categoryLabel: 'Public Elementary',
-    board: 'Thames Valley DSB',
-    address: '550 Pinetree Dr, London, ON N6H 3N1',
-    grades: 'JK – 8',
-    website: 'https://riverside.tvdsb.ca',
-    fraserRating: 8.0,
-    fraserLink: 'https://www.compareschoolrankings.org/',
-    fraserNote: 'Consistently ranked among London\'s top elementary public schools',
-    highlight: false,
-  },
-  {
-    name: 'Notre Dame Catholic School',
-    category: 'catholic',
-    categoryLabel: 'Catholic Elementary',
-    board: 'London District Catholic SB',
-    address: '767 Valetta St, London, ON N6H 4N1',
-    grades: 'JK – 8',
-    website: 'https://dam.ldcsb.ca',
-    fraserRating: 7.3,
-    fraserLink: 'https://www.compareschoolrankings.org/',
-    fraserNote: 'Serving the Oakridge Catholic community since 1969',
-    highlight: false,
-  },
-  {
-    name: 'St. Nicholas Catholic School',
-    category: 'catholic',
-    categoryLabel: 'Catholic Elementary',
-    board: 'London District Catholic SB',
-    address: '1956 Shore Rd, London, ON N6K 0E8',
-    grades: 'JK – 8',
-    website: 'https://nic.ldcsb.ca',
-    fraserRating: null,
-    fraserLink: 'https://www.compareschoolrankings.org/',
-    fraserNote: 'Home of the Nighthawks — see Fraser Institute for rating',
-    highlight: false,
-  },
-  {
-    name: 'Matthews Hall Independent School',
-    category: 'private',
-    categoryLabel: 'Private Independent',
-    board: 'Independent (CIS Ontario / CAIS)',
-    address: '1370 Oxford St W, London, ON N6H 1W2',
-    grades: 'Preschool – 8',
-    website: 'https://matthewshall.ca',
-    fraserRating: null,
-    fraserLink: 'https://www.compareschoolrankings.org/',
-    fraserNote: 'Est. 1918 · Small class sizes of 10–17 · CIS Ontario & CAIS accredited',
-    highlight: false,
-  },
-  {
-    name: 'Oakridge Secondary School',
-    category: 'secondary',
-    categoryLabel: 'Public Secondary',
-    board: 'Thames Valley DSB',
-    address: '1040 Oxford St W, London, ON N6H 1V4',
-    grades: '9 – 12',
-    website: 'https://oakridge.tvdsb.ca',
-    fraserRating: 8.0,
-    fraserLink: 'https://www.compareschoolrankings.org/',
-    fraserNote: '#86 of 747 secondary schools in Ontario · Top 12%',
-    highlight: false,
-  },
-  {
-    name: 'St. Thomas Aquinas Catholic Secondary School',
-    category: 'secondary',
-    categoryLabel: 'Catholic Secondary',
-    board: 'London District Catholic SB',
-    address: '1360 Oxford St W, London, ON',
-    grades: '9 – 12',
-    website: 'https://sta.ldcsb.ca',
-    fraserRating: null,
-    fraserLink: 'https://www.compareschoolrankings.org/',
-    fraserNote: 'Ranked #163 of 746 secondary schools in Ontario (Wikipedia)',
-    highlight: false,
-  },
-  {
-    name: 'West Oaks French Immersion Public School',
-    category: 'french',
-    categoryLabel: 'French Immersion',
-    board: 'Thames Valley DSB',
-    address: '1050 Plantation Rd, London, ON N6H 2Y5',
-    grades: 'JK – 8',
-    website: 'https://westoaks.tvdsb.ca',
-    fraserRating: null,
-    fraserLink: 'https://www.compareschoolrankings.org/',
-    fraserNote: 'Core French immersion program — see Fraser Institute for rating',
-    highlight: false,
-  },
-  {
-    name: 'École élémentaire Marie-Curie',
-    category: 'french',
-    categoryLabel: 'French First Language',
-    board: 'Conseil scolaire Viamonde',
-    address: '40 Hunt Club Drive, London, ON',
-    grades: 'JK – 6',
-    website: 'https://viamonde.ca',
-    fraserRating: null,
-    fraserLink: 'https://www.compareschoolrankings.org/',
-    fraserNote: 'French first-language school — see Fraser Institute for rating',
-    highlight: false,
-  },
-];
+const schools = SCHOOLS;
 
 const golf = [
   {
@@ -250,8 +134,8 @@ function fraserStars(rating: number | null): string {
 ---
 
 <Base
-  title="Oakridge Community Guide — Schools, Golf & Local Resources | Justin Skrypnyk Real Estate Broker"
-  description="Your complete guide to schools and golf courses near Oakridge, London Ontario. Public, Catholic, and French schools with Fraser Institute ratings, plus top golf courses within 15 minutes."
+  title="11 Oakridge Schools Ranked & 8 Nearby Golf Courses | Justin Skrypnyk"
+  description="Fraser Institute ratings for all 11 schools serving Oakridge — public, Catholic, and French immersion — plus 8 golf courses within 15 minutes. The local guide from Justin Skrypnyk, Oakridge Real Estate Broker."
 >
 
   <!-- Hero -->
@@ -350,7 +234,8 @@ function fraserStars(rating: number | null): string {
       <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6" id="school-grid">
         {schools.map((school) => (
           <div
-            class={`school-card flex flex-col relative ${school.highlight ? 'pt-3' : ''}`}
+            id={school.slug}
+            class={`school-card scroll-mt-40 flex flex-col relative ${school.highlight ? 'pt-3' : ''}`}
             data-category={school.category}
           >
             {school.highlight && (
@@ -418,6 +303,12 @@ function fraserStars(rating: number | null): string {
             </div>
           </div>
         ))}
+      </div>
+
+      <!-- Schools Map -->
+      <div class="mt-10">
+        <h3 class="font-serif text-xl text-navy mb-4 text-center">Where These Schools Are</h3>
+        <AreaMap schools={schools} />
       </div>
 
       <!-- Fraser Institute Note -->
