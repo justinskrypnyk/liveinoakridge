@@ -1,6 +1,7 @@
 ---
 import Base from '@/layouts/Base.astro';
 import Schema from '@/components/Schema.astro';
+import TrendLineChart from '@/components/TrendLineChart.astro';
 import { SITE } from '@/data/site';
 import { BLOG_POSTS } from '@/data/blog';
 
@@ -141,6 +142,23 @@ const { post } = Astro.props;
               />
             </div>
           )}
+
+          {post.charts && post.charts.length > 0 && (
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+              {post.charts.map((chart) => (
+                <div class="bg-white rounded-2xl p-5 shadow-sm">
+                  <TrendLineChart
+                    title={chart.title}
+                    color={chart.color}
+                    labels={chart.labels}
+                    values={chart.values}
+                    valueSuffix={chart.valueSuffix}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+
           <div class="bg-white rounded-2xl p-5 sm:p-8 lg:p-10 shadow-sm prose prose-slate prose-headings:font-serif prose-headings:text-navy prose-a:text-gold prose-strong:text-navy max-w-none" set:html={post.content} />
 
           {post.faqs && post.faqs.length > 0 && (

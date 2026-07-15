@@ -1,3 +1,11 @@
+export interface BlogChart {
+  title: string;
+  color?: string;
+  labels: string[];
+  values: number[];
+  valueSuffix?: string;
+}
+
 export interface BlogPost {
   slug: string;
   title: string;
@@ -10,6 +18,7 @@ export interface BlogPost {
   image?: string;
   imageAlt?: string;
   content: string;
+  charts?: BlogChart[];
   faqs?: Array<{ question: string; answer: string }>;
   sources?: Array<{ label: string; url: string }>;
 }
@@ -543,9 +552,9 @@ export const BLOG_POSTS: BlogPost[] = [
       <ul>
         <li><strong><a href="/areas/west-london/">West London</a></strong> — Entry-level detached homes and a strong established community. Best value in the west end ($520K–$700K for detached).</li>
         <li><strong><a href="/areas/westmount/">Westmount</a></strong> — Diverse housing including condos and semis near Western University and University Hospital ($350K–$700K range).</li>
-        <li><strong><a href="/areas/white-oaks/">White Oaks</a></strong> — Townhomes and semis at accessible price points near White Oaks Mall ($460K–$650K).</li>
-        <li><strong><a href="/areas/south-london/">South London</a></strong> — Post-war bungalows and semis at good value south of Commissioners Road ($490K–$680K).</li>
-        <li><strong><a href="/areas/east-london/">East London</a></strong> — Most affordable entry-level detached options in the city ($400K–$580K).</li>
+        <li><strong>White Oaks</strong> — Townhomes and semis at accessible price points near White Oaks Mall ($460K–$650K).</li>
+        <li><strong>South London</strong> — Post-war bungalows and semis at good value south of Commissioners Road ($490K–$680K).</li>
+        <li><strong>East London</strong> — Most affordable entry-level detached options in the city ($400K–$580K).</li>
       </ul>
       <p>For a full neighbourhood-by-neighbourhood comparison, read our <a href="/blog/london-ontario-neighbourhood-guide-2026/">complete London Ontario neighbourhood guide</a> or explore all <a href="/areas/">areas we serve</a>.</p>
 
@@ -608,7 +617,7 @@ export const BLOG_POSTS: BlogPost[] = [
 
       <h2>Step 1: Get a Complimentary Home Evaluation First</h2>
       <p>Before you do anything else, you need to know what your home is actually worth in today's market. Online automated estimates are notoriously inaccurate for individual properties — they cannot see your updated kitchen, finished basement, or the fact that comparable properties on your street recently sold above the estimate. A real <a href="/services/home-evaluation/">complimentary home evaluation from a local Real Estate Broker</a> gives you an accurate, data-backed price range before you make any decisions.</p>
-      <p>Justin provides complimentary home evaluations for homeowners across <a href="/areas/oakridge/">Oakridge</a>, <a href="/areas/byron/">Byron</a>, <a href="/areas/westmount/">Westmount</a>, <a href="/areas/lambeth/">Lambeth</a>, <a href="/areas/hyde-park/">Hyde Park</a>, and all of West London and London Ontario.</p>
+      <p>Justin provides complimentary home evaluations for homeowners across <a href="/areas/oakridge/">Oakridge</a>, <a href="/areas/byron/">Byron</a>, <a href="/areas/westmount/">Westmount</a>, <a href="/areas/lambeth/">Lambeth</a>, Hyde Park, and all of West London and London Ontario.</p>
 
       <h2>Step 2: Pricing Strategy Is Everything</h2>
       <p>The most consequential decision in selling your home is the list price. Price too high and your listing accumulates days on market that make buyers suspicious and reduce your negotiating power. Price accurately (or slightly below market) and you create competition that often drives the final sale price above asking.</p>
@@ -751,7 +760,7 @@ export const BLOG_POSTS: BlogPost[] = [
       <p>Here is the math problem with waiting: if rates drop, buyer demand typically surges as affordability improves, which drives prices up. You might pay less each month but more for the home itself. The best time to buy is when demand is moderate and you can afford the purchase — not when everyone else decides to enter the market simultaneously. Read our <a href="/blog/house-prices-expected-to-rise-london-ontario/">price outlook analysis</a> for more context.</p>
 
       <h2>The London Ontario Advantage</h2>
-      <p>London Ontario home prices are still significantly more accessible than Toronto or the GTA, which means the rate impact here is proportionally lower. A West London home at $650,000 versus a comparable Toronto property at $1.2M has very different interest cost dynamics. Neighbourhoods like <a href="/areas/west-london/">West London</a>, <a href="/areas/westmount/">Westmount</a>, and <a href="/areas/east-london/">East London</a> offer accessible entry points even in a higher-rate environment.</p>
+      <p>London Ontario home prices are still significantly more accessible than Toronto or the GTA, which means the rate impact here is proportionally lower. A West London home at $650,000 versus a comparable Toronto property at $1.2M has very different interest cost dynamics. Neighbourhoods like <a href="/areas/west-london/">West London</a>, <a href="/areas/westmount/">Westmount</a>, and East London offer accessible entry points even in a higher-rate environment.</p>
 
       <p>Questions about how rates affect what you can buy? <a href="/mortgages/calculator/">Use our mortgage calculator</a> to model different rate scenarios, or <a href="/contact/">reach out to Justin</a> to discuss your specific situation.</p>
     `,
@@ -798,22 +807,22 @@ export const BLOG_POSTS: BlogPost[] = [
       <p>East London offers London's most affordable detached home prices, starting in the $400,000–$550,000 range. In the west end, West London near Commissioners Road delivers the best balance of price and established neighbourhood quality. Here is a frank neighbourhood-by-neighbourhood breakdown of where you can buy a house in London Ontario at the lowest price points — without sacrificing liveability.</p>
 
       <h2>East London — Most Affordable Detached Homes</h2>
-      <p><a href="/areas/east-london/">East London</a> offers London's most affordable entry-level prices for detached homes, with properties starting in the $400,000 to $550,000 range. Established and diverse communities east of Adelaide Street are undergoing revitalization, with growing investment activity and improving infrastructure. For buyers who prioritize getting into a detached home at the lowest possible price in an established area, East London delivers.</p>
+      <p>East London offers London's most affordable entry-level prices for detached homes, with properties starting in the $400,000 to $550,000 range. Established and diverse communities east of Adelaide Street are undergoing revitalization, with growing investment activity and improving infrastructure. For buyers who prioritize getting into a detached home at the lowest possible price in an established area, East London delivers.</p>
 
       <h2>West London — Best Value in the West End</h2>
       <p>The <a href="/areas/west-london/">West London</a> corridor along Commissioners Road West offers some of the most accessible pricing for buyers who want a genuinely established west-end neighbourhood. Entry-level semi-detached homes and bungalows start in the $520,000 to $580,000 range, with detached two-storeys reaching into the $680,000 to $720,000 range. The area is central, well-served by transit, and close to Cherry Hill Mall for everyday conveniences. It is the best balance of price and neighbourhood quality in West London.</p>
 
       <h2>White Oaks — South London Value</h2>
-      <p><a href="/areas/white-oaks/">White Oaks</a> is a complete south London neighbourhood centred on White Oaks Mall and the Wellington Road corridor. Townhomes and semi-detached homes start in the $460,000 to $550,000 range, with detached homes reaching $680,000. For buyers who want abundant retail and services nearby at an accessible price, White Oaks is one of London's most practical choices.</p>
+      <p>White Oaks is a complete south London neighbourhood centred on White Oaks Mall and the Wellington Road corridor. Townhomes and semi-detached homes start in the $460,000 to $550,000 range, with detached homes reaching $680,000. For buyers who want abundant retail and services nearby at an accessible price, White Oaks is one of London's most practical choices.</p>
 
       <h2>South London — Post-War Value</h2>
-      <p><a href="/areas/south-london/">South London</a> between Commissioners Road and Highway 401 offers post-war bungalows and two-storeys at solid value — typically $490,000 to $680,000 for detached homes. Quick access to White Oaks Mall and Wellington Road retail, plus Highway 401, makes it practical for commuters and budget-conscious families.</p>
+      <p>South London between Commissioners Road and Highway 401 offers post-war bungalows and two-storeys at solid value — typically $490,000 to $680,000 for detached homes. Quick access to White Oaks Mall and Wellington Road retail, plus Highway 401, makes it practical for commuters and budget-conscious families.</p>
 
       <h2>Westmount — Most Diverse Price Range</h2>
       <p><a href="/areas/westmount/">Westmount</a> offers one of the most diverse housing ranges in West London, from condos and apartments starting below $350,000 to larger detached homes in the $650,000 to $750,000 range. It offers exceptional value given its location near Western University and University Hospital. For investors or buyers who want flexibility in property type, Westmount is worth a close look.</p>
 
       <h2>The Bottom Line</h2>
-      <p>For the most accessible entry point in the west end with genuine liveability, <a href="/areas/west-london/">West London near the Commissioners corridor</a> is the strongest choice. For the absolute lowest detached home prices, <a href="/areas/east-london/">East London</a> delivers. For south London convenience at an accessible price, <a href="/areas/white-oaks/">White Oaks</a> is worth exploring.</p>
+      <p>For the most accessible entry point in the west end with genuine liveability, <a href="/areas/west-london/">West London near the Commissioners corridor</a> is the strongest choice. For the absolute lowest detached home prices, East London delivers. For south London convenience at an accessible price, White Oaks is worth exploring.</p>
       <p>Want to explore homes currently available in any of these areas? See our full <a href="/blog/london-ontario-neighbourhood-guide-2026/">London Ontario neighbourhood guide</a>, compare areas in our <a href="/blog/oakridge-vs-byron-west-london-neighbourhoods/">Oakridge vs. Byron</a> breakdown, or <a href="/contact/">reach out to Justin</a> for a no-pressure conversation about which area fits your budget and lifestyle.</p>
     `,
     faqs: [
@@ -864,7 +873,7 @@ export const BLOG_POSTS: BlogPost[] = [
       <p>Several fundamentals support modest price appreciation in 2026–2027. Population growth driven by immigration is maintaining housing demand. <a href="https://www.cmhc-schl.gc.ca/observer" target="_blank" rel="noopener noreferrer">CMHC supply reports</a> confirm that supply remains constrained across Ontario. Interest rates have eased from peak levels. And London's economic base continues to diversify and grow, anchored by Western University, London Health Sciences Centre, and an expanding tech sector.</p>
 
       <h2>The Counterweights</h2>
-      <p>Affordability remains stretched relative to local incomes, which limits how much prices can rise without commensurate income growth. Inventory is slowly improving as more sellers who delayed listing during rate uncertainty finally come to market. Buyers who are looking for value should look at <a href="/areas/west-london/">West London</a>, <a href="/areas/westmount/">Westmount</a>, and <a href="/areas/medway/">Medway</a> as strong candidates for appreciation that hasn't yet been fully priced in.</p>
+      <p>Affordability remains stretched relative to local incomes, which limits how much prices can rise without commensurate income growth. Inventory is slowly improving as more sellers who delayed listing during rate uncertainty finally come to market. Buyers who are looking for value should look at <a href="/areas/west-london/">West London</a>, <a href="/areas/westmount/">Westmount</a>, and Medway as strong candidates for appreciation that hasn't yet been fully priced in.</p>
 
       <h2>The Honest Answer</h2>
       <p>No one can reliably predict home prices with precision. What I can tell you with confidence: the London Ontario market has strong long-term fundamentals, West London is a perennially desirable destination for buyers, and the buyers who consistently win are those who buy when they are financially ready — not when they think the market will be perfect. See our <a href="/blog/interest-rates-london-ontario-home-prices/">interest rates analysis</a> for context on how rate movements affect this picture.</p>
@@ -934,46 +943,46 @@ export const BLOG_POSTS: BlogPost[] = [
 
       <h2>Northwest London</h2>
 
-      <h3><a href="/areas/hyde-park/">Hyde Park</a> — Best for: New builds, family streets, young families</h3>
+      <h3>Hyde Park — Best for: New builds, family streets, young families</h3>
       <p>Hyde Park has grown rapidly into one of London's most family-oriented communities. New construction dominates, with modern two-storeys on well-planned streets and the Medway Community Centre providing pool, ice, and fitness. Prices typically range from $700,000 to $1.05 million.</p>
 
-      <h3><a href="/areas/river-bend/">River Bend</a> — Best for: Nature, newer homes, quiet streets</h3>
+      <h3>River Bend — Best for: Nature, newer homes, quiet streets</h3>
       <p>River Bend sits along the North Thames River with direct access to the Thames Valley Parkway trail system. Newer homes on calm streets back onto river and conservation land — one of London's best-kept secrets for nature-focused buyers. Prices range from $580,000 to $850,000.</p>
 
-      <h3><a href="/areas/fox-hollow/">Fox Hollow</a> — Best for: Ravine access, family-friendly, northwest value</h3>
+      <h3>Fox Hollow — Best for: Ravine access, family-friendly, northwest value</h3>
       <p>Fox Hollow offers newer family homes backing onto the Medway Creek ravine trail network, minutes from Hyde Park Road. Quieter and less premium-priced than Hyde Park, Fox Hollow homes typically range from $600,000 to $900,000.</p>
 
-      <h3><a href="/areas/medway/">Medway</a> — Best for: Central west location, established value</h3>
+      <h3>Medway — Best for: Central west location, established value</h3>
       <p>Medway occupies the central-west portion of London and is often overlooked in favour of Hyde Park or Oakridge — which creates value. Similar convenience at 10–15% lower prices than comparable west-end options. Medway Creek trails, proximity to Western University, and solid post-war housing make it one of London's most practical choices. Prices range from $520,000 to $760,000.</p>
 
       <h2>Far North London</h2>
 
-      <h3><a href="/areas/masonville/">Masonville</a> — Best for: Upscale north end, premium shopping, newer construction</h3>
+      <h3>Masonville — Best for: Upscale north end, premium shopping, newer construction</h3>
       <p>Masonville is anchored by Masonville Place — London's most upscale shopping mall. Newer construction in a prestigious north-end location close to Western University attracts professionals and families looking for north London's best address. Prices range from $650,000 to $950,000.</p>
 
-      <h3><a href="/areas/sunningdale/">Sunningdale</a> — Best for: New construction, growing community, young families</h3>
+      <h3>Sunningdale — Best for: New construction, growing community, young families</h3>
       <p>Sunningdale is London's fastest-growing community — predominantly new builds at the city's northern edge. Infrastructure, schools, and retail are all expanding to meet demand. Prices range from $650,000 to $1 million.</p>
 
       <h2>Old and Heritage London</h2>
 
-      <h3><a href="/areas/old-north/">Old North</a> — Best for: Heritage architecture, walkability, Western University proximity</h3>
+      <h3>Old North — Best for: Heritage architecture, walkability, Western University proximity</h3>
       <p>Old North is London's most architecturally significant residential neighbourhood — Victorian and Edwardian homes on tree-lined streets, walking distance to Western University and Richmond Row. It attracts buyers who value character, history, and urban walkability. Prices range from $600,000 to $950,000.</p>
 
-      <h3><a href="/areas/downtown/">Downtown London</a> — Best for: Urban lifestyle, condos, walkability to everything</h3>
+      <h3>Downtown London — Best for: Urban lifestyle, condos, walkability to everything</h3>
       <p>Downtown London is the city's growing condo and urban residential market. Budweiser Gardens, Covent Garden Market, Richmond Row, and Dundas Place are all walking distance. For buyers who want no car needed and culture at their doorstep, the downtown condo market ($350,000–$700,000) offers genuine value. Homes for sale in downtown London are increasingly competitive as urban investment grows.</p>
 
       <h2>South and East London</h2>
 
-      <h3><a href="/areas/south-london/">South London</a> — Best for: Post-war value near the 401</h3>
+      <h3>South London — Best for: Post-war value near the 401</h3>
       <p>South London offers established bungalows and two-storeys between Commissioners and the 401 at solid value — typically $490,000 to $700,000. Quick access to White Oaks Mall and Wellington Road retail makes it practical for families on a budget.</p>
 
-      <h3><a href="/areas/white-oaks/">White Oaks</a> — Best for: Complete neighbourhood near the mall, diverse housing</h3>
+      <h3>White Oaks — Best for: Complete neighbourhood near the mall, diverse housing</h3>
       <p>White Oaks centres on the White Oaks Mall and Wellington Road corridor — a complete retail ecosystem within minutes. Diverse housing from townhomes to detached at accessible prices ($460,000–$680,000) makes this a practical choice for buyers who prioritize convenience.</p>
 
-      <h3><a href="/areas/east-london/">East London</a> — Best for: Most affordable entry point, investment potential</h3>
+      <h3>East London — Best for: Most affordable entry point, investment potential</h3>
       <p>For the most accessible entry-level detached home prices in the city, East London delivers ($400,000–$580,000 range). Growing investment activity and infrastructure improvement are tracking the city's upward trajectory.</p>
 
-      <h3><a href="/areas/komoka/">Komoka</a> — Best for: Small-town charm, large lots, 10 minutes from London</h3>
+      <h3>Komoka — Best for: Small-town charm, large lots, 10 minutes from London</h3>
       <p>If you want rural peace with city proximity, Komoka sits 10 minutes west of London along the Thames River. Komoka Provincial Park, large lots, and a genuine small-town community make it the choice for buyers who won't sacrifice space or nature. Prices range from $600,000 to $900,000.</p>
 
       <h2>Ready to Find the Right Neighbourhood?</h2>
@@ -1006,6 +1015,416 @@ export const BLOG_POSTS: BlogPost[] = [
       { label: 'London District Catholic School Board (LDCSB)', url: 'https://www.ldcsb.ca' },
       { label: 'London and St. Thomas Association of REALTORS® (LSTAR)', url: 'https://www.lstar.ca' },
       { label: 'City of London — Living in London', url: 'https://london.ca/living-london' },
+    ],
+  },
+  {
+    slug: 'riverbend-vs-byron-southwest-london',
+    title: 'Riverbend vs. Byron: Southwest London\'s Two Golf-and-River Communities Compared',
+    description: 'New-build golf community or established riverside village? Here is how Riverbend and Byron compare on price, schools, construction, and lifestyle for southwest London buyers.',
+    date: '2026-07-13',
+    dateDisplay: 'July 13, 2026',
+    category: 'Neighbourhood Guides',
+    author: 'Justin Skrypnyk',
+    readTime: '6 min read',
+    image: '/images/areas/riverbend-neighbourhood-london-ontario.webp',
+    imageAlt: 'Riverbend Golf Community homes in southwest London Ontario',
+    content: `
+      <p>Riverbend and Byron sit next to each other in southwest London, both wrapped around the Thames River, and both attract buyers who want more green space than a typical subdivision offers. But they are built for different buyers — one is a new-build golf community still under construction, the other is a fully established village neighbourhood with decades of character. Here's how they actually compare.</p>
+
+      <h2>Location and Feel</h2>
+      <p><a href="/areas/riverbend/">Riverbend</a> is Sifton Properties' landmark golf community at the southwest edge of the city, built around the Riverbend Golf Club with the Thames River tracing its southern and western boundary. It's a newer, gated-community feel — homes built to a single cohesive design vision, still expanding toward a planned 400+ homes. <a href="/areas/byron/">Byron</a> sits just northeast of Riverbend, anchored by Springbank Park and Commissioners Road's village-style main street. Byron has been a distinct community since before amalgamation and feels like it — mature trees, a real mix of housing eras, and decades of neighbourhood identity.</p>
+
+      <h2>Home Prices: Riverbend vs. Byron</h2>
+      <p><a href="/areas/riverbend/">Riverbend</a> commands a premium for its new-build, executive-finish homes — typically $730,000 to $900,000+, with larger estate properties exceeding that. <a href="/areas/byron/">Byron</a> ranges from $700,000 to $950,000 for detached homes, spanning everything from post-war bungalows to executive two-storeys. The price bands overlap, but the product is different: Riverbend buyers are paying for new construction and golf-course lots, while Byron's range reflects a wider mix of home ages and sizes.</p>
+
+      <h2>New Construction vs. Established Character</h2>
+      <p>This is the real decision point. Riverbend offers new-build quality — modern layouts, current finishes, and a community built from scratch by a single developer, which means fewer surprises but also fewer mature trees and less architectural variety. Byron offers the opposite trade: established streets, mature landscaping, and genuine architectural variety, but homes that may need updating depending on age. Buyers who want to walk into a move-in-ready new home tend to land in Riverbend; buyers who want character and are comfortable with some renovation tend to land in Byron.</p>
+
+      <h2>Schools</h2>
+      <p>Riverbend is served by the new Riverbend Public School (1000 Upperpoint Ave), opening September 2027, plus Saunders Secondary School — the largest high school in the TVDSB, serving the broader west-end catchment. Byron is served by Byron Northview Public School and Byron Secondary School, which consistently ranks among the region's top academic performers. Families prioritizing an established, proven school with a long academic track record often lean Byron; families comfortable with a brand-new school opening in 2027 have that option in Riverbend.</p>
+
+      <h2>Golf, River Access, and Outdoor Lifestyle</h2>
+      <p>Both neighbourhoods are built around outdoor access, but differently. <a href="/areas/riverbend/">Riverbend</a> is centred on its 18-hole golf course, with Thames River valley trails connecting toward Springbank Park. <a href="/areas/byron/">Byron</a> has Springbank Park itself — London's largest park at over 200 acres — directly in the neighbourhood, plus the Thames Valley Parkway trail system. If golf-course living is the draw, Riverbend wins outright. If it's about park size and trail access for walking, running, and cycling, Byron's proximity to Springbank Park is hard to beat.</p>
+
+      <h2>Who Should Choose Each Neighbourhood?</h2>
+      <p><strong>Choose <a href="/areas/riverbend/">Riverbend</a> if:</strong> You want new construction, golf-course living, and a community built to a single modern design vision, and you're comfortable with a still-developing neighbourhood and a school opening in 2027.</p>
+      <p><strong>Choose <a href="/areas/byron/">Byron</a> if:</strong> You want an established community with mature character, proximity to Springbank Park, and a long-proven school track record.</p>
+      <p>Not sure which fits your family? <a href="/contact/">Reach out to Justin</a> for a straightforward comparison based on your budget and priorities. You can also explore our <a href="/blog/oakridge-vs-byron-west-london-neighbourhoods/">Oakridge vs. Byron comparison</a>, browse all <a href="/areas/">areas we serve</a>, or read the full <a href="/blog/london-ontario-neighbourhood-guide-2026/">London Ontario neighbourhood guide</a>.</p>
+    `,
+    faqs: [
+      {
+        question: 'Is Riverbend or Byron more expensive?',
+        answer: 'Riverbend homes typically range from $730,000 to $900,000+ for new-build, golf-course properties. Byron ranges from $700,000 to $950,000 for detached homes, covering a wider mix of ages and sizes. The bands overlap, but Riverbend\'s premium reflects new construction while Byron\'s range reflects an established, more varied housing stock.',
+      },
+      {
+        question: 'Is Riverbend a good investment?',
+        answer: 'Riverbend is a still-developing Sifton Properties community with a planned 400+ homes, golf course access, and a new public school opening September 2027. New-build golf communities in growing southwest London have generally held value well, though buyers should factor in that some infrastructure and amenities are still being completed.',
+      },
+      {
+        question: 'When does the new Riverbend Public School open?',
+        answer: 'Riverbend Public School, located at 1000 Upperpoint Ave, is scheduled to open in September 2027. Until then, students in the area are served by existing TVDSB schools including Saunders Secondary School.',
+      },
+      {
+        question: 'Which is better for families, Riverbend or Byron?',
+        answer: 'Both are strong family choices. Byron has a long-established, top-ranked school (Byron Secondary School) and immediate access to Springbank Park. Riverbend offers new-build homes and golf-course living but has a school opening in 2027 rather than an existing proven one. Families prioritizing school track record often lean Byron; those prioritizing new construction often lean Riverbend.',
+      },
+      {
+        question: 'How close is Riverbend to Byron and Springbank Park?',
+        answer: 'Riverbend is directly adjacent to Byron in southwest London, with Thames River valley trails connecting the two communities. Springbank Park, which sits in Byron, is easily accessible from Riverbend via the trail network.',
+      },
+    ],
+    sources: [
+      { label: 'Thames Valley District School Board (TVDSB)', url: 'https://www.tvdsb.ca' },
+      { label: 'Sifton Properties', url: 'https://www.sifton.com' },
+      { label: 'London and St. Thomas Association of REALTORS® (LSTAR)', url: 'https://www.lstar.ca' },
+    ],
+  },
+  {
+    slug: 'lambeth-london-ontario-real-estate-guide',
+    title: 'Lambeth, Ontario Real Estate Guide: New Builds, Commuter Access, and Small-Town Character',
+    description: 'A complete guide to buying a home in Lambeth, London Ontario — new estate communities, school ratings, highway access, and current home prices.',
+    date: '2026-07-13',
+    dateDisplay: 'July 13, 2026',
+    category: 'Neighbourhood Guides',
+    author: 'Justin Skrypnyk',
+    readTime: '6 min read',
+    image: '/images/areas/lambeth-neighbourhood-london-ontario.webp',
+    imageAlt: 'New homes in Lambeth, London Ontario',
+    content: `
+      <p>Lambeth doesn't get talked about as often as Oakridge or Byron, but it quietly solves a problem a lot of buyers have: newer, larger homes, genuine small-town character, and some of the fastest highway access in the entire city. If you need Highway 401 or 402 for work, or just want more house for your money without leaving London, Lambeth deserves a look.</p>
+
+      <h2>Where Is Lambeth and Who Lives There</h2>
+      <p>Lambeth sits in the southwest corner of London, immediately north of Highway 402 and anchored by Colonel Talbot Road. It was its own village before amalgamation, and that history still shows up along Main Street Lambeth — a genuine small-town strip with local shops and services. Around that core, the neighbourhood has expanded rapidly with newer estate subdivisions. It tends to attract move-up buyers, commuters, and families who want a newer, larger home without sacrificing a sense of community.</p>
+
+      <h2>New Construction: Heathwoods and Privé</h2>
+      <p>Lambeth's biggest draw for a lot of buyers is its newer housing stock. Estate communities like Heathwoods and Privé have brought larger, modern homes on generous lots into the neighbourhood — a different product than the character homes and older bungalows found in more established West London communities. Buyers who want a new-build feel without committing to a from-scratch development like <a href="/areas/riverbend/">Riverbend</a> often find Lambeth's mix of new and established streets a good middle ground.</p>
+
+      <h2>Commuting from Lambeth</h2>
+      <p>This is where Lambeth genuinely stands out. Direct access to both Highway 401 and Highway 402 makes it one of the best-positioned neighbourhoods in London for commuters — whether that's a regular drive to Windsor, Kitchener-Waterloo, or occasional trips toward Toronto. Big-box retail on Wellington Road is also just minutes away, so day-to-day errands don't require a highway trip at all.</p>
+
+      <h2>Schools and Fraser Institute Ratings</h2>
+      <p>Lambeth is served by Lambeth Public School, St. Nicholas Catholic Elementary, and Sir Frederick Banting Secondary School. Fraser Institute ratings for schools in the area consistently exceed the provincial average, which is a meaningful factor for families weighing Lambeth against other southwest London options.</p>
+
+      <h2>Home Prices in Lambeth</h2>
+      <p>Lambeth homes typically range from $700,000 to $1,100,000, reflecting the newer estate-home product common in the area — executive detached and new-construction homes on larger lots. That puts Lambeth above the London city-wide average, in a similar band to <a href="/areas/riverbend/">Riverbend</a>, but with more established community infrastructure already in place.</p>
+
+      <h2>Is Lambeth Right for You?</h2>
+      <p>Lambeth makes the most sense if commute flexibility matters to you, you want a newer or larger home than what's typically available in established neighbourhoods, and you don't mind trading some walkable urban character for small-town main street charm plus quick highway access. If proximity to downtown or a fully mature tree canopy matters more, neighbourhoods like <a href="/areas/oakridge/">Oakridge</a> or <a href="/areas/byron/">Byron</a> may be a better fit.</p>
+      <p>Curious whether Lambeth fits your situation? <a href="/contact/">Reach out to Justin</a> for a no-pressure conversation, or browse all <a href="/areas/">areas we serve</a> and the full <a href="/blog/london-ontario-neighbourhood-guide-2026/">London Ontario neighbourhood guide</a>.</p>
+    `,
+    faqs: [
+      {
+        question: 'Is Lambeth a good place to raise a family?',
+        answer: 'Yes. Lambeth is served by Lambeth Public School, St. Nicholas Catholic Elementary, and Sir Frederick Banting Secondary School, with Fraser Institute ratings consistently above the provincial average. Newer estate communities like Heathwoods and Privé add larger homes on generous lots, which appeals to growing families.',
+      },
+      {
+        question: 'How far is Lambeth from downtown London?',
+        answer: 'Lambeth is in the southwest corner of London, roughly a 15-20 minute drive from downtown depending on traffic. Its main advantage is highway access rather than downtown proximity — Highway 401 and 402 are both directly accessible from the neighbourhood.',
+      },
+      {
+        question: 'What new developments are in Lambeth?',
+        answer: 'Heathwoods and Privé are the two prominent newer estate communities in Lambeth, offering larger, modern homes on generous lots alongside the neighbourhood\'s original village-era streets around Main Street Lambeth.',
+      },
+      {
+        question: 'What is the average home price in Lambeth?',
+        answer: 'Lambeth homes generally range from $700,000 to $1,100,000, reflecting the prevalence of newer, larger estate homes in the area. This is above the London city-wide average and comparable to other newer-construction communities like Riverbend.',
+      },
+      {
+        question: 'Is Lambeth good for commuters?',
+        answer: 'Yes, Lambeth is one of the best-positioned neighbourhoods in London for commuters, with direct access to both Highway 401 and Highway 402. It suits buyers who regularly travel toward Windsor, Kitchener-Waterloo, or Toronto.',
+      },
+    ],
+    sources: [
+      { label: 'Fraser Institute — School Rankings', url: 'https://www.fraserinstitute.org/studies/school-performance' },
+      { label: 'Thames Valley District School Board (TVDSB)', url: 'https://www.tvdsb.ca' },
+      { label: 'London and St. Thomas Association of REALTORS® (LSTAR)', url: 'https://www.lstar.ca' },
+    ],
+  },
+  {
+    slug: 'westmount-vs-west-london-affordable-neighbourhoods',
+    title: 'Westmount vs. West London: Comparing the West End\'s Best-Value Neighbourhoods',
+    description: 'Priced out of Oakridge or Byron? Westmount and West London offer established communities, strong access to amenities, and some of the west end\'s most accessible home prices.',
+    date: '2026-07-13',
+    dateDisplay: 'July 13, 2026',
+    category: 'Neighbourhood Guides',
+    author: 'Justin Skrypnyk',
+    readTime: '6 min read',
+    image: '/images/areas/westmount-neighbourhood-london-ontario.webp',
+    imageAlt: 'Residential street in Westmount, London Ontario',
+    content: `
+      <p>Not every west-end buyer needs or wants Oakridge or Byron pricing. Westmount and West London are the two neighbourhoods we point value-focused buyers toward most often — both established, both centrally located, and both offering meaningfully more accessible entry points than the west end's premium communities. Here's how they compare.</p>
+
+      <h2>Location and Feel</h2>
+      <p><a href="/areas/westmount/">Westmount</a> developed primarily in the 1960s along the Wonderland Road corridor, evolving into one of the west end's most versatile communities — a genuine mix of bungalows, larger detached homes, and high-rise apartments, with an urban-suburban feel. <a href="/areas/west-london/">West London</a> centres on the Commissioners Road West corridor near Cherry Hill Mall, with mature, tree-lined streets of bungalows and two-storeys built between the 1960s and 1980s. Westmount feels busier and more mixed-use; West London feels quieter and more purely residential.</p>
+
+      <h2>Home Prices</h2>
+      <p><a href="/areas/westmount/">Westmount</a> homes typically range from $550,000 to $750,000. <a href="/areas/west-london/">West London</a> is slightly more accessible still, at $520,000 to $720,000. Both sit well below <a href="/areas/oakridge/">Oakridge</a> and <a href="/areas/byron/">Byron</a>'s $650,000-$950,000 range, making them the go-to answer for buyers who want a west-end address without the premium. For a full breakdown of pricing across all London neighbourhoods, see our <a href="/blog/cheapest-area-buy-house-london-ontario/">affordability guide</a>.</p>
+
+      <h2>Proximity to Western University and University Hospital</h2>
+      <p>This is Westmount's clearest edge. Its location along Wonderland Road puts it minutes from Western University and University Hospital, making it a natural fit for hospital staff, university faculty, and landlords targeting the student and young-professional rental market. West London is centrally located too, but doesn't have the same direct proximity to either institution.</p>
+
+      <h2>Housing Mix and Investment Potential</h2>
+      <p>Westmount's diversity of housing types — including apartments and condos alongside detached homes — gives it more investment and rental flexibility than most west-end neighbourhoods. West London's housing stock is more uniformly single-family, which suits owner-occupiers looking for a straightforward detached home rather than investors comparing unit types.</p>
+
+      <h2>Amenities and Daily Convenience</h2>
+      <p><a href="/areas/westmount/">Westmount</a> is anchored by White Oaks Mall and the extensive Wonderland Road retail corridor, offering some of the widest day-to-day shopping and dining options in the west end. <a href="/areas/west-london/">West London</a> is anchored by Cherry Hill Mall and is a short drive to downtown London and the Thames River trail system, favouring buyers who want quick highway and downtown access over retail density.</p>
+
+      <h2>Who Should Choose Each Neighbourhood?</h2>
+      <p><strong>Choose <a href="/areas/westmount/">Westmount</a> if:</strong> You want proximity to Western University or University Hospital, more housing-type variety, or investment/rental flexibility.</p>
+      <p><strong>Choose <a href="/areas/west-london/">West London</a> if:</strong> You want a quieter, more purely residential feel with mature lots and quick access to downtown London.</p>
+      <p>Not sure which fits your budget and goals? <a href="/contact/">Reach out to Justin</a> for a straightforward comparison, or explore all <a href="/areas/">areas we serve</a> and the full <a href="/blog/london-ontario-neighbourhood-guide-2026/">London Ontario neighbourhood guide</a>.</p>
+    `,
+    faqs: [
+      {
+        question: 'Is Westmount or West London cheaper?',
+        answer: 'West London is slightly more accessible, typically ranging from $520,000 to $720,000, compared to Westmount\'s $550,000 to $750,000. Both are well below the premium commanded by Oakridge and Byron.',
+      },
+      {
+        question: 'Is Westmount close to Western University?',
+        answer: 'Yes. Westmount\'s location along the Wonderland Road corridor puts it just minutes from Western University and University Hospital, making it a popular choice for hospital staff, faculty, and landlords targeting student or young-professional renters.',
+      },
+      {
+        question: 'Is Westmount a good place to invest?',
+        answer: 'Westmount\'s diverse housing mix — detached homes, semi-detached, condos, townhomes, and apartments — combined with proximity to Western University and University Hospital gives it more rental and investment flexibility than most west-end London neighbourhoods.',
+      },
+      {
+        question: 'What is West London known for?',
+        answer: 'West London is centred on the Commissioners Road West corridor near Cherry Hill Mall, known for mature tree-lined streets, established bungalows and two-storeys built from the 1960s to 1980s, and quick access to downtown London and the Thames River trail system.',
+      },
+      {
+        question: 'Are Westmount and West London good for families?',
+        answer: 'Both are solid family options with established schools and community infrastructure. Westmount offers a wider mix of housing types and proximity to Western University and University Hospital, while West London offers a quieter, more uniformly residential setting with mature lots.',
+      },
+    ],
+    sources: [
+      { label: 'Thames Valley District School Board (TVDSB)', url: 'https://www.tvdsb.ca' },
+      { label: 'London and St. Thomas Association of REALTORS® (LSTAR)', url: 'https://www.lstar.ca' },
+      { label: 'Western University', url: 'https://www.uwo.ca' },
+    ],
+  },
+  {
+    slug: 'why-listings-get-terminated-london-ontario',
+    title: 'Why Listings Get Pulled: How to Avoid a Terminated Listing in London Ontario',
+    description: 'Terminations are up sharply across London Ontario in 2026. Here is what a terminated listing actually means, why it happens, and how to price your home so it never happens to you.',
+    date: '2026-07-14',
+    dateDisplay: 'July 14, 2026',
+    category: 'Selling Tips',
+    author: 'Justin Skrypnyk',
+    readTime: '6 min read',
+    image: '/images/june-2026-london-ontario-market-update.png',
+    imageAlt: 'For sale sign being removed from a front lawn, representing a terminated real estate listing in London Ontario',
+    content: `
+      <p>If you've noticed more "for sale" signs disappearing without a "sold" sticker on them lately, you're not imagining it. Terminations — listings pulled from the market instead of sold — jumped 30.6% citywide and 42.1% in Oakridge in June 2026 alone. If you're planning to sell, understanding why this happens is the difference between a fast sale and joining that statistic.</p>
+
+      <h2>What Is a Terminated Listing?</h2>
+      <p>A termination means a home was listed for sale, then pulled off the market before it sold — not because the seller changed their mind about selling entirely, but usually because the listing expired or the seller cancelled it, often to relist later at a different price or with a different approach. It's distinct from a sale falling through after an accepted offer; a termination means the home never sold at all during that listing period.</p>
+
+      <h2>Why Are Terminations Rising in London Ontario Right Now?</h2>
+      <p>Terminations climbed both citywide (up 30.6% month-over-month) and in Oakridge (up 42.1%) in June 2026, following a year of steadily growing inventory. As <a href="https://wowa.ca/london-housing-market" target="_blank" rel="noopener noreferrer">supply has built up across the city</a>, buyers have gained real negotiating leverage — and sellers who priced based on last year's market, or based on what a neighbour's house sold for eight months ago, are finding buyers simply aren't willing to meet that number anymore.</p>
+      <p>A rising termination rate is one of the clearest signs a market is shifting toward buyers. It doesn't mean homes aren't selling — it means the homes that <em>are</em> selling are priced accurately, and the ones that aren't priced accurately are getting pulled rather than negotiated down.</p>
+
+      <h2>The #1 Reason Listings Get Pulled: Overpricing</h2>
+      <p>The pattern is consistent, in London and everywhere else: homes priced to the current market sell, homes priced ahead of it sit, and eventually get pulled. In Oakridge specifically, the homes that sold in June had a median time on market of just 19 days — while the neighbourhood's terminations rose to 27 listings, up from 19 in May. Same neighbourhood, same month: some homes sold in under three weeks, others didn't sell at all. The difference almost always comes down to the list price relative to what recent comparable sales actually support.</p>
+      <p>Other contributing factors — poor photography, limited showings availability, a home that needs visible work — matter too, but they're rarely the deciding factor on their own. An overpriced home with great photos still sits. A well-priced home with mediocre photos still gets showings.</p>
+
+      <h2>What Happens After a Termination?</h2>
+      <p>A terminated listing isn't fatal, but it does leave a mark. Buyers' agents can typically see a property's full listing history, including previous list prices and how long it sat before being pulled. A home that comes back on the market at a lower price after a termination can read as a seller who's already shown their hand — which is exactly the negotiating position you don't want to be in. It's far better to price correctly the first time than to test a high number and adjust after the market has already told you no.</p>
+
+      <h2>How to Avoid Becoming a Termination Statistic</h2>
+      <p>The fix is almost always the same: price to actual, recent comparable sales in your specific neighbourhood — not to what you hope your home is worth, not to last year's numbers, and not to the highest nearby sale from the spring peak. A pricing strategy built on real, current data is the single biggest factor in whether a home sells quickly or becomes another termination.</p>
+      <p>This is exactly what a proper home evaluation is for. Justin's <a href="/services/home-evaluation/">complimentary home evaluation</a> uses actual comparable sales — not an algorithm, not a guess — to land on a number that reflects what buyers are genuinely willing to pay right now. If you just want a rough starting point before that conversation, the <a href="/home-value-estimate/">instant ballpark estimate tool</a> is a reasonable first step, though it's not a substitute for a real evaluation.</p>
+      <p>For the full picture on where the broader market stands, see our <a href="/blog/june-2026-london-ontario-market-update/">June 2026 London Ontario market update</a> and <a href="/blog/may-2026-london-ontario-market-update/">May 2026 update</a>.</p>
+    `,
+    faqs: [
+      {
+        question: 'What does it mean when a house listing is terminated?',
+        answer: "A terminated listing means the home was listed for sale but pulled off the market before selling — typically because it wasn't attracting acceptable offers at the listed price. It's different from a sale falling through after an accepted offer; a termination means the home never sold during that listing period at all.",
+      },
+      {
+        question: 'Why are so many listings being terminated in London Ontario in 2026?',
+        answer: "Terminations rose 30.6% citywide and 42.1% in Oakridge in June 2026 alone, as growing inventory has shifted negotiating leverage toward buyers. Sellers who priced based on older market conditions are finding buyers won't meet those numbers, leading to more listings being pulled rather than sold.",
+      },
+      {
+        question: 'Does a terminated listing hurt my chances of selling later?',
+        answer: "It can. Buyers' agents typically see a property's full listing history, including prior list prices and days on market. Coming back at a lower price after a termination can signal to buyers that you've already shown flexibility, weakening your negotiating position. Pricing correctly the first time avoids this entirely.",
+      },
+      {
+        question: 'How do I make sure my home does not get terminated?',
+        answer: "Price it to actual, recent comparable sales in your specific neighbourhood rather than hopeful expectations or outdated numbers. A proper home evaluation based on current comparables — not an automated estimate — is the most reliable way to land on a price that both sells quickly and gets full value.",
+      },
+    ],
+    sources: [
+      { label: 'London and St. Thomas Association of REALTORS® (LSTAR)', url: 'https://www.lstar.ca' },
+      { label: 'WOWA — London Housing Market', url: 'https://wowa.ca/london-housing-market' },
+    ],
+  },
+  {
+    slug: 'best-time-to-list-your-home-london-ontario',
+    title: 'Best Time to List Your Home in London Ontario in 2026',
+    description: 'Spring outsold summer in London Ontario this year. Here is what the April-to-June 2026 data actually shows about timing your listing, and what it means if you are selling this year.',
+    date: '2026-07-14',
+    dateDisplay: 'July 14, 2026',
+    category: 'Selling Tips',
+    author: 'Justin Skrypnyk',
+    readTime: '5 min read',
+    image: '/images/may-2026-london-ontario-market-update.png',
+    imageAlt: 'Spring homes for sale sign in a London Ontario neighbourhood, representing seasonal real estate market timing',
+    content: `
+      <p>"When should I list?" is one of the most common questions sellers ask, and the honest answer is usually "it depends." But 2026's numbers actually give a clear, specific answer for this year: London's spring market outperformed its early summer market by a wide margin, and the data shows exactly why.</p>
+
+      <h2>The 2026 Trend So Far: Spring vs. Summer</h2>
+      <table>
+        <thead>
+          <tr><th>Metric</th><th>May 2026</th><th>June 2026</th><th>Direction</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Sales Volume (City-Wide)</td><td>543 (+26.0% MoM)</td><td>501 (-7.7% MoM)</td><td>Cooling</td></tr>
+          <tr><td>Average Sale Price</td><td>$638,813 (+5.9% MoM)</td><td>$594,008 (-7.1% MoM)</td><td>Cooling</td></tr>
+          <tr><td>Average Days on Market</td><td>33 days</td><td>39 days</td><td>Slower</td></tr>
+          <tr><td>Terminations (City-Wide)</td><td>Baseline</td><td>+30.6% MoM</td><td>Rising sharply</td></tr>
+        </tbody>
+      </table>
+      <p>May was the strongest month of 2026 so far by almost every measure: the highest sales volume, the fastest average days on market, and rising prices. June cooled on every one of those same measures. If you're deciding when to list a home for the rest of this year, that's a meaningful signal.</p>
+
+      <h2>Why Spring Outperformed Summer This Year</h2>
+      <p>The pattern lines up with what's been building through 2026: <a href="https://wowa.ca/london-housing-market" target="_blank" rel="noopener noreferrer">inventory has grown steadily across the city</a>, giving buyers more options and more negotiating room as the year has gone on. Spring listings landed while buyer urgency and available inventory were still relatively balanced. By June, more supply had piled up, competing for a buyer pool that also starts splitting its attention toward summer travel and vacations — a normal seasonal dip in urgency that showed up clearly in the slower days-on-market and rising termination numbers.</p>
+
+      <h2>Does This Pattern Hold Every Year?</h2>
+      <p>Broadly, yes — spring is consistently the most active season in most Ontario real estate markets, as buyers who spent winter planning start touring in earnest once the weather turns. But the size of the gap between spring and summer varies year to year based on inventory levels and broader economic conditions. 2026's gap was more pronounced than usual because inventory has been building all year, which means summer buyers had unusually strong alternatives to choose from — exactly the conditions that make an overpriced summer listing sit.</p>
+
+      <h2>What This Means If You're Selling This Year</h2>
+      <p>If you missed the spring window, it doesn't mean you shouldn't sell — it means pricing accuracy matters more than it did three months ago. With more inventory competing for buyer attention, a correctly priced home still sells; an ambitiously priced one is more likely to join June's rising termination numbers. See our <a href="/blog/why-listings-get-terminated-london-ontario/">guide to avoiding a terminated listing</a> for more on getting the price right the first time.</p>
+      <p>Fall remains a reasonably active secondary window in most years, once back-to-school schedules settle and serious buyers who didn't find something in spring re-enter the market. If timing is flexible, late summer through early fall is usually the next-best window after spring.</p>
+
+      <h2>Oakridge Bucks the Seasonal Slowdown</h2>
+      <p>Not every pocket of London followed the citywide pattern. <a href="/areas/oakridge/">Oakridge</a> held a median 19-day time on market in June — down from 27 in May — with 22.9% of homes selling above asking, up from 17.1% the month before. While the city broadly cooled heading into summer, well-priced Oakridge listings kept moving quickly. That's a reminder that neighbourhood-level demand can outweigh citywide seasonal trends when a neighbourhood has strong enough fundamentals.</p>
+      <p>Curious how your specific neighbourhood is trending? See our <a href="/blog/june-2026-london-ontario-market-update/">June 2026 market update</a> or <a href="/services/home-evaluation/">request a complimentary home evaluation</a> to get current, comparable-based guidance on timing and pricing for your home.</p>
+    `,
+    faqs: [
+      {
+        question: 'What is the best month to sell a house in London Ontario?',
+        answer: 'Based on 2026 data, May was the strongest month by nearly every measure — highest sales volume, fastest average days on market (33 days), and rising prices. June cooled on all of those measures. Spring generally outperforms summer in most years, though the size of the gap varies with inventory levels.',
+      },
+      {
+        question: 'Is summer a bad time to sell a house in London Ontario?',
+        answer: "Summer isn't a bad time to sell, but 2026 data shows it was slower than spring: average days on market rose from 33 in May to 39 in June, and terminations jumped 30.6% month-over-month. Homes priced accurately still sold quickly; overpriced homes were more likely to sit or get pulled.",
+      },
+      {
+        question: 'Should I wait until next spring to list my home?',
+        answer: 'Not necessarily. Fall is typically a reasonable secondary window once back-to-school schedules settle. What matters more than the exact month is pricing accurately for current conditions — a well-priced home sells in any season, while an overpriced one struggles regardless of timing.',
+      },
+      {
+        question: 'Did every London Ontario neighbourhood slow down in June 2026?',
+        answer: "No. Oakridge was a clear exception, with median days on market dropping to 19 (from 27 in May) and 22.9% of homes selling above asking. While the citywide market cooled heading into summer, strong-fundamental neighbourhoods like Oakridge kept moving quickly.",
+      },
+    ],
+    sources: [
+      { label: 'London and St. Thomas Association of REALTORS® (LSTAR)', url: 'https://www.lstar.ca' },
+      { label: 'WOWA — London Housing Market', url: 'https://wowa.ca/london-housing-market' },
+    ],
+  },
+  {
+    slug: 'london-ontario-months-of-supply-july-2026',
+    title: "London Ontario's Housing Supply Just Tripled: What July 2026 Means for Buyers and Sellers",
+    description: "London Ontario's months of supply jumped from 2.5 to 7.3 in a single month. Here is a full year of data on what that means, and whether you're now in a buyer's or seller's market.",
+    date: '2026-07-14',
+    dateDisplay: 'July 14, 2026',
+    category: 'Market Analysis',
+    author: 'Justin Skrypnyk',
+    readTime: '6 min read',
+    image: '/images/london-ontario-months-of-supply-july-2026.png',
+    imageAlt: "Justin Skrypnyk graphic: London Ontario months of inventory nearly tripled, supply up from 2.5 to 7.3, still only 28 days to sell",
+    charts: [
+      {
+        title: 'Months of Supply — Aug 2025 to Jul 2026',
+        color: '#059669',
+        labels: ['Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
+        values: [2.9, 3.3, 2.9, 3.3, 4.2, 4.3, 3.9, 2.7, 2.9, 2.3, 2.5, 7.3],
+        valueSuffix: ' mo',
+      },
+      {
+        title: 'Median Days to Sell — Aug 2025 to Jul 2026',
+        color: '#0c2340',
+        labels: ['Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
+        values: [27, 28, 29, 30, 43, 40, 29, 27, 24, 22, 25, 28],
+        valueSuffix: 'd',
+      },
+    ],
+    content: `
+      <p>One number changed more than any other in London's housing market this summer, and it's not one most buyers or sellers watch closely: months of supply. It sat in a tight 2.3-to-2.9 range for most of the past year — then jumped to 7.3 in July 2026. That's the difference between a seller's market and a buyer's market, and it happened in a single month.</p>
+
+      <h2>What Is "Months of Supply" and Why It Matters</h2>
+      <p>Months of supply (also called absorption rate) answers a simple question: at the current pace of sales, how long would it take to sell off every home currently listed? Real estate professionals generally read it like this:</p>
+      <table>
+        <thead>
+          <tr><th>Months of Supply</th><th>Market Condition</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Under 4 months</td><td>Seller's market — demand outpaces supply</td></tr>
+          <tr><td>4 to 6 months</td><td>Balanced market</td></tr>
+          <tr><td>Over 6 months</td><td>Buyer's market — supply outpaces demand</td></tr>
+        </tbody>
+      </table>
+
+      <h2>A Full Year of Data: August 2025 to July 2026</h2>
+      <table>
+        <thead>
+          <tr><th>Month</th><th>Months of Supply</th><th>Median Days to Sell</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Aug 2025</td><td>2.9</td><td>27</td></tr>
+          <tr><td>Sep 2025</td><td>3.3</td><td>28</td></tr>
+          <tr><td>Oct 2025</td><td>2.9</td><td>29</td></tr>
+          <tr><td>Nov 2025</td><td>3.3</td><td>30</td></tr>
+          <tr><td>Dec 2025</td><td>4.2</td><td>43</td></tr>
+          <tr><td>Jan 2026</td><td>4.3</td><td>40</td></tr>
+          <tr><td>Feb 2026</td><td>3.9</td><td>29</td></tr>
+          <tr><td>Mar 2026</td><td>2.7</td><td>27</td></tr>
+          <tr><td>Apr 2026</td><td>2.9</td><td>24</td></tr>
+          <tr><td>May 2026</td><td>2.3</td><td>22</td></tr>
+          <tr><td>Jun 2026</td><td>2.5</td><td>25</td></tr>
+          <tr><td>Jul 2026</td><td><strong>7.3</strong></td><td>28</td></tr>
+        </tbody>
+      </table>
+      <p><em>Source: PropTx Innovations Inc. MLS® data, covering London East, London North, and London South (Middlesex), calculated from approximately 67,000 listings.</em></p>
+
+      <h2>The Big Story: What Happened in July 2026</h2>
+      <p>From August 2025 through June 2026, London held firmly in seller's-market territory — months of supply never climbed above 4.3, and it spent the spring of 2026 as low as 2.3 to 2.5. Then July arrived and supply jumped to 7.3 months, crossing well past the 6-month line into buyer's-market conditions. That's roughly a tripling of available supply relative to the pace of sales, in a single month.</p>
+      <p>Notice what didn't move much: the median days to sell only ticked up from 25 in June to 28 in July. That gap — supply surging while days-on-market barely budged — is a signature of a market in transition. It typically means a wave of new listings hit at once, faster than buyers could absorb them, rather than buyers suddenly disappearing. The homes already under contract or about to sell haven't felt it yet; the shift shows up first in the supply numbers, before it shows up in how long homes sit.</p>
+
+      <h2>Why This Matters If You're Selling</h2>
+      <p>A jump from 2.5 to 7.3 months of supply means meaningfully more competition for buyer attention than sellers faced all spring. This is exactly the environment where <a href="/blog/why-listings-get-terminated-london-ontario/">accurate pricing stops being optional</a> — with three times the inventory competing for the same buyers, a home priced even slightly ahead of the market is far more likely to sit, and eventually get pulled, than it would have in May's tighter conditions.</p>
+      <p>It doesn't mean don't sell. It means price to where the market actually is today, not to where it was in May.</p>
+
+      <h2>Why This Matters If You're Buying</h2>
+      <p>For buyers, this is the most leverage London has offered in a year. More active inventory means more choice, less urgency to overbid, and more room to negotiate on price, closing terms, or conditions. If you've been priced out of multiple-offer situations over the past year, July's numbers suggest that pressure has eased considerably, at least for now.</p>
+      <p>Whether that holds into fall or proves to be a one-month spike is the thing to watch. One month of data is a signal worth taking seriously; it isn't yet a confirmed new trend.</p>
+
+      <h2>How Does This Fit With the Rest of 2026?</h2>
+      <p>This lines up with — and sharpens — the story from our <a href="/blog/best-time-to-list-your-home-london-ontario/">Best Time to List</a> post: spring 2026 was London's tightest, fastest-moving window of the past year, and conditions have been loosening since. July's supply spike is the clearest evidence yet of how far that loosening has gone. For the neighbourhood-level picture, see our <a href="/blog/june-2026-london-ontario-market-update/">June 2026 market update</a>, which showed Oakridge holding a 19-day median time on market even as the citywide market slowed.</p>
+      <p>Thinking about what this means for your specific plans to buy or sell? <a href="/services/home-evaluation/">Request a complimentary home evaluation</a> for pricing guidance that reflects exactly where the market stands today.</p>
+    `,
+    faqs: [
+      {
+        question: 'What is a healthy months of supply for a real estate market?',
+        answer: "Generally, under 4 months of supply indicates a seller's market, 4 to 6 months is considered balanced, and over 6 months indicates a buyer's market. London Ontario sat between 2.3 and 4.3 months for a full year before jumping to 7.3 months in July 2026.",
+      },
+      {
+        question: 'Is London Ontario a buyer\'s market or seller\'s market right now?',
+        answer: "As of July 2026, London Ontario crossed into buyer's-market territory, with months of supply jumping to 7.3 — well above the 6-month threshold. This followed nearly a year of seller's-market conditions, including a low of 2.3 months in May 2026.",
+      },
+      {
+        question: 'Why did London Ontario housing supply increase so much in July 2026?',
+        answer: "Months of supply measures active listings against the current pace of sales, so a sharp increase typically means a wave of new listings arrived faster than buyers absorbed them — not necessarily that buyer demand collapsed. Median days to sell only rose slightly (25 to 28 days) over the same period, suggesting the shift is showing up in supply before it shows up in how quickly homes are selling.",
+      },
+      {
+        question: 'Does more housing supply mean lower prices in London Ontario?',
+        answer: 'Rising supply typically gives buyers more negotiating leverage and can slow price growth, but a single month of data is a signal, not a confirmed trend. Sellers who price accurately to current conditions can still sell effectively; the risk is for listings priced to earlier, tighter-market conditions.',
+      },
+    ],
+    sources: [
+      { label: 'PropTx Innovations Inc.', url: 'https://proptx.ca' },
+      { label: 'London and St. Thomas Association of REALTORS® (LSTAR)', url: 'https://www.lstar.ca' },
     ],
   },
 ];
