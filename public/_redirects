@@ -3,7 +3,10 @@
 # ever exists at the same path (Netlify lets files shadow non-forced redirects)
 
 /about-4                                                                     /about/                                              301!
+/about-4-1                                                                   /about/                                              301!
 /our-hood                                                                    /community/                                          301!
+/services-3                                                                  /services/                                          301!
+/contact-8                                                                   /contact/                                           301!
 /post/what-is-the-price-forecast-for-london-property-for-the-next-5-years   /blog/house-prices-expected-to-rise-london-ontario/  301!
 /post/*                                                                      /blog/                                               301!
 

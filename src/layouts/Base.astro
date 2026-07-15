@@ -3,6 +3,8 @@ import '../styles/global.css';
 import Header from '@/components/Header.astro';
 import Footer from '@/components/Footer.astro';
 import SEO from '@/components/SEO.astro';
+import AskWidget from '@/components/AskWidget.astro';
+import StickyMobileCTA from '@/components/StickyMobileCTA.astro';
 import { SITE } from '@/data/site';
 
 interface Props {
@@ -24,6 +26,8 @@ const {
   noindex,
   heroOverlap = false,
 } = Astro.props;
+
+const hideStickyCTA = Astro.url.pathname.startsWith('/contact');
 ---
 
 <!doctype html>
@@ -81,7 +85,7 @@ const {
         src="https://www.facebook.com/tr?id=3837845766512267&ev=PageView&noscript=1" alt="" />
     </noscript>
   </head>
-  <body class="bg-white text-navy">
+  <body class:list={['bg-white text-navy', !hideStickyCTA && 'pb-[calc(4.5rem+env(safe-area-inset-bottom))] sm:pb-0']}>
     <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-gold text-navy px-4 py-2 rounded-md font-semibold z-[100]">
       Skip to main content
     </a>
@@ -93,5 +97,7 @@ const {
     </main>
 
     <Footer />
+    <AskWidget bottomOffsetClass={hideStickyCTA ? '' : 'bottom-20 sm:bottom-5'} />
+    {!hideStickyCTA && <StickyMobileCTA />}
   </body>
 </html>

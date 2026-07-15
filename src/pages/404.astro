@@ -19,12 +19,14 @@ import Base from '@/layouts/Base.astro';
         <a href="/contact/" class="btn-secondary">Contact Justin</a>
       </div>
 
-      <div class="mt-12 grid grid-cols-2 md:grid-cols-4 gap-4 text-left">
+      <div class="mt-12 grid grid-cols-2 md:grid-cols-3 gap-4 text-left">
         {[
           { label: 'Buy a Home', href: '/services/buying/' },
           { label: 'Sell Your Home', href: '/services/selling/' },
           { label: 'Complimentary Evaluation', href: '/services/home-evaluation/' },
           { label: 'Areas We Serve', href: '/areas/' },
+          { label: 'Which Neighbourhood Fits You?', href: '/neighbourhood-quiz/' },
+          { label: 'Explore the Territory Map', href: '/explore-map/' },
         ].map((item) => (
           <a href={item.href} class="bg-white border border-gray-100 hover:border-gold text-navy/80 hover:text-gold text-sm font-medium p-4 rounded-xl transition-all text-center">
             {item.label}

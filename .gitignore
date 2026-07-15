@@ -1,5 +1,6 @@
 # Environment variables — never commit
 .env
+.mcp.json
 
 # Build output
 dist/
