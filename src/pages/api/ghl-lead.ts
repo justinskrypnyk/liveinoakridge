@@ -1,0 +1,82 @@
+// Receives Netlify's "form submission" outgoing-webhook notification and
+// upserts the lead into GoHighLevel as a contact. Shared by every Netlify
+// form on the site (contact, home-value-lead, newsletter, ...) — configure
+// ONE outgoing webhook in the Netlify dashboard (Site settings -> Forms ->
+// Form notifications -> Outgoing webhook, applying to "all forms") once
+// deploys are unblocked, pointing at this route with a custom header
+// `X-Webhook-Secret: <GHL_WEBHOOK_SECRET>`.
+import type { APIRoute } from 'astro';
+
+export const prerender = false;
+
+const GHL_API_TOKEN = import.meta.env.GHL_API_TOKEN;
+const GHL_LOCATION_ID = import.meta.env.GHL_LOCATION_ID;
+const WEBHOOK_SECRET = import.meta.env.GHL_WEBHOOK_SECRET;
+
+export const POST: APIRoute = async ({ request }) => {
+  if (!GHL_API_TOKEN || !GHL_LOCATION_ID) {
+    console.error('GHL env vars missing');
+    return new Response('Not configured', { status: 500 });
+  }
+
+  if (WEBHOOK_SECRET && request.headers.get('x-webhook-secret') !== WEBHOOK_SECRET) {
+    return new Response('Unauthorized', { status: 401 });
+  }
+
+  let body: any;
+  try {
+    body = await request.json();
+  } catch {
+    return new Response('Invalid JSON', { status: 400 });
+  }
+
+  // Netlify's outgoing-webhook notification wraps the submission in `payload`;
+  // other trigger paths (e.g. a named submission-created function) send the
+  // same shape unwrapped. Handle both rather than assuming one.
+  const submission = body.payload ?? body;
+  const data = submission.data ?? {};
+
+  const email = data.email;
+  if (!email) {
+    return new Response('Missing email', { status: 400 });
+  }
+
+  // Different forms on the site split the name differently — ContactForm
+  // uses first-name/last-name, home-value-estimate uses a single `name`
+  // field. Handle both rather than assuming one shape.
+  const firstName = data['first-name'] || '';
+  const lastName = data['last-name'] || '';
+  const splitName = [firstName, lastName].filter(Boolean).join(' ');
+  const fullName = splitName || data.name || '';
+
+  const res = await fetch('https://services.leadconnectorhq.com/contacts/upsert', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+      Authorization: `Bearer ${GHL_API_TOKEN}`,
+      Version: '2021-07-28',
+    },
+    body: JSON.stringify({
+      firstName: firstName || undefined,
+      lastName: lastName || undefined,
+      name: fullName || undefined,
+      email,
+      phone: data.phone || undefined,
+      locationId: GHL_LOCATION_ID,
+      // form_name tags each lead by which form sent it (e.g. "home-value-lead",
+      // "newsletter", "contact") so they're segmentable in GHL; data.service
+      // adds the "I'm interested in..." selection from the contact form.
+      tags: ['website-lead', submission.form_name, data.service].filter(Boolean),
+      source: `Website — ${data.subject || submission.form_name || 'Contact Form'}`,
+    }),
+  });
+
+  if (!res.ok) {
+    const errText = await res.text().catch(() => '');
+    console.error('GHL upsert failed:', res.status, errText);
+    return new Response('GHL upsert failed', { status: 502 });
+  }
+
+  return new Response('OK', { status: 200 });
+};

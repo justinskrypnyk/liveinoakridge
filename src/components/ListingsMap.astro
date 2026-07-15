@@ -1,0 +1,189 @@
+---
+import { fmtPrice, field, buildAddress, listingSlug } from '@/lib/listings';
+import { SCHOOLS } from '@/data/schools';
+
+interface Props {
+  listings: Record<string, unknown>[];
+  height?: string;
+  showSchools?: boolean;
+}
+
+const { listings, height = '600px', showSchools = true } = Astro.props;
+const mapId = `listings-map-${Math.random().toString(36).slice(2, 9)}`;
+
+type MapListing = {
+  lat: number; lng: number; price: string; priceShort: string; address: string;
+  beds: string; baths: string; sqft: string; photoUrl: string | null;
+  mlsNumber: string; office: string; href: string;
+};
+
+function shortPrice(n: number): string {
+  if (n >= 1000000) return `$${(n / 1000000).toFixed(n % 1000000 === 0 ? 0 : 1)}M`;
+  if (n >= 1000) return `$${Math.round(n / 1000)}K`;
+  return `$${n}`;
+}
+
+const mapListings: MapListing[] = listings
+  .map((l) => {
+    const geo = l._geo as { lat: number; lng: number } | null;
+    if (!geo) return null;
+    const rawPrice = Number(l.ListPrice) || 0;
+    return {
+      lat: geo.lat,
+      lng: geo.lng,
+      price: fmtPrice(l.ListPrice),
+      priceShort: shortPrice(rawPrice),
+      address: buildAddress(l),
+      beds: field(l, 'BedroomsTotal'),
+      baths: field(l, 'BathroomsTotalInteger', 'BathroomsTotal'),
+      sqft: field(l, 'BuildingAreaTotal'),
+      photoUrl: (l._photoUrl as string | null) ?? null,
+      mlsNumber: field(l, 'ListingKey', 'ListingId'),
+      office: field(l, 'ListOfficeName'),
+      href: `/properties/${listingSlug(l)}/`,
+    };
+  })
+  .filter((l): l is MapListing => l !== null);
+
+const geoSchools = showSchools ? SCHOOLS.filter((s) => s.geo) : [];
+---
+
+{mapListings.length > 0 && (
+  <div>
+    <div class="rounded-2xl overflow-hidden shadow-card border border-gray-100">
+      <div
+        id={mapId}
+        style={`height: ${height}`}
+        role="region"
+        aria-label={`Interactive map showing ${mapListings.length} listings${geoSchools.length ? ' and nearby schools' : ''}. The same listings are also shown in the grid on this page.`}
+      ></div>
+    </div>
+    {geoSchools.length > 0 && (
+      <div class="flex items-center justify-center gap-6 mt-3 text-xs text-slate/60">
+        <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-navy inline-block"></span> Listings</span>
+        <span class="flex items-center gap-1.5"><span class="text-base">🎓</span> Schools</span>
+      </div>
+    )}
+  </div>
+
+  <script define:vars={{ mapId, mapListings, geoSchools }}>
+    function esc(s) {
+      const d = document.createElement('div');
+      d.textContent = s ?? '';
+      return d.innerHTML;
+    }
+
+    function initListingsMap() {
+      const map = L.map(mapId, { scrollWheelZoom: false });
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        maxZoom: 19,
+      }).addTo(map);
+
+      const priceIcon = (label) => L.divIcon({
+        html: `<div style="background:#0c2340;color:#fff;font:700 12px Inter,sans-serif;padding:5px 10px;border-radius:999px;box-shadow:0 2px 8px rgba(12,35,64,.35);white-space:nowrap;border:2px solid #10b981;">${label}</div>`,
+        className: '',
+        iconSize: [0, 0],
+        iconAnchor: [0, 12],
+      });
+
+      const schoolIcon = L.divIcon({
+        html: `<div style="font-size:20px;line-height:1;">🎓</div>`,
+        className: '',
+        iconSize: [26, 26],
+        iconAnchor: [13, 13],
+      });
+
+      const markers = mapListings.map((l) => {
+        const popupHtml = `
+          <a href="${l.href}" style="display:block;width:240px;text-decoration:none;color:inherit;font-family:Inter,sans-serif;">
+            <div style="width:100%;height:130px;border-radius:8px;overflow:hidden;background:#f0f9f6;margin-bottom:8px;">
+              ${l.photoUrl
+                ? `<img src="${esc(l.photoUrl)}" alt="" style="width:100%;height:100%;object-fit:cover;" />`
+                : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:32px;">🏡</div>`}
+            </div>
+            <div style="display:flex;align-items:center;justify-content:between;gap:6px;">
+              <span style="font-weight:800;font-size:16px;color:#0c2340;">${esc(l.price)}</span>
+              <span style="margin-left:auto;background:#10b981;color:#0c2340;font-size:10px;font-weight:700;padding:2px 8px;border-radius:999px;">For Sale</span>
+            </div>
+            <div style="font-size:12.5px;color:#334155;margin:3px 0 6px;line-height:1.3;">${esc(l.address)}</div>
+            <div style="display:flex;gap:10px;font-size:11.5px;color:#0c2340;font-weight:600;margin-bottom:6px;">
+              ${l.beds ? `<span>🛏 ${esc(l.beds)}</span>` : ''}
+              ${l.baths ? `<span>🛁 ${esc(l.baths)}</span>` : ''}
+              ${l.sqft ? `<span>${Number(l.sqft).toLocaleString()} ft²</span>` : ''}
+            </div>
+            <div style="font-size:10px;color:#94a3b8;border-top:1px solid #eee;padding-top:5px;">${esc(l.mlsNumber)}, ${esc(l.office)}</div>
+          </a>
+        `;
+        return L.marker([l.lat, l.lng], { icon: priceIcon(l.priceShort) }).bindPopup(popupHtml, { maxWidth: 260 });
+      });
+
+      const listingLayer = L.layerGroup(markers).addTo(map);
+
+      if (geoSchools.length > 0) {
+        const schoolMarkers = geoSchools.map((s) =>
+          L.marker([s.geo.lat, s.geo.lng], { icon: schoolIcon }).bindPopup(
+            `<strong>${esc(s.name)}</strong><br>${esc(s.address)}<br><span style="color:#666">${esc(s.grades)} · ${esc(s.board)}</span>`
+          )
+        );
+        L.layerGroup(schoolMarkers).addTo(map);
+      }
+
+      const allPoints = mapListings.map((l) => [l.lat, l.lng]);
+      if (allPoints.length > 0) {
+        map.fitBounds(L.latLngBounds(allPoints).pad(0.25));
+      }
+
+      return map;
+    }
+
+    function loadLeaflet() {
+      return new Promise((resolve) => {
+        if (window.L) { resolve(); return; }
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+        link.integrity = 'sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H';
+        link.crossOrigin = 'anonymous';
+        document.head.appendChild(link);
+
+        const script = document.createElement('script');
+        script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+        script.integrity = 'sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH';
+        script.crossOrigin = 'anonymous';
+        script.onload = resolve;
+        document.body.appendChild(script);
+      });
+    }
+
+    // Leaflet computes its layout from the container's size at init time — if
+    // initialized while the container is `display:none` (e.g. Grid view is the
+    // default tab), it gets a 0x0 box and every marker collapses to (0,0) with
+    // the map zoomed out to the whole world. So: init lazily, only once the
+    // container is actually visible, either immediately (if already visible on
+    // load) or the first time the "Map" toggle shows it.
+    let mapInstance = null;
+    const container = document.getElementById(mapId);
+
+    function isVisible(el) {
+      return !!(el.offsetWidth || el.offsetHeight || el.getClientRects().length);
+    }
+
+    async function ensureMapReady() {
+      if (mapInstance) {
+        mapInstance.invalidateSize();
+        const allPoints = mapListings.map((l) => [l.lat, l.lng]);
+        if (allPoints.length > 0) mapInstance.fitBounds(L.latLngBounds(allPoints).pad(0.25));
+        return;
+      }
+      await loadLeaflet();
+      mapInstance = initListingsMap();
+    }
+
+    if (container && isVisible(container)) {
+      ensureMapReady();
+    } else {
+      window.addEventListener('show-listings-map', ensureMapReady);
+    }
+  </script>
+)}

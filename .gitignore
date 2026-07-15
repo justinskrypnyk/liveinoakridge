@@ -14,3 +14,7 @@ node_modules/
 
 # Logs
 *.log
+
+# Local Netlify folder
+.netlify
+src/data/listings.json
