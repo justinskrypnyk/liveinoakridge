@@ -42,7 +42,7 @@ const { service } = Astro.props;
           <div class="text-5xl mb-6">{service.icon}</div>
           <h1 class="font-serif text-4xl md:text-5xl font-bold mb-4">{service.headline}</h1>
           <div class="gold-divider mb-6"></div>
-          <p class="text-xl text-white/70 leading-relaxed mb-8">{service.longDescription}</p>
+          <p class="text-xl text-white/70 leading-relaxed mb-8" set:html={service.longDescription} />
           <a href="/contact/" class="btn-primary">{service.ctaText}</a>
         </div>
 

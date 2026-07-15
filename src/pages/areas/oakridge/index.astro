@@ -2,11 +2,19 @@
 import Base from '@/layouts/Base.astro';
 import Schema from '@/components/Schema.astro';
 import GoogleMap from '@/components/GoogleMap.astro';
+import AreaMap from '@/components/AreaMap.astro';
 import ContactForm from '@/components/ContactForm.astro';
 import { getArea, AREAS } from '@/data/areas';
 import { SITE } from '@/data/site';
 
 const area = getArea('oakridge')!;
+
+const boardBadgeClass: Record<string, string> = {
+  TVDSB: 'bg-navy/10 text-navy',
+  LDCSB: 'bg-amber-50 text-amber-800',
+  Viamonde: 'bg-emerald-50 text-emerald-800',
+  Independent: 'bg-slate-100 text-slate-700',
+};
 
 const areaServices = [
   { label: 'Buy in Oakridge', href: '/areas/oakridge/buy/', icon: '🏡' },
@@ -59,7 +67,7 @@ const subNeighbourhoods = [
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
         <div>
           <h1 class="font-serif text-5xl font-bold mb-4">
-            Oakridge, London Ontario
+            Oakridge Homes for Sale — London Ontario
           </h1>
           <div class="gold-divider mb-6"></div>
           <p class="text-xl text-white/70 leading-relaxed mb-8">{area.headline}</p>
@@ -88,6 +96,9 @@ const subNeighbourhoods = [
             <div class="text-white/80 text-sm">{area.nearbyAmenities.join(' · ')}</div>
           </div>
         </div>
+        <p class="text-white/40 text-xs mt-4">
+          Own a home in Oakridge? <a href="/home-value-estimate/" class="text-gold hover:underline">Get an instant ballpark estimate</a> of what it might be worth.
+        </p>
       </div>
     </div>
   </section>
@@ -173,10 +184,10 @@ const subNeighbourhoods = [
             </h3>
             <div class="space-y-3">
               {area.schoolsData.elementary.map((school) => (
-                <div class="bg-white rounded-xl p-5 shadow-card">
+                <a href={`/community/#${school.slug}`} class="block bg-white rounded-xl p-5 shadow-card hover:shadow-lg hover:ring-1 hover:ring-gold/40 transition-all">
                   <div class="flex items-start justify-between gap-3 mb-2">
                     <h4 class="font-serif text-base text-navy leading-snug">{school.name}</h4>
-                    <span class={`shrink-0 text-xs font-semibold px-2 py-0.5 rounded-full ${school.board === 'TVDSB' ? 'bg-navy/10 text-navy' : 'bg-amber-50 text-amber-800'}`}>
+                    <span class={`shrink-0 text-xs font-semibold px-2 py-0.5 rounded-full ${boardBadgeClass[school.board]}`}>
                       {school.board}
                     </span>
                   </div>
@@ -188,7 +199,13 @@ const subNeighbourhoods = [
                   </div>
                   <span class="inline-block text-xs bg-cream text-navy/60 px-2 py-0.5 rounded-full">Grades {school.grades}</span>
                   {school.notes && <p class="text-xs text-slate/55 mt-2 italic">{school.notes}</p>}
-                </div>
+                  <span class="inline-flex items-center gap-1 text-xs text-gold font-semibold mt-3">
+                    Full ratings &amp; details
+                    <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                      <path d="M5 12h14M12 5l7 7-7 7"/>
+                    </svg>
+                  </span>
+                </a>
               ))}
             </div>
           </div>
@@ -201,10 +218,10 @@ const subNeighbourhoods = [
             </h3>
             <div class="space-y-3">
               {area.schoolsData.secondary.map((school) => (
-                <div class="bg-white rounded-xl p-5 shadow-card">
+                <a href={`/community/#${school.slug}`} class="block bg-white rounded-xl p-5 shadow-card hover:shadow-lg hover:ring-1 hover:ring-gold/40 transition-all">
                   <div class="flex items-start justify-between gap-3 mb-2">
                     <h4 class="font-serif text-base text-navy leading-snug">{school.name}</h4>
-                    <span class={`shrink-0 text-xs font-semibold px-2 py-0.5 rounded-full ${school.board === 'TVDSB' ? 'bg-navy/10 text-navy' : 'bg-amber-50 text-amber-800'}`}>
+                    <span class={`shrink-0 text-xs font-semibold px-2 py-0.5 rounded-full ${boardBadgeClass[school.board]}`}>
                       {school.board}
                     </span>
                   </div>
@@ -216,7 +233,13 @@ const subNeighbourhoods = [
                   </div>
                   <span class="inline-block text-xs bg-cream text-navy/60 px-2 py-0.5 rounded-full">Grades {school.grades}</span>
                   {school.notes && <p class="text-xs text-slate/55 mt-2 italic">{school.notes}</p>}
-                </div>
+                  <span class="inline-flex items-center gap-1 text-xs text-gold font-semibold mt-3">
+                    Full ratings &amp; details
+                    <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                      <path d="M5 12h14M12 5l7 7-7 7"/>
+                    </svg>
+                  </span>
+                </a>
               ))}
             </div>
           </div>
@@ -228,6 +251,18 @@ const subNeighbourhoods = [
           {' '}or the{' '}
           <a href="https://www.ldcsb.ca/apps/pages/index.jsp?uREC_ID=1076461&type=d&pREC_ID=1360078" class="text-gold hover:underline" target="_blank" rel="noopener noreferrer">LDCSB school finder</a>.
         </p>
+
+        <div class="text-center mt-6">
+          <a
+            href="/community/#content-schools"
+            class="inline-flex items-center gap-2 text-gold hover:text-gold-light font-semibold text-sm transition-colors"
+          >
+            See full Fraser Institute ratings &amp; rankings for all Oakridge-area schools
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+          </a>
+        </div>
       </div>
     </section>
   )}
@@ -290,6 +325,11 @@ const subNeighbourhoods = [
               </div>
             </div>
           ))}
+        </div>
+
+        <div class="mt-12">
+          <h3 class="font-serif text-xl text-navy mb-4 text-center">Parks &amp; Schools in Oakridge</h3>
+          <AreaMap parks={area.parksData.parks} schools={[...(area.schoolsData?.elementary ?? []), ...(area.schoolsData?.secondary ?? [])]} />
         </div>
       </div>
     </section>
@@ -447,7 +487,7 @@ const subNeighbourhoods = [
             The homes south of Oxford Street are the original Sifton builds — 1950s and 1960s single-family detached homes on genuinely wide lots with the spatial logic that came standard in that era: large basements, deep backyards, proper street setbacks, and room to live. Bungalows, cape-cods, and split-levels are the dominant styles. Many have been substantially updated over the decades while maintaining their footprints and lot lines. What buyers find here is the combination that is hard to manufacture in newer developments: established character on large land at prices that still represent real value in the West London market.
           </p>
           <p>
-            The community anchor is Oakridge Optimist Community Park at 825 Valetta Street — one of the most complete neighbourhood parks in London. The park has two baseball diamonds with a batting cage, an outdoor pool, a spray pad, tennis and pickleball courts, a renovated arena, and playground structures for all ages. The Optimist Club runs baseball and soccer programs serving over 2,000 youth each year, making it one of the most active neighbourhood clubs in the city. For nature, Sifton Bog ESA sits on the south side of Oxford Street west of Hyde Park Road: 2.8 kilometres of trail with a 370-metre boardwalk to a viewing platform over Redmond's Pond. Formed 13,000 years ago as the last glacier retreated, Sifton Bog is the most southerly large acidic bog in Canada — home to carnivorous plants and rare ecosystems found almost nowhere else in southwestern Ontario.
+            The community anchor is Oakridge Optimist Community Park at 825 Valetta Street — one of the most complete neighbourhood parks in London. The park has two baseball diamonds with a batting cage, an outdoor pool, a spray pad, tennis and pickleball courts, a renovated arena, and playground structures for all ages. The Optimist Club runs baseball and soccer programs serving over 2,000 youth each year, making it one of the most active neighbourhood clubs in the city. Kelly Park, at 881 Kelly Street, adds a quieter neighbourhood green space and trail connection nearby. For nature, Sifton Bog ESA sits on the south side of Oxford Street west of Hyde Park Road: 2.8 kilometres of trail with a 370-metre boardwalk to a viewing platform over Redmond's Pond. Formed 13,000 years ago as the last glacier retreated, Sifton Bog is the most southerly large acidic bog in Canada — home to carnivorous plants and rare ecosystems found almost nowhere else in southwestern Ontario.
           </p>
         </div>
       </div>
@@ -466,7 +506,7 @@ const subNeighbourhoods = [
             Hunt Club divides naturally into two pockets. Old Hunt Club — the southern portion — carries the best of the original postwar stock: 1950s single-family homes on large, mature-treed lots with the hushed street character that buyers spend years looking for. Promenade Hunt Club, Kingspark Crescent, Fitzwilliam Boulevard, and Northumberland Road back directly onto the golf course, making them among the most unique residential addresses in London. The northern portion of Hunt Club offers late-20th-century detached homes and townhouses — newer construction with the same prestigious address at more accessible price points.
           </p>
           <p>
-            Two neighbourhood parks serve Hunt Club directly: Oak Park and Cheltenham Park, each offering playgrounds, swings, and walking paths suited to the community's family character. The London Hunt and Country Club itself — with its private 18-hole course, tennis courts, and large clubhouse — has defined this neighbourhood's identity for 140 years and anchors its western edge. Elementary students attend Clara Brenton, John Dearness, or St. Paul Catholic elementary schools; French immersion is available at École élémentaire Marie-Curie. Secondary students attend Oakridge Secondary or St. Thomas Aquinas Catholic Secondary School.
+            Two neighbourhood parks serve Hunt Club directly: Oak Park at 1207 Hunt Club Drive and Cheltenham Park, each offering playgrounds, swings, and walking paths suited to the community's family character. The London Hunt and Country Club itself — with its private 18-hole course, tennis courts, and large clubhouse — has defined this neighbourhood's identity for 140 years and anchors its western edge. Elementary students attend Clara Brenton, John Dearness, or St. Paul Catholic elementary schools; French-language public education is available at École élémentaire Marie-Curie (40 Hunt Club Drive), part of the Conseil scolaire Viamonde. Secondary students attend Oakridge Secondary or St. Thomas Aquinas Catholic Secondary School.
           </p>
         </div>
       </div>
@@ -504,7 +544,7 @@ const subNeighbourhoods = [
             The dominant home style is the same mix of bungalows, split-levels, and two-storeys that defines the broader Oakridge neighbourhood — detached, owner-occupied, and well-maintained. Oakridge Park has not been heavily redeveloped and retains its original residential scale. Lot coverage remains modest, gardens are deep, and the neighbourhood has the feel of a community where people have lived for decades rather than one that turns over constantly. First-time buyers who have been priced out of areas farther east often find that Oakridge Park represents their best opportunity to get into a genuinely established West London neighbourhood.
           </p>
           <p>
-            Oakridge Park shares the Oakridge Optimist Community Park at 825 Valetta Street — the neighbourhood's most complete recreational anchor, with its arena, pool, spray pad, baseball diamonds, and tennis and pickleball courts. For golf, Thames Valley Golf Course sits at the southern boundary of the broader Oakridge area: established in 1924, it offers an 18-hole course and a 9-hole course running along the Thames River, and it is one of the few public golf facilities in London with genuine natural character. The combination of Optimist Park's organized sports programming and the Thames River Valley trail network gives Oakridge Park unusually good access to active outdoor life for a neighbourhood this close to the urban core.
+            Oakridge Park shares the Oakridge Optimist Community Park at 825 Valetta Street — the neighbourhood's most complete recreational anchor, with its arena, pool, spray pad, baseball diamonds, and tennis and pickleball courts. Thornwood Park, at 699 Thornwood Drive, adds a closer neighbourhood playground and green space within the pocket itself. For golf, Thames Valley Golf Course sits at the southern boundary of the broader Oakridge area: established in 1924, it offers an 18-hole course and a 9-hole course running along the Thames River, and it is one of the few public golf facilities in London with genuine natural character. The combination of Optimist Park's organized sports programming and the Thames River Valley trail network gives Oakridge Park unusually good access to active outdoor life for a neighbourhood this close to the urban core.
           </p>
         </div>
       </div>
@@ -558,7 +598,7 @@ const subNeighbourhoods = [
         <h2 class="section-heading">Services in Oakridge</h2>
         <div class="gold-divider mx-auto mb-4"></div>
         <p class="section-subheading mx-auto">
-          Justin provides full-service real estate guidance specific to the Oakridge market.
+          Justin provides full-service real estate guidance for houses and homes for sale in the Oakridge market.
         </p>
       </div>
 

@@ -1,3 +1,29 @@
+import { SCHOOLS } from './schools';
+
+const oakridgeSchools = SCHOOLS.filter((s) => s.servesOakridge);
+const oakridgeElementary = oakridgeSchools
+  .filter((s) => s.category !== 'secondary')
+  .map((s) => ({
+    slug: s.slug,
+    name: s.name,
+    address: s.address,
+    grades: s.grades,
+    board: s.boardCode,
+    notes: s.fraserNote,
+    geo: s.geo,
+  }));
+const oakridgeSecondary = oakridgeSchools
+  .filter((s) => s.category === 'secondary')
+  .map((s) => ({
+    slug: s.slug,
+    name: s.name,
+    address: s.address,
+    grades: s.grades,
+    board: s.boardCode,
+    notes: s.fraserNote,
+    geo: s.geo,
+  }));
+
 export interface LocalBusiness {
   name: string;
   category: string;
@@ -12,11 +38,13 @@ export interface AreaFaq {
 }
 
 export interface SchoolEntry {
+  slug: string;
   name: string;
   address: string;
   grades: string;
-  board: 'TVDSB' | 'LDCSB';
+  board: 'TVDSB' | 'LDCSB' | 'Independent' | 'Viamonde';
   notes?: string;
+  geo?: { lat: number; lng: number };
 }
 
 export interface SchoolsData {
@@ -32,6 +60,7 @@ export interface ParkEntry {
   highlight?: string;
   image?: string;
   imageAlt?: string;
+  geo?: { lat: number; lng: number };
 }
 
 export interface ParksData {
@@ -106,7 +135,7 @@ export const AREAS: Area[] = [
     longDescription:
       'Oakridge sits between Wonderland Road and Sanatorium Road along the Oxford Street corridor in West London. Most homes were built between the 1950s and 1980s, offering buyers solid construction on generous lots lined with mature trees. The neighbourhood is centred around Oakridge Optimist Park, Sifton Bog conservation area, and some of London\'s highest-rated elementary and secondary schools. Residents enjoy walkable access to Hyde Park Road shops, Oxford Street businesses, and a tight-knit community that throws block parties and knows its neighbours by name.',
     mapEmbedId: 'Oakridge,+London,+Ontario,+Canada',
-    geo: { lat: 42.9849, lng: -81.2453 },
+    geo: { lat: 42.975169, lng: -81.306 },
     image: '/images/oakridge-aerial-drone-2026-thumb.webp',
     imageAlt: "Aerial drone view of Oakridge's mature tree canopy, London Ontario",
     highlights: [
@@ -116,11 +145,12 @@ export const AREAS: Area[] = [
       'Top-rated elementary and secondary schools',
       '10-minute drive to downtown London',
       'Excellent walkability to shops on Hyde Park & Oxford',
+      'Consistently ranked among London\'s safest neighbourhoods',
     ],
     avgPrice: '$650,000–$850,000',
     homingTypes: ['Detached', 'Semi-Detached', 'Townhomes', 'Bungalows'],
-    schools: ['Clara Brenton PS', 'John Dearness PS', 'St. Paul Catholic School', 'Oakridge Secondary School', 'St. Thomas Aquinas Catholic Secondary'],
-    nearbyAmenities: ['Remark Fresh Markets', 'Chopped Leaf', 'Gordon\'s Gold Jewellers', 'Starbucks', 'Shoppers Drug Mart', 'Sifton Bog Conservation Area'],
+    schools: oakridgeSchools.map((s) => s.name),
+    nearbyAmenities: ['Remark Fresh Markets', 'Chopped Leaf', 'Gordon\'s Gold Jewellers', 'Starbucks', 'Shoppers Drug Mart', 'Sifton Bog Conservation Area', 'Oakridge Centre (Real Canadian Superstore)'],
     localBusinesses: [
       {
         name: 'Remark Fresh Markets',
@@ -129,6 +159,14 @@ export const AREAS: Area[] = [
         description:
           'A west London landmark since 2004, Remark Fresh Markets sits right at the Oxford & Hyde Park intersection. This is a family-run operation — Gerry Remark\'s name is on the door, and it shows in every aisle. Think premium produce, fresh-cut meats, house-baked goods, full-service deli, sushi, and specialty items you simply won\'t find at a big-box grocer. Remark changed the way west London shops for food, and Oakridge residents have been the biggest beneficiaries.',
         highlight: 'Family-owned, locally rooted — London\'s most beloved grocer',
+      },
+      {
+        name: 'Oakridge Centre',
+        category: 'Shopping Centre',
+        icon: '🛍️',
+        description:
+          'At 1201 Oxford Street West, Oakridge Centre is the neighbourhood\'s major retail anchor — more than 35 stores under one roof, headlined by a Real Canadian Superstore, alongside a pharmacy, bank, and food court. For the everyday big-basket grocery run or a full afternoon of errands without leaving Oakridge, this is where residents go.',
+        highlight: '35+ stores anchored by Real Canadian Superstore, right in Oakridge',
       },
       {
         name: 'Chopped Leaf',
@@ -167,7 +205,7 @@ export const AREAS: Area[] = [
         category: 'Parks & Nature',
         icon: '🌿',
         description:
-          'One of the rarest natural features in any Canadian city — a genuine kettle bog preserved within the urban fabric of west London. Sifton Bog is home to carnivorous plants, migratory birds, and a unique ecosystem found almost nowhere else in southwestern Ontario. The walking trails are just minutes from most Oakridge homes. Having something like this as a backyard amenity is something money genuinely cannot buy elsewhere.',
+          'One of the rarest natural features in any Canadian city — a genuine kettle bog preserved within the urban fabric of west London. Officially designated a Class 2 provincially significant wetland and jointly managed by the City of London and the Upper Thames River Conservation Authority, Sifton Bog is home to carnivorous plants — including sundews (Drosera intermedia and Drosera rotundifolia) and the purple pitcher plant (Sarracenia purpurea) — migratory birds, and a unique ecosystem found almost nowhere else in southwestern Ontario. The walking trails are just minutes from most Oakridge homes. Having something like this as a backyard amenity is something money genuinely cannot buy elsewhere.',
         highlight: 'One of Canada\'s most unique urban nature reserves — right here',
       },
       {
@@ -180,15 +218,8 @@ export const AREAS: Area[] = [
       },
     ],
     schoolsData: {
-      elementary: [
-        { name: 'Clara Brenton Public School', address: '1025 St. Croix Avenue', grades: 'JK–8', board: 'TVDSB' },
-        { name: 'John Dearness Public School', address: '555 Sanatorium Road', grades: 'JK–8', board: 'TVDSB' },
-        { name: 'St. Paul Catholic School', address: '1090 Guildwood Boulevard', grades: 'JK–8', board: 'LDCSB', notes: 'Serves Oak Park, Oakridge Acres, Huntington, and Hunt Club' },
-      ],
-      secondary: [
-        { name: 'Oakridge Secondary School', address: '1040 Oxford Street West', grades: '9–12', board: 'TVDSB' },
-        { name: 'St. Thomas Aquinas Catholic Secondary School', address: '1360 Oxford Street West', grades: '9–12', board: 'LDCSB' },
-      ],
+      elementary: oakridgeElementary,
+      secondary: oakridgeSecondary,
     },
     demographicsData: {
       stats: [
@@ -200,6 +231,7 @@ export const AREAS: Area[] = [
       statsSource: 'City of London Neighbourhood Profile (Statistics Canada Census data)',
       buildingTrends: [
         'Established neighbourhood — most permit activity is renovations, additions, and basement conversions on existing lots rather than new builds',
+        'Sifton Properties continues building on Oakridge\'s own northern edge in Deer Ridge and Oakridge Crossing (south of Sarnia Road, between Wonderland and Hyde Park), with new condos, townhomes ($480K–$680K), and detached homes pushing past $1M',
         'New Riverbend Public School (1000 Upperpoint Ave, $27.1M) ranked among London\'s top 2025 building permits — opening September 2027, serving the west-end catchment',
         'London issued a record 5,462 new residential units citywide in 2025 — a 48% increase over 2024 — strengthening demand for established addresses like Oakridge',
         'Sifton Properties\' Riverbend Golf Community (400+ new homes, 1200 Sandy Somerville Drive) adds premium inventory to the adjacent west-end market',
@@ -212,20 +244,63 @@ export const AREAS: Area[] = [
           address: '825 Valetta Street',
           amenities: ['2 baseball diamonds', 'Batting cage', 'Outdoor pool', 'Spray pad', '2 tennis courts', 'Pickleball courts', 'Arena (1 ice pad)', '2 play structures', 'Swing set', 'Recreation centre', 'Washrooms', 'Accessible'],
           highlight: 'Community hub run by the Optimist Club since 1957 — 2,000+ youth served annually',
+          image: '/images/areas/oakridge-optimist-community-park-sign.webp',
+          imageAlt: 'Oakridge Optimist Community Park entrance sign at 825 Valetta Street, Oakridge, London Ontario',
+          geo: { lat: 42.975169, lng: -81.306 },
         },
         {
           name: 'Sifton Bog Conservation Area',
           address: 'Oxford Street West (west of Hyde Park Road)',
-          amenities: ['2.8 km walking trail', '370 m boardwalk', 'Viewing platform', 'Birdwatching', 'Nature education'],
+          amenities: ['Class 2 provincially significant wetland', '2.8 km walking trail', '370 m boardwalk', 'Viewing platform', 'Birdwatching', 'Nature education'],
           highlight: 'Most southerly large acidic bog in Canada — carnivorous plants, migratory birds, and rare ecosystems',
-          image: '/images/areas/sifton-bog-aerial-square-oakridge.webp',
-          imageAlt: "Top-down aerial drone photo of Sifton Bog's kettle bog waters, Oakridge, London Ontario",
+          image: '/images/areas/sifton-bog-trail-entrance-oakridge.webp',
+          imageAlt: 'Sifton Bog trail entrance with fencing and interpretive signage, Oakridge, London Ontario',
+          geo: { lat: 42.974075, lng: -81.323761 },
         },
         {
           name: 'Hazelden Park',
           address: '430 Hyde Park Road',
           amenities: ['Baseball diamond', 'Full-size soccer field', '2 mid-size soccer fields', 'Play structure', 'Swing set', 'Parking'],
           highlight: 'Neighbourhood park serving the Hazelden pocket of Oakridge',
+          image: '/images/areas/hazelden-park-soccer-field-oakridge.webp',
+          imageAlt: 'Soccer fields at Hazelden Park, 430 Hyde Park Road, Oakridge, London Ontario',
+          geo: { lat: 42.966064, lng: -81.315919 },
+        },
+        {
+          name: 'Kelly Park',
+          address: '881 Kelly Street',
+          amenities: ['Walking trail', 'Open green space', 'Nearby school route'],
+          highlight: 'Neighbourhood park and trail connection serving the Oakridge Acres pocket',
+          image: '/images/areas/kelly-park-sign-trail-london-ontario.webp',
+          imageAlt: 'Kelly Park sign and trail entrance at 881 Kelly Street, Oakridge Acres, London Ontario',
+          geo: { lat: 42.970875, lng: -81.306097 },
+        },
+        {
+          name: 'Oak Park',
+          address: '1207 Hunt Club Drive',
+          amenities: ['Soccer field', 'Volleyball net', 'Play structure', 'Swing set', 'Walking paths', 'Benches'],
+          highlight: 'One of two neighbourhood parks serving Hunt Club, alongside Cheltenham Park',
+          image: '/images/areas/oak-park-sign-london-ontario.webp',
+          imageAlt: 'Oak Park sign at 1207 Hunt Club Drive, Hunt Club, Oakridge, London Ontario',
+          geo: { lat: 42.976131, lng: -81.325478 },
+        },
+        {
+          name: "St. Anthony's Park",
+          address: 'Hampton Crescent',
+          amenities: ['Tennis court', 'Open green space'],
+          highlight: 'Quiet neighbourhood park anchoring Hazelden\'s green space alongside Hazelden Park',
+          image: '/images/areas/st-anthonys-park-sign-oakridge.webp',
+          imageAlt: "St. Anthony's Park sign on Hampton Crescent, Hazelden, Oakridge, London Ontario",
+          geo: { lat: 42.961667, lng: -81.317589 },
+        },
+        {
+          name: 'Thornwood Park',
+          address: '699 Thornwood Drive',
+          amenities: ['Play structure', 'Walking paths', 'Open green space'],
+          highlight: 'Neighbourhood park serving the Oakridge Park pocket',
+          image: '/images/areas/thornwood-park-sign-playground-london-ontario.webp',
+          imageAlt: 'Thornwood Park sign and playground at 699 Thornwood Drive, Oakridge Park, London Ontario',
+          geo: { lat: 42.980439, lng: -81.295075 },
         },
         {
           name: 'Thames Valley Golf Course',
@@ -262,6 +337,11 @@ export const AREAS: Area[] = [
           title: 'Flood, War, and a Course Reborn',
           year: '1937–1946',
           body: "Thames Valley's early success survived a battering. The Great Flood of 1937 sent the Thames over its banks, submerging the pump house and much of the course. Three years later, with Canada at war, the Department of National Defence took over the grounds as a training camp — by 1942, more than 5,000 soldiers trained there and golf became impossible. The course didn't reopen until 1946. Much of the camp's original infrastructure never left: the water fountain beside the 5th tee on the Classic course still runs through pipes the army laid in 1940.",
+        },
+        {
+          title: 'Byron Bog Becomes Sifton Bog',
+          year: '1967',
+          body: "Long before it was a protected nature reserve, the wetland at Oakridge's doorstep had a different name. Known as \"Byron Bog\" for decades — it sat within the boundaries of the old Village of Byron before amalgamation — it was renamed Sifton Bog in 1967 after Sifton Properties Limited, the same company building Oakridge, donated the land to the city. At its centre, Redmond's Pond was once a 23-hectare glacial lake that has been quietly filling with peat for roughly 10,000 years; today it has shrunk to just 0.2 hectares, sitting atop a peat layer measured at 18 metres (60 feet) deep.",
         },
       ],
       photos: [
@@ -321,9 +401,9 @@ export const AREAS: Area[] = [
         a: 'Oakridge has some of London\'s highest-rated schools. Oakridge Public School and Mother Teresa Catholic Elementary serve younger students, and Oakridge Secondary School is well-regarded for academics and extracurriculars. The school catchments are a major reason families specifically seek out Oakridge homes.',
       },
     ],
-    metaTitle: 'Oakridge London Ontario Real Estate | Justin Skrypnyk Real Estate Broker',
+    metaTitle: 'Oakridge Homes for Sale | London Ontario Real Estate | Justin Skrypnyk',
     metaDescription:
-      'Looking to buy or sell in Oakridge, London Ontario? Justin Skrypnyk is the local expert. Explore homes, get a complimentary evaluation, and find out why Oakridge is West London\'s best-kept secret.',
+      'Oakridge homes for sale in London Ontario. Justin Skrypnyk is the local expert — explore listings, get a complimentary evaluation, and find out why Oakridge is West London\'s best-kept secret.',
   },
   {
     slug: 'byron',
@@ -453,9 +533,9 @@ export const AREAS: Area[] = [
         a: 'Byron typically commands a modest price premium over Oakridge and offers a quieter, more nature-focused lifestyle anchored by Springbank Park and the Thames River. Oakridge offers slightly more walkable everyday amenities and a more central West London location. Both are excellent — the right choice depends on whether outdoor lifestyle or daily convenience is your priority.',
       },
     ],
-    metaTitle: 'Byron London Ontario Real Estate | Buy & Sell in Byron | Justin Skrypnyk',
+    metaTitle: 'Byron Homes for Sale | London Ontario Real Estate | Justin Skrypnyk',
     metaDescription:
-      'Explore Byron real estate in London Ontario with local Real Estate Broker Justin Skrypnyk. Homes near Springbank Park, great schools, and Thames River trails. Get a complimentary home evaluation today.',
+      'Byron homes for sale in London Ontario. Local Real Estate Broker Justin Skrypnyk can help you find homes near Springbank Park, great schools, and Thames River trails. Get a complimentary home evaluation today.',
   },
   {
     slug: 'westmount',
@@ -565,9 +645,9 @@ export const AREAS: Area[] = [
         a: 'Westmount works well for families thanks to its strong schools (Princess Anne French Immersion, St. Thomas Aquinas Catholic, Westmount Secondary), proximity to University Hospital, and excellent transit connections. The Wonderland Road and Commissioners corridors put every daily need within easy reach.',
       },
     ],
-    metaTitle: 'Westmount London Ontario Real Estate | Justin Skrypnyk Real Estate Broker',
+    metaTitle: 'Westmount Homes for Sale | London Ontario Real Estate | Justin Skrypnyk',
     metaDescription:
-      'Westmount London Ontario homes for sale. Justin Skrypnyk helps buyers and sellers navigate this diverse West London neighbourhood. Complimentary home evaluation available.',
+      'Westmount homes for sale in London Ontario. Justin Skrypnyk helps buyers and sellers navigate this diverse West London neighbourhood. Complimentary home evaluation available.',
   },
   {
     slug: 'riverbend',

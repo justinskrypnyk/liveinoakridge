@@ -131,7 +131,7 @@ export const SERVICES: Service[] = [
     description:
       'Get an accurate, no-obligation home valuation from a Real Estate Broker who knows your street, your neighbourhood, and your market.',
     longDescription:
-      'Your home\'s market value isn\'t just a number pulled from an algorithm — it\'s shaped by your specific street, your home\'s condition, recent comparable sales, and current buyer demand. Justin Skrypnyk provides complimentary home evaluations for London Ontario homeowners. Whether you\'re thinking of selling this spring or simply curious about your equity position, Justin gives you real numbers you can act on.',
+      'Your home\'s market value isn\'t just a number pulled from an algorithm — it\'s shaped by your specific street, your home\'s condition, recent comparable sales, and current buyer demand. Justin Skrypnyk provides complimentary home evaluations for London Ontario homeowners. Whether you\'re thinking of selling this spring or simply curious about your equity position, Justin gives you real numbers you can act on. Just curious for a starting point? Try the <a href="/home-value-estimate/" class="text-gold hover:underline">instant ballpark estimate tool</a> first — then book the real thing below.',
     benefits: [
       'Complimentary — no obligation, no pressure',
       'Hyper-local data from your specific street and neighbourhood',
@@ -175,7 +175,7 @@ export const SERVICES: Service[] = [
     name: 'First-Time Home Buyers',
     shortName: 'First-Time Buyers',
     icon: '🔑',
-    headline: 'Your First Home. Done Right.',
+    headline: 'First-Time Home Buyer Guide — London Ontario',
     description:
       'First-time buying is exciting and overwhelming in equal measure. Justin breaks it down step by step so you arrive at closing day confident.',
     longDescription:
@@ -223,7 +223,7 @@ export const SERVICES: Service[] = [
     name: 'Downsizing',
     shortName: 'Downsizing',
     icon: '🏘️',
-    headline: 'Downsize with Dignity and Maximum Return',
+    headline: 'Downsizing Your Home in London Ontario',
     description:
       'Moving to a smaller home is a major life transition. Justin helps you time the market, maximize your sale, and find the right next home.',
     longDescription:
@@ -271,7 +271,7 @@ export const SERVICES: Service[] = [
     name: 'Upsizing',
     shortName: 'Upsizing',
     icon: '⬆️',
-    headline: 'Ready to Move Up? Let\'s Find Your Forever Home.',
+    headline: 'Upsizing Your Home in London Ontario',
     description:
       'Your family has outgrown your current home. Justin helps you sell strategically and move into more space without missing a beat.',
     longDescription:
@@ -323,7 +323,7 @@ export const SERVICES: Service[] = [
     description:
       'Relocating from out of town is stressful enough. Justin makes finding your home in London Ontario simple, fast, and surprisingly enjoyable.',
     longDescription:
-      'Whether you\'re relocating from Toronto, Ottawa, Vancouver, or anywhere else in Canada, London Ontario is welcoming more newcomers than ever — drawn by affordability, quality of life, and a growing economy. But knowing which neighbourhood is right for your commute, your kids\' schools, and your lifestyle takes local knowledge. Justin Skrypnyk specializes in helping relocating buyers navigate London Ontario without wasted trips or wrong decisions.',
+      'Whether you\'re relocating from Toronto, Ottawa, Vancouver, or anywhere else in Canada, London Ontario is welcoming more newcomers than ever — drawn by affordability, quality of life, and a growing economy. But knowing which neighbourhood is right for your commute, your kids\' schools, and your lifestyle takes local knowledge. Justin Skrypnyk specializes in helping relocating buyers navigate London Ontario without wasted trips or wrong decisions. Not sure which area keeps your commute reasonable? Try the <a href="/commute-calculator/" class="text-gold hover:underline">commute time calculator</a> to compare drive times from each neighbourhood to your new workplace.',
     benefits: [
       'Virtual tours and remote buying options for out-of-town buyers',
       'Neighbourhood matching based on your lifestyle, commute, and family needs',

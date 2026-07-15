@@ -2,6 +2,7 @@
 import Base from '@/layouts/Base.astro';
 import Schema from '@/components/Schema.astro';
 import GoogleMap from '@/components/GoogleMap.astro';
+import AreaMap from '@/components/AreaMap.astro';
 import ContactForm from '@/components/ContactForm.astro';
 import { AREAS } from '@/data/areas';
 import { SITE } from '@/data/site';
@@ -56,7 +57,7 @@ const areaServices = [
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
         <div>
           <h1 class="font-serif text-5xl font-bold mb-4">
-            {area.name}, London Ontario
+            {area.name} Homes for Sale — London Ontario
           </h1>
           <div class="gold-divider mb-6"></div>
           <p class="text-xl text-white/70 leading-relaxed mb-8">{area.headline}</p>
@@ -87,6 +88,9 @@ const areaServices = [
             <div class="text-white/80 text-sm">{area.nearbyAmenities.join(' · ')}</div>
           </div>
         </div>
+        <p class="text-white/40 text-xs mt-4">
+          Own a home in {area.name}? <a href="/home-value-estimate/" class="text-gold hover:underline">Get an instant ballpark estimate</a> of what it might be worth.
+        </p>
       </div>
     </div>
   </section>
@@ -269,6 +273,11 @@ const areaServices = [
             </div>
           ))}
         </div>
+
+        <div class="mt-12">
+          <h3 class="font-serif text-xl text-navy mb-4 text-center">Parks &amp; Schools in {area.name}</h3>
+          <AreaMap parks={area.parksData.parks} schools={[...(area.schoolsData?.elementary ?? []), ...(area.schoolsData?.secondary ?? [])]} />
+        </div>
       </div>
     </section>
   )}
@@ -449,7 +458,7 @@ const areaServices = [
         <h2 class="section-heading">Services in {area.name}</h2>
         <div class="gold-divider mx-auto mb-4"></div>
         <p class="section-subheading mx-auto">
-          Justin provides full-service real estate guidance specific to the {area.name} market.
+          Justin provides full-service real estate guidance for houses and homes for sale in the {area.name} market.
         </p>
       </div>
 

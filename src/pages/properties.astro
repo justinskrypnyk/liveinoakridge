@@ -1,9 +1,11 @@
 ---
 import Base from '@/layouts/Base.astro';
 import { SITE } from '@/data/site';
+import { AREAS } from '@/data/areas';
 import listingsData from '@/data/listings.json';
 
 const listings = listingsData.listings || [];
+const browseAreas = AREAS.filter((a) => a.avgPrice);
 const fetchedAt = listingsData.fetchedAt;
 const totalCount = listingsData.totalCount || 0;
 
@@ -39,13 +41,12 @@ function realtorUrl(l: Record<string, unknown>): string {
   return `https://www.realtor.ca/real-estate/${id}`;
 }
 
-// Neighbourhood slugs for linking to area pages
+// Neighbourhood slugs for linking to area pages — only the 7 active areas.
+// MLS subdivision names outside this territory (e.g. Hyde Park, Komoka) intentionally
+// get no link (areaSlug stays null) rather than pointing at a redirected/removed page.
 const AREA_SLUGS: Record<string, string> = {
-  'Oakridge': 'oakridge', 'Byron': 'byron', 'Westmount': 'westmount',
-  'Lambeth': 'lambeth', 'Hyde Park': 'hyde-park', 'Komoka': 'komoka',
-  'West London': 'west-london', 'Old North': 'old-north', 'Masonville': 'masonville',
-  'Sunningdale': 'sunningdale', 'Fox Hollow': 'fox-hollow', 'River Bend': 'river-bend',
-  'White Oaks': 'white-oaks', 'Medway': 'medway', 'Downtown': 'downtown-london',
+  'Oakridge': 'oakridge', 'West London': 'west-london', 'Whitehills': 'whitehills',
+  'Byron': 'byron', 'Westmount': 'westmount', 'Riverbend': 'riverbend', 'Lambeth': 'lambeth',
 };
 
 // Pre-process listings in frontmatter to avoid type annotation issues in template
@@ -83,7 +84,7 @@ const processedListings: ListingCard[] = listings.map((l) => {
 
 <Base
   title="Homes For Sale in West London Ontario | Justin Skrypnyk Real Estate Broker"
-  description="Browse current MLS® listings in Oakridge, Byron, Westmount, Lambeth, West London, Hyde Park, and Komoka. Updated from DDF® before every build. Contact Justin Skrypnyk at 519.639.5176."
+  description="Browse current MLS® listings in Oakridge, West London, Whitehills, Byron, Westmount, Riverbend, and Lambeth. Updated from DDF® before every build. Contact Justin Skrypnyk at 519.639.5176."
 >
   <!-- Hero -->
   <section class="bg-navy py-20 text-white">
@@ -97,7 +98,7 @@ const processedListings: ListingCard[] = listings.map((l) => {
         <h1 class="font-serif text-5xl font-bold mb-4">Homes For Sale in West London</h1>
         <div class="gold-divider mb-6"></div>
         <p class="text-xl text-white/70 leading-relaxed">
-          Active MLS® listings across Oakridge, Byron, Westmount, Lambeth, Hyde Park, and beyond.
+          Browse houses for sale across Oakridge, Byron, Westmount, Lambeth, and every West London neighbourhood Justin serves.
           {totalCount > 0 && <span> {totalCount} homes available.</span>}
         </p>
         {fetchedAt && (
@@ -114,7 +115,7 @@ const processedListings: ListingCard[] = listings.map((l) => {
     <div class="container-site">
       <div class="flex flex-wrap gap-2 items-center">
         <span class="text-sm font-medium text-navy/60 mr-1 shrink-0">Filter:</span>
-        {['All', 'Oakridge', 'Byron', 'Westmount', 'Lambeth', 'Hyde Park', 'Komoka', 'West London'].map((area, i) => (
+        {['All', ...AREAS.map((a) => a.name)].map((area, i) => (
           <button
             data-filter={area === 'All' ? '' : area}
             class={`filter-btn px-4 py-2 rounded-full text-sm font-medium transition-all ${i === 0 ? 'bg-gold text-navy' : 'bg-cream text-navy/70 hover:bg-gold hover:text-navy border border-gray-200'}`}
@@ -166,7 +167,7 @@ const processedListings: ListingCard[] = listings.map((l) => {
           <h2 class="font-serif text-3xl text-navy mb-4">Live MLS® Listings Coming Soon</h2>
           <p class="text-slate text-lg leading-relaxed mb-8">
             Justin's DDF® feed is being configured. In the meantime, contact Justin directly for the latest
-            available listings in Oakridge, Byron, Westmount, Lambeth, Hyde Park, Komoka, and all of West London.
+            available listings in Oakridge, West London, Whitehills, Byron, Westmount, Riverbend, and Lambeth.
           </p>
           <div class="flex flex-col sm:flex-row gap-4 justify-center">
             <a href={`tel:${SITE.phone}`} class="btn-primary">Call {SITE.phoneDisplay}</a>
@@ -177,19 +178,10 @@ const processedListings: ListingCard[] = listings.map((l) => {
           <div class="mt-14">
             <h3 class="font-serif text-xl text-navy mb-5">Browse by Neighbourhood</h3>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {[
-                { name: 'Oakridge', slug: 'oakridge', price: '$650K–$850K' },
-                { name: 'Byron', slug: 'byron', price: '$700K–$950K' },
-                { name: 'Westmount', slug: 'westmount', price: '$550K–$750K' },
-                { name: 'Lambeth', slug: 'lambeth', price: '$700K–$1.1M' },
-                { name: 'West London', slug: 'west-london', price: '$520K–$720K' },
-                { name: 'Hyde Park', slug: 'hyde-park', price: '$700K–$1.05M' },
-                { name: 'Komoka', slug: 'komoka', price: '$600K–$900K' },
-                { name: 'Masonville', slug: 'masonville', price: '$580K–$800K' },
-              ].map((area) => (
+              {browseAreas.map((area) => (
                 <a href={`/areas/${area.slug}/buy/`} class="card p-4 hover:border-gold/30 border border-transparent group text-center">
                   <h4 class="font-serif text-navy group-hover:text-gold transition-colors font-semibold text-sm">{area.name}</h4>
-                  <p class="text-xs text-slate mt-1">{area.price}</p>
+                  <p class="text-xs text-slate mt-1">{area.avgPrice}</p>
                 </a>
               ))}
             </div>
