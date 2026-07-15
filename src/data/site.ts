@@ -4,7 +4,7 @@ export const SITE = {
   agent: 'Justin Skrypnyk',
   tagline: 'Oakridge Roots. Oakridge Life.',
   description:
-    'Justin Skrypnyk is a Real Estate Broker with Sutton Group Chapman Realty Inc., Brokerage, specializing in Oakridge and West London real estate in London, Ontario. Buyer and seller representation in Oakridge, Byron, Westmount, Lambeth, West London, Hyde Park, and Komoka.',
+    'Justin Skrypnyk is a Real Estate Broker with Sutton Group Chapman Realty Inc., Brokerage, specializing in Oakridge and West London real estate in London, Ontario. Buyer and seller representation in Oakridge, West London, Whitehills, Byron, Westmount, Riverbend, and Lambeth.',
   url: 'https://www.liveinoakridge.ca',
   phone: '519-639-5176',
   phoneDisplay: '519.639.5176',
