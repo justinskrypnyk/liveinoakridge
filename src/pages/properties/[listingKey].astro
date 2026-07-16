@@ -92,38 +92,34 @@ const facts: [string, string][] = [
     </div>
   </section>
 
-  <!-- Photo Gallery -->
+  <!-- Photo preview — big photo + two side photos (like Cove's), opens the
+       full gallery in a lightbox rather than taking over the page with a
+       huge inline hero photo -->
   <section class="bg-navy pb-8">
     <div class="container-site">
-      {photoUrls.length > 0 ? (
-        <div id="gallery" class="rounded-2xl overflow-hidden">
-          <div class="relative bg-navy-dark aspect-[16/9] md:aspect-[21/9]">
-            {photoUrls.map((url, i) => (
-              <img
-                src={url}
-                alt={`${address} — photo ${i + 1} of ${photoUrls.length}`}
-                class="gallery-slide absolute inset-0 w-full h-full object-cover transition-opacity duration-300"
-                style={i === 0 ? '' : 'opacity:0; pointer-events:none;'}
-                data-index={i}
-                loading={i === 0 ? 'eager' : 'lazy'}
-              />
-            ))}
-            <button id="gallery-prev" type="button" aria-label="Previous photo" class="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-navy-dark/70 text-white flex items-center justify-center hover:bg-gold hover:text-navy transition-colors">
-              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+      {photoUrls.length > 1 ? (
+        <div class="grid grid-cols-3 grid-rows-1 gap-2 h-72 md:h-80 rounded-2xl overflow-hidden">
+          <button type="button" class="gallery-open-thumb col-span-2 row-span-1 relative group cursor-pointer min-h-0 min-w-0" data-index="0" aria-label={`View all ${photoUrls.length} photos`}>
+            <img src={photoUrls[0]} alt={`${address} — photo 1 of ${photoUrls.length}`} class="w-full h-full object-cover" loading="eager" />
+            <div class="absolute inset-0 bg-navy-dark/0 group-hover:bg-navy-dark/20 transition-colors"></div>
+          </button>
+          <div class="col-span-1 row-span-1 grid grid-rows-2 gap-2 min-h-0">
+            <button type="button" class="gallery-open-thumb relative group cursor-pointer min-h-0 min-w-0" data-index="1" aria-label={`View all ${photoUrls.length} photos`}>
+              <img src={photoUrls[1]} alt={`${address} — photo 2 of ${photoUrls.length}`} class="w-full h-full object-cover" loading="eager" />
+              <div class="absolute inset-0 bg-navy-dark/0 group-hover:bg-navy-dark/20 transition-colors"></div>
             </button>
-            <button id="gallery-next" type="button" aria-label="Next photo" class="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-navy-dark/70 text-white flex items-center justify-center hover:bg-gold hover:text-navy transition-colors">
-              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+            <button type="button" class="gallery-open-thumb relative group cursor-pointer min-h-0 min-w-0" data-index={photoUrls.length > 2 ? 2 : 0} aria-label={`View all ${photoUrls.length} photos`}>
+              <img src={photoUrls.length > 2 ? photoUrls[2] : photoUrls[0]} alt="" class="w-full h-full object-cover" loading="eager" />
+              <div class="absolute inset-0 bg-navy-dark/40 group-hover:bg-navy-dark/55 transition-colors flex items-center justify-center">
+                <span class="text-white font-semibold text-xs sm:text-sm text-center px-2">View Gallery<br />({photoUrls.length} photos)</span>
+              </div>
             </button>
-            <div id="gallery-count" class="absolute bottom-3 right-3 bg-navy-dark/80 text-white text-xs font-semibold px-3 py-1.5 rounded-full">1 / {photoUrls.length}</div>
-          </div>
-          <div class="flex gap-2 mt-2 overflow-x-auto pb-2 no-scrollbar">
-            {photoUrls.map((url, i) => (
-              <button type="button" class="gallery-thumb shrink-0 w-20 h-16 rounded-lg overflow-hidden border-2 border-transparent data-[active=true]:border-gold" data-index={i}>
-                <img src={url} alt="" class="w-full h-full object-cover" loading="lazy" />
-              </button>
-            ))}
           </div>
         </div>
+      ) : photoUrls.length === 1 ? (
+        <button type="button" class="gallery-open-thumb relative w-full h-72 md:h-80 rounded-2xl overflow-hidden block group cursor-pointer" data-index="0" aria-label="View photo">
+          <img src={photoUrls[0]} alt={`${address} photo`} class="w-full h-full object-cover" loading="eager" />
+        </button>
       ) : (
         <div class="aspect-[16/9] bg-navy-light rounded-2xl flex items-center justify-center">
           <span class="text-7xl">🏡</span>
@@ -131,6 +127,34 @@ const facts: [string, string][] = [
       )}
     </div>
   </section>
+
+  <!-- Full gallery lightbox — object-contain so photos are never cropped -->
+  {photoUrls.length > 0 && (
+    <div id="gallery-modal" class="hidden fixed inset-0 z-[100] bg-black/95 flex-col">
+      <div class="flex items-center justify-between px-4 py-3 text-white shrink-0">
+        <span id="gallery-modal-count" class="text-sm">1 / {photoUrls.length}</span>
+        <button id="gallery-close" type="button" aria-label="Close gallery" class="w-9 h-9 rounded-full hover:bg-white/10 flex items-center justify-center transition-colors">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="relative flex-1 flex items-center justify-center min-h-0 px-4">
+        <button id="gallery-modal-prev" type="button" aria-label="Previous photo" class="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-gold hover:text-navy transition-colors">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <img id="gallery-modal-image" src={photoUrls[0]} alt={address} class="max-w-full max-h-full object-contain" />
+        <button id="gallery-modal-next" type="button" aria-label="Next photo" class="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-gold hover:text-navy transition-colors">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+        </button>
+      </div>
+      <div class="flex gap-2 overflow-x-auto px-4 py-3 no-scrollbar shrink-0">
+        {photoUrls.map((url, i) => (
+          <button type="button" class="gallery-modal-thumb shrink-0 w-16 h-12 rounded-md overflow-hidden border-2 border-transparent data-[active=true]:border-gold opacity-60 data-[active=true]:opacity-100 transition-opacity" data-index={i}>
+            <img src={url} alt="" class="w-full h-full object-cover" loading="lazy" />
+          </button>
+        ))}
+      </div>
+    </div>
+  )}
 
   <!-- Header: address, price, stats, actions -->
   <section class="py-8 bg-white border-b border-gray-100">
@@ -336,7 +360,7 @@ const facts: [string, string][] = [
   </section>
 </Base>
 
-<script define:vars={{ rawPrice, mlsNumber }}>
+<script define:vars={{ rawPrice, mlsNumber, photoUrls, address }}>
   // CREA Analytics Web Service — fire-and-forget "view" beacon. Client-side
   // only (define:vars scripts are inlined, not modules, so this can't import
   // src/lib/analytics-client.ts — kept in sync with it manually).
@@ -363,23 +387,53 @@ const facts: [string, string][] = [
     }
   })(mlsNumber);
 
-  const slides = Array.from(document.querySelectorAll('.gallery-slide'));
-  const thumbs = Array.from(document.querySelectorAll('.gallery-thumb'));
-  const countEl = document.getElementById('gallery-count');
+  // Gallery lightbox — opens on demand instead of showing a large photo
+  // inline, and uses object-contain (never object-cover) so photos are
+  // never cropped top/bottom.
+  const modal = document.getElementById('gallery-modal');
+  const modalImage = document.getElementById('gallery-modal-image');
+  const modalCount = document.getElementById('gallery-modal-count');
+  const modalThumbs = Array.from(document.querySelectorAll('.gallery-modal-thumb'));
   let current = 0;
 
-  function show(index) {
-    if (slides.length === 0) return;
-    current = (index + slides.length) % slides.length;
-    slides.forEach((s, i) => { s.style.opacity = i === current ? '1' : '0'; s.style.pointerEvents = i === current ? 'auto' : 'none'; });
-    thumbs.forEach((t, i) => t.dataset.active = String(i === current));
-    if (countEl) countEl.textContent = `${current + 1} / ${slides.length}`;
+  function showModalPhoto(index) {
+    if (photoUrls.length === 0) return;
+    current = (index + photoUrls.length) % photoUrls.length;
+    if (modalImage) {
+      modalImage.src = photoUrls[current];
+      modalImage.alt = `${address} — photo ${current + 1} of ${photoUrls.length}`;
+    }
+    if (modalCount) modalCount.textContent = `${current + 1} / ${photoUrls.length}`;
+    modalThumbs.forEach((t, i) => { t.dataset.active = String(i === current); });
   }
 
-  document.getElementById('gallery-prev')?.addEventListener('click', () => show(current - 1));
-  document.getElementById('gallery-next')?.addEventListener('click', () => show(current + 1));
-  thumbs.forEach((t) => t.addEventListener('click', () => show(Number(t.dataset.index))));
-  show(0);
+  function openGalleryModal(index) {
+    showModalPhoto(index);
+    modal?.classList.remove('hidden');
+    modal?.classList.add('flex');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeGalleryModal() {
+    modal?.classList.add('hidden');
+    modal?.classList.remove('flex');
+    document.body.style.overflow = '';
+  }
+
+  document.querySelectorAll('.gallery-open-thumb').forEach((el) => {
+    el.addEventListener('click', () => openGalleryModal(Number(el.dataset.index) || 0));
+  });
+  document.getElementById('gallery-close')?.addEventListener('click', closeGalleryModal);
+  document.getElementById('gallery-modal-prev')?.addEventListener('click', () => showModalPhoto(current - 1));
+  document.getElementById('gallery-modal-next')?.addEventListener('click', () => showModalPhoto(current + 1));
+  modalThumbs.forEach((t) => t.addEventListener('click', () => showModalPhoto(Number(t.dataset.index))));
+  modal?.addEventListener('click', (e) => { if (e.target === modal) closeGalleryModal(); });
+  document.addEventListener('keydown', (e) => {
+    if (modal?.classList.contains('hidden')) return;
+    if (e.key === 'Escape') closeGalleryModal();
+    if (e.key === 'ArrowLeft') showModalPhoto(current - 1);
+    if (e.key === 'ArrowRight') showModalPhoto(current + 1);
+  });
 
   // Payment calculator
   function calculate() {
