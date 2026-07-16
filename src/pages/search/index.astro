@@ -153,12 +153,12 @@ const allAreasBoundsForClient = getAllAreasBounds();
     </div>
   </section>
 
-  <section class="py-4 bg-white border-b border-gray-100 sticky top-20 z-30 shadow-sm">
+  <section id="search-filter-bar" class="py-3 bg-white border-b border-gray-100 sticky top-20 z-30 shadow-sm">
     <div class="container-site">
       <button
         type="button"
         id="filters-toggle"
-        class="flex items-center gap-2 text-sm font-semibold text-navy py-1 -my-1"
+        class="flex items-center gap-2 text-sm font-semibold text-navy py-0.5 -my-0.5"
         aria-expanded="true"
         aria-controls="filters-collapsible"
       >
@@ -166,8 +166,8 @@ const allAreasBoundsForClient = getAllAreasBounds();
         Search Filters
       </button>
 
-      <div id="filters-collapsible" class="pt-3">
-      <form method="GET" action="/search/" id="filters-form" class="flex flex-wrap items-center gap-2.5">
+      <div id="filters-collapsible" class="pt-2">
+      <form method="GET" action="/search/" id="filters-form" class="flex flex-wrap items-center gap-2">
         <input type="hidden" name="area" value={area} />
         <div class="relative flex-1 min-w-[240px]">
           <svg class="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-navy/40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
@@ -176,24 +176,24 @@ const allAreasBoundsForClient = getAllAreasBounds();
             name="q"
             value={q}
             placeholder="Leave blank to browse the map, or search a city/address/MLS® number (e.g. Toronto, X13567832)"
-            class="w-full pl-10 pr-4 py-2.5 rounded-full text-sm bg-cream border border-gray-200 text-navy placeholder-navy/40 focus:border-gold focus:outline-none transition-colors"
+            class="w-full pl-10 pr-4 py-2 rounded-full text-sm bg-cream border border-gray-200 text-navy placeholder-navy/40 focus:border-gold focus:outline-none transition-colors"
           />
         </div>
         <div class="relative">
-          <select name="minPrice" id="minPrice-select" class="appearance-none pl-4 pr-9 py-2 rounded-full text-sm font-medium bg-cream text-navy/70 border border-gray-200 hover:border-gold focus:border-gold focus:outline-none transition-colors cursor-pointer">
+          <select name="minPrice" id="minPrice-select" class="appearance-none pl-4 pr-9 py-1.5 rounded-full text-sm font-medium bg-cream text-navy/70 border border-gray-200 hover:border-gold focus:border-gold focus:outline-none transition-colors cursor-pointer">
             <option value="">No Min</option>
             {priceSteps.map((p) => <option value={p} selected={minPrice === p}>{shortPrice(p)}</option>)}
           </select>
         </div>
         <span class="text-navy/30 text-sm">–</span>
         <div class="relative">
-          <select name="maxPrice" id="maxPrice-select" class="appearance-none pl-4 pr-9 py-2 rounded-full text-sm font-medium bg-cream text-navy/70 border border-gray-200 hover:border-gold focus:border-gold focus:outline-none transition-colors cursor-pointer">
+          <select name="maxPrice" id="maxPrice-select" class="appearance-none pl-4 pr-9 py-1.5 rounded-full text-sm font-medium bg-cream text-navy/70 border border-gray-200 hover:border-gold focus:border-gold focus:outline-none transition-colors cursor-pointer">
             <option value="">No Max</option>
             {priceSteps.map((p) => <option value={p} selected={maxPrice === p}>{shortPrice(p)}</option>)}
           </select>
         </div>
         <div class="relative">
-          <select name="type" id="type-select" class="appearance-none pl-4 pr-9 py-2 rounded-full text-sm font-medium bg-cream text-navy/70 border border-gray-200 hover:border-gold focus:border-gold focus:outline-none transition-colors cursor-pointer">
+          <select name="type" id="type-select" class="appearance-none pl-4 pr-9 py-1.5 rounded-full text-sm font-medium bg-cream text-navy/70 border border-gray-200 hover:border-gold focus:border-gold focus:outline-none transition-colors cursor-pointer">
             <option value="">Any Type</option>
             <option value="Detached" selected={propertyType === 'Detached'}>Detached</option>
             <option value="Semi" selected={propertyType === 'Semi'}>Semi-Detached</option>
@@ -205,7 +205,7 @@ const allAreasBoundsForClient = getAllAreasBounds();
           <button
             type="button"
             id="more-filters-toggle"
-            class="flex items-center gap-1.5 pl-4 pr-3.5 py-2 rounded-full text-sm font-medium bg-cream text-navy/70 border border-gray-200 hover:border-gold transition-colors cursor-pointer"
+            class="flex items-center gap-1.5 pl-4 pr-3.5 py-1.5 rounded-full text-sm font-medium bg-cream text-navy/70 border border-gray-200 hover:border-gold transition-colors cursor-pointer"
           >
             More Filters
             <span id="more-filters-count" class="hidden bg-emerald-500 text-navy text-[10px] font-bold w-4 h-4 rounded-full items-center justify-center leading-none"></span>
@@ -290,35 +290,35 @@ const allAreasBoundsForClient = getAllAreasBounds();
           </div>
         </div>
 
-        <button type="submit" class="btn-primary !py-2.5 !px-6">Search</button>
+        <button type="submit" class="btn-primary !py-2 !px-6">Search</button>
       </form>
       </div>
 
       {!q && (
-        <div class="flex flex-wrap items-center gap-2 mt-4">
+        <div class="flex flex-wrap items-center gap-1.5 mt-3">
           <a
             href={areaUrl('')}
             data-area-tab
             data-bounds={JSON.stringify(allAreasBoundsForClient)}
-            class={`text-xs font-semibold px-3.5 py-1.5 rounded-full transition-colors ${!area ? 'bg-navy text-white' : 'bg-cream text-navy/70 border border-gray-200 hover:border-gold'}`}
+            class={`text-xs font-semibold px-3 py-1 rounded-full transition-colors ${!area ? 'bg-navy text-white' : 'bg-cream text-navy/70 border border-gray-200 hover:border-gold'}`}
           >All London</a>
           {AREAS.map((a) => (
             <a
               href={areaUrl(a.slug)}
               data-area-tab
               data-bounds={JSON.stringify(areaBoundsJson[a.slug] ?? null)}
-              class={`text-xs font-semibold px-3.5 py-1.5 rounded-full transition-colors ${area === a.slug ? 'bg-navy text-white' : 'bg-cream text-navy/70 border border-gray-200 hover:border-gold'}`}
+              class={`text-xs font-semibold px-3 py-1 rounded-full transition-colors ${area === a.slug ? 'bg-navy text-white' : 'bg-cream text-navy/70 border border-gray-200 hover:border-gold'}`}
             >{a.shortName}</a>
           ))}
         </div>
       )}
 
       {q ? (
-        <p class="text-sm text-slate mt-3">
+        <p class="text-sm text-slate mt-2.5">
           {textResult?.totalMatching ?? 0} active listing{(textResult?.totalMatching ?? 0) !== 1 ? 's' : ''} matching "{q}"
         </p>
       ) : (
-        <div class="flex flex-wrap items-center justify-between gap-3 mt-3">
+        <div class="flex flex-wrap items-center justify-between gap-3 mt-2.5">
           <p id="results-count" class="text-sm text-slate">
             {browseResult?.capped
               ? `Showing ${browseCards.length} of ${browseResult.total.toLocaleString()} active listings in view — zoom in to narrow down`
@@ -461,7 +461,7 @@ const allAreasBoundsForClient = getAllAreasBounds();
           </div>
 
           <div class="order-1 lg:order-2">
-            <div class="lg:sticky lg:top-24">
+            <div id="map-sticky-wrap" class="lg:sticky lg:top-24">
               <div class="relative isolate rounded-2xl overflow-hidden shadow-card border border-gray-100">
                 <div id="live-map" style="height: 600px"></div>
               </div>
@@ -526,6 +526,24 @@ const allAreasBoundsForClient = getAllAreasBounds();
     setFiltersCollapsed(collapsed);
     localStorage.setItem(FILTERS_COLLAPSED_KEY, collapsed ? '1' : '0');
   });
+
+  // The map's sticky top offset has to sit right below the filter bar above
+  // it, but that bar's height isn't fixed — it changes when filters
+  // collapse/expand, when the area-tab pills wrap to a second line at
+  // narrower desktop widths, or if its content changes for any other
+  // reason. A hardcoded offset drifts out of sync with any of that and the
+  // map (plus any open marker popup) ends up rendering underneath the bar.
+  // ResizeObserver keeps it correct regardless of what caused the resize.
+  const filterBar = document.getElementById('search-filter-bar');
+  const mapStickyWrap = document.getElementById('map-sticky-wrap');
+  if (filterBar && mapStickyWrap && window.ResizeObserver) {
+    const syncMapOffset = () => {
+      const barTop = parseFloat(getComputedStyle(filterBar).top) || 0;
+      mapStickyWrap.style.top = `${barTop + filterBar.offsetHeight}px`;
+    };
+    new ResizeObserver(syncMapOffset).observe(filterBar);
+    syncMapOffset();
+  }
 </script>
 
 {!q && (
@@ -659,7 +677,13 @@ const allAreasBoundsForClient = getAllAreasBounds();
           highlightedCard.style.outlineOffset = '';
         }
         clearTimeout(highlightTimeout);
-        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // Deliberately no scrollIntoView here: with the default "All London"
+        // view capped at 300 listings sorted Newest First, a card can be
+        // ~150 rows / 60,000px down the page, and force-scrolling the whole
+        // page to it (rather than just the map's own popup, which already
+        // shows the photo/price/address) reads as randomly jumping to the
+        // footer. Just highlight the card if it happens to already be on
+        // screen.
         card.style.outline = '3px solid #10b981';
         card.style.outlineOffset = '3px';
         highlightedCard = card;
