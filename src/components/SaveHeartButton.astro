@@ -1,0 +1,26 @@
+---
+interface Props {
+  mls: string;
+  address: string;
+  class?: string;
+}
+
+const { mls, address, class: className = '' } = Astro.props;
+---
+
+<button
+  type="button"
+  data-save-heart
+  data-mls={mls}
+  data-address={address}
+  aria-label="Save this listing"
+  aria-pressed="false"
+  class={`save-heart-btn w-8 h-8 rounded-full bg-white/90 shadow-md flex items-center justify-center hover:scale-110 transition-transform ${className}`}
+>
+  <svg class="heart-outline w-4 h-4 text-navy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+    <path d="M12 21s-6.716-4.35-9.428-8.06C.94 10.42 1.2 6.9 3.808 5.06 6.06 3.47 9 4.08 12 7.2c3-3.12 5.94-3.73 8.192-2.14 2.608 1.84 2.868 5.36 1.236 7.88C18.716 16.65 12 21 12 21z"/>
+  </svg>
+  <svg class="heart-filled w-4 h-4 text-rose-500 hidden" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+    <path d="M12 21s-6.716-4.35-9.428-8.06C.94 10.42 1.2 6.9 3.808 5.06 6.06 3.47 9 4.08 12 7.2c3-3.12 5.94-3.73 8.192-2.14 2.608 1.84 2.868 5.36 1.236 7.88C18.716 16.65 12 21 12 21z"/>
+  </svg>
+</button>

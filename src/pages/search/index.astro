@@ -2,6 +2,8 @@
 export const prerender = false; // live Ontario-wide DDF search — see src/lib/ddf.ts
 import Base from '@/layouts/Base.astro';
 import Schema from '@/components/Schema.astro';
+import SaveHeartButton from '@/components/SaveHeartButton.astro';
+import SaveListingModal from '@/components/SaveListingModal.astro';
 import { SITE } from '@/data/site';
 import { searchMarketListings, searchNationalPoolByBounds, getActiveListingKeys } from '@/lib/ddf';
 import { fmtPrice, field, buildAddress, listingSlug } from '@/lib/listings';
@@ -73,6 +75,7 @@ const textCards = (textResult?.listings ?? []).map((l) => {
     isOwn: ownKeys.has(field(L, 'ListingKey', 'ListingId').toLowerCase()),
     photoUrl: (L._photoUrl as string | null) ?? null,
     detailHref: `/search/${listingSlug(L)}/`,
+    mls: field(L, 'ListingKey', 'ListingId'),
   };
 });
 
@@ -356,7 +359,7 @@ const allAreasBoundsForClient = getAllAreasBounds();
           <>
             <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
               {textCards.map((l, i) => (
-                <article class="listing-card bg-white rounded-2xl shadow-card overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all border border-gray-100">
+                <article class="listing-card bg-white rounded-2xl shadow-card overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all border border-gray-100" data-mls={l.mls}>
                   <div class="aspect-[4/3] bg-cream relative overflow-hidden">
                     {l.photoUrl ? (
                       i < 3
@@ -375,6 +378,7 @@ const allAreasBoundsForClient = getAllAreasBounds();
                         <span class="bg-navy/80 text-white text-xs font-medium px-2 py-0.5 rounded-full">{l.type}</span>
                       </div>
                     )}
+                    <SaveHeartButton mls={l.mls} address={`${l.address}${l.city ? `, ${l.city}` : ''}`} class="absolute bottom-2 right-2" />
                   </div>
                   <a href={l.detailHref} class="block p-3.5">
                     <div class="font-serif text-lg text-navy font-bold mb-0.5">{l.price}</div>
@@ -439,8 +443,9 @@ const allAreasBoundsForClient = getAllAreasBounds();
                         <span class="bg-navy/80 text-white text-xs font-medium px-2 py-0.5 rounded-full">{l.type}</span>
                       </div>
                     )}
+                    <SaveHeartButton mls={l.mls} address={`${l.address}${l.city ? `, ${l.city}` : ''}`} class="absolute bottom-2 right-2" />
                   </div>
-                  <a href={l.href} class="block p-3.5">
+                  <div class="block p-3.5 cursor-pointer">
                     <div class="font-serif text-lg text-navy font-bold mb-0.5">{l.price}</div>
                     <p class="text-slate text-xs leading-snug mb-2 line-clamp-1">{l.address}{l.city ? `, ${l.city}` : ''}</p>
                     <div class="flex items-center gap-3 text-xs text-navy/70 border-t border-gray-100 pt-2">
@@ -449,7 +454,7 @@ const allAreasBoundsForClient = getAllAreasBounds();
                       {l.sqft && <span>{Number(l.sqft).toLocaleString()} sq ft</span>}
                     </div>
                     <p class="text-[10px] text-slate/50 mt-1.5">Courtesy of {l.brokerage}</p>
-                  </a>
+                  </div>
                   <div class="flex gap-2 px-3.5 pb-3.5">
                     <a href={l.href} class="flex-1 bg-navy text-white text-xs font-semibold text-center py-2 rounded-lg hover:bg-navy/80 transition-colors">
                       View Full Details
@@ -480,6 +485,8 @@ const allAreasBoundsForClient = getAllAreasBounds();
       </p>
     </div>
   </section>
+
+  <SaveListingModal />
 </Base>
 
 <!-- Terms of Use consent banner — enhanced browse-wrap per CREA DDF Rule 6(d) -->
@@ -548,6 +555,29 @@ const allAreasBoundsForClient = getAllAreasBounds();
 
 {!q && (
   <script define:vars={{ initialBounds, initialCards: browseCards, allAreasBounds: allAreasBoundsForClient }}>
+    // `define:vars` scripts are inline, non-module scripts (Astro can't run
+    // them through Vite), so they can't `import` the shared helpers in
+    // src/lib/save-listing-client.ts — duplicated here instead of risking a
+    // cross-script load-order race with SaveListingModal.astro's module
+    // script. Both read/write the same sessionStorage key and the same
+    // data-save-heart/.heart-outline/.heart-filled contract, so state still
+    // stays in sync everywhere on the page.
+    function syncHeartButtons(root) {
+      let saved;
+      try {
+        saved = new Set(JSON.parse(sessionStorage.getItem('saved_listings_v1') || '[]'));
+      } catch {
+        saved = new Set();
+      }
+      (root || document).querySelectorAll('[data-save-heart]').forEach((btn) => {
+        const filled = saved.has(btn.getAttribute('data-mls') || '');
+        btn.classList.toggle('is-saved', filled);
+        btn.setAttribute('aria-pressed', String(filled));
+        btn.querySelector('.heart-outline')?.classList.toggle('hidden', filled);
+        btn.querySelector('.heart-filled')?.classList.toggle('hidden', !filled);
+      });
+    }
+
     function esc(s) {
       const d = document.createElement('div');
       d.textContent = s ?? '';
@@ -560,7 +590,22 @@ const allAreasBoundsForClient = getAllAreasBounds();
       return `$${n}`;
     }
 
+    // Matches SaveHeartButton.astro's markup exactly — save-listing-client.ts's
+    // syncHeartButtons()/setHeartVisual() and the delegated click handler in
+    // SaveListingModal.astro key off these same classes/data attributes
+    // regardless of whether a heart came from server-rendered HTML, this
+    // client re-render, or a Leaflet popup.
+    function heartHtml(mls, address, extraClass) {
+      return `
+        <button type="button" data-save-heart data-mls="${esc(mls)}" data-address="${esc(address)}" aria-label="Save this listing" aria-pressed="false" class="save-heart-btn w-8 h-8 rounded-full bg-white/90 shadow-md flex items-center justify-center hover:scale-110 transition-transform ${extraClass || ''}">
+          <svg class="heart-outline w-4 h-4 text-navy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 21s-6.716-4.35-9.428-8.06C.94 10.42 1.2 6.9 3.808 5.06 6.06 3.47 9 4.08 12 7.2c3-3.12 5.94-3.73 8.192-2.14 2.608 1.84 2.868 5.36 1.236 7.88C18.716 16.65 12 21 12 21z"/></svg>
+          <svg class="heart-filled w-4 h-4 text-rose-500 hidden" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 21s-6.716-4.35-9.428-8.06C.94 10.42 1.2 6.9 3.808 5.06 6.06 3.47 9 4.08 12 7.2c3-3.12 5.94-3.73 8.192-2.14 2.608 1.84 2.868 5.36 1.236 7.88C18.716 16.65 12 21 12 21z"/></svg>
+        </button>
+      `;
+    }
+
     function cardHtml(l) {
+      const address = `${l.address}${l.city ? `, ${l.city}` : ''}`;
       return `
         <article class="listing-card bg-white rounded-2xl shadow-card overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all border border-gray-100" data-mls="${esc(l.mls)}">
           <div class="aspect-[4/3] bg-cream relative overflow-hidden">
@@ -569,8 +614,9 @@ const allAreasBoundsForClient = getAllAreasBounds();
               : `<div class="flex items-center justify-center h-full"><span class="text-5xl">🏡</span></div>`}
             ${l.isOwn ? `<div class="absolute top-2 left-2"><span class="bg-gold text-navy text-xs font-bold px-2 py-0.5 rounded-full">In-House Listing</span></div>` : ''}
             ${l.type ? `<div class="absolute top-2 right-2"><span class="bg-navy/80 text-white text-xs font-medium px-2 py-0.5 rounded-full">${esc(l.type)}</span></div>` : ''}
+            ${heartHtml(l.mls, address, 'absolute bottom-2 right-2')}
           </div>
-          <a href="${l.href}" class="block p-3.5">
+          <div class="block p-3.5 cursor-pointer">
             <div class="font-serif text-lg text-navy font-bold mb-0.5">${esc(l.price)}</div>
             <p class="text-slate text-xs leading-snug mb-2 line-clamp-1">${esc(l.address)}${l.city ? `, ${esc(l.city)}` : ''}</p>
             <div class="flex items-center gap-3 text-xs text-navy/70 border-t border-gray-100 pt-2">
@@ -579,7 +625,7 @@ const allAreasBoundsForClient = getAllAreasBounds();
               ${l.sqft ? `<span>${Number(l.sqft).toLocaleString()} sq ft</span>` : ''}
             </div>
             <p class="text-[10px] text-slate/50 mt-1.5">Courtesy of ${esc(l.brokerage)}</p>
-          </a>
+          </div>
           <div class="flex gap-2 px-3.5 pb-3.5">
             <a href="${l.href}" class="flex-1 bg-navy text-white text-xs font-semibold text-center py-2 rounded-lg hover:bg-navy/80 transition-colors">View Full Details</a>
           </div>
@@ -588,25 +634,29 @@ const allAreasBoundsForClient = getAllAreasBounds();
     }
 
     function popupHtml(l) {
+      const address = `${l.address}${l.city ? `, ${l.city}` : ''}`;
       return `
-        <a href="${l.href}" style="display:block;width:240px;padding-top:18px;text-decoration:none;color:inherit;font-family:Inter,sans-serif;">
-          <div style="width:100%;height:130px;border-radius:8px;overflow:hidden;background:#f0f9f6;margin-bottom:8px;">
+        <div style="width:240px;padding-top:18px;font-family:Inter,sans-serif;">
+          <div style="width:100%;height:130px;border-radius:8px;overflow:hidden;background:#f0f9f6;margin-bottom:8px;position:relative;">
             ${l.photoUrl
               ? `<img src="${esc(l.photoUrl)}" alt="" style="width:100%;height:100%;object-fit:contain;" />`
               : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:32px;">🏡</div>`}
+            <div style="position:absolute;bottom:6px;right:6px;">${heartHtml(l.mls, address)}</div>
           </div>
-          <div style="display:flex;align-items:center;justify-content:between;gap:6px;">
-            <span style="font-weight:800;font-size:16px;color:#0c2340;">${esc(l.price)}</span>
-            <span style="margin-left:auto;background:#10b981;color:#0c2340;font-size:10px;font-weight:700;padding:2px 8px;border-radius:999px;">${l.isOwn ? "In-House Listing" : 'For Sale'}</span>
-          </div>
-          <div style="font-size:12.5px;color:#334155;margin:3px 0 6px;line-height:1.3;">${esc(l.address)}${l.city ? `, ${esc(l.city)}` : ''}</div>
-          <div style="display:flex;gap:10px;font-size:11.5px;color:#0c2340;font-weight:600;margin-bottom:6px;">
-            ${l.beds ? `<span>🛏 ${esc(l.beds)}</span>` : ''}
-            ${l.baths ? `<span>🛁 ${esc(l.baths)}</span>` : ''}
-            ${l.sqft ? `<span>${Number(l.sqft).toLocaleString()} ft²</span>` : ''}
-          </div>
-          <div style="font-size:10px;color:#94a3b8;border-top:1px solid #eee;padding-top:5px;">${esc(l.mls)}, ${esc(l.brokerage)}</div>
-        </a>
+          <a href="${l.href}" style="display:block;text-decoration:none;color:inherit;">
+            <div style="display:flex;align-items:center;justify-content:between;gap:6px;">
+              <span style="font-weight:800;font-size:16px;color:#0c2340;">${esc(l.price)}</span>
+              <span style="margin-left:auto;background:#10b981;color:#0c2340;font-size:10px;font-weight:700;padding:2px 8px;border-radius:999px;">${l.isOwn ? "In-House Listing" : 'For Sale'}</span>
+            </div>
+            <div style="font-size:12.5px;color:#334155;margin:3px 0 6px;line-height:1.3;">${esc(l.address)}${l.city ? `, ${esc(l.city)}` : ''}</div>
+            <div style="display:flex;gap:10px;font-size:11.5px;color:#0c2340;font-weight:600;margin-bottom:6px;">
+              ${l.beds ? `<span>🛏 ${esc(l.beds)}</span>` : ''}
+              ${l.baths ? `<span>🛁 ${esc(l.baths)}</span>` : ''}
+              ${l.sqft ? `<span>${Number(l.sqft).toLocaleString()} ft²</span>` : ''}
+            </div>
+            <div style="font-size:10px;color:#94a3b8;border-top:1px solid #eee;padding-top:5px;">${esc(l.mls)}, ${esc(l.brokerage)}</div>
+          </a>
+        </div>
       `;
     }
 
@@ -667,6 +717,7 @@ const allAreasBoundsForClient = getAllAreasBounds();
       let clusterLayer = L.markerClusterGroup().addTo(map);
       let highlightedCard = null;
       let highlightTimeout = null;
+      let markersByMls = new Map();
 
       function highlightListingCard(mls) {
         if (!mls) return;
@@ -703,11 +754,14 @@ const allAreasBoundsForClient = getAllAreasBounds();
       // (which do need a real re-render) call this with skipGridRender unset.
       function renderListings(listings, total, capped, { skipGridRender = false } = {}) {
         clusterLayer.clearLayers();
+        markersByMls = new Map();
         const markers = listings
           .filter((l) => l.lat && l.lng)
           .map((l) => {
             const marker = L.marker([l.lat, l.lng], { icon: priceIcon(shortPrice(l.rawPrice)) }).bindPopup(popupHtml(l), { maxWidth: 260, autoPanPadding: [24, 40] });
             marker.on('click', () => highlightListingCard(l.mls));
+            marker.on('popupopen', (e) => syncHeartButtons(e.popup.getElement()));
+            if (l.mls) markersByMls.set(l.mls, marker);
             return marker;
           });
         clusterLayer.addLayers(markers);
@@ -716,6 +770,7 @@ const allAreasBoundsForClient = getAllAreasBounds();
           gridEl.innerHTML = listings.length
             ? listings.map(cardHtml).join('')
             : `<div class="col-span-full max-w-xl mx-auto text-center py-16"><div class="text-6xl mb-6">🏡</div><h2 class="font-serif text-2xl text-navy mb-2">No listings in this view</h2><p class="text-slate">Pan or zoom the map, or widen your price range.</p></div>`;
+          syncHeartButtons(gridEl);
         }
         if (countEl) {
           countEl.textContent = capped
@@ -725,6 +780,39 @@ const allAreasBoundsForClient = getAllAreasBounds();
       }
 
       renderListings(initialCards, initialCards.length, false, { skipGridRender: true });
+
+      // Click-to-map: clicking a card body (anywhere but the heart or "View
+      // Full Details") pans/zooms the live map to that listing's pin and
+      // opens its popup — mirrors what clicking the pin itself does, in
+      // reverse. Every browse card's mls is guaranteed to have a marker in
+      // markersByMls, since cards and markers are rendered from the exact
+      // same `listings` array on every fetch.
+      function focusListing(mls) {
+        const marker = markersByMls.get(mls);
+        if (!marker) return;
+        const targetZoom = Math.max(map.getZoom(), 15);
+        clearTimeout(fetchTimeout);
+        map.once('moveend', async () => {
+          await fetchForCurrentView();
+          markersByMls.get(mls)?.openPopup();
+        });
+        map.flyTo(marker.getLatLng(), targetZoom, { duration: 0.8 });
+      }
+
+      gridEl?.addEventListener('click', (e) => {
+        if (e.target.closest('[data-save-heart]')) return;
+        if (e.target.closest('a[href]')) return;
+        const card = e.target.closest('.listing-card');
+        const mls = card?.getAttribute('data-mls');
+        if (!mls) return;
+        focusListing(mls);
+        // On mobile the map sits stacked above the grid rather than beside
+        // it (see the order-1/order-2 classes on these two columns) — bring
+        // it into view since the user is likely scrolled down into the list.
+        if (!window.matchMedia('(min-width: 1024px)').matches) {
+          mapEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
 
       function currentFilters() {
         const form = document.getElementById('filters-form');

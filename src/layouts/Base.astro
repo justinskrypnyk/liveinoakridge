@@ -103,5 +103,26 @@ const hideStickyCTA = Astro.url.pathname.startsWith('/contact');
     <Footer />
     <AskWidget bottomOffsetClass={hideStickyCTA ? '' : 'bottom-20 sm:bottom-5'} />
     {!hideStickyCTA && <StickyMobileCTA />}
+
+    <!-- Netlify's build-time bot only detects forms present in statically
+         generated HTML. The real "save listing" form (SaveListingModal.astro)
+         only ever renders on /search/ and /properties/, both `prerender =
+         false`, so it's invisible to that bot. This static, hidden twin
+         exists purely so Netlify registers the "save-listing" form name —
+         most pages using this layout ARE static, so it ships in their build
+         output. Netlify matches real submissions by the `form-name` field in
+         the POST body, not by which page sent it, so the AJAX submit from
+         the dynamic pages still works once this name is registered. -->
+    <form name="save-listing" data-netlify="true" netlify-honeypot="bot-field" hidden>
+      <input type="hidden" name="form-name" value="save-listing" />
+      <input name="bot-field" />
+      <input name="first-name" />
+      <input name="last-name" />
+      <input name="email" />
+      <input name="phone" />
+      <input name="message" />
+      <input name="property-address" />
+      <input name="mls-number" />
+    </form>
   </body>
 </html>

@@ -69,10 +69,45 @@ const geoSchools = showSchools ? SCHOOLS.filter((s) => s.geo) : [];
   </div>
 
   <script define:vars={{ mapId, mapListings, geoSchools, cluster }}>
+    // `define:vars` scripts are inline, non-module scripts (Astro can't run
+    // them through Vite), so they can't `import` the shared helpers in
+    // src/lib/save-listing-client.ts — duplicated here instead of risking a
+    // cross-script load-order race with SaveListingModal.astro's module
+    // script. Both read/write the same sessionStorage key and the same
+    // data-save-heart/.heart-outline/.heart-filled contract, so state still
+    // stays in sync everywhere on the page.
+    function syncHeartButtons(root) {
+      let saved;
+      try {
+        saved = new Set(JSON.parse(sessionStorage.getItem('saved_listings_v1') || '[]'));
+      } catch {
+        saved = new Set();
+      }
+      (root || document).querySelectorAll('[data-save-heart]').forEach((btn) => {
+        const filled = saved.has(btn.getAttribute('data-mls') || '');
+        btn.classList.toggle('is-saved', filled);
+        btn.setAttribute('aria-pressed', String(filled));
+        btn.querySelector('.heart-outline')?.classList.toggle('hidden', filled);
+        btn.querySelector('.heart-filled')?.classList.toggle('hidden', !filled);
+      });
+    }
+
     function esc(s) {
       const d = document.createElement('div');
       d.textContent = s ?? '';
       return d.innerHTML;
+    }
+
+    // Matches SaveHeartButton.astro's markup — save-listing-client.ts and the
+    // shared SaveListingModal (included once on the page that uses this
+    // component) key off these same classes/data attributes.
+    function heartHtml(mls, address) {
+      return `
+        <button type="button" data-save-heart data-mls="${esc(mls)}" data-address="${esc(address)}" aria-label="Save this listing" aria-pressed="false" class="save-heart-btn w-8 h-8 rounded-full bg-white/90 shadow-md flex items-center justify-center hover:scale-110 transition-transform">
+          <svg class="heart-outline w-4 h-4 text-navy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 21s-6.716-4.35-9.428-8.06C.94 10.42 1.2 6.9 3.808 5.06 6.06 3.47 9 4.08 12 7.2c3-3.12 5.94-3.73 8.192-2.14 2.608 1.84 2.868 5.36 1.236 7.88C18.716 16.65 12 21 12 21z"/></svg>
+          <svg class="heart-filled w-4 h-4 text-rose-500 hidden" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 21s-6.716-4.35-9.428-8.06C.94 10.42 1.2 6.9 3.808 5.06 6.06 3.47 9 4.08 12 7.2c3-3.12 5.94-3.73 8.192-2.14 2.608 1.84 2.868 5.36 1.236 7.88C18.716 16.65 12 21 12 21z"/></svg>
+        </button>
+      `;
     }
 
     let highlightedCard = null;
@@ -104,6 +139,8 @@ const geoSchools = showSchools ? SCHOOLS.filter((s) => s.geo) : [];
       }, 2500);
     }
 
+    const markersByMls = new Map();
+
     function initListingsMap() {
       const map = L.map(mapId, { scrollWheelZoom: true });
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -132,27 +169,32 @@ const geoSchools = showSchools ? SCHOOLS.filter((s) => s.geo) : [];
 
       const markers = mapListings.map((l) => {
         const popupHtml = `
-          <a href="${l.href}" style="display:block;width:240px;text-decoration:none;color:inherit;font-family:Inter,sans-serif;">
-            <div style="width:100%;height:130px;border-radius:8px;overflow:hidden;background:#f0f9f6;margin-bottom:8px;">
+          <div style="width:240px;font-family:Inter,sans-serif;">
+            <div style="width:100%;height:130px;border-radius:8px;overflow:hidden;background:#f0f9f6;margin-bottom:8px;position:relative;">
               ${l.photoUrl
                 ? `<img src="${esc(l.photoUrl)}" alt="" style="width:100%;height:100%;object-fit:cover;" />`
                 : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:32px;">🏡</div>`}
+              <div style="position:absolute;bottom:6px;right:6px;">${heartHtml(l.mlsNumber, l.address)}</div>
             </div>
-            <div style="display:flex;align-items:center;justify-content:between;gap:6px;">
-              <span style="font-weight:800;font-size:16px;color:#0c2340;">${esc(l.price)}</span>
-              <span style="margin-left:auto;background:#10b981;color:#0c2340;font-size:10px;font-weight:700;padding:2px 8px;border-radius:999px;">For Sale</span>
-            </div>
-            <div style="font-size:12.5px;color:#334155;margin:3px 0 6px;line-height:1.3;">${esc(l.address)}</div>
-            <div style="display:flex;gap:10px;font-size:11.5px;color:#0c2340;font-weight:600;margin-bottom:6px;">
-              ${l.beds ? `<span>🛏 ${esc(l.beds)}</span>` : ''}
-              ${l.baths ? `<span>🛁 ${esc(l.baths)}</span>` : ''}
-              ${l.sqft ? `<span>${Number(l.sqft).toLocaleString()} ft²</span>` : ''}
-            </div>
-            <div style="font-size:10px;color:#94a3b8;border-top:1px solid #eee;padding-top:5px;">${esc(l.mlsNumber)}, ${esc(l.office)}</div>
-          </a>
+            <a href="${l.href}" style="display:block;text-decoration:none;color:inherit;">
+              <div style="display:flex;align-items:center;justify-content:between;gap:6px;">
+                <span style="font-weight:800;font-size:16px;color:#0c2340;">${esc(l.price)}</span>
+                <span style="margin-left:auto;background:#10b981;color:#0c2340;font-size:10px;font-weight:700;padding:2px 8px;border-radius:999px;">For Sale</span>
+              </div>
+              <div style="font-size:12.5px;color:#334155;margin:3px 0 6px;line-height:1.3;">${esc(l.address)}</div>
+              <div style="display:flex;gap:10px;font-size:11.5px;color:#0c2340;font-weight:600;margin-bottom:6px;">
+                ${l.beds ? `<span>🛏 ${esc(l.beds)}</span>` : ''}
+                ${l.baths ? `<span>🛁 ${esc(l.baths)}</span>` : ''}
+                ${l.sqft ? `<span>${Number(l.sqft).toLocaleString()} ft²</span>` : ''}
+              </div>
+              <div style="font-size:10px;color:#94a3b8;border-top:1px solid #eee;padding-top:5px;">${esc(l.mlsNumber)}, ${esc(l.office)}</div>
+            </a>
+          </div>
         `;
-        const marker = L.marker([l.lat, l.lng], { icon: priceIcon(l.priceShort) }).bindPopup(popupHtml, { maxWidth: 260 });
+        const marker = L.marker([l.lat, l.lng], { icon: priceIcon(l.priceShort) }).bindPopup(popupHtml, { maxWidth: 260, autoPanPadding: [24, 40] });
         marker.on('click', () => highlightListingCard(l.mlsNumber));
+        marker.on('popupopen', (e) => syncHeartButtons(e.popup.getElement()));
+        if (l.mlsNumber) markersByMls.set(l.mlsNumber, marker);
         return marker;
       });
 
@@ -222,6 +264,16 @@ const geoSchools = showSchools ? SCHOOLS.filter((s) => s.geo) : [];
       return !!(el.offsetWidth || el.offsetHeight || el.getClientRects().length);
     }
 
+    // `focus-listing-pin` (below) and the "Map" toggle button both call
+    // ensureMapReady(), and a card click fires both in quick succession
+    // (setView('map') dispatches 'show-listings-map' as well as our own
+    // event). Without this guard, two concurrent calls could both pass the
+    // `if (mapInstance)` check before the first one's `await loadLeaflet()`
+    // resolves, and both then try to `L.map()` the same container — Leaflet
+    // throws "Map container is already initialized" on the second one.
+    // Tracking the in-flight promise means every caller, concurrent or not,
+    // waits on the exact same single initialization.
+    let initPromise = null;
     async function ensureMapReady() {
       if (mapInstance) {
         mapInstance.invalidateSize();
@@ -229,8 +281,13 @@ const geoSchools = showSchools ? SCHOOLS.filter((s) => s.geo) : [];
         if (allPoints.length > 0) mapInstance.fitBounds(L.latLngBounds(allPoints).pad(0.25));
         return;
       }
-      await loadLeaflet();
-      mapInstance = initListingsMap();
+      if (!initPromise) {
+        initPromise = (async () => {
+          await loadLeaflet();
+          mapInstance = initListingsMap();
+        })();
+      }
+      await initPromise;
     }
 
     if (container && isVisible(container)) {
@@ -238,5 +295,18 @@ const geoSchools = showSchools ? SCHOOLS.filter((s) => s.geo) : [];
     } else {
       window.addEventListener('show-listings-map', ensureMapReady);
     }
+
+    // Click-to-map from the listings grid (see the click handler in
+    // properties.astro): every listing here is loaded onto the map upfront
+    // (no pagination/live-fetch like /search/'s National Pool view), so
+    // markersByMls already has every card's marker the moment the map exists.
+    window.addEventListener('focus-listing-pin', async (e) => {
+      await ensureMapReady();
+      const marker = markersByMls.get(e.detail.mls);
+      if (!marker || !mapInstance) return;
+      const targetZoom = Math.max(mapInstance.getZoom(), 15);
+      mapInstance.once('moveend', () => marker.openPopup());
+      mapInstance.flyTo(marker.getLatLng(), targetZoom, { duration: 0.8 });
+    });
   </script>
 )}

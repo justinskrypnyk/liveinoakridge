@@ -49,14 +49,29 @@ export const POST: APIRoute = async ({ request }) => {
   const splitName = [firstName, lastName].filter(Boolean).join(' ');
   const fullName = splitName || data.name || '';
 
+  // The "save listing" heart on /search/ and /properties/ posts the same
+  // shape as every other form here, plus property-address/mls-number — give
+  // those leads a distinct, filterable tag. Per Justin: keep the contact
+  // record itself to name/email/phone, and put the property/MLS context plus
+  // whatever the person typed in the message/comment as a note on the
+  // contact instead — simpler than guessing at custom-field IDs that may not
+  // exist in his GHL account, and easier to actually read.
+  const propertyAddress = data['property-address'];
+  const mlsNumber = data['mls-number'];
+  const FORM_TAG_LABELS: Record<string, string> = {
+    'save-listing': 'Saved Listing Lead',
+  };
+
+  const authHeaders = {
+    'Content-Type': 'application/json',
+    Accept: 'application/json',
+    Authorization: `Bearer ${GHL_API_TOKEN}`,
+    Version: '2021-07-28',
+  };
+
   const res = await fetch('https://services.leadconnectorhq.com/contacts/upsert', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
-      Authorization: `Bearer ${GHL_API_TOKEN}`,
-      Version: '2021-07-28',
-    },
+    headers: authHeaders,
     body: JSON.stringify({
       firstName: firstName || undefined,
       lastName: lastName || undefined,
@@ -66,8 +81,10 @@ export const POST: APIRoute = async ({ request }) => {
       locationId: GHL_LOCATION_ID,
       // form_name tags each lead by which form sent it (e.g. "home-value-lead",
       // "newsletter", "contact") so they're segmentable in GHL; data.service
-      // adds the "I'm interested in..." selection from the contact form.
-      tags: ['website-lead', submission.form_name, data.service].filter(Boolean),
+      // adds the "I'm interested in..." selection from the contact form;
+      // FORM_TAG_LABELS adds a friendlier, distinctly-filterable tag for
+      // forms that want one (e.g. "Saved Listing Lead").
+      tags: ['website-lead', submission.form_name, FORM_TAG_LABELS[submission.form_name], data.service].filter(Boolean),
       source: `Website — ${data.subject || submission.form_name || 'Contact Form'}`,
     }),
   });
@@ -76,6 +93,35 @@ export const POST: APIRoute = async ({ request }) => {
     const errText = await res.text().catch(() => '');
     console.error('GHL upsert failed:', res.status, errText);
     return new Response('GHL upsert failed', { status: 502 });
+  }
+
+  // Property/MLS context (save-listing) and the free-text message/comment
+  // (any form with one) go on the contact as a note rather than jammed into
+  // `source` or a tag. A note failure shouldn't fail the whole request — the
+  // contact itself is already saved at this point.
+  const noteLines = [
+    propertyAddress && `Property: ${propertyAddress}`,
+    mlsNumber && `MLS®: ${mlsNumber}`,
+    data.message,
+  ].filter(Boolean);
+
+  if (noteLines.length > 0) {
+    try {
+      const upserted = await res.json();
+      const contactId = upserted?.contact?.id;
+      if (contactId) {
+        const noteRes = await fetch(`https://services.leadconnectorhq.com/contacts/${contactId}/notes`, {
+          method: 'POST',
+          headers: authHeaders,
+          body: JSON.stringify({ body: noteLines.join('\n') }),
+        });
+        if (!noteRes.ok) {
+          console.error('GHL note failed:', noteRes.status, await noteRes.text().catch(() => ''));
+        }
+      }
+    } catch (err) {
+      console.error('GHL note failed:', err);
+    }
   }
 
   return new Response('OK', { status: 200 });

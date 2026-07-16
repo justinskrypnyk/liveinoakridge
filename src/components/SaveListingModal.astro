@@ -1,0 +1,210 @@
+---
+// Shared "save listing" lead-capture modal — included once per page
+// (/search/, /properties/). A single document-level click listener handles
+// every heart button on the page, however it got there: server-rendered
+// cards, client re-rendered cards after a map pan, or a Leaflet popup.
+//
+// Submits via the same Netlify Forms -> outgoing webhook -> GHL pattern as
+// ContactForm/home-value-estimate (see src/pages/api/ghl-lead.ts), but over
+// fetch() instead of a native POST, since this form must not navigate away
+// from the page. Netlify's build-time bot only detects forms in statically
+// generated HTML, and this component only ever renders on dynamic
+// (prerender = false) pages — so a static twin of this exact form lives in
+// Base.astro purely so Netlify registers the "save-listing" form name at
+// build time; submissions here still work because Netlify matches by the
+// `form-name` field in the POST body, not by which page sent it.
+---
+
+<div id="save-listing-modal" class="hidden fixed inset-0 z-[70] flex items-center justify-center p-4">
+  <div id="save-listing-backdrop" class="absolute inset-0 bg-navy/50"></div>
+
+  <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 max-h-[90vh] overflow-y-auto">
+    <button
+      type="button"
+      id="save-listing-close"
+      aria-label="Close"
+      class="absolute top-4 right-4 w-8 h-8 rounded-full hover:bg-cream flex items-center justify-center"
+    >
+      <svg class="w-5 h-5 text-navy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+
+    <h3 class="font-serif text-xl text-navy font-bold mb-1">Save This Listing</h3>
+    <p id="save-listing-subtitle" class="text-sm text-slate mb-5">Get more details on this home sent directly to you.</p>
+
+    <form id="save-listing-form" class="space-y-4">
+      <input type="hidden" name="form-name" value="save-listing" />
+      <input type="hidden" name="property-address" id="save-listing-address-field" />
+      <input type="hidden" name="mls-number" id="save-listing-mls-field" />
+
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label for="save-listing-first-name" class="block text-sm font-medium text-navy/70 mb-1.5">First Name *</label>
+          <input
+            type="text" id="save-listing-first-name" name="first-name" required autocomplete="given-name"
+            class="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-navy text-sm outline-none focus:border-gold focus:ring-2 focus:ring-gold/20"
+          />
+        </div>
+        <div>
+          <label for="save-listing-last-name" class="block text-sm font-medium text-navy/70 mb-1.5">Last Name *</label>
+          <input
+            type="text" id="save-listing-last-name" name="last-name" required autocomplete="family-name"
+            class="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-navy text-sm outline-none focus:border-gold focus:ring-2 focus:ring-gold/20"
+          />
+        </div>
+      </div>
+
+      <div>
+        <label for="save-listing-email" class="block text-sm font-medium text-navy/70 mb-1.5">Email Address *</label>
+        <input
+          type="email" id="save-listing-email" name="email" required autocomplete="email"
+          class="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-navy text-sm outline-none focus:border-gold focus:ring-2 focus:ring-gold/20"
+        />
+      </div>
+
+      <div>
+        <label for="save-listing-phone" class="block text-sm font-medium text-navy/70 mb-1.5">Phone Number</label>
+        <input
+          type="tel" id="save-listing-phone" name="phone" autocomplete="tel"
+          class="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-navy text-sm outline-none focus:border-gold focus:ring-2 focus:ring-gold/20"
+        />
+      </div>
+
+      <div>
+        <label for="save-listing-message" class="block text-sm font-medium text-navy/70 mb-1.5">Message *</label>
+        <textarea
+          id="save-listing-message" name="message" rows="3" required
+          class="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-navy text-sm outline-none focus:border-gold focus:ring-2 focus:ring-gold/20 resize-none"
+        ></textarea>
+      </div>
+
+      <p id="save-listing-error" class="hidden text-xs text-red-600"></p>
+
+      <button type="submit" id="save-listing-submit" class="btn-primary w-full justify-center">
+        Send Me Details
+      </button>
+      <p class="text-xs text-center text-slate">
+        By submitting, you agree to our <a href="/privacy-policy/" class="underline hover:text-gold transition-colors">Privacy Policy</a>. We never share your information.
+      </p>
+    </form>
+
+    <div id="save-listing-success" class="hidden text-center py-6">
+      <div class="text-4xl mb-3">💌</div>
+      <p class="font-serif text-lg text-navy font-bold mb-1">Thanks!</p>
+      <p class="text-sm text-slate">Justin will follow up with more details on this home shortly.</p>
+    </div>
+  </div>
+</div>
+
+<div id="save-listing-tooltip" class="hidden fixed z-[80] bg-navy text-white text-xs font-medium px-3 py-2 rounded-lg shadow-lg pointer-events-none max-w-[220px] text-center">
+  You're already interested in this one!
+</div>
+
+<script>
+  import { isListingSaved, markListingSaved, setHeartVisual, syncHeartButtons } from '@/lib/save-listing-client';
+
+  syncHeartButtons();
+
+  const modal = document.getElementById('save-listing-modal');
+  const form = document.getElementById('save-listing-form') as HTMLFormElement | null;
+  const successEl = document.getElementById('save-listing-success');
+  const errorEl = document.getElementById('save-listing-error');
+  const submitBtn = document.getElementById('save-listing-submit') as HTMLButtonElement | null;
+  const addressField = document.getElementById('save-listing-address-field') as HTMLInputElement | null;
+  const mlsField = document.getElementById('save-listing-mls-field') as HTMLInputElement | null;
+  const messageField = document.getElementById('save-listing-message') as HTMLTextAreaElement | null;
+  const subtitle = document.getElementById('save-listing-subtitle');
+  const tooltip = document.getElementById('save-listing-tooltip');
+
+  let activeHeart: HTMLElement | null = null;
+
+  function openModal(heart: HTMLElement) {
+    activeHeart = heart;
+    const mls = heart.getAttribute('data-mls') || '';
+    const address = heart.getAttribute('data-address') || 'this home';
+    if (addressField) addressField.value = address;
+    if (mlsField) mlsField.value = mls;
+    if (messageField) messageField.value = `I'm interested in ${address}. Please send more details.`;
+    if (subtitle) subtitle.textContent = `Get more details on ${address} sent directly to you.`;
+    errorEl?.classList.add('hidden');
+    successEl?.classList.add('hidden');
+    form?.classList.remove('hidden');
+    modal?.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeModal() {
+    modal?.classList.add('hidden');
+    document.body.style.overflow = '';
+    activeHeart = null;
+  }
+
+  document.getElementById('save-listing-close')?.addEventListener('click', closeModal);
+  document.getElementById('save-listing-backdrop')?.addEventListener('click', closeModal);
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !modal?.classList.contains('hidden')) closeModal();
+  });
+
+  let tooltipTimeout: ReturnType<typeof setTimeout> | null = null;
+  function showAlreadySavedTooltip(heart: HTMLElement) {
+    if (!tooltip) return;
+    const rect = heart.getBoundingClientRect();
+    tooltip.style.top = `${rect.top - 44}px`;
+    tooltip.style.left = `${Math.max(8, rect.left + rect.width / 2 - 110)}px`;
+    tooltip.classList.remove('hidden');
+    if (tooltipTimeout) clearTimeout(tooltipTimeout);
+    tooltipTimeout = setTimeout(() => tooltip.classList.add('hidden'), 2000);
+  }
+
+  // Delegated: covers hearts already on the page and any inserted later
+  // (re-rendered map/grid cards, Leaflet popups) without extra wiring.
+  document.addEventListener('click', (e) => {
+    const heart = (e.target as HTMLElement).closest<HTMLElement>('[data-save-heart]');
+    if (!heart) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const mls = heart.getAttribute('data-mls');
+    if (isListingSaved(mls)) {
+      showAlreadySavedTooltip(heart);
+      return;
+    }
+    openModal(heart);
+  });
+
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!submitBtn) return;
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Sending...';
+    errorEl?.classList.add('hidden');
+
+    try {
+      const data = new FormData(form);
+      const body = new URLSearchParams();
+      data.forEach((value, key) => body.append(key, String(value)));
+      const res = await fetch('/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: body.toString(),
+      });
+      if (!res.ok) throw new Error(`${res.status}`);
+
+      const mls = mlsField?.value;
+      if (mls) {
+        markListingSaved(mls);
+        syncHeartButtons();
+      }
+      form.classList.add('hidden');
+      successEl?.classList.remove('hidden');
+      setTimeout(closeModal, 2200);
+      form.reset();
+    } catch {
+      if (errorEl) {
+        errorEl.textContent = "Something went wrong sending that — please try again, or call/text Justin directly.";
+        errorEl.classList.remove('hidden');
+      }
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Send Me Details';
+    }
+  });
+</script>

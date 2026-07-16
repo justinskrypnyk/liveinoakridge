@@ -8,6 +8,8 @@ import { getActiveListings } from '@/lib/ddf';
 import { fmtPrice, field, buildAddress, realtorUrl, listingSlug, AREA_SLUGS } from '@/lib/listings';
 import { findAreaForPoint } from '@/lib/area-boundaries';
 import ListingsMap from '@/components/ListingsMap.astro';
+import SaveHeartButton from '@/components/SaveHeartButton.astro';
+import SaveListingModal from '@/components/SaveListingModal.astro';
 
 const listings = await getActiveListings();
 const browseAreas = AREAS.filter((a) => a.avgPrice);
@@ -381,10 +383,11 @@ const processedListings: ListingCard[] = listings.map((l) => {
                     <span class="bg-navy/80 text-white text-xs font-medium px-2 py-0.5 rounded-full">{l.type}</span>
                   </div>
                 )}
+                <SaveHeartButton mls={l.mls} address={`${l.address}${l.city ? `, ${l.city}` : ''}`} class="absolute bottom-2 right-2" />
               </div>
 
-              <!-- Details -->
-              <a href={l.detailHref} class="block p-3.5">
+              <!-- Details (clicking pans/zooms the map below to this listing's pin — see the click-to-map script at the bottom of this page) -->
+              <div class="block p-3.5 cursor-pointer">
                 <div class="font-serif text-lg text-navy font-bold mb-0.5">{l.price}</div>
                 <p class="text-slate text-xs leading-snug mb-2 line-clamp-1">{l.address}{l.city ? `, ${l.city}` : ''}</p>
 
@@ -430,7 +433,7 @@ const processedListings: ListingCard[] = listings.map((l) => {
                   )}
                 </div>
                 <p class="text-[10px] text-slate/50 mt-1.5">Courtesy of {l.brokerage}</p>
-              </a>
+              </div>
 
               <!-- Actions -->
               <div class="flex gap-2 px-3.5 pb-3.5">
@@ -480,6 +483,8 @@ const processedListings: ListingCard[] = listings.map((l) => {
       </div>
     </section>
   )}
+
+  <SaveListingModal />
 </Base>
 
 <script>
@@ -509,6 +514,24 @@ const processedListings: ListingCard[] = listings.map((l) => {
 
   // Client-side filter logic
   const grid = document.getElementById('listings-grid');
+
+  // Click-to-map: clicking a card's photo/price/address/stats (but not the
+  // heart or the action-row links) switches to the Map view — a separate
+  // toggled section here, unlike /search/'s permanent side-by-side split —
+  // and tells ListingsMap.astro (via a custom event, since it's a separate
+  // script with its own closure) which pin to fly to and pop open.
+  grid?.addEventListener('click', (e) => {
+    const target = e.target as HTMLElement;
+    if (target.closest('[data-save-heart]')) return;
+    if (target.closest('a[href]')) return;
+    const card = target.closest<HTMLElement>('.listing-card');
+    const mls = card?.getAttribute('data-mls');
+    if (!mls) return;
+    setView('map');
+    window.dispatchEvent(new CustomEvent('focus-listing-pin', { detail: { mls } }));
+    mapView?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+
   if (grid) {
     const cards = () => Array.from(grid.querySelectorAll<HTMLElement>('.listing-card'));
     const countEl = document.getElementById('listing-count');
