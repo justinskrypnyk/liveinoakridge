@@ -62,7 +62,25 @@ async function odataGet(resource: string, params: Record<string, string>) {
   return res.json();
 }
 
+// Photos rarely change while a listing is active, but every page that shows
+// listing cards calls this for each card on every request — without caching,
+// that's N live AMPRE Media calls on every single click (pagination, area
+// filter, price filter), which is the main source of felt slowness on
+// /search/. Cached durably in Blobs, same pattern as the geocode cache.
+const PHOTO_CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24h
+
 async function fetchPhotos(listingKey: string): Promise<string[]> {
+  let store: ReturnType<typeof getStore> | null = null;
+  try {
+    store = getStore('ddf-photo-cache');
+    const cached = await store.get(listingKey, { type: 'json' }) as { urls: string[]; cachedAt: number } | null;
+    if (cached && Date.now() - cached.cachedAt < PHOTO_CACHE_TTL_MS) {
+      return cached.urls;
+    }
+  } catch {
+    // Blobs unavailable (e.g. local dev without `netlify dev`) — fall through to live fetch, just uncached.
+  }
+
   try {
     const data = await odataGet('Media', {
       $filter: `contains(ResourceRecordKey,'${listingKey}')`,
@@ -71,7 +89,7 @@ async function fetchPhotos(listingKey: string): Promise<string[]> {
       $top: '250',
     });
     const seen = new Set<string>();
-    return (data.value || [])
+    const urls = (data.value || [])
       .filter((m: any) => m.MediaCategory === 'Photo' || m.MediaType?.startsWith('image'))
       .filter((m: any) => m.ImageSizeDescription === 'Largest') // watermarked full-res — never "LargestNoWatermark"
       .sort((a: any, b: any) => (a.Order ?? 0) - (b.Order ?? 0))
@@ -82,6 +100,11 @@ async function fetchPhotos(listingKey: string): Promise<string[]> {
       })
       .map((m: any) => m.MediaURL)
       .filter(Boolean);
+
+    if (store) {
+      store.setJSON(listingKey, { urls, cachedAt: Date.now() }).catch(() => {});
+    }
+    return urls;
   } catch {
     return [];
   }

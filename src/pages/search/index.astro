@@ -157,7 +157,7 @@ const cards = result.listings.map((l) => {
           <div class="order-2 lg:order-1">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
               {cards.map((l) => (
-                <article class="listing-card bg-white rounded-2xl shadow-card overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all border border-gray-100">
+                <article class="listing-card bg-white rounded-2xl shadow-card overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all border border-gray-100" data-mls={l.mls}>
                   <div class="aspect-[4/3] bg-cream relative overflow-hidden">
                     {l.photoUrl ? (
                       <img src={l.photoUrl} alt={`${l.address}, ${l.city}`} class="w-full h-full object-cover" loading="lazy" />

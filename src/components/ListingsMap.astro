@@ -75,6 +75,35 @@ const geoSchools = showSchools ? SCHOOLS.filter((s) => s.geo) : [];
       return d.innerHTML;
     }
 
+    let highlightedCard = null;
+    let highlightTimeout = null;
+
+    // Clicking a map marker highlights the matching card in the list beside
+    // it, if that listing happens to be showing (e.g. on the current page of
+    // results) — a no-op otherwise, since not every map pin has a visible
+    // card counterpart when the list is paginated.
+    function highlightListingCard(mlsNumber) {
+      if (!mlsNumber) return;
+      const card = document.querySelector(`[data-mls="${window.CSS && CSS.escape ? CSS.escape(mlsNumber) : mlsNumber}"]`);
+      if (!card) return;
+
+      if (highlightedCard && highlightedCard !== card) {
+        highlightedCard.style.outline = '';
+        highlightedCard.style.outlineOffset = '';
+      }
+      clearTimeout(highlightTimeout);
+
+      card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      card.style.outline = '3px solid #10b981';
+      card.style.outlineOffset = '3px';
+      highlightedCard = card;
+      highlightTimeout = setTimeout(() => {
+        card.style.outline = '';
+        card.style.outlineOffset = '';
+        highlightedCard = null;
+      }, 2500);
+    }
+
     function initListingsMap() {
       const map = L.map(mapId, { scrollWheelZoom: true });
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -122,7 +151,9 @@ const geoSchools = showSchools ? SCHOOLS.filter((s) => s.geo) : [];
             <div style="font-size:10px;color:#94a3b8;border-top:1px solid #eee;padding-top:5px;">${esc(l.mlsNumber)}, ${esc(l.office)}</div>
           </a>
         `;
-        return L.marker([l.lat, l.lng], { icon: priceIcon(l.priceShort) }).bindPopup(popupHtml, { maxWidth: 260 });
+        const marker = L.marker([l.lat, l.lng], { icon: priceIcon(l.priceShort) }).bindPopup(popupHtml, { maxWidth: 260 });
+        marker.on('click', () => highlightListingCard(l.mlsNumber));
+        return marker;
       });
 
       const listingLayer = cluster && window.L.markerClusterGroup
