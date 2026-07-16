@@ -198,7 +198,7 @@ const latestPosts = [...BLOG_POSTS]
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
           {activeListings.map((l) => (
             <a href={l.url} class="card overflow-hidden hover:border-gold/30 border border-transparent group block">
-              <div class="h-40 bg-cream relative overflow-hidden">
+              <div class="h-32 bg-cream relative overflow-hidden">
                 {l.photoUrl ? (
                   <img src={l.photoUrl} alt={`${l.address}, ${l.city}`} class="w-full h-full object-cover" loading="lazy" />
                 ) : (
