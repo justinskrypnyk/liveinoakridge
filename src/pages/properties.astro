@@ -115,11 +115,11 @@ const processedListings: ListingCard[] = listings.map((l) => {
         <span class="text-white/70">Properties</span>
       </nav>
       <div class="max-w-3xl">
-        <span class="inline-block bg-gold text-navy text-xs font-bold px-3 py-1 rounded-full mb-4">Justin's Own Listings</span>
-        <h1 class="font-serif text-5xl font-bold mb-4">Homes For Sale, Represented by Justin</h1>
+        <span class="inline-block bg-gold text-navy text-xs font-bold px-3 py-1 rounded-full mb-4">In-House Listings</span>
+        <h1 class="font-serif text-5xl font-bold mb-4">Homes For Sale in West London</h1>
         <div class="gold-divider mb-6"></div>
         <p class="text-xl text-white/70 leading-relaxed">
-          Every home Justin is currently the listing Broker for, across Oakridge, Byron, Westmount, Lambeth, and every West London neighbourhood he serves — no added layer, direct representation. Looking for a home listed by someone else? <a href="/search/" class="text-gold hover:underline">Search every MLS® listing in Ontario</a>.
+          Every home currently listed by {SITE.brokerage} — Justin's own brokerage — across Oakridge, Byron, Westmount, Lambeth, and every West London neighbourhood served. Looking for a home listed by someone else? <a href="/search/" class="text-gold hover:underline">Search every MLS® listing in Ontario</a>.
           {totalCount > 0 && <span> {totalCount} homes available.</span>}
         </p>
         {fetchedAt && (

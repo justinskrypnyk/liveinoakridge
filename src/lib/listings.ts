@@ -6,13 +6,15 @@ export const AREA_SLUGS: Record<string, string> = {
   'Byron': 'byron', 'Westmount': 'westmount', 'Riverbend': 'riverbend', 'Lambeth': 'lambeth',
 };
 
-// Flags Justin's own listings inline on /search/ (which mixes every
-// brokerage via National Pool) instead of needing a separate URL/page per
-// listing. Deliberately NOT a brokerage-name match — National Pool's
-// ListOfficeName is set to the *originating board* name, not the real
-// brokerage (see src/lib/ddf.ts's National Pool normalizer), so it almost
-// never contains "Chapman" even for Justin's own listings. MLS number is
-// the one identifier both feeds agree on.
+// Flags in-house (Sutton Group Chapman Realty) listings inline on /search/
+// (which mixes every brokerage via National Pool) instead of needing a
+// separate URL/page per listing. Not necessarily Justin's own listing
+// personally — other agents at the brokerage list here too. Deliberately
+// NOT a brokerage-name match — National Pool's ListOfficeName is set to
+// the *originating board* name, not the real brokerage (see
+// src/lib/ddf.ts's National Pool normalizer), so it almost never contains
+// "Chapman" even for in-house listings. MLS number is the one identifier
+// both feeds agree on.
 export function ownListingKeySet(chapmanListings: Record<string, unknown>[]): Set<string> {
   return new Set(chapmanListings.map((l) => field(l, 'ListingKey', 'ListingId').toLowerCase()));
 }

@@ -361,7 +361,7 @@ const allAreasBoundsForClient = getAllAreasBounds();
                     )}
                     {l.isOwn && (
                       <div class="absolute top-2 left-2">
-                        <span class="bg-gold text-navy text-xs font-bold px-2 py-0.5 rounded-full">Justin's Listing</span>
+                        <span class="bg-gold text-navy text-xs font-bold px-2 py-0.5 rounded-full">In-House Listing</span>
                       </div>
                     )}
                     {l.type && (
@@ -423,7 +423,7 @@ const allAreasBoundsForClient = getAllAreasBounds();
                     )}
                     {l.isOwn && (
                       <div class="absolute top-2 left-2">
-                        <span class="bg-gold text-navy text-xs font-bold px-2 py-0.5 rounded-full">Justin's Listing</span>
+                        <span class="bg-gold text-navy text-xs font-bold px-2 py-0.5 rounded-full">In-House Listing</span>
                       </div>
                     )}
                     {l.type && (
@@ -541,7 +541,7 @@ const allAreasBoundsForClient = getAllAreasBounds();
             ${l.photoUrl
               ? `<img src="${esc(l.photoUrl)}" alt="" class="w-full h-full object-contain" loading="lazy" />`
               : `<div class="flex items-center justify-center h-full"><span class="text-5xl">🏡</span></div>`}
-            ${l.isOwn ? `<div class="absolute top-2 left-2"><span class="bg-gold text-navy text-xs font-bold px-2 py-0.5 rounded-full">Justin's Listing</span></div>` : ''}
+            ${l.isOwn ? `<div class="absolute top-2 left-2"><span class="bg-gold text-navy text-xs font-bold px-2 py-0.5 rounded-full">In-House Listing</span></div>` : ''}
             ${l.type ? `<div class="absolute top-2 right-2"><span class="bg-navy/80 text-white text-xs font-medium px-2 py-0.5 rounded-full">${esc(l.type)}</span></div>` : ''}
           </div>
           <a href="${l.href}" class="block p-3.5">
@@ -571,7 +571,7 @@ const allAreasBoundsForClient = getAllAreasBounds();
           </div>
           <div style="display:flex;align-items:center;justify-content:between;gap:6px;">
             <span style="font-weight:800;font-size:16px;color:#0c2340;">${esc(l.price)}</span>
-            <span style="margin-left:auto;background:#10b981;color:#0c2340;font-size:10px;font-weight:700;padding:2px 8px;border-radius:999px;">${l.isOwn ? "Justin's Listing" : 'For Sale'}</span>
+            <span style="margin-left:auto;background:#10b981;color:#0c2340;font-size:10px;font-weight:700;padding:2px 8px;border-radius:999px;">${l.isOwn ? "In-House Listing" : 'For Sale'}</span>
           </div>
           <div style="font-size:12.5px;color:#334155;margin:3px 0 6px;line-height:1.3;">${esc(l.address)}${l.city ? `, ${esc(l.city)}` : ''}</div>
           <div style="display:flex;gap:10px;font-size:11.5px;color:#0c2340;font-weight:600;margin-bottom:6px;">

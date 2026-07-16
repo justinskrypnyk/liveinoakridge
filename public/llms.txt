@@ -58,7 +58,7 @@ In Ontario, a Real Estate Broker holds an advanced license that requires additio
 
 ## Tools
 
-- [Justin's Own Listings](/properties/) — every home Justin Skrypnyk is currently the listing Broker for
+- [In-House Listings](/properties/) — every home currently listed by Sutton Group Chapman Realty, Justin's own brokerage
 - [Browse & Search MLS® Listings](/search/) — every active listing in Ontario, every brokerage, on one live map
 - [Home Value Estimate](/home-value-estimate/) — directional estimate range, not an appraisal
 - [Commute Time Calculator](/commute-calculator/)

@@ -35,7 +35,7 @@ import { BLOG_POSTS } from '@/data/blog';
 // homepage by mistake. Homepage shows a handful, each linking to its own
 // /search/[listingKey]/ page (the canonical detail URL — /properties/[key]/
 // 301s there); "View All Listings" below sends people to /properties/, the
-// full list of Justin's own current listings.
+// full list of the brokerage's current listings.
 const liveListings = await getActiveListings();
 const activeListings = liveListings.slice(0, 6).map((l) => {
   const L = l as Record<string, unknown>;

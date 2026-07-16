@@ -187,7 +187,7 @@ const facts: [string, string][] = [
         <div>
           <div class="flex items-center gap-2 mb-2">
             <span class="bg-gold text-navy text-xs font-bold px-3 py-1 rounded-full">{field(listing, 'StandardStatus') || 'Active'}</span>
-            {isOwn && <span class="bg-navy text-gold text-xs font-bold px-3 py-1 rounded-full">Justin's Listing</span>}
+            {isOwn && <span class="bg-navy text-gold text-xs font-bold px-3 py-1 rounded-full">In-House Listing</span>}
           </div>
           <h1 class="font-serif text-3xl md:text-4xl text-navy font-bold mb-1">{address}</h1>
           <p class="text-slate">{city}{field(listing, 'PostalCode') ? `, ${field(listing, 'PostalCode')}` : ''}</p>
@@ -313,7 +313,7 @@ const facts: [string, string][] = [
             <div class="p-6">
               <p class="text-xs text-white/50 mb-4 leading-relaxed">
                 {isOwn
-                  ? `This is one of ${SITE.agent}'s own listings — you'd be dealing directly with the listing Broker, no added layer.`
+                  ? `This is an in-house listing with ${SITE.brokerage} — ${SITE.agent}'s own brokerage. He can help arrange a showing or answer questions directly.`
                   : `This listing is courtesy of ${listOfficeName}. ${SITE.agent} can arrange a private showing or answer questions as your buyer's representative.`}
               </p>
               <div class="space-y-2 mb-5">
