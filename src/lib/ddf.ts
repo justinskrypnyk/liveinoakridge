@@ -354,8 +354,45 @@ async function fetchNationalSearchPage(token: string, filter: string, orderby: s
   return data.value || [];
 }
 
+// Result cache — deliberately scoped narrow: only "no other filters"
+// requests (the default all-areas view and each of the 7 area-tab views,
+// all deterministic/enumerable bounds from area-boundaries.ts) are
+// cacheable. An arbitrary user-panned viewport or a custom price/bed/bath
+// filter combo is never cached — those keys would almost never repeat, so
+// caching them would just be dead weight for no benefit. 60s TTL: DDF/board
+// compliance requires listing data to refresh at least every 15-30 min, so
+// this is nowhere close to a freshness concern — it exists purely to absorb
+// bursts of hits (a GTmetrix run, several visitors landing on the same
+// default/area view within a minute) without repeating the ~2s National
+// Pool paginated round-trip every single time.
+const BOUNDS_CACHE_TTL_MS = 60 * 1000;
+
+function isCacheableBoundsQuery(params: MapBoundsParams): boolean {
+  return !params.minPrice && !params.maxPrice && !params.propertyType &&
+    !params.minBeds && !params.minBaths && !params.minParking &&
+    !params.daysOnMarket && !params.keyword &&
+    (params.sortBy === 'newest' || !params.sortBy);
+}
+
 export async function searchNationalPoolByBounds(params: MapBoundsParams): Promise<MapBoundsResult> {
   const empty: MapBoundsResult = { listings: [], total: 0, capped: false };
+
+  const cacheKey = isCacheableBoundsQuery(params)
+    ? `${params.north}:${params.south}:${params.east}:${params.west}`
+    : null;
+  let boundsStore: ReturnType<typeof getStore> | null = null;
+  if (cacheKey) {
+    try {
+      boundsStore = getStore('ddf-bounds-cache');
+      const cached = await boundsStore.get(cacheKey, { type: 'json' }) as (MapBoundsResult & { cachedAt: number }) | null;
+      if (cached && Date.now() - cached.cachedAt < BOUNDS_CACHE_TTL_MS) {
+        return { listings: cached.listings, total: cached.total, capped: cached.capped };
+      }
+    } catch {
+      // Blobs unavailable (e.g. local dev without `netlify dev`) — fall through to a live fetch, just uncached.
+    }
+  }
+
   const token = await getNationalToken();
   if (!token) return empty;
 
@@ -438,7 +475,11 @@ export async function searchNationalPoolByBounds(params: MapBoundsParams): Promi
       });
     }
 
-    return { listings, total, capped: total > MAP_SEARCH_PAGE_CAP };
+    const result: MapBoundsResult = { listings, total, capped: total > MAP_SEARCH_PAGE_CAP };
+    if (cacheKey && boundsStore) {
+      boundsStore.setJSON(cacheKey, { ...result, cachedAt: Date.now() }).catch(() => {});
+    }
+    return result;
   } catch (err) {
     console.error('National Pool bounds search failed:', err instanceof Error ? err.message : err);
     return empty;
