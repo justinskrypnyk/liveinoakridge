@@ -610,6 +610,44 @@ export async function getActiveListings(): Promise<RawListing[]> {
   }
 }
 
+// Lightweight in-memory cache, separate from listingsCache above — this
+// answers one question ("is this MLS# ours?") for the "In-House Listing"
+// badge, so it skips the N parallel fetchPhotos()/geocodeAddress() calls
+// getActiveListings() does for every active listing. That matters a lot
+// here: geocodeAddress() can trigger getNationalGeoMap(), a ~46-page
+// National Pool re-fetch, on a cold instance. Measured live 2026-07-16 —
+// every /search/ and /search/[listingKey]/ view was calling the full
+// enriched getActiveListings() just for this Set, sequentially before its
+// own live fetch, and that stacking was the dominant cost behind a 14.7s
+// GTmetrix LCP on /search/.
+let activeKeysCache: { data: Set<string>; fetchedAt: number } | null = null;
+const ACTIVE_KEYS_CACHE_TTL_MS = 2 * 60 * 1000;
+
+export async function getActiveListingKeys(): Promise<Set<string>> {
+  if (activeKeysCache && Date.now() - activeKeysCache.fetchedAt < ACTIVE_KEYS_CACHE_TTL_MS) {
+    return activeKeysCache.data;
+  }
+  if (!ACCESS_TOKEN || !BASE_URL) return activeKeysCache?.data ?? new Set();
+
+  try {
+    const data = await odataGet('Property', {
+      $filter: `contains(ListOfficeName,'${OFFICE_NAME_CONTAINS}')`,
+      $select: 'ListingKey,ListingId,StandardStatus,PropertyType',
+      $top: '200',
+    });
+    const all: RawListing[] = data.value || [];
+    const active = all.filter((l) => l.StandardStatus === 'Active' && l.PropertyType !== 'Commercial');
+    const keys = new Set(
+      active.map((l) => String(l.ListingKey || l.ListingId || '').toLowerCase()).filter(Boolean)
+    );
+    activeKeysCache = { data: keys, fetchedAt: Date.now() };
+    return keys;
+  } catch (err) {
+    console.error('DDF active-keys fetch failed:', err instanceof Error ? err.message : err);
+    return activeKeysCache?.data ?? new Set();
+  }
+}
+
 export async function getListingByKey(key: string): Promise<RawListing | null> {
   const listings = await getActiveListings();
   const match = listings.find(

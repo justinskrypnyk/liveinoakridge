@@ -3,8 +3,8 @@ export const prerender = false; // live Ontario-wide DDF search — see src/lib/
 import Base from '@/layouts/Base.astro';
 import Schema from '@/components/Schema.astro';
 import { SITE } from '@/data/site';
-import { searchMarketListings, searchNationalPoolByBounds, getActiveListings } from '@/lib/ddf';
-import { fmtPrice, field, buildAddress, listingSlug, ownListingKeySet } from '@/lib/listings';
+import { searchMarketListings, searchNationalPoolByBounds, getActiveListingKeys } from '@/lib/ddf';
+import { fmtPrice, field, buildAddress, listingSlug } from '@/lib/listings';
 import { AREAS } from '@/data/areas';
 import { getAreaBounds, getAllAreasBounds } from '@/lib/area-boundaries';
 
@@ -37,16 +37,27 @@ function areaUrl(slug: string): string {
   return `/search/?${u.toString()}`;
 }
 
-// Cheap — getActiveListings() is in-memory cached (see src/lib/ddf.ts),
-// already fetched by the homepage/properties.astro on most requests.
-const ownKeys = ownListingKeySet(await getActiveListings());
+// getActiveListingKeys(), the text search, and the map browse search are
+// all independent live fetches — run them concurrently instead of stacking
+// them sequentially. (This used to be 3 separate `await`s in a row; on a
+// cold instance that meant a full National-Pool-bounds search only started
+// after a completely unrelated AMPRE lookup finished, which measured as the
+// dominant cost behind a 14.7s GTmetrix LCP on this page.)
+const initialBounds = (area ? getAreaBounds(area) : null) ?? getAllAreasBounds();
 
-// Text search (a specific address/city/MLS® number anywhere in Ontario)
-// stays on the existing AMPRE-backed path — unrelated to the map below,
-// which is the "browse everything" default view.
-const textResult = q
-  ? await searchMarketListings({ query: q, minPrice, maxPrice, propertyType, page })
-  : null;
+const [ownKeys, textResult, browseResult] = await Promise.all([
+  getActiveListingKeys(),
+  // Text search (a specific address/city/MLS® number anywhere in Ontario)
+  // stays on the existing AMPRE-backed path — unrelated to the map below,
+  // which is the "browse everything" default view.
+  q ? searchMarketListings({ query: q, minPrice, maxPrice, propertyType, page }) : Promise.resolve(null),
+  !q
+    ? searchNationalPoolByBounds({
+        ...initialBounds, minPrice, maxPrice, propertyType: propertyType || undefined,
+        minBeds, minBaths, minParking, daysOnMarket, keyword: keyword || undefined, sortBy,
+      })
+    : Promise.resolve(null),
+]);
 
 const textCards = (textResult?.listings ?? []).map((l) => {
   const L = l as Record<string, unknown>;
@@ -74,16 +85,9 @@ function pageUrl(p: number): string {
 // Browse mode (no `q`): a live, pannable/zoomable map covering every active
 // residential listing in Ontario, sourced from National Pool (see
 // src/lib/ddf.ts — AMPRE can't do viewport queries at all). Area tabs and
-// the initial server render both start at a specific bounding box; from
-// there the map component in the script below re-fetches on every pan/zoom.
-const initialBounds = (area ? getAreaBounds(area) : null) ?? getAllAreasBounds();
-const browseResult = !q
-  ? await searchNationalPoolByBounds({
-      ...initialBounds, minPrice, maxPrice, propertyType: propertyType || undefined,
-      minBeds, minBaths, minParking, daysOnMarket, keyword: keyword || undefined, sortBy,
-    })
-  : null;
-
+// the initial server render both start at a specific bounding box (computed
+// above, alongside the Promise.all this feeds); from there the map component
+// in the script below re-fetches on every pan/zoom.
 const browseCards = (browseResult?.listings ?? []).map((l) => {
   const L = l as Record<string, unknown>;
   const geo = L._geo as { lat: number; lng: number } | null;

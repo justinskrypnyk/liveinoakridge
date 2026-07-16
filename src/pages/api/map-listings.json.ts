@@ -5,8 +5,8 @@
 // coordinates. Returns a small JSON shape the client script renders into
 // map pins + grid cards.
 import type { APIRoute } from 'astro';
-import { searchNationalPoolByBounds, getActiveListings } from '@/lib/ddf';
-import { fmtPrice, field, buildAddress, listingSlug, ownListingKeySet } from '@/lib/listings';
+import { searchNationalPoolByBounds, getActiveListingKeys } from '@/lib/ddf';
+import { fmtPrice, field, buildAddress, listingSlug } from '@/lib/listings';
 
 export const prerender = false;
 
@@ -36,7 +36,7 @@ export const GET: APIRoute = async ({ url }) => {
       north, south, east, west, minPrice, maxPrice, propertyType,
       minBeds, minBaths, minParking, daysOnMarket, keyword, sortBy,
     }),
-    getActiveListings().then(ownListingKeySet),
+    getActiveListingKeys(),
   ]);
 
   const cards = listings.map((l) => {
