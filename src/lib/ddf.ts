@@ -151,11 +151,32 @@ const NATIONAL_PAGE_SIZE = 100;
 const NATIONAL_PAGE_CONCURRENCY = 10;
 
 let nationalTokenCache: { token: string; expiresAt: number } | null = null;
+const NATIONAL_TOKEN_BLOB_KEY = 'token';
 
+// The in-memory cache only survives within one warm function instance — a
+// cold instance (which is exactly what a fresh visitor, or GTmetrix, hits)
+// used to always pay a live ~0.6s POST to identity.crea.ca before it could
+// even start the National Pool bounds query. The token is valid ~1h with no
+// refresh token, so a Blobs-backed cache lets a cold instance reuse whatever
+// token any other instance last minted, same pattern as the photo/geocode
+// caches elsewhere in this file.
 async function getNationalToken(): Promise<string | null> {
   if (nationalTokenCache && Date.now() < nationalTokenCache.expiresAt) {
     return nationalTokenCache.token;
   }
+
+  let store: ReturnType<typeof getStore> | null = null;
+  try {
+    store = getStore('ddf-national-token-cache');
+    const cached = await store.get(NATIONAL_TOKEN_BLOB_KEY, { type: 'json' }) as { token: string; expiresAt: number } | null;
+    if (cached && Date.now() < cached.expiresAt) {
+      nationalTokenCache = cached;
+      return cached.token;
+    }
+  } catch {
+    // Blobs unavailable (e.g. local dev without `netlify dev`) — fall through to a live token fetch, just uncached.
+  }
+
   if (!NATIONAL_USERNAME || !NATIONAL_PASSWORD) return null;
   try {
     const res = await fetch('https://identity.crea.ca/connect/token', {
@@ -174,6 +195,9 @@ async function getNationalToken(): Promise<string | null> {
     // Token is valid 1h, non-sliding, no refresh token — re-request a bit
     // early so a borderline-expired token is never handed to a caller.
     nationalTokenCache = { token: data.access_token, expiresAt: Date.now() + (Number(data.expires_in || 3600) - 60) * 1000 };
+    if (store) {
+      store.setJSON(NATIONAL_TOKEN_BLOB_KEY, nationalTokenCache).catch(() => {});
+    }
     return nationalTokenCache.token;
   } catch {
     return null;
