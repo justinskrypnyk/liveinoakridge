@@ -124,8 +124,20 @@ const allAreasBoundsForClient = getAllAreasBounds();
     </div>
   </section>
 
-  <section class="py-6 bg-white border-b border-gray-100 sticky top-20 z-30 shadow-sm">
+  <section class="py-4 bg-white border-b border-gray-100 sticky top-20 z-30 shadow-sm">
     <div class="container-site">
+      <button
+        type="button"
+        id="filters-toggle"
+        class="flex items-center gap-2 text-sm font-semibold text-navy py-1 -my-1"
+        aria-expanded="true"
+        aria-controls="filters-collapsible"
+      >
+        <svg id="filters-toggle-icon" class="w-4 h-4 transition-transform duration-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+        Search Filters
+      </button>
+
+      <div id="filters-collapsible" class="pt-3">
       <form method="GET" action="/search/" id="filters-form" class="flex flex-wrap items-center gap-2.5">
         <input type="hidden" name="area" value={area} />
         <div class="relative flex-1 min-w-[240px]">
@@ -251,6 +263,7 @@ const allAreasBoundsForClient = getAllAreasBounds();
 
         <button type="submit" class="btn-primary !py-2.5 !px-6">Search</button>
       </form>
+      </div>
 
       {!q && (
         <div class="flex flex-wrap items-center gap-2 mt-4">
@@ -443,6 +456,30 @@ const allAreasBoundsForClient = getAllAreasBounds();
   document.getElementById('terms-accept')?.addEventListener('click', () => {
     localStorage.setItem(KEY, '1');
     banner?.classList.add('hidden');
+  });
+</script>
+
+<!-- Collapsible filter block — the sticky bar eats a lot of screen space,
+     especially on mobile, so it can be tucked away leaving just the area
+     tabs and results count visible. Remembered across visits. -->
+<script>
+  const FILTERS_COLLAPSED_KEY = 'search_filters_collapsed';
+  const filtersToggle = document.getElementById('filters-toggle');
+  const filtersCollapsible = document.getElementById('filters-collapsible');
+  const filtersToggleIcon = document.getElementById('filters-toggle-icon');
+
+  function setFiltersCollapsed(collapsed) {
+    filtersCollapsible?.classList.toggle('hidden', collapsed);
+    filtersToggleIcon?.classList.toggle('-rotate-90', collapsed);
+    filtersToggle?.setAttribute('aria-expanded', String(!collapsed));
+  }
+
+  setFiltersCollapsed(localStorage.getItem(FILTERS_COLLAPSED_KEY) === '1');
+
+  filtersToggle?.addEventListener('click', () => {
+    const collapsed = !filtersCollapsible?.classList.contains('hidden');
+    setFiltersCollapsed(collapsed);
+    localStorage.setItem(FILTERS_COLLAPSED_KEY, collapsed ? '1' : '0');
   });
 </script>
 
