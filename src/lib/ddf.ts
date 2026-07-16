@@ -153,6 +153,55 @@ async function geocodeAddress(listing: RawListing): Promise<{ lat: number; lng: 
   return geo;
 }
 
+// Google Geocoding — used for bulk market-wide geocoding (e.g. tagging every
+// London-area listing to its real neighbourhood), where Nominatim's 1
+// req/sec cap makes a ~2,000-address run impractical. Shares the same Blobs
+// cache store as the Nominatim path above — a cached lat/lng is provider-
+// agnostic, so addresses already geocoded for Chapman's own feed are reused
+// for free, and vice versa.
+async function geocodeLiveGoogle(query: string): Promise<{ lat: number; lng: number } | null> {
+  const apiKey = import.meta.env.GOOGLE_GEOCODING_API_KEY;
+  if (!apiKey) return null;
+  try {
+    const url = new URL('https://maps.googleapis.com/maps/api/geocode/json');
+    url.searchParams.set('address', query);
+    url.searchParams.set('key', apiKey);
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (data.status !== 'OK' || !data.results?.[0]) return null;
+    const loc = data.results[0].geometry.location;
+    return { lat: loc.lat, lng: loc.lng };
+  } catch {
+    return null;
+  }
+}
+
+export async function geocodeAddressGoogle(listing: RawListing): Promise<{ lat: number; lng: number } | null> {
+  const address = String(listing.UnparsedAddress || '');
+  if (!address) return null;
+
+  let store: ReturnType<typeof getStore> | null = null;
+  try {
+    store = getStore('ddf-geocode-cache');
+    const cached = await store.get(address, { type: 'json' });
+    if (cached) return cached as { lat: number; lng: number };
+  } catch {
+    // Blobs unavailable (e.g. local dev without `netlify dev`) — fall through, just uncached.
+  }
+
+  const geo = await geocodeLiveGoogle(`${address}, Ontario, Canada`);
+
+  if (geo && store) {
+    try {
+      await store.setJSON(address, geo);
+    } catch {
+      // best-effort cache write
+    }
+  }
+  return geo;
+}
+
 // Short in-memory cache so concurrent requests hitting the same warm
 // function instance don't each re-fetch from AMPRE independently.
 let listingsCache: { data: RawListing[]; fetchedAt: number } | null = null;
