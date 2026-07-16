@@ -13,6 +13,12 @@ const minPrice = Number(params.get('minPrice')) || undefined;
 const maxPrice = Number(params.get('maxPrice')) || undefined;
 const propertyType = params.get('type') || '';
 const page = Number(params.get('page')) || 1;
+const minBeds = Number(params.get('minBeds')) || undefined;
+const minBaths = Number(params.get('minBaths')) || undefined;
+const minParking = Number(params.get('minParking')) || undefined;
+const daysOnMarket = Number(params.get('days')) || undefined;
+const keyword = params.get('keyword') || '';
+const sortBy = (params.get('sort') as 'newest' | 'price-asc' | 'price-desc' | 'beds-desc' | null) || 'newest';
 
 const priceSteps = Array.from({ length: 40 }, (_, i) => (i + 1) * 50000);
 function shortPrice(n: number): string {
@@ -65,7 +71,10 @@ function pageUrl(p: number): string {
 // there the map component in the script below re-fetches on every pan/zoom.
 const initialBounds = (area ? getAreaBounds(area) : null) ?? getAllAreasBounds();
 const browseResult = !q
-  ? await searchNationalPoolByBounds({ ...initialBounds, minPrice, maxPrice, propertyType: propertyType || undefined })
+  ? await searchNationalPoolByBounds({
+      ...initialBounds, minPrice, maxPrice, propertyType: propertyType || undefined,
+      minBeds, minBaths, minParking, daysOnMarket, keyword: keyword || undefined, sortBy,
+    })
   : null;
 
 const browseCards = (browseResult?.listings ?? []).map((l) => {
@@ -151,6 +160,95 @@ const allAreasBoundsForClient = getAllAreasBounds();
             <option value="Condo" selected={propertyType === 'Condo'}>Condo / Apartment</option>
           </select>
         </div>
+        <div class="relative">
+          <button
+            type="button"
+            id="more-filters-toggle"
+            class="flex items-center gap-1.5 pl-4 pr-3.5 py-2 rounded-full text-sm font-medium bg-cream text-navy/70 border border-gray-200 hover:border-gold transition-colors cursor-pointer"
+          >
+            More Filters
+            <span id="more-filters-count" class="hidden bg-emerald-500 text-navy text-[10px] font-bold w-4 h-4 rounded-full items-center justify-center leading-none"></span>
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+
+          <div id="more-filters-backdrop" class="hidden fixed inset-0 bg-navy/40 z-40 lg:hidden"></div>
+
+          <div
+            id="more-filters-panel"
+            class="hidden fixed inset-x-0 bottom-0 z-50 bg-white rounded-t-3xl shadow-2xl p-5 max-h-[85vh] overflow-y-auto lg:absolute lg:inset-x-auto lg:bottom-auto lg:top-full lg:mt-2 lg:right-0 lg:w-[560px] lg:rounded-2xl lg:border lg:border-gray-100 lg:max-h-none lg:overflow-visible"
+          >
+            <div class="flex items-center justify-between mb-4 lg:hidden">
+              <span class="font-serif text-lg text-navy font-bold">More Filters</span>
+              <button type="button" id="more-filters-close" aria-label="Close filters" class="w-8 h-8 rounded-full hover:bg-cream flex items-center justify-center">
+                <svg class="w-5 h-5 text-navy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+              </button>
+            </div>
+
+            <div class="mb-5">
+              <div class="text-xs font-semibold uppercase tracking-wider text-navy/50 mb-2">Bedrooms</div>
+              <div class="flex flex-wrap gap-2">
+                <input type="radio" form="filters-form" name="minBeds" id="minBeds-any" value="" class="peer/b0 sr-only" checked={!minBeds} />
+                <label for="minBeds-any" class="cursor-pointer text-xs font-semibold px-3.5 py-1.5 rounded-full border border-gray-200 text-navy/70 peer-checked/b0:bg-navy peer-checked/b0:text-white peer-checked/b0:border-navy transition-colors">Any</label>
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <>
+                    <input type="radio" form="filters-form" name="minBeds" id={`minBeds-${n}`} value={n} class={`peer/b${n} sr-only`} checked={minBeds === n} />
+                    <label for={`minBeds-${n}`} class={`cursor-pointer text-xs font-semibold px-3.5 py-1.5 rounded-full border border-gray-200 text-navy/70 peer-checked/b${n}:bg-navy peer-checked/b${n}:text-white peer-checked/b${n}:border-navy transition-colors`}>{n}+</label>
+                  </>
+                ))}
+              </div>
+            </div>
+
+            <div class="mb-5">
+              <div class="text-xs font-semibold uppercase tracking-wider text-navy/50 mb-2">Bathrooms</div>
+              <div class="flex flex-wrap gap-2">
+                <input type="radio" form="filters-form" name="minBaths" id="minBaths-any" value="" class="peer/a0 sr-only" checked={!minBaths} />
+                <label for="minBaths-any" class="cursor-pointer text-xs font-semibold px-3.5 py-1.5 rounded-full border border-gray-200 text-navy/70 peer-checked/a0:bg-navy peer-checked/a0:text-white peer-checked/a0:border-navy transition-colors">Any</label>
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <>
+                    <input type="radio" form="filters-form" name="minBaths" id={`minBaths-${n}`} value={n} class={`peer/a${n} sr-only`} checked={minBaths === n} />
+                    <label for={`minBaths-${n}`} class={`cursor-pointer text-xs font-semibold px-3.5 py-1.5 rounded-full border border-gray-200 text-navy/70 peer-checked/a${n}:bg-navy peer-checked/a${n}:text-white peer-checked/a${n}:border-navy transition-colors`}>{n}+</label>
+                  </>
+                ))}
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 mb-5">
+              <div>
+                <div class="text-xs font-semibold uppercase tracking-wider text-navy/50 mb-2">Parking</div>
+                <select form="filters-form" name="minParking" class="w-full appearance-none pl-4 pr-9 py-2 rounded-full text-sm font-medium bg-cream text-navy/70 border border-gray-200 hover:border-gold focus:border-gold focus:outline-none transition-colors cursor-pointer">
+                  <option value="">Any</option>
+                  <option value="1" selected={minParking === 1}>1+</option>
+                  <option value="2" selected={minParking === 2}>2+</option>
+                  <option value="3" selected={minParking === 3}>3+</option>
+                </select>
+              </div>
+              <div>
+                <div class="text-xs font-semibold uppercase tracking-wider text-navy/50 mb-2">Days on Market</div>
+                <select form="filters-form" name="days" class="w-full appearance-none pl-4 pr-9 py-2 rounded-full text-sm font-medium bg-cream text-navy/70 border border-gray-200 hover:border-gold focus:border-gold focus:outline-none transition-colors cursor-pointer">
+                  <option value="">Any time</option>
+                  <option value="7" selected={daysOnMarket === 7}>Last 7 days</option>
+                  <option value="30" selected={daysOnMarket === 30}>Last 30 days</option>
+                  <option value="90" selected={daysOnMarket === 90}>Last 90 days</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="mb-1">
+              <div class="text-xs font-semibold uppercase tracking-wider text-navy/50 mb-2">Keyword</div>
+              <input
+                type="text"
+                form="filters-form"
+                name="keyword"
+                value={keyword}
+                placeholder="e.g. finished basement, pool, in-law suite"
+                class="w-full px-4 py-2 rounded-full text-sm bg-cream border border-gray-200 text-navy placeholder-navy/40 focus:border-gold focus:outline-none transition-colors"
+              />
+            </div>
+
+            <button type="submit" form="filters-form" class="btn-primary w-full justify-center mt-5 lg:hidden">Show Results</button>
+          </div>
+        </div>
+
         <button type="submit" class="btn-primary !py-2.5 !px-6">Search</button>
       </form>
 
@@ -178,11 +276,27 @@ const allAreasBoundsForClient = getAllAreasBounds();
           {textResult?.totalMatching ?? 0} active listing{(textResult?.totalMatching ?? 0) !== 1 ? 's' : ''} matching "{q}"
         </p>
       ) : (
-        <p id="results-count" class="text-sm text-slate mt-3">
-          {browseResult?.capped
-            ? `Showing ${browseCards.length} of ${browseResult.total.toLocaleString()} active listings in view — zoom in to narrow down`
-            : `${browseResult?.total ?? 0} active listing${(browseResult?.total ?? 0) !== 1 ? 's' : ''} in view · all REALTORS®`}
-        </p>
+        <div class="flex flex-wrap items-center justify-between gap-3 mt-3">
+          <p id="results-count" class="text-sm text-slate">
+            {browseResult?.capped
+              ? `Showing ${browseCards.length} of ${browseResult.total.toLocaleString()} active listings in view — zoom in to narrow down`
+              : `${browseResult?.total ?? 0} active listing${(browseResult?.total ?? 0) !== 1 ? 's' : ''} in view · all REALTORS®`}
+          </p>
+          <div class="relative">
+            <label for="sort-select" class="sr-only">Sort by</label>
+            <select
+              form="filters-form"
+              name="sort"
+              id="sort-select"
+              class="appearance-none pl-4 pr-9 py-1.5 rounded-full text-xs font-semibold bg-cream text-navy/70 border border-gray-200 hover:border-gold focus:border-gold focus:outline-none transition-colors cursor-pointer"
+            >
+              <option value="newest" selected={sortBy === 'newest'}>Newest First</option>
+              <option value="price-asc" selected={sortBy === 'price-asc'}>Price: Low to High</option>
+              <option value="price-desc" selected={sortBy === 'price-desc'}>Price: High to Low</option>
+              <option value="beds-desc" selected={sortBy === 'beds-desc'}>Most Bedrooms</option>
+            </select>
+          </div>
+        </div>
       )}
     </div>
   </section>
@@ -500,20 +614,48 @@ const allAreasBoundsForClient = getAllAreasBounds();
 
       function currentFilters() {
         const form = document.getElementById('filters-form');
+        // FormData(form) includes elements associated via form="filters-form"
+        // even though they're not DOM descendants of the <form> — standard
+        // behaviour, lets the More Filters panel live anywhere in the DOM
+        // (needed for the fixed-position mobile drawer) while still counting
+        // as one form.
         const data = new FormData(form);
         return {
           minPrice: data.get('minPrice') || '',
           maxPrice: data.get('maxPrice') || '',
           type: data.get('type') || '',
+          minBeds: data.get('minBeds') || '',
+          minBaths: data.get('minBaths') || '',
+          minParking: data.get('minParking') || '',
+          days: data.get('days') || '',
+          keyword: (data.get('keyword') || '').trim(),
+          sort: data.get('sort') || '',
         };
       }
+
+      function updateMoreFiltersBadge() {
+        const f = currentFilters();
+        const count = [f.minBeds, f.minBaths, f.minParking, f.days, f.keyword].filter(Boolean).length;
+        const badge = document.getElementById('more-filters-count');
+        if (!badge) return;
+        if (count > 0) {
+          badge.textContent = String(count);
+          badge.classList.remove('hidden');
+          badge.classList.add('flex');
+        } else {
+          badge.classList.add('hidden');
+          badge.classList.remove('flex');
+        }
+      }
+      updateMoreFiltersBadge();
 
       let fetchToken = 0;
       let fetchTimeout = null;
       async function fetchForCurrentView() {
+        updateMoreFiltersBadge();
         const myToken = ++fetchToken;
         const bounds = map.getBounds();
-        const { minPrice, maxPrice, type } = currentFilters();
+        const { minPrice, maxPrice, type, minBeds, minBaths, minParking, days, keyword, sort } = currentFilters();
         const qs = new URLSearchParams({
           north: String(bounds.getNorth()),
           south: String(bounds.getSouth()),
@@ -523,6 +665,12 @@ const allAreasBoundsForClient = getAllAreasBounds();
         if (minPrice) qs.set('minPrice', minPrice);
         if (maxPrice) qs.set('maxPrice', maxPrice);
         if (type) qs.set('type', type);
+        if (minBeds) qs.set('minBeds', minBeds);
+        if (minBaths) qs.set('minBaths', minBaths);
+        if (minParking) qs.set('minParking', minParking);
+        if (days) qs.set('days', days);
+        if (keyword) qs.set('keyword', keyword);
+        if (sort) qs.set('sort', sort);
 
         try {
           const res = await fetch(`/api/map-listings.json?${qs.toString()}`);
@@ -564,7 +712,43 @@ const allAreasBoundsForClient = getAllAreasBounds();
       filtersForm?.addEventListener('submit', (e) => {
         if (document.querySelector('input[name="q"]').value.trim()) return; // let text search submit normally
         e.preventDefault();
+        closeMoreFilters();
         fetchForCurrentView();
+      });
+
+      // More Filters: an inline dropdown on desktop, a bottom-sheet drawer
+      // (with backdrop) on mobile — same panel, positioned differently via
+      // the lg: breakpoint classes already on it in the markup.
+      const moreFiltersToggle = document.getElementById('more-filters-toggle');
+      const moreFiltersPanel = document.getElementById('more-filters-panel');
+      const moreFiltersBackdrop = document.getElementById('more-filters-backdrop');
+      const moreFiltersClose = document.getElementById('more-filters-close');
+
+      function openMoreFilters() {
+        moreFiltersPanel?.classList.remove('hidden');
+        moreFiltersBackdrop?.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+      }
+      function closeMoreFilters() {
+        moreFiltersPanel?.classList.add('hidden');
+        moreFiltersBackdrop?.classList.add('hidden');
+        document.body.style.overflow = '';
+      }
+      moreFiltersToggle?.addEventListener('click', () => {
+        if (moreFiltersPanel?.classList.contains('hidden')) openMoreFilters();
+        else closeMoreFilters();
+      });
+      moreFiltersClose?.addEventListener('click', closeMoreFilters);
+      moreFiltersBackdrop?.addEventListener('click', closeMoreFilters);
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeMoreFilters();
+      });
+      // Desktop dropdown: clicking outside it closes it too (the backdrop
+      // div is lg:hidden, so this covers the case the backdrop doesn't).
+      document.addEventListener('click', (e) => {
+        if (moreFiltersPanel?.classList.contains('hidden')) return;
+        if (moreFiltersPanel.contains(e.target) || moreFiltersToggle?.contains(e.target)) return;
+        closeMoreFilters();
       });
     }
 

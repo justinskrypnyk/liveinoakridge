@@ -282,19 +282,30 @@ function normalizeNationalListing(row: Record<string, unknown>): RawListing {
 
 const MAP_SEARCH_PAGE_CAP = 300; // ceiling on pins/cards rendered per viewport query
 
+// Square footage (BuildingAreaTotal, 0.1% filled) and lot size (LotSizeArea,
+// 2.1% filled; the more-populated LotSizeDimensions is free text with
+// inconsistent per-board formats, e.g. "150" vs "350 FT" — not a clean
+// number) are deliberately NOT exposed as filters — verified 2026-07-16 they
+// have far too little reliable data to power a min/max range filter without
+// returning empty results almost always.
 export interface MapBoundsParams {
   north: number; south: number; east: number; west: number;
   minPrice?: number; maxPrice?: number; propertyType?: string;
+  minBeds?: number; minBaths?: number; minParking?: number;
+  daysOnMarket?: number; // OriginalEntryTimestamp within the last N days
+  keyword?: string; // contains() against PublicRemarks
+  sortBy?: 'newest' | 'price-asc' | 'price-desc' | 'beds-desc';
 }
 
 export interface MapBoundsResult { listings: RawListing[]; total: number; capped: boolean; }
 
-async function fetchNationalSearchPage(token: string, filter: string, skip: number): Promise<any[]> {
+async function fetchNationalSearchPage(token: string, filter: string, orderby: string | undefined, skip: number): Promise<any[]> {
   const url = new URL(`${NATIONAL_BASE_URL}Property`);
   url.searchParams.set('$filter', filter);
   url.searchParams.set('$select', NATIONAL_SEARCH_SELECT);
   url.searchParams.set('$top', String(NATIONAL_PAGE_SIZE));
   url.searchParams.set('$skip', String(skip));
+  if (orderby) url.searchParams.set('$orderby', orderby);
   const res = await fetch(url, { headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' } });
   if (!res.ok) return [];
   const data = await res.json();
@@ -316,6 +327,34 @@ export async function searchNationalPoolByBounds(params: MapBoundsParams): Promi
   ];
   if (params.minPrice) conditions.push(`ListPrice ge ${params.minPrice}`);
   if (params.maxPrice) conditions.push(`ListPrice le ${params.maxPrice}`);
+  if (params.minBeds) conditions.push(`BedroomsTotal ge ${params.minBeds}`);
+  if (params.minBaths) conditions.push(`BathroomsTotalInteger ge ${params.minBaths}`);
+  if (params.minParking) conditions.push(`ParkingTotal ge ${params.minParking}`);
+  if (params.daysOnMarket) {
+    const cutoff = new Date(Date.now() - params.daysOnMarket * 24 * 60 * 60 * 1000).toISOString().replace(/\.\d+Z$/, 'Z');
+    conditions.push(`OriginalEntryTimestamp gt ${cutoff}`);
+  }
+  if (params.keyword) conditions.push(`contains(PublicRemarks,'${escapeODataString(params.keyword)}')`);
+
+  // Sorting by price/bedrooms needs its own filter guard: nulls sort first
+  // in ascending order (verified 2026-07-16 — a plain `ListPrice asc` put
+  // null-priced listings at the very top), and BedroomsTotal has real
+  // data-entry garbage at the high end (144, 43, 42-bedroom "houses" seen in
+  // production data) that would otherwise dominate a "most bedrooms" sort.
+  let orderby: string | undefined;
+  if (params.sortBy === 'newest') {
+    orderby = 'OriginalEntryTimestamp desc';
+  } else if (params.sortBy === 'price-asc') {
+    conditions.push('ListPrice ne null');
+    orderby = 'ListPrice asc';
+  } else if (params.sortBy === 'price-desc') {
+    conditions.push('ListPrice ne null');
+    orderby = 'ListPrice desc';
+  } else if (params.sortBy === 'beds-desc') {
+    conditions.push('BedroomsTotal le 10');
+    orderby = 'BedroomsTotal desc';
+  }
+
   const filter = conditions.join(' and ');
 
   try {
@@ -324,6 +363,7 @@ export async function searchNationalPoolByBounds(params: MapBoundsParams): Promi
     firstUrl.searchParams.set('$select', NATIONAL_SEARCH_SELECT);
     firstUrl.searchParams.set('$top', String(NATIONAL_PAGE_SIZE));
     firstUrl.searchParams.set('$count', 'true');
+    if (orderby) firstUrl.searchParams.set('$orderby', orderby);
     const firstRes = await fetch(firstUrl, { headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' } });
     if (!firstRes.ok) return empty;
     const firstData = await firstRes.json();
@@ -336,7 +376,7 @@ export async function searchNationalPoolByBounds(params: MapBoundsParams): Promi
 
     for (let i = 0; i < remainingSkips.length; i += NATIONAL_PAGE_CONCURRENCY) {
       const batch = remainingSkips.slice(i, i + NATIONAL_PAGE_CONCURRENCY);
-      const pages = await Promise.all(batch.map((skip) => fetchNationalSearchPage(token, filter, skip)));
+      const pages = await Promise.all(batch.map((skip) => fetchNationalSearchPage(token, filter, orderby, skip)));
       for (const page of pages) rows.push(...page);
     }
 
