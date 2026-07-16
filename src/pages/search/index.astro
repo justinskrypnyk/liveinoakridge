@@ -1,0 +1,210 @@
+---
+export const prerender = false; // live Ontario-wide DDF search — see src/lib/ddf.ts
+import Base from '@/layouts/Base.astro';
+import { searchMarketListings } from '@/lib/ddf';
+import { fmtPrice, field, buildAddress, realtorUrl } from '@/lib/listings';
+
+const params = Astro.url.searchParams;
+const q = params.get('q') || '';
+const minPrice = Number(params.get('minPrice')) || undefined;
+const maxPrice = Number(params.get('maxPrice')) || undefined;
+const propertyType = params.get('type') || '';
+const page = Number(params.get('page')) || 1;
+
+const result = q
+  ? await searchMarketListings({ query: q, minPrice, maxPrice, propertyType, page })
+  : { listings: [], totalMatching: 0, page: 1, pageCount: 0 };
+
+const priceSteps = Array.from({ length: 40 }, (_, i) => (i + 1) * 50000);
+function shortPrice(n: number): string {
+  if (n >= 1000000) return `$${(n / 1000000).toFixed(n % 1000000 === 0 ? 0 : 1)}M`;
+  return `$${Math.round(n / 1000)}K`;
+}
+
+function pageUrl(p: number): string {
+  const u = new URLSearchParams(params);
+  u.set('page', String(p));
+  return `/search/?${u.toString()}`;
+}
+
+const cards = result.listings.map((l) => {
+  const L = l as Record<string, unknown>;
+  return {
+    address: buildAddress(L),
+    city: field(L, 'City'),
+    price: fmtPrice(L.ListPrice),
+    beds: field(L, 'BedroomsTotal'),
+    baths: field(L, 'BathroomsTotalInteger', 'BathroomsTotal'),
+    sqft: field(L, 'BuildingAreaTotal'),
+    type: field(L, 'PropertySubType', 'PropertyType'),
+    brokerage: field(L, 'ListOfficeName'),
+    photoUrl: (L._photoUrl as string | null) ?? null,
+    mls: field(L, 'ListingKey', 'ListingId'),
+    detailHref: `/search/${field(L, 'ListingKey', 'ListingId').toLowerCase()}/`,
+  };
+});
+---
+
+<Base
+  title="Search Ontario MLS® Listings | Justin Skrypnyk Real Estate Broker"
+  description="Search active MLS® listings across Ontario — London, Toronto, Ottawa, and everywhere in between. Powered by REALTOR.ca data, brought to you by Justin Skrypnyk, Real Estate Broker."
+  noindex
+>
+  <section class="bg-navy py-16 text-white">
+    <div class="container-site">
+      <nav aria-label="Breadcrumb" class="flex items-center gap-2 text-sm text-white/40 mb-8">
+        <a href="/" class="hover:text-gold transition-colors">Home</a>
+        <span>/</span>
+        <span class="text-white/70">Search Ontario Listings</span>
+      </nav>
+      <h1 class="font-serif text-5xl font-bold mb-4">Search Ontario MLS® Listings</h1>
+      <div class="gold-divider mb-6"></div>
+      <p class="text-xl text-white/70 max-w-2xl">
+        Search active listings anywhere in Ontario — not just West London. Looking specifically at Oakridge, Byron, Westmount, and the rest of Justin's home turf? Browse <a href="/properties/" class="text-gold hover:underline">his own listings here</a> instead.
+      </p>
+    </div>
+  </section>
+
+  <section class="py-6 bg-white border-b border-gray-100 sticky top-20 z-30 shadow-sm">
+    <div class="container-site">
+      <form method="GET" action="/search/" class="flex flex-wrap items-center gap-2.5">
+        <div class="relative flex-1 min-w-[240px]">
+          <svg class="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-navy/40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+          <input
+            type="text"
+            name="q"
+            value={q}
+            placeholder="City, address, or MLS® number (e.g. Toronto, or X13567832)"
+            required
+            class="w-full pl-10 pr-4 py-2.5 rounded-full text-sm bg-cream border border-gray-200 text-navy placeholder-navy/40 focus:border-gold focus:outline-none transition-colors"
+          />
+        </div>
+        <div class="relative">
+          <select name="minPrice" class="appearance-none pl-4 pr-9 py-2 rounded-full text-sm font-medium bg-cream text-navy/70 border border-gray-200 hover:border-gold focus:border-gold focus:outline-none transition-colors cursor-pointer">
+            <option value="">No Min</option>
+            {priceSteps.map((p) => <option value={p} selected={minPrice === p}>{shortPrice(p)}</option>)}
+          </select>
+        </div>
+        <span class="text-navy/30 text-sm">–</span>
+        <div class="relative">
+          <select name="maxPrice" class="appearance-none pl-4 pr-9 py-2 rounded-full text-sm font-medium bg-cream text-navy/70 border border-gray-200 hover:border-gold focus:border-gold focus:outline-none transition-colors cursor-pointer">
+            <option value="">No Max</option>
+            {priceSteps.map((p) => <option value={p} selected={maxPrice === p}>{shortPrice(p)}</option>)}
+          </select>
+        </div>
+        <div class="relative">
+          <select name="type" class="appearance-none pl-4 pr-9 py-2 rounded-full text-sm font-medium bg-cream text-navy/70 border border-gray-200 hover:border-gold focus:border-gold focus:outline-none transition-colors cursor-pointer">
+            <option value="">Any Type</option>
+            <option value="Detached" selected={propertyType === 'Detached'}>Detached</option>
+            <option value="Semi" selected={propertyType === 'Semi'}>Semi-Detached</option>
+            <option value="Townhouse" selected={propertyType === 'Townhouse'}>Townhouse</option>
+            <option value="Condo" selected={propertyType === 'Condo'}>Condo / Apartment</option>
+          </select>
+        </div>
+        <button type="submit" class="btn-primary !py-2.5 !px-6">Search</button>
+      </form>
+      {q && (
+        <p class="text-sm text-slate mt-3">
+          {result.totalMatching} active listing{result.totalMatching !== 1 ? 's' : ''} matching "{q}"
+        </p>
+      )}
+    </div>
+  </section>
+
+  <section class="py-12 bg-cream">
+    <div class="container-site">
+      {!q ? (
+        <div class="max-w-xl mx-auto text-center py-16">
+          <div class="text-6xl mb-6">🔎</div>
+          <h2 class="font-serif text-2xl text-navy mb-2">Search anywhere in Ontario</h2>
+          <p class="text-slate">Enter a city, address, or MLS® number above to search active listings across the province.</p>
+        </div>
+      ) : cards.length === 0 ? (
+        <div class="max-w-xl mx-auto text-center py-16">
+          <div class="text-6xl mb-6">🏡</div>
+          <h2 class="font-serif text-2xl text-navy mb-2">No listings found</h2>
+          <p class="text-slate">Try a different city, address, or MLS® number, or widen your price range.</p>
+        </div>
+      ) : (
+        <>
+          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            {cards.map((l) => (
+              <article class="listing-card bg-white rounded-2xl shadow-card overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all border border-gray-100">
+                <div class="h-36 bg-cream relative overflow-hidden">
+                  {l.photoUrl ? (
+                    <img src={l.photoUrl} alt={`${l.address}, ${l.city}`} class="w-full h-full object-cover" loading="lazy" />
+                  ) : (
+                    <div class="flex items-center justify-center h-full"><span class="text-5xl">🏡</span></div>
+                  )}
+                  {l.type && (
+                    <div class="absolute top-2 right-2">
+                      <span class="bg-navy/80 text-white text-xs font-medium px-2 py-0.5 rounded-full">{l.type}</span>
+                    </div>
+                  )}
+                </div>
+                <a href={l.detailHref} class="block p-3.5">
+                  <div class="font-serif text-lg text-navy font-bold mb-0.5">{l.price}</div>
+                  <p class="text-slate text-xs leading-snug mb-2 line-clamp-1">{l.address}{l.city ? `, ${l.city}` : ''}</p>
+                  <div class="flex items-center gap-3 text-xs text-navy/70 border-t border-gray-100 pt-2">
+                    {l.beds && <span>{l.beds} bed</span>}
+                    {l.baths && <span>{l.baths} bath</span>}
+                    {l.sqft && <span>{Number(l.sqft).toLocaleString()} sq ft</span>}
+                  </div>
+                  <p class="text-[10px] text-slate/50 mt-1.5">Courtesy of {l.brokerage}</p>
+                </a>
+                <div class="flex gap-2 px-3.5 pb-3.5">
+                  <a href={l.detailHref} class="flex-1 bg-navy text-white text-xs font-semibold text-center py-2 rounded-lg hover:bg-navy/80 transition-colors">
+                    View Full Details
+                  </a>
+                </div>
+              </article>
+            ))}
+          </div>
+
+          {result.pageCount > 1 && (
+            <div class="flex items-center justify-center gap-2 mt-10">
+              {result.page > 1 && (
+                <a href={pageUrl(result.page - 1)} class="px-4 py-2 rounded-full text-sm font-medium bg-white border border-gray-200 text-navy hover:border-gold transition-colors">Previous</a>
+              )}
+              <span class="text-sm text-slate px-2">Page {result.page} of {result.pageCount}</span>
+              {result.page < result.pageCount && (
+                <a href={pageUrl(result.page + 1)} class="px-4 py-2 rounded-full text-sm font-medium bg-white border border-gray-200 text-navy hover:border-gold transition-colors">Next</a>
+              )}
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  </section>
+
+  <!-- Required MLS/REALTOR trademark statement — every page of a National Pool Website must display this -->
+  <section class="py-6 bg-white border-t border-gray-100">
+    <div class="container-site">
+      <p class="text-xs text-slate/60 text-center max-w-3xl mx-auto">
+        REALTOR®, REALTORS®, and the REALTOR® logo are certification marks owned by REALTOR® Canada Inc. and licensed exclusively to The Canadian Real Estate Association (CREA). MLS® and the MLS® logo are owned by CREA. This website is operated by Justin Skrypnyk, Real Estate Broker, Sutton Group Chapman Realty Inc., Brokerage, a member of CREA. See our <a href="/terms-of-use/" class="text-gold hover:underline">Terms of Use</a>.
+      </p>
+    </div>
+  </section>
+</Base>
+
+<!-- Terms of Use consent banner — enhanced browse-wrap per CREA DDF Rule 6(d) -->
+<div id="terms-banner" class="hidden fixed bottom-0 inset-x-0 z-50 bg-navy text-white shadow-2xl">
+  <div class="container-site py-4 flex flex-col sm:flex-row items-center gap-4">
+    <p class="text-sm text-white/80 flex-1">
+      By using this Ontario-wide listing search, you agree to our <a href="/terms-of-use/" target="_blank" class="text-gold hover:underline">Terms of Use</a>, including the CREA/REALTOR® trademark notices and permitted-use restrictions.
+    </p>
+    <button id="terms-accept" type="button" class="btn-primary !py-2 !px-6 whitespace-nowrap shrink-0">Got It</button>
+  </div>
+</div>
+
+<script>
+  const KEY = 'terms_of_use_ack_v1';
+  const banner = document.getElementById('terms-banner');
+  if (banner && !localStorage.getItem(KEY)) {
+    banner.classList.remove('hidden');
+  }
+  document.getElementById('terms-accept')?.addEventListener('click', () => {
+    localStorage.setItem(KEY, '1');
+    banner?.classList.add('hidden');
+  });
+</script>

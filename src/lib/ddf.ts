@@ -12,7 +12,7 @@ const BASE_URL = import.meta.env.DDF_API_BASE_URL;
 const OFFICE_NAME_CONTAINS = 'Chapman';
 
 const SELECT_FIELDS = [
-  'ListingKey', 'ListingId', 'StandardStatus',
+  'ListingKey', 'ListingId', 'StandardStatus', 'TransactionType',
   'ListPrice', 'UnparsedAddress', 'City', 'CityRegion', 'StateOrProvince', 'PostalCode',
   'Latitude', 'Longitude',
   'BedroomsTotal', 'BedroomsAboveGrade', 'BedroomsBelowGrade',
@@ -206,4 +206,112 @@ export async function getListingByKey(key: string): Promise<RawListing | null> {
     (l) => String(l.ListingKey || l.ListingId).toLowerCase() === key.toLowerCase()
   );
   return match ?? null;
+}
+
+// Ontario-wide (National Pool) search — separate from the Chapman-only
+// Member Website feed above. See project memory for the compliance
+// distinction: filtering by brokerage isn't allowed here, only objective
+// criteria (location, price, property type).
+//
+// This AMPRE deployment's OData parser rejects ANY compound `and`/`or`
+// filter (confirmed: even two plain numeric comparisons combined fail with
+// the same 'Edm.Boolean'/'Edm.Double' type error as the known string-eq
+// bug) — only a single top-level condition works. So exactly one filter is
+// sent server-side (location text or MLS key via `contains()`); status,
+// property type, and price range are all applied client-side afterward,
+// same pattern as the Chapman feed's status/commercial filtering above.
+const MARKET_PAGE_SIZE = 24;
+const MARKET_FETCH_CAP = 500;
+
+export interface MarketSearchParams {
+  query: string; // address/city/location text, or an MLS number
+  minPrice?: number;
+  maxPrice?: number;
+  propertyType?: string;
+  page?: number;
+}
+
+export interface MarketSearchResult {
+  listings: RawListing[];
+  totalMatching: number;
+  page: number;
+  pageCount: number;
+}
+
+function escapeODataString(s: string): string {
+  return s.replace(/'/g, "''");
+}
+
+function looksLikeMlsNumber(s: string): boolean {
+  return /^[a-z]\d{5,}$/i.test(s.trim());
+}
+
+export async function searchMarketListings(params: MarketSearchParams): Promise<MarketSearchResult> {
+  const query = params.query.trim();
+  const empty: MarketSearchResult = { listings: [], totalMatching: 0, page: 1, pageCount: 0 };
+  if (!query || !ACCESS_TOKEN || !BASE_URL) return empty;
+
+  const filter = looksLikeMlsNumber(query)
+    ? `contains(ListingKey,'${escapeODataString(query)}')`
+    : `contains(UnparsedAddress,'${escapeODataString(query)}')`;
+
+  try {
+    const data = await odataGet('Property', {
+      $filter: filter,
+      $select: SELECT_FIELDS,
+      $top: String(MARKET_FETCH_CAP),
+    });
+
+    const all: RawListing[] = data.value || [];
+    let filtered = all.filter((l) =>
+      l.StandardStatus === 'Active' && l.PropertyType !== 'Commercial' && l.TransactionType !== 'For Lease'
+    );
+
+    if (params.minPrice) filtered = filtered.filter((l) => (Number(l.ListPrice) || 0) >= params.minPrice!);
+    if (params.maxPrice) filtered = filtered.filter((l) => (Number(l.ListPrice) || 0) <= params.maxPrice!);
+    if (params.propertyType) {
+      const wanted = params.propertyType.toLowerCase();
+      filtered = filtered.filter((l) =>
+        String(l.PropertySubType || l.PropertyType || '').toLowerCase().includes(wanted)
+      );
+    }
+
+    const totalMatching = filtered.length;
+    const pageCount = Math.max(1, Math.ceil(totalMatching / MARKET_PAGE_SIZE));
+    const page = Math.min(Math.max(1, params.page || 1), pageCount);
+    const start = (page - 1) * MARKET_PAGE_SIZE;
+    const pageSlice = filtered.slice(start, start + MARKET_PAGE_SIZE);
+
+    const enriched = await Promise.all(
+      pageSlice.map(async (listing) => {
+        const key = String(listing.ListingKey || listing.ListingId);
+        const photoUrls = key ? await fetchPhotos(key) : [];
+        return { ...listing, _photoUrls: photoUrls, _photoUrl: photoUrls[0] || null };
+      })
+    );
+
+    return { listings: enriched, totalMatching, page, pageCount };
+  } catch (err) {
+    console.error('Market search failed:', err instanceof Error ? err.message : err);
+    return empty;
+  }
+}
+
+export async function getMarketListingByKey(key: string): Promise<RawListing | null> {
+  if (!ACCESS_TOKEN || !BASE_URL) return null;
+  try {
+    const data = await odataGet('Property', {
+      $filter: `contains(ListingKey,'${escapeODataString(key)}')`,
+      $select: SELECT_FIELDS,
+      $top: '5',
+    });
+    const all: RawListing[] = data.value || [];
+    const match = all.find((l) => String(l.ListingKey || l.ListingId).toLowerCase() === key.toLowerCase());
+    if (!match) return null;
+    const photoUrls = await fetchPhotos(key);
+    return { ...match, _photoUrls: photoUrls, _photoUrl: photoUrls[0] || null };
+  } catch (err) {
+    console.error('Market listing lookup failed:', err instanceof Error ? err.message : err);
+    return null;
+  }
 }

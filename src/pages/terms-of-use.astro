@@ -1,0 +1,51 @@
+---
+import Base from '@/layouts/Base.astro';
+import { SITE } from '@/data/site';
+---
+
+<Base
+  title="Terms of Use | Live In Oakridge | Justin Skrypnyk Real Estate Broker"
+  description="Terms of use for the Ontario-wide MLS® listing search on liveinoakridge.ca, operated by Justin Skrypnyk, Real Estate Broker, Sutton Group Chapman Realty Inc., Brokerage."
+  noindex
+>
+  <section class="bg-navy py-16 text-white">
+    <div class="container-site max-w-3xl">
+      <h1 class="font-serif text-4xl font-bold mb-4">Terms of Use</h1>
+      <div class="gold-divider mb-4"></div>
+      <p class="text-white/60 text-sm">Last updated: July 2026</p>
+    </div>
+  </section>
+
+  <section class="py-16 bg-cream">
+    <div class="container-site max-w-3xl">
+      <div class="bg-white rounded-2xl p-10 shadow-card prose prose-slate max-w-none">
+        <p>
+          This website, <strong>{SITE.url.replace('https://www.', '')}</strong>, is operated by {SITE.agent}, a Broker registered with {SITE.brokerage}, a member of The Canadian Real Estate Association (CREA) and the London and St. Thomas Association of REALTORS® (LSTAR). By using the Ontario-wide MLS® listing search on this website, you agree to the following terms.
+        </p>
+
+        <h2>Trademarks</h2>
+        <p>
+          REALTOR®, REALTORS®, and the REALTOR® logo are certification marks that are owned by REALTOR® Canada Inc. and licensed exclusively to The Canadian Real Estate Association (CREA). These certification marks identify real estate professionals who are members of CREA and who must abide by CREA's By-Laws, Rules, and the REALTOR® Code. The MLS® trademark and the MLS® logo are owned by CREA and identify the quality of services provided by real estate professionals who are members of CREA.
+        </p>
+
+        <h2>Accuracy of Information</h2>
+        <p>
+          The information contained on this site is based in whole or in part on information that is provided by members of The Canadian Real Estate Association (CREA), who are responsible for its accuracy. CREA reproduces and distributes this information as a service for its members and assumes no responsibility for its accuracy.
+        </p>
+
+        <h2>Permitted Use</h2>
+        <p>
+          This website may only be used by consumers that have a bona fide interest in the purchase, sale, or lease of real estate of the type being offered through this website.
+        </p>
+
+        <h2>Copyright</h2>
+        <p>
+          The listing content on this website is protected by copyright and other laws, and is intended solely for the private, non-commercial use by individuals. Any other reproduction, distribution or use of the content, in whole or in part, is specifically forbidden. The prohibited uses include commercial use, "screen scraping," "database scraping," and any other activity intended to collect, store, reorganize, or manipulate data on the pages produced by or displayed on this website.
+        </p>
+
+        <h2>Contact</h2>
+        <p>Questions about these terms can be directed to {SITE.agent} at <a href={`tel:${SITE.phone}`}>{SITE.phoneDisplay}</a> or <a href={`mailto:${SITE.email}`}>{SITE.email}</a>.</p>
+      </div>
+    </div>
+  </section>
+</Base>
