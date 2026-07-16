@@ -5,8 +5,8 @@
 // coordinates. Returns a small JSON shape the client script renders into
 // map pins + grid cards.
 import type { APIRoute } from 'astro';
-import { searchNationalPoolByBounds } from '@/lib/ddf';
-import { fmtPrice, field, buildAddress, listingSlug } from '@/lib/listings';
+import { searchNationalPoolByBounds, getActiveListings } from '@/lib/ddf';
+import { fmtPrice, field, buildAddress, listingSlug, ownListingKeySet } from '@/lib/listings';
 
 export const prerender = false;
 
@@ -31,18 +31,22 @@ export const GET: APIRoute = async ({ url }) => {
   const keyword = params.get('keyword') || undefined;
   const sortBy = (params.get('sort') as 'newest' | 'price-asc' | 'price-desc' | 'beds-desc' | null) || undefined;
 
-  const { listings, total, capped } = await searchNationalPoolByBounds({
-    north, south, east, west, minPrice, maxPrice, propertyType,
-    minBeds, minBaths, minParking, daysOnMarket, keyword, sortBy,
-  });
+  const [{ listings, total, capped }, ownKeys] = await Promise.all([
+    searchNationalPoolByBounds({
+      north, south, east, west, minPrice, maxPrice, propertyType,
+      minBeds, minBaths, minParking, daysOnMarket, keyword, sortBy,
+    }),
+    getActiveListings().then(ownListingKeySet),
+  ]);
 
   const cards = listings.map((l) => {
     const L = l as Record<string, unknown>;
     const geo = L._geo as { lat: number; lng: number } | null;
+    const mls = field(L, 'ListingKey', 'ListingId');
     return {
       lat: geo?.lat ?? null,
       lng: geo?.lng ?? null,
-      mls: field(L, 'ListingKey', 'ListingId'),
+      mls,
       price: fmtPrice(L.ListPrice),
       rawPrice: Number(L.ListPrice) || 0,
       address: buildAddress(L),
@@ -52,6 +56,7 @@ export const GET: APIRoute = async ({ url }) => {
       sqft: field(L, 'BuildingAreaTotal'),
       type: field(L, 'PropertySubType'),
       brokerage: field(L, 'ListOfficeName'),
+      isOwn: ownKeys.has(mls.toLowerCase()),
       photoUrl: (L._photoUrl as string | null) ?? null,
       href: `/search/${listingSlug(L)}/`,
     };

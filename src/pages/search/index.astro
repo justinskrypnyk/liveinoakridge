@@ -3,8 +3,8 @@ export const prerender = false; // live Ontario-wide DDF search — see src/lib/
 import Base from '@/layouts/Base.astro';
 import Schema from '@/components/Schema.astro';
 import { SITE } from '@/data/site';
-import { searchMarketListings, searchNationalPoolByBounds } from '@/lib/ddf';
-import { fmtPrice, field, buildAddress, listingSlug } from '@/lib/listings';
+import { searchMarketListings, searchNationalPoolByBounds, getActiveListings } from '@/lib/ddf';
+import { fmtPrice, field, buildAddress, listingSlug, ownListingKeySet } from '@/lib/listings';
 import { AREAS } from '@/data/areas';
 import { getAreaBounds, getAllAreasBounds } from '@/lib/area-boundaries';
 
@@ -37,6 +37,10 @@ function areaUrl(slug: string): string {
   return `/search/?${u.toString()}`;
 }
 
+// Cheap — getActiveListings() is in-memory cached (see src/lib/ddf.ts),
+// already fetched by the homepage/properties.astro on most requests.
+const ownKeys = ownListingKeySet(await getActiveListings());
+
 // Text search (a specific address/city/MLS® number anywhere in Ontario)
 // stays on the existing AMPRE-backed path — unrelated to the map below,
 // which is the "browse everything" default view.
@@ -55,6 +59,7 @@ const textCards = (textResult?.listings ?? []).map((l) => {
     sqft: field(L, 'BuildingAreaTotal'),
     type: field(L, 'PropertySubType', 'PropertyType'),
     brokerage: field(L, 'ListOfficeName'),
+    isOwn: ownKeys.has(field(L, 'ListingKey', 'ListingId').toLowerCase()),
     photoUrl: (L._photoUrl as string | null) ?? null,
     detailHref: `/search/${listingSlug(L)}/`,
   };
@@ -82,10 +87,11 @@ const browseResult = !q
 const browseCards = (browseResult?.listings ?? []).map((l) => {
   const L = l as Record<string, unknown>;
   const geo = L._geo as { lat: number; lng: number } | null;
+  const mls = field(L, 'ListingKey', 'ListingId');
   return {
     lat: geo?.lat ?? null,
     lng: geo?.lng ?? null,
-    mls: field(L, 'ListingKey', 'ListingId'),
+    mls,
     price: fmtPrice(L.ListPrice),
     rawPrice: Number(L.ListPrice) || 0,
     address: buildAddress(L),
@@ -95,6 +101,7 @@ const browseCards = (browseResult?.listings ?? []).map((l) => {
     sqft: field(L, 'BuildingAreaTotal'),
     type: field(L, 'PropertySubType'),
     brokerage: field(L, 'ListOfficeName'),
+    isOwn: ownKeys.has(mls.toLowerCase()),
     photoUrl: (L._photoUrl as string | null) ?? null,
     href: `/search/${listingSlug(L)}/`,
   };
@@ -352,6 +359,11 @@ const allAreasBoundsForClient = getAllAreasBounds();
                     ) : (
                       <div class="flex items-center justify-center h-full"><span class="text-5xl">🏡</span></div>
                     )}
+                    {l.isOwn && (
+                      <div class="absolute top-2 left-2">
+                        <span class="bg-gold text-navy text-xs font-bold px-2 py-0.5 rounded-full">Justin's Listing</span>
+                      </div>
+                    )}
                     {l.type && (
                       <div class="absolute top-2 right-2">
                         <span class="bg-navy/80 text-white text-xs font-medium px-2 py-0.5 rounded-full">{l.type}</span>
@@ -408,6 +420,11 @@ const allAreasBoundsForClient = getAllAreasBounds();
                       <img src={l.photoUrl} alt={`${l.address}, ${l.city}`} class="w-full h-full object-contain" loading="lazy" />
                     ) : (
                       <div class="flex items-center justify-center h-full"><span class="text-5xl">🏡</span></div>
+                    )}
+                    {l.isOwn && (
+                      <div class="absolute top-2 left-2">
+                        <span class="bg-gold text-navy text-xs font-bold px-2 py-0.5 rounded-full">Justin's Listing</span>
+                      </div>
                     )}
                     {l.type && (
                       <div class="absolute top-2 right-2">
@@ -524,6 +541,7 @@ const allAreasBoundsForClient = getAllAreasBounds();
             ${l.photoUrl
               ? `<img src="${esc(l.photoUrl)}" alt="" class="w-full h-full object-contain" loading="lazy" />`
               : `<div class="flex items-center justify-center h-full"><span class="text-5xl">🏡</span></div>`}
+            ${l.isOwn ? `<div class="absolute top-2 left-2"><span class="bg-gold text-navy text-xs font-bold px-2 py-0.5 rounded-full">Justin's Listing</span></div>` : ''}
             ${l.type ? `<div class="absolute top-2 right-2"><span class="bg-navy/80 text-white text-xs font-medium px-2 py-0.5 rounded-full">${esc(l.type)}</span></div>` : ''}
           </div>
           <a href="${l.href}" class="block p-3.5">
@@ -553,7 +571,7 @@ const allAreasBoundsForClient = getAllAreasBounds();
           </div>
           <div style="display:flex;align-items:center;justify-content:between;gap:6px;">
             <span style="font-weight:800;font-size:16px;color:#0c2340;">${esc(l.price)}</span>
-            <span style="margin-left:auto;background:#10b981;color:#0c2340;font-size:10px;font-weight:700;padding:2px 8px;border-radius:999px;">For Sale</span>
+            <span style="margin-left:auto;background:#10b981;color:#0c2340;font-size:10px;font-weight:700;padding:2px 8px;border-radius:999px;">${l.isOwn ? "Justin's Listing" : 'For Sale'}</span>
           </div>
           <div style="font-size:12.5px;color:#334155;margin:3px 0 6px;line-height:1.3;">${esc(l.address)}${l.city ? `, ${esc(l.city)}` : ''}</div>
           <div style="display:flex;gap:10px;font-size:11.5px;color:#0c2340;font-weight:600;margin-bottom:6px;">

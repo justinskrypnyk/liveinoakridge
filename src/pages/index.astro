@@ -33,8 +33,9 @@ import { BLOG_POSTS } from '@/data/blog';
 // Featured Listings — live from the DDF feed (every active Chapman listing),
 // not a hand-maintained list, so a sold home can never linger on the
 // homepage by mistake. Homepage shows a handful, each linking to its own
-// /properties/[listingKey]/ page; "View All Listings" below sends people to
-// /search/ instead, the Ontario-wide browse tool.
+// /search/[listingKey]/ page (the canonical detail URL — /properties/[key]/
+// 301s there); "View All Listings" below sends people to /properties/, the
+// full list of Justin's own current listings.
 const liveListings = await getActiveListings();
 const activeListings = liveListings.slice(0, 6).map((l) => {
   const L = l as Record<string, unknown>;
@@ -45,7 +46,7 @@ const activeListings = liveListings.slice(0, 6).map((l) => {
     beds: field(L, 'BedroomsTotal'),
     baths: field(L, 'BathroomsTotalInteger', 'BathroomsTotal'),
     photoUrl: (L._photoUrl as string | null) ?? null,
-    url: `/properties/${listingSlug(L)}/`,
+    url: `/search/${listingSlug(L)}/`,
   };
 });
 const latestPosts = [...BLOG_POSTS]
@@ -223,7 +224,7 @@ const latestPosts = [...BLOG_POSTS]
           ))}
         </div>
         <div class="text-center mt-10">
-          <a href="/search/" class="btn-secondary">View All Listings</a>
+          <a href="/properties/" class="btn-secondary">View All Listings</a>
         </div>
       </div>
     </section>

@@ -5,8 +5,8 @@ import GoogleMap from '@/components/GoogleMap.astro';
 import ContactForm from '@/components/ContactForm.astro';
 import Schema from '@/components/Schema.astro';
 import { SITE } from '@/data/site';
-import { getMarketListingByKey, getNationalPoolListingByListingId } from '@/lib/ddf';
-import { fmtPrice, field, buildAddress, realtorUrl, photos } from '@/lib/listings';
+import { getMarketListingByKey, getNationalPoolListingByListingId, getActiveListings } from '@/lib/ddf';
+import { fmtPrice, field, buildAddress, realtorUrl, photos, ownListingKeySet } from '@/lib/listings';
 
 // AMPRE first (richer fields for listings it has — e.g. a real
 // ListOfficeName instead of just the originating board), falling back to
@@ -41,6 +41,10 @@ const lotDepth = field(listing, 'LotDepth');
 const mlsNumber = field(listing, 'ListingKey', 'ListingId');
 const remarks = field(listing, 'PublicRemarks');
 const listOfficeName = field(listing, 'ListOfficeName') || 'the listing brokerage';
+// Not a brokerage-name match — see ownListingKeySet's doc comment for why
+// that's unreliable for National-Pool-sourced listings (which this page
+// falls back to for anything outside AMPRE's coverage).
+const isOwn = ownListingKeySet(await getActiveListings()).has(mlsNumber.toLowerCase());
 const postalCode = field(listing, 'PostalCode');
 // Street-level only, for schema's PostalAddress.streetAddress — `address`
 // above may be the full UnparsedAddress string (city/region/postal and all)
@@ -183,6 +187,7 @@ const facts: [string, string][] = [
         <div>
           <div class="flex items-center gap-2 mb-2">
             <span class="bg-gold text-navy text-xs font-bold px-3 py-1 rounded-full">{field(listing, 'StandardStatus') || 'Active'}</span>
+            {isOwn && <span class="bg-navy text-gold text-xs font-bold px-3 py-1 rounded-full">Justin's Listing</span>}
           </div>
           <h1 class="font-serif text-3xl md:text-4xl text-navy font-bold mb-1">{address}</h1>
           <p class="text-slate">{city}{field(listing, 'PostalCode') ? `, ${field(listing, 'PostalCode')}` : ''}</p>
@@ -254,6 +259,45 @@ const facts: [string, string][] = [
             <h2 class="font-serif text-2xl text-navy mb-4">Location</h2>
             <GoogleMap query={mapQuery} title={address} height="360px" />
           </div>
+
+          <div class="bg-white rounded-2xl shadow-card p-6 md:p-8">
+            <h2 class="font-serif text-2xl text-navy mb-1">Estimate Your Payment</h2>
+            <p class="text-sm text-slate mb-6">Based on this home's list price of {price}.</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-6">
+              <div>
+                <label for="calc-price" class="block text-sm font-medium text-navy/70 mb-1.5">Home Price ($)</label>
+                <input type="number" id="calc-price" value={rawPrice || 500000} min="50000" step="5000"
+                  class="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm focus:border-gold outline-none focus:ring-2 focus:ring-gold/20" />
+              </div>
+              <div>
+                <label for="calc-down" class="block text-sm font-medium text-navy/70 mb-1.5">Down Payment ($)</label>
+                <input type="number" id="calc-down" value={Math.round((rawPrice || 500000) * 0.2)} min="0" step="1000"
+                  class="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm focus:border-gold outline-none focus:ring-2 focus:ring-gold/20" />
+                <p id="calc-dp-percent" class="text-xs text-slate mt-1">20.0% down payment</p>
+              </div>
+              <div>
+                <label for="calc-rate" class="block text-sm font-medium text-navy/70 mb-1.5">Interest Rate (%)</label>
+                <input type="number" id="calc-rate" value="5.25" min="0.1" max="20" step="0.05"
+                  class="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm focus:border-gold outline-none focus:ring-2 focus:ring-gold/20" />
+              </div>
+              <div>
+                <label for="calc-amortization" class="block text-sm font-medium text-navy/70 mb-1.5">Amortization (years)</label>
+                <select id="calc-amortization" class="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm focus:border-gold outline-none focus:ring-2 focus:ring-gold/20">
+                  <option value="10">10 years</option>
+                  <option value="15">15 years</option>
+                  <option value="20">20 years</option>
+                  <option value="25" selected>25 years</option>
+                  <option value="30">30 years</option>
+                </select>
+              </div>
+            </div>
+            <div class="bg-gold rounded-xl p-6 text-center">
+              <div class="text-sm text-navy/70 font-medium mb-1">Estimated Monthly Payment</div>
+              <div id="calc-monthly" class="font-serif text-4xl text-navy font-bold">$0</div>
+              <div class="text-xs text-navy/50 mt-2">Principal &amp; interest only — does not include property tax, insurance, or CMHC premiums.</div>
+            </div>
+            <p class="text-xs text-slate mt-4 text-center">Also budget for closing costs — try the <a href="/mortgages/closing-costs/" class="text-gold hover:underline">Closing Costs Calculator</a>.</p>
+          </div>
         </div>
 
         <div class="space-y-6">
@@ -268,7 +312,9 @@ const facts: [string, string][] = [
             </div>
             <div class="p-6">
               <p class="text-xs text-white/50 mb-4 leading-relaxed">
-                This listing is courtesy of {listOfficeName}. {SITE.agent} can arrange a private showing or answer questions as your buyer's representative.
+                {isOwn
+                  ? `This is one of ${SITE.agent}'s own listings — you'd be dealing directly with the listing Broker, no added layer.`
+                  : `This listing is courtesy of ${listOfficeName}. ${SITE.agent} can arrange a private showing or answer questions as your buyer's representative.`}
               </p>
               <div class="space-y-2 mb-5">
                 <a href={`tel:${SITE.phone}`} class="flex items-center gap-2 text-sm text-white/80 hover:text-gold transition-colors">
@@ -403,4 +449,32 @@ const facts: [string, string][] = [
     if (e.key === 'ArrowLeft') showModalPhoto(current - 1);
     if (e.key === 'ArrowRight') showModalPhoto(current + 1);
   });
+
+  // Payment calculator
+  function calculate() {
+    const price = parseFloat(document.getElementById('calc-price')?.value) || 0;
+    const down = parseFloat(document.getElementById('calc-down')?.value) || 0;
+    const rate = (parseFloat(document.getElementById('calc-rate')?.value) || 0) / 100 / 12;
+    const years = parseInt(document.getElementById('calc-amortization')?.value) || 25;
+    const n = years * 12;
+    const principal = price - down;
+
+    const dpPercent = price > 0 ? ((down / price) * 100).toFixed(1) : '0.0';
+    const dpEl = document.getElementById('calc-dp-percent');
+    if (dpEl) dpEl.textContent = `${dpPercent}% down payment`;
+
+    const payment = rate > 0
+      ? (principal * rate * Math.pow(1 + rate, n)) / (Math.pow(1 + rate, n) - 1)
+      : principal / n;
+
+    const el = document.getElementById('calc-monthly');
+    if (el) el.textContent = payment > 0
+      ? `$${payment.toLocaleString('en-CA', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
+      : '$0';
+  }
+
+  ['calc-price', 'calc-down', 'calc-rate', 'calc-amortization'].forEach((id) => {
+    document.getElementById(id)?.addEventListener('input', calculate);
+  });
+  calculate();
 </script>
