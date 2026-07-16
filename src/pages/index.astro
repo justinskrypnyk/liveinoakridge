@@ -1,10 +1,13 @@
 ---
+export const prerender = false; // live "Featured Listings" section — see src/lib/ddf.ts
 import Base from '@/layouts/Base.astro';
 import Schema from '@/components/Schema.astro';
 import ContactForm from '@/components/ContactForm.astro';
 import { SITE } from '@/data/site';
 import { AREAS, getArea } from '@/data/areas';
 import { TESTIMONIALS } from '@/data/testimonials';
+import { getActiveListings } from '@/lib/ddf';
+import { fmtPrice, field, buildAddress, listingSlug } from '@/lib/listings';
 
 const oakridge = getArea('oakridge')!;
 const rootsTimeline = [
@@ -24,11 +27,24 @@ const rootsTimeline = [
   },
 ];
 import { SERVICES } from '@/data/services';
-import { FEATURED_LISTINGS } from '@/data/featured-listings';
 import { MARKET_SNAPSHOT } from '@/data/market-snapshot';
 import { BLOG_POSTS } from '@/data/blog';
 
-const activeListings = FEATURED_LISTINGS.filter((l) => l.active);
+// Featured Listings — live from the DDF feed (every active Chapman listing),
+// not a hand-maintained list, so a sold home can never linger on the
+// homepage by mistake. Homepage shows a handful; "View All" goes to
+// /properties/ for the complete live set.
+const liveListings = await getActiveListings();
+const activeListings = liveListings.slice(0, 6).map((l) => {
+  const L = l as Record<string, unknown>;
+  return {
+    address: buildAddress(L),
+    city: field(L, 'City'),
+    price: fmtPrice(L.ListPrice),
+    photoUrl: (L._photoUrl as string | null) ?? null,
+    url: `/properties/${listingSlug(L)}/`,
+  };
+});
 const latestPosts = [...BLOG_POSTS]
   .sort((a, b) => b.date.localeCompare(a.date))
   .slice(0, 3);
@@ -125,7 +141,7 @@ const latestPosts = [...BLOG_POSTS]
         <a href="/services/home-evaluation/" class="btn-primary text-lg py-4 px-8">
           Get a Complimentary Home Evaluation
         </a>
-        <a href="/areas/oakridge/" class="btn-white text-lg py-4 px-8">
+        <a href="/properties/" class="btn-white text-lg py-4 px-8">
           Browse Oakridge Homes for Sale
         </a>
       </div>
@@ -179,22 +195,28 @@ const latestPosts = [...BLOG_POSTS]
           <h2 class="font-serif text-3xl md:text-4xl text-navy mb-4">Featured Listings</h2>
           <div class="gold-divider mx-auto"></div>
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
           {activeListings.map((l) => (
-            <a
-              href={l.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              class="card p-6 hover:border-gold/30 border border-transparent group block"
-            >
-              <div class="flex items-start justify-between gap-3 mb-2">
-                <h3 class="font-serif text-xl text-navy font-bold group-hover:text-gold transition-colors">{l.address}</h3>
-                <span class="text-gold text-sm font-semibold whitespace-nowrap">{l.price}</span>
+            <a href={l.url} class="card overflow-hidden hover:border-gold/30 border border-transparent group block">
+              <div class="h-40 bg-cream relative overflow-hidden">
+                {l.photoUrl ? (
+                  <img src={l.photoUrl} alt={`${l.address}, ${l.city}`} class="w-full h-full object-cover" loading="lazy" />
+                ) : (
+                  <div class="flex items-center justify-center h-full"><span class="text-5xl">🏡</span></div>
+                )}
               </div>
-              <p class="text-slate text-sm mb-3">{l.city}</p>
-              <p class="text-slate text-sm leading-relaxed">{l.blurb}</p>
+              <div class="p-5">
+                <div class="flex items-start justify-between gap-3 mb-1">
+                  <h3 class="font-serif text-lg text-navy font-bold group-hover:text-gold transition-colors">{l.address}</h3>
+                </div>
+                <p class="text-slate text-sm mb-2">{l.city}</p>
+                <span class="text-gold text-sm font-semibold">{l.price}</span>
+              </div>
             </a>
           ))}
+        </div>
+        <div class="text-center mt-10">
+          <a href="/properties/" class="btn-secondary">View All Listings</a>
         </div>
       </div>
     </section>
