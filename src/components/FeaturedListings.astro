@@ -1,0 +1,66 @@
+---
+// Server Island — the ONLY live/dynamic piece of an otherwise fully static,
+// prerendered homepage. Before this existed, index.astro carried
+// `export const prerender = false` for the whole page just so these 6 cards
+// could be live, which meant every homepage request blocked on a live AMPRE
+// round-trip (Property list + N parallel photo/geocode lookups) before the
+// server could send even the first byte of HTML — including the static hero
+// image above it. `server:defer` on the <FeaturedListings> usage in
+// index.astro lets the rest of the page stay static/CDN-served while just
+// this section streams in after.
+import { getActiveListings } from '@/lib/ddf';
+import { fmtPrice, field, buildAddress, listingSlug } from '@/lib/listings';
+
+const liveListings = await getActiveListings();
+const activeListings = liveListings.slice(0, 6).map((l) => {
+  const L = l as Record<string, unknown>;
+  return {
+    address: buildAddress(L),
+    city: field(L, 'City'),
+    price: fmtPrice(L.ListPrice),
+    beds: field(L, 'BedroomsTotal'),
+    baths: field(L, 'BathroomsTotalInteger', 'BathroomsTotal'),
+    photoUrl: (L._photoUrl as string | null) ?? null,
+    url: `/search/${listingSlug(L)}/`,
+  };
+});
+---
+
+{activeListings.length > 0 && (
+  <section class="py-14 md:py-20 bg-cream">
+    <div class="container-site">
+      <div class="text-center mb-10">
+        <div class="inline-block text-gold text-sm font-semibold tracking-wider uppercase mb-4">Currently Listed</div>
+        <h2 class="font-serif text-3xl md:text-4xl text-navy mb-4">Featured Listings</h2>
+        <div class="gold-divider mx-auto"></div>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
+        {activeListings.map((l) => (
+          <a href={l.url} class="card overflow-hidden hover:border-gold/30 border border-transparent group block">
+            <div class="aspect-[4/3] bg-cream relative overflow-hidden">
+              {l.photoUrl ? (
+                <img src={l.photoUrl} alt={`${l.address}, ${l.city}`} class="w-full h-full object-cover" loading="lazy" />
+              ) : (
+                <div class="flex items-center justify-center h-full"><span class="text-5xl">🏡</span></div>
+              )}
+            </div>
+            <div class="p-5">
+              <div class="flex items-start justify-between gap-3 mb-1">
+                <h3 class="font-serif text-lg text-navy font-bold group-hover:text-gold transition-colors">{l.address}</h3>
+              </div>
+              <p class="text-slate text-sm mb-2">{l.city}</p>
+              <div class="flex items-center gap-3 text-xs text-navy/70 mb-2">
+                {l.beds && <span>{l.beds} bed</span>}
+                {l.baths && <span>{l.baths} bath</span>}
+              </div>
+              <span class="text-gold text-sm font-semibold">{l.price}</span>
+            </div>
+          </a>
+        ))}
+      </div>
+      <div class="text-center mt-10">
+        <a href="/properties/" class="btn-secondary">View All Listings</a>
+      </div>
+    </div>
+  </section>
+)}

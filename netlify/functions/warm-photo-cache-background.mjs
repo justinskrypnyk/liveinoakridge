@@ -25,6 +25,11 @@ async function odataGet(resource, params) {
   return res.json();
 }
 
+// Mirrors src/lib/ddf.ts's groupPhotosBySize() — AMPRE returns 5 pre-rendered
+// size tiers per photo (Thumbnail/Medium/Large/Largest/LargestNoWatermark)
+// sharing the same `Order`, all in this one Media call. `full` (Large,
+// 1920px cap) feeds the detail-page gallery; `thumb` (Medium, 960px cap)
+// feeds map-popup previews — never the unbounded "Largest" original.
 async function fetchPhotoUrls(listingKey) {
   const data = await odataGet('Media', {
     $filter: `contains(ResourceRecordKey,'${listingKey}')`,
@@ -32,18 +37,18 @@ async function fetchPhotoUrls(listingKey) {
     $orderby: 'Order',
     $top: '250',
   });
-  const seen = new Set();
-  return (data.value || [])
-    .filter((m) => m.MediaCategory === 'Photo' || m.MediaType?.startsWith('image'))
-    .filter((m) => m.ImageSizeDescription === 'Largest') // watermarked full-res — never "LargestNoWatermark"
-    .sort((a, b) => (a.Order ?? 0) - (b.Order ?? 0))
-    .filter((m) => {
-      if (seen.has(m.MediaObjectID)) return false;
-      seen.add(m.MediaObjectID);
-      return true;
-    })
-    .map((m) => m.MediaURL)
-    .filter(Boolean);
+  const photos = (data.value || []).filter((m) => m.MediaCategory === 'Photo' || m.MediaType?.startsWith('image'));
+
+  const byOrder = new Map();
+  for (const m of photos) {
+    const order = m.Order ?? 0;
+    if (!byOrder.has(order)) byOrder.set(order, {});
+    if (m.MediaURL) byOrder.get(order)[m.ImageSizeDescription] = m.MediaURL;
+  }
+  const orders = [...byOrder.keys()].sort((a, b) => a - b);
+  const full = orders.map((o) => byOrder.get(o).Large || byOrder.get(o).Largest).filter(Boolean);
+  const thumb = orders.map((o) => byOrder.get(o).Medium || byOrder.get(o).Large || byOrder.get(o).Largest).filter(Boolean);
+  return { full, thumb };
 }
 
 export default async () => {
@@ -82,8 +87,8 @@ export default async () => {
           return;
         }
         try {
-          const urls = await fetchPhotoUrls(key);
-          await store.setJSON(key, { urls, cachedAt: Date.now() });
+          const { full, thumb } = await fetchPhotoUrls(key);
+          await store.setJSON(key, { full, thumb, cachedAt: Date.now() });
           fetched++;
         } catch {
           failed++;

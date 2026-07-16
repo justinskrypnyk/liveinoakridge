@@ -45,6 +45,10 @@ const hideStickyCTA = Astro.url.pathname.startsWith('/contact');
     <!-- Preconnect -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- Leaflet (unpkg.com) — used by /search/, /properties/, and area/price map
+         pages; a cheap hint everywhere else, saves a cold DNS+TLS handshake
+         once the map script actually loads on pages that need it. -->
+    <link rel="preconnect" href="https://unpkg.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap"
       rel="stylesheet"

@@ -1,13 +1,14 @@
 ---
-export const prerender = false; // live "Featured Listings" section — see src/lib/ddf.ts
+// Fully static/prerendered — the one live piece (Featured Listings) is a
+// Server Island (see src/components/FeaturedListings.astro) so a slow/cold
+// AMPRE round-trip never blocks TTFB for the rest of this page.
 import Base from '@/layouts/Base.astro';
 import Schema from '@/components/Schema.astro';
 import ContactForm from '@/components/ContactForm.astro';
+import FeaturedListings from '@/components/FeaturedListings.astro';
 import { SITE } from '@/data/site';
 import { AREAS, getArea } from '@/data/areas';
 import { TESTIMONIALS } from '@/data/testimonials';
-import { getActiveListings } from '@/lib/ddf';
-import { fmtPrice, field, buildAddress, listingSlug } from '@/lib/listings';
 
 const oakridge = getArea('oakridge')!;
 const rootsTimeline = [
@@ -30,25 +31,6 @@ import { SERVICES } from '@/data/services';
 import { MARKET_SNAPSHOT } from '@/data/market-snapshot';
 import { BLOG_POSTS } from '@/data/blog';
 
-// Featured Listings — live from the DDF feed (every active Chapman listing),
-// not a hand-maintained list, so a sold home can never linger on the
-// homepage by mistake. Homepage shows a handful, each linking to its own
-// /search/[listingKey]/ page (the canonical detail URL — /properties/[key]/
-// 301s there); "View All Listings" below sends people to /properties/, the
-// full list of the brokerage's current listings.
-const liveListings = await getActiveListings();
-const activeListings = liveListings.slice(0, 6).map((l) => {
-  const L = l as Record<string, unknown>;
-  return {
-    address: buildAddress(L),
-    city: field(L, 'City'),
-    price: fmtPrice(L.ListPrice),
-    beds: field(L, 'BedroomsTotal'),
-    baths: field(L, 'BathroomsTotalInteger', 'BathroomsTotal'),
-    photoUrl: (L._photoUrl as string | null) ?? null,
-    url: `/search/${listingSlug(L)}/`,
-  };
-});
 const latestPosts = [...BLOG_POSTS]
   .sort((a, b) => b.date.localeCompare(a.date))
   .slice(0, 3);
@@ -191,8 +173,8 @@ const latestPosts = [...BLOG_POSTS]
     </div>
   </a>
 
-  {activeListings.length > 0 && (
-    <section class="py-14 md:py-20 bg-cream">
+  <FeaturedListings server:defer>
+    <section slot="fallback" class="py-14 md:py-20 bg-cream" aria-hidden="true">
       <div class="container-site">
         <div class="text-center mb-10">
           <div class="inline-block text-gold text-sm font-semibold tracking-wider uppercase mb-4">Currently Listed</div>
@@ -200,35 +182,19 @@ const latestPosts = [...BLOG_POSTS]
           <div class="gold-divider mx-auto"></div>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
-          {activeListings.map((l) => (
-            <a href={l.url} class="card overflow-hidden hover:border-gold/30 border border-transparent group block">
-              <div class="aspect-[4/3] bg-cream relative overflow-hidden">
-                {l.photoUrl ? (
-                  <img src={l.photoUrl} alt={`${l.address}, ${l.city}`} class="w-full h-full object-cover" loading="lazy" />
-                ) : (
-                  <div class="flex items-center justify-center h-full"><span class="text-5xl">🏡</span></div>
-                )}
+          {[...Array(6)].map(() => (
+            <div class="card overflow-hidden border border-transparent block">
+              <div class="aspect-[4/3] bg-cream animate-pulse"></div>
+              <div class="p-5 space-y-2">
+                <div class="h-4 w-3/4 bg-cream animate-pulse rounded"></div>
+                <div class="h-3 w-1/2 bg-cream animate-pulse rounded"></div>
               </div>
-              <div class="p-5">
-                <div class="flex items-start justify-between gap-3 mb-1">
-                  <h3 class="font-serif text-lg text-navy font-bold group-hover:text-gold transition-colors">{l.address}</h3>
-                </div>
-                <p class="text-slate text-sm mb-2">{l.city}</p>
-                <div class="flex items-center gap-3 text-xs text-navy/70 mb-2">
-                  {l.beds && <span>{l.beds} bed</span>}
-                  {l.baths && <span>{l.baths} bath</span>}
-                </div>
-                <span class="text-gold text-sm font-semibold">{l.price}</span>
-              </div>
-            </a>
+            </div>
           ))}
-        </div>
-        <div class="text-center mt-10">
-          <a href="/properties/" class="btn-secondary">View All Listings</a>
         </div>
       </div>
     </section>
-  )}
+  </FeaturedListings>
 
   <section class="py-12 md:py-20 bg-navy-dark text-white">
     <div class="container-site">

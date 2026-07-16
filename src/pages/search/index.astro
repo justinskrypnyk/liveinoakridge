@@ -351,11 +351,13 @@ const allAreasBoundsForClient = getAllAreasBounds();
         ) : (
           <>
             <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-              {textCards.map((l) => (
+              {textCards.map((l, i) => (
                 <article class="listing-card bg-white rounded-2xl shadow-card overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all border border-gray-100">
                   <div class="aspect-[4/3] bg-cream relative overflow-hidden">
                     {l.photoUrl ? (
-                      <img src={l.photoUrl} alt={`${l.address}, ${l.city}`} class="w-full h-full object-contain" loading="lazy" />
+                      i < 3
+                        ? <img src={l.photoUrl} alt={`${l.address}, ${l.city}`} class="w-full h-full object-contain" loading="eager" fetchpriority={i === 0 ? 'high' : undefined} />
+                        : <img src={l.photoUrl} alt={`${l.address}, ${l.city}`} class="w-full h-full object-contain" loading="lazy" />
                     ) : (
                       <div class="flex items-center justify-center h-full"><span class="text-5xl">🏡</span></div>
                     )}
@@ -413,11 +415,13 @@ const allAreasBoundsForClient = getAllAreasBounds();
                   <p class="text-slate">Pan or zoom the map, or widen your price range.</p>
                 </div>
               )}
-              {browseCards.map((l) => (
+              {browseCards.map((l, i) => (
                 <article class="listing-card bg-white rounded-2xl shadow-card overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all border border-gray-100" data-mls={l.mls}>
                   <div class="aspect-[4/3] bg-cream relative overflow-hidden">
                     {l.photoUrl ? (
-                      <img src={l.photoUrl} alt={`${l.address}, ${l.city}`} class="w-full h-full object-contain" loading="lazy" />
+                      i < 2
+                        ? <img src={l.photoUrl} alt={`${l.address}, ${l.city}`} class="w-full h-full object-contain" loading="eager" fetchpriority={i === 0 ? 'high' : undefined} />
+                        : <img src={l.photoUrl} alt={`${l.address}, ${l.city}`} class="w-full h-full object-contain" loading="lazy" />
                     ) : (
                       <div class="flex items-center justify-center h-full"><span class="text-5xl">🏡</span></div>
                     )}
@@ -662,7 +666,14 @@ const allAreasBoundsForClient = getAllAreasBounds();
         }, 2500);
       }
 
-      function renderListings(listings, total, capped) {
+      // `skipGridRender` matters for the very first call: #grid-cards is
+      // already server-rendered with this same `initialCards` data (see the
+      // browseCards.map() block above), complete with the eager/lazy loading
+      // hints on its images. Re-writing it here — after Leaflet has finished
+      // loading from unpkg.com — would both be redundant and would strip
+      // those hints from the LCP-candidate card image. Panning/filtering
+      // (which do need a real re-render) call this with skipGridRender unset.
+      function renderListings(listings, total, capped, { skipGridRender = false } = {}) {
         clusterLayer.clearLayers();
         const markers = listings
           .filter((l) => l.lat && l.lng)
@@ -673,7 +684,7 @@ const allAreasBoundsForClient = getAllAreasBounds();
           });
         clusterLayer.addLayers(markers);
 
-        if (gridEl) {
+        if (gridEl && !skipGridRender) {
           gridEl.innerHTML = listings.length
             ? listings.map(cardHtml).join('')
             : `<div class="col-span-full max-w-xl mx-auto text-center py-16"><div class="text-6xl mb-6">🏡</div><h2 class="font-serif text-2xl text-navy mb-2">No listings in this view</h2><p class="text-slate">Pan or zoom the map, or widen your price range.</p></div>`;
@@ -685,7 +696,7 @@ const allAreasBoundsForClient = getAllAreasBounds();
         }
       }
 
-      renderListings(initialCards, initialCards.length, false);
+      renderListings(initialCards, initialCards.length, false, { skipGridRender: true });
 
       function currentFilters() {
         const form = document.getElementById('filters-form');

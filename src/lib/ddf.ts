@@ -69,13 +69,41 @@ async function odataGet(resource: string, params: Record<string, string>) {
 // /search/. Cached durably in Blobs, same pattern as the geocode cache.
 const PHOTO_CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24h
 
-async function fetchPhotos(listingKey: string): Promise<string[]> {
+type PhotoSet = { full: string[]; thumb: string[] };
+
+// AMPRE returns 5 pre-rendered size tiers per photo (Thumbnail 240px,
+// Medium 960px, Large 1920px w/ quality cap ~512KB, Largest = unbounded
+// original, LargestNoWatermark 3840px), all sharing the same `Order` value —
+// one Media API call already contains every tier, no extra request needed.
+// Measured live against a real Chapman listing: Largest was 314KB, Large
+// 267KB, Medium 224KB, Thumbnail 16.5KB. Cards/popups render these at
+// 240-400px, so serving "Largest" there was 1.4-19x more bytes than the
+// display size ever needed. `full` (Large) feeds the detail-page gallery;
+// `thumb` (Medium) feeds every card/map-popup context.
+function groupPhotosBySize(media: any[]): PhotoSet {
+  const byOrder = new Map<number, Record<string, string>>();
+  for (const m of media) {
+    const order = m.Order ?? 0;
+    if (!byOrder.has(order)) byOrder.set(order, {});
+    if (m.MediaURL) byOrder.get(order)![m.ImageSizeDescription] = m.MediaURL;
+  }
+  const orders = [...byOrder.keys()].sort((a, b) => a - b);
+  const full = orders.map((o) => byOrder.get(o)!.Large || byOrder.get(o)!.Largest).filter(Boolean) as string[];
+  const thumb = orders.map((o) => byOrder.get(o)!.Medium || byOrder.get(o)!.Large || byOrder.get(o)!.Largest).filter(Boolean) as string[];
+  return { full, thumb };
+}
+
+async function fetchPhotos(listingKey: string): Promise<PhotoSet> {
   let store: ReturnType<typeof getStore> | null = null;
   try {
     store = getStore('ddf-photo-cache');
-    const cached = await store.get(listingKey, { type: 'json' }) as { urls: string[]; cachedAt: number } | null;
-    if (cached && Date.now() - cached.cachedAt < PHOTO_CACHE_TTL_MS) {
-      return cached.urls;
+    const cached = await store.get(listingKey, { type: 'json' }) as (PhotoSet & { cachedAt: number }) | null;
+    // Array.isArray(cached.full) guards against pre-existing cache entries
+    // written by the old { urls: [...] } shape (up to 24h TTL) — those have
+    // no `full` field at all, so treat them as a miss and re-fetch live
+    // instead of silently returning empty arrays for a day.
+    if (cached && Array.isArray(cached.full) && Date.now() - cached.cachedAt < PHOTO_CACHE_TTL_MS) {
+      return { full: cached.full, thumb: cached.thumb ?? [] };
     }
   } catch {
     // Blobs unavailable (e.g. local dev without `netlify dev`) — fall through to live fetch, just uncached.
@@ -88,25 +116,15 @@ async function fetchPhotos(listingKey: string): Promise<string[]> {
       $orderby: 'Order',
       $top: '250',
     });
-    const seen = new Set<string>();
-    const urls = (data.value || [])
-      .filter((m: any) => m.MediaCategory === 'Photo' || m.MediaType?.startsWith('image'))
-      .filter((m: any) => m.ImageSizeDescription === 'Largest') // watermarked full-res — never "LargestNoWatermark"
-      .sort((a: any, b: any) => (a.Order ?? 0) - (b.Order ?? 0))
-      .filter((m: any) => {
-        if (seen.has(m.MediaObjectID)) return false;
-        seen.add(m.MediaObjectID);
-        return true;
-      })
-      .map((m: any) => m.MediaURL)
-      .filter(Boolean);
+    const photos = (data.value || []).filter((m: any) => m.MediaCategory === 'Photo' || m.MediaType?.startsWith('image'));
+    const { full, thumb } = groupPhotosBySize(photos);
 
     if (store) {
-      store.setJSON(listingKey, { urls, cachedAt: Date.now() }).catch(() => {});
+      store.setJSON(listingKey, { full, thumb, cachedAt: Date.now() }).catch(() => {});
     }
-    return urls;
+    return { full, thumb };
   } catch {
-    return [];
+    return { full: [], thumb: [] };
   }
 }
 
@@ -575,11 +593,11 @@ export async function getActiveListings(): Promise<RawListing[]> {
     const enriched = await Promise.all(
       active.map(async (listing) => {
         const key = String(listing.ListingKey || listing.ListingId);
-        const [photoUrls, geo] = await Promise.all([
-          key ? fetchPhotos(key) : Promise.resolve([]),
+        const [{ full, thumb }, geo] = await Promise.all([
+          key ? fetchPhotos(key) : Promise.resolve<PhotoSet>({ full: [], thumb: [] }),
           geocodeAddress(listing),
         ]);
-        return { ...listing, _photoUrls: photoUrls, _photoUrl: photoUrls[0] || null, _geo: geo };
+        return { ...listing, _photoUrls: full, _photoUrl: thumb[0] || null, _geo: geo };
       })
     );
 
@@ -677,8 +695,8 @@ export async function searchMarketListings(params: MarketSearchParams): Promise<
     const enriched = await Promise.all(
       pageSlice.map(async (listing) => {
         const key = String(listing.ListingKey || listing.ListingId);
-        const photoUrls = key ? await fetchPhotos(key) : [];
-        return { ...listing, _photoUrls: photoUrls, _photoUrl: photoUrls[0] || null };
+        const { full, thumb } = key ? await fetchPhotos(key) : { full: [], thumb: [] };
+        return { ...listing, _photoUrls: full, _photoUrl: thumb[0] || null };
       })
     );
 
@@ -700,8 +718,8 @@ export async function getMarketListingByKey(key: string): Promise<RawListing | n
     const all: RawListing[] = data.value || [];
     const match = all.find((l) => String(l.ListingKey || l.ListingId).toLowerCase() === key.toLowerCase());
     if (!match) return null;
-    const photoUrls = await fetchPhotos(key);
-    return { ...match, _photoUrls: photoUrls, _photoUrl: photoUrls[0] || null };
+    const { full, thumb } = await fetchPhotos(key);
+    return { ...match, _photoUrls: full, _photoUrl: thumb[0] || null };
   } catch (err) {
     console.error('Market listing lookup failed:', err instanceof Error ? err.message : err);
     return null;
@@ -736,8 +754,8 @@ async function getCachedGeo(address: string): Promise<{ lat: number; lng: number
 async function getCachedPhotoUrl(listingKey: string): Promise<string | null> {
   try {
     const store = getStore('ddf-photo-cache');
-    const cached = await store.get(listingKey, { type: 'json' }) as { urls: string[] } | null;
-    return cached?.urls?.[0] ?? null;
+    const cached = await store.get(listingKey, { type: 'json' }) as { thumb?: string[]; full?: string[] } | null;
+    return cached?.thumb?.[0] ?? cached?.full?.[0] ?? null;
   } catch {
     return null;
   }
@@ -807,8 +825,8 @@ export async function getAreaMarketListings(areaSlug: string): Promise<RawListin
   return Promise.all(
     matches.map(async (listing) => {
       const key = String(listing.ListingKey || listing.ListingId);
-      const photoUrls = key ? await fetchPhotos(key) : [];
-      return { ...listing, _photoUrls: photoUrls, _photoUrl: photoUrls[0] || null };
+      const { full, thumb } = key ? await fetchPhotos(key) : { full: [], thumb: [] };
+      return { ...listing, _photoUrls: full, _photoUrl: thumb[0] || null };
     })
   );
 }
@@ -864,8 +882,8 @@ export async function getLondonBrowseListings(params: LondonBrowseParams = {}): 
   const enriched = await Promise.all(
     pageSlice.map(async (listing) => {
       const key = String(listing.ListingKey || listing.ListingId);
-      const photoUrls = key ? await fetchPhotos(key) : [];
-      return { ...listing, _photoUrls: photoUrls, _photoUrl: photoUrls[0] || null };
+      const { full, thumb } = key ? await fetchPhotos(key) : { full: [], thumb: [] };
+      return { ...listing, _photoUrls: full, _photoUrl: thumb[0] || null };
     })
   );
 
