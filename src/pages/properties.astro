@@ -25,8 +25,18 @@ type ListingCard = {
   address: string; city: string; area: string; price: string; rawPrice: number;
   beds: string; baths: string; sqft: string; type: string; garage: string; brokerage: string;
   photoUrl: string | null; realtorLink: string; detailHref: string; areaSlug: string | null; beds_n: number;
-  mls: string;
+  mls: string; baths_n: number; parking_n: number; daysOnMarket: number; remarks: string;
 };
+
+// AMPRE's own DaysOnMarket field is never populated (verified empirically) —
+// computed from OriginalEntryTimestamp instead, same approach used for the
+// National Pool feed on /search/.
+function computeDaysOnMarket(raw: string): number {
+  if (!raw) return Infinity;
+  const listed = new Date(raw).getTime();
+  if (Number.isNaN(listed)) return Infinity;
+  return Math.floor((Date.now() - listed) / (1000 * 60 * 60 * 24));
+}
 
 const processedListings: ListingCard[] = listings.map((l) => {
   const L = l as Record<string, unknown>;
@@ -63,6 +73,10 @@ const processedListings: ListingCard[] = listings.map((l) => {
     areaSlug,
     beds_n: Number(field(L, 'BedroomsTotal')) || 0,
     mls: field(L, 'ListingKey', 'ListingId'),
+    baths_n: Number(field(L, 'BathroomsTotalInteger', 'BathroomsTotal')) || 0,
+    parking_n: Number(field(L, 'ParkingTotal')) || 0,
+    daysOnMarket: computeDaysOnMarket(field(L, 'OriginalEntryTimestamp')),
+    remarks: field(L, 'PublicRemarks'),
   };
 });
 ---
@@ -130,7 +144,7 @@ const processedListings: ListingCard[] = listings.map((l) => {
         )}
       </div>
 
-      <!-- Price + Bed filters -->
+      <!-- Price + Type + More Filters + Sort -->
       {listings.length > 0 && (
         <div class="flex flex-wrap items-center gap-2.5 mt-3">
           <div class="relative">
@@ -149,24 +163,115 @@ const processedListings: ListingCard[] = listings.map((l) => {
             <svg class="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 w-3 h-3 text-navy/40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 9l6 6 6-6"/></svg>
           </div>
           <div class="relative">
-            <select id="filter-beds" class="filter-select appearance-none pl-4 pr-9 py-2 rounded-full text-sm font-medium bg-cream text-navy/70 border border-gray-200 hover:border-gold focus:border-gold focus:outline-none transition-colors cursor-pointer">
-              <option value="">Any Bedrooms</option>
-              <option value="2">2+ Beds</option>
-              <option value="3">3+ Beds</option>
-              <option value="4">4+ Beds</option>
-              <option value="5">5+ Beds</option>
-            </select>
-            <svg class="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 w-3 h-3 text-navy/40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 9l6 6 6-6"/></svg>
-          </div>
-          <div class="relative">
+            <!-- Values/labels match /search/'s property type filter exactly
+                 (Detached/Semi/Townhouse/Condo) — the old "Single Family"
+                 option never matched real AMPRE data (Chapman's listings use
+                 "Detached"), so it was silently non-functional. -->
             <select id="filter-type" class="filter-select appearance-none pl-4 pr-9 py-2 rounded-full text-sm font-medium bg-cream text-navy/70 border border-gray-200 hover:border-gold focus:border-gold focus:outline-none transition-colors cursor-pointer">
               <option value="">Any Type</option>
-              <option value="Single Family">Single Family</option>
+              <option value="Detached">Detached</option>
+              <option value="Semi">Semi-Detached</option>
               <option value="Townhouse">Townhouse</option>
               <option value="Condo">Condo / Apartment</option>
             </select>
             <svg class="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 w-3 h-3 text-navy/40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 9l6 6 6-6"/></svg>
           </div>
+
+          <div class="relative">
+            <button
+              type="button"
+              id="more-filters-toggle"
+              class="flex items-center gap-1.5 pl-4 pr-3.5 py-2 rounded-full text-sm font-medium bg-cream text-navy/70 border border-gray-200 hover:border-gold transition-colors cursor-pointer"
+            >
+              More Filters
+              <span id="more-filters-count" class="hidden bg-emerald-500 text-navy text-[10px] font-bold w-4 h-4 rounded-full items-center justify-center leading-none"></span>
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+
+            <div id="more-filters-backdrop" class="hidden fixed inset-0 bg-navy/40 z-40 lg:hidden"></div>
+
+            <div
+              id="more-filters-panel"
+              class="hidden fixed inset-x-0 bottom-0 z-50 bg-white rounded-t-3xl shadow-2xl p-5 max-h-[85vh] overflow-y-auto lg:absolute lg:inset-x-auto lg:bottom-auto lg:top-full lg:mt-2 lg:right-0 lg:w-[560px] lg:rounded-2xl lg:border lg:border-gray-100 lg:max-h-none lg:overflow-visible"
+            >
+              <div class="flex items-center justify-between mb-4 lg:hidden">
+                <span class="font-serif text-lg text-navy font-bold">More Filters</span>
+                <button type="button" id="more-filters-close" aria-label="Close filters" class="w-8 h-8 rounded-full hover:bg-cream flex items-center justify-center">
+                  <svg class="w-5 h-5 text-navy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                </button>
+              </div>
+
+              <div class="mb-5">
+                <div class="text-xs font-semibold uppercase tracking-wider text-navy/50 mb-2">Bedrooms</div>
+                <div class="flex flex-wrap gap-2">
+                  <input type="radio" name="beds-radio" id="p-beds-any" value="" class="peer/pbd0 sr-only" checked />
+                  <label for="p-beds-any" class="cursor-pointer text-xs font-semibold px-3.5 py-1.5 rounded-full border border-gray-200 text-navy/70 peer-checked/pbd0:bg-navy peer-checked/pbd0:text-white peer-checked/pbd0:border-navy transition-colors">Any</label>
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <>
+                      <input type="radio" name="beds-radio" id={`p-beds-${n}`} value={n} class={`peer/pbd${n} sr-only`} />
+                      <label for={`p-beds-${n}`} class={`cursor-pointer text-xs font-semibold px-3.5 py-1.5 rounded-full border border-gray-200 text-navy/70 peer-checked/pbd${n}:bg-navy peer-checked/pbd${n}:text-white peer-checked/pbd${n}:border-navy transition-colors`}>{n}+</label>
+                    </>
+                  ))}
+                </div>
+              </div>
+
+              <div class="mb-5">
+                <div class="text-xs font-semibold uppercase tracking-wider text-navy/50 mb-2">Bathrooms</div>
+                <div class="flex flex-wrap gap-2">
+                  <input type="radio" name="baths-radio" id="p-baths-any" value="" class="peer/pba0 sr-only" checked />
+                  <label for="p-baths-any" class="cursor-pointer text-xs font-semibold px-3.5 py-1.5 rounded-full border border-gray-200 text-navy/70 peer-checked/pba0:bg-navy peer-checked/pba0:text-white peer-checked/pba0:border-navy transition-colors">Any</label>
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <>
+                      <input type="radio" name="baths-radio" id={`p-baths-${n}`} value={n} class={`peer/pba${n} sr-only`} />
+                      <label for={`p-baths-${n}`} class={`cursor-pointer text-xs font-semibold px-3.5 py-1.5 rounded-full border border-gray-200 text-navy/70 peer-checked/pba${n}:bg-navy peer-checked/pba${n}:text-white peer-checked/pba${n}:border-navy transition-colors`}>{n}+</label>
+                    </>
+                  ))}
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-4 mb-5">
+                <div>
+                  <div class="text-xs font-semibold uppercase tracking-wider text-navy/50 mb-2">Parking</div>
+                  <select id="filter-parking" class="w-full appearance-none pl-4 pr-9 py-2 rounded-full text-sm font-medium bg-cream text-navy/70 border border-gray-200 hover:border-gold focus:border-gold focus:outline-none transition-colors cursor-pointer">
+                    <option value="">Any</option>
+                    <option value="1">1+</option>
+                    <option value="2">2+</option>
+                    <option value="3">3+</option>
+                  </select>
+                </div>
+                <div>
+                  <div class="text-xs font-semibold uppercase tracking-wider text-navy/50 mb-2">Days on Market</div>
+                  <select id="filter-days" class="w-full appearance-none pl-4 pr-9 py-2 rounded-full text-sm font-medium bg-cream text-navy/70 border border-gray-200 hover:border-gold focus:border-gold focus:outline-none transition-colors cursor-pointer">
+                    <option value="">Any time</option>
+                    <option value="7">Last 7 days</option>
+                    <option value="30">Last 30 days</option>
+                    <option value="90">Last 90 days</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="mb-1">
+                <div class="text-xs font-semibold uppercase tracking-wider text-navy/50 mb-2">Keyword</div>
+                <input
+                  type="text"
+                  id="filter-keyword"
+                  placeholder="e.g. finished basement, pool, in-law suite"
+                  class="w-full px-4 py-2 rounded-full text-sm bg-cream border border-gray-200 text-navy placeholder-navy/40 focus:border-gold focus:outline-none transition-colors"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div class="relative">
+            <select id="filter-sort" class="filter-select appearance-none pl-4 pr-9 py-2 rounded-full text-sm font-medium bg-cream text-navy/70 border border-gray-200 hover:border-gold focus:border-gold focus:outline-none transition-colors cursor-pointer">
+              <option value="newest">Newest First</option>
+              <option value="price-asc">Price: Low to High</option>
+              <option value="price-desc">Price: High to Low</option>
+              <option value="beds-desc">Most Bedrooms</option>
+            </select>
+            <svg class="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 w-3 h-3 text-navy/40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 9l6 6 6-6"/></svg>
+          </div>
+
           <button type="button" id="clear-filters-btn" class="hidden items-center gap-1 text-sm font-medium text-navy/50 hover:text-gold transition-colors px-2 py-2">
             <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
             Clear all
@@ -228,8 +333,12 @@ const processedListings: ListingCard[] = listings.map((l) => {
               data-type={l.type}
               data-price={l.rawPrice}
               data-beds={l.beds_n}
+              data-baths={l.baths_n}
+              data-parking={l.parking_n}
+              data-days={l.daysOnMarket}
               data-address={l.address}
               data-mls={l.mls}
+              data-remarks={l.remarks.toLowerCase()}
             >
               <!-- Photo -->
               <div class="aspect-[4/3] bg-cream relative overflow-hidden">
@@ -384,46 +493,87 @@ const processedListings: ListingCard[] = listings.map((l) => {
     let minPrice = 0;
     let maxPrice = Infinity;
     let minBeds = 0;
+    let minBaths = 0;
+    let minParking = 0;
+    let maxDays = Infinity;
     let typeFilter = '';
     let searchTerm = '';
+    let keyword = '';
 
     const priceMinSelect = document.getElementById('filter-price-min') as HTMLSelectElement | null;
     const priceMaxSelect = document.getElementById('filter-price-max') as HTMLSelectElement | null;
-    const bedsSelect = document.getElementById('filter-beds') as HTMLSelectElement | null;
     const typeSelect = document.getElementById('filter-type') as HTMLSelectElement | null;
+    const parkingSelect = document.getElementById('filter-parking') as HTMLSelectElement | null;
+    const daysSelect = document.getElementById('filter-days') as HTMLSelectElement | null;
+    const sortSelect = document.getElementById('filter-sort') as HTMLSelectElement | null;
+    const keywordInput = document.getElementById('filter-keyword') as HTMLInputElement | null;
     const searchInput = document.getElementById('listing-search') as HTMLInputElement | null;
     const clearBtn = document.getElementById('clear-filters-btn');
+    const bedsRadios = Array.from(document.querySelectorAll<HTMLInputElement>('input[name="beds-radio"]'));
+    const bathsRadios = Array.from(document.querySelectorAll<HTMLInputElement>('input[name="baths-radio"]'));
 
     function updateClearButton() {
       const anyActive = !!activeArea || !!priceMinSelect?.value || !!priceMaxSelect?.value
-        || !!bedsSelect?.value || !!typeSelect?.value || !!searchTerm;
+        || !!typeSelect?.value || !!searchTerm || minBeds > 0 || minBaths > 0
+        || !!parkingSelect?.value || !!daysSelect?.value || !!keyword;
       clearBtn?.classList.toggle('hidden', !anyActive);
       clearBtn?.classList.toggle('inline-flex', anyActive);
+
+      const moreCount = [minBeds > 0, minBaths > 0, !!parkingSelect?.value, !!daysSelect?.value, !!keyword].filter(Boolean).length;
+      const badge = document.getElementById('more-filters-count');
+      if (badge) {
+        badge.textContent = String(moreCount);
+        badge.classList.toggle('hidden', moreCount === 0);
+        badge.classList.toggle('flex', moreCount > 0);
+      }
     }
 
     function applyFilters() {
       let visible = 0;
       const search = searchTerm.trim().toLowerCase();
+      const kw = keyword.trim().toLowerCase();
       cards().forEach(card => {
         const area = card.dataset.area || '';
         const price = Number(card.dataset.price) || 0;
         const beds = Number(card.dataset.beds) || 0;
+        const baths = Number(card.dataset.baths) || 0;
+        const parking = Number(card.dataset.parking) || 0;
+        const days = Number(card.dataset.days ?? Infinity);
         const type = card.dataset.type || '';
         const address = (card.dataset.address || '').toLowerCase();
         const mls = (card.dataset.mls || '').toLowerCase();
+        const remarks = card.dataset.remarks || '';
 
         const areaMatch = !activeArea || area.toLowerCase().includes(activeArea.toLowerCase());
         const priceMatch = price >= minPrice && price <= maxPrice;
         const bedsMatch = beds >= minBeds;
+        const bathsMatch = baths >= minBaths;
+        const parkingMatch = parking >= minParking;
+        const daysMatch = days <= maxDays;
         const typeMatch = !typeFilter || type.toLowerCase().includes(typeFilter.toLowerCase());
         const searchMatch = !search || address.includes(search) || mls.includes(search);
+        const keywordMatch = !kw || remarks.includes(kw);
 
-        const show = areaMatch && priceMatch && bedsMatch && typeMatch && searchMatch;
+        const show = areaMatch && priceMatch && bedsMatch && bathsMatch && parkingMatch
+          && daysMatch && typeMatch && searchMatch && keywordMatch;
         card.style.display = show ? '' : 'none';
         if (show) visible++;
       });
       if (countEl) countEl.textContent = `${visible} listing${visible !== 1 ? 's' : ''}`;
       updateClearButton();
+    }
+
+    function sortCards() {
+      if (!grid) return;
+      const sortBy = sortSelect?.value || 'newest';
+      const sorted = cards().sort((a, b) => {
+        if (sortBy === 'price-asc') return (Number(a.dataset.price) || 0) - (Number(b.dataset.price) || 0);
+        if (sortBy === 'price-desc') return (Number(b.dataset.price) || 0) - (Number(a.dataset.price) || 0);
+        if (sortBy === 'beds-desc') return (Number(b.dataset.beds) || 0) - (Number(a.dataset.beds) || 0);
+        // newest first — lower "days on market" means more recently listed
+        return (Number(a.dataset.days ?? Infinity)) - (Number(b.dataset.days ?? Infinity));
+      });
+      sorted.forEach((card) => grid.appendChild(card));
     }
 
     // Area filter buttons
@@ -457,16 +607,72 @@ const processedListings: ListingCard[] = listings.map((l) => {
       applyFilters();
     });
 
-    // Beds filter
-    bedsSelect?.addEventListener('change', (e) => {
-      minBeds = Number((e.target as HTMLSelectElement).value) || 0;
+    // Bedrooms / Bathrooms button groups
+    bedsRadios.forEach((r) => r.addEventListener('change', () => {
+      minBeds = Number(r.value) || 0;
       applyFilters();
-    });
+    }));
+    bathsRadios.forEach((r) => r.addEventListener('change', () => {
+      minBaths = Number(r.value) || 0;
+      applyFilters();
+    }));
 
     // Type filter
     typeSelect?.addEventListener('change', (e) => {
       typeFilter = (e.target as HTMLSelectElement).value || '';
       applyFilters();
+    });
+
+    // Parking / Days on market
+    parkingSelect?.addEventListener('change', (e) => {
+      minParking = Number((e.target as HTMLSelectElement).value) || 0;
+      applyFilters();
+    });
+    daysSelect?.addEventListener('change', (e) => {
+      const val = (e.target as HTMLSelectElement).value;
+      maxDays = val ? Number(val) : Infinity;
+      applyFilters();
+    });
+
+    // Keyword search (against PublicRemarks)
+    keywordInput?.addEventListener('input', (e) => {
+      keyword = (e.target as HTMLInputElement).value;
+      applyFilters();
+    });
+
+    // Sort
+    sortSelect?.addEventListener('change', sortCards);
+    sortCards();
+
+    // More Filters: inline dropdown on desktop, bottom-sheet drawer on mobile
+    const moreFiltersToggle = document.getElementById('more-filters-toggle');
+    const moreFiltersPanel = document.getElementById('more-filters-panel');
+    const moreFiltersBackdrop = document.getElementById('more-filters-backdrop');
+    const moreFiltersClose = document.getElementById('more-filters-close');
+
+    function openMoreFilters() {
+      moreFiltersPanel?.classList.remove('hidden');
+      moreFiltersBackdrop?.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeMoreFilters() {
+      moreFiltersPanel?.classList.add('hidden');
+      moreFiltersBackdrop?.classList.add('hidden');
+      document.body.style.overflow = '';
+    }
+    moreFiltersToggle?.addEventListener('click', () => {
+      if (moreFiltersPanel?.classList.contains('hidden')) openMoreFilters();
+      else closeMoreFilters();
+    });
+    moreFiltersClose?.addEventListener('click', closeMoreFilters);
+    moreFiltersBackdrop?.addEventListener('click', closeMoreFilters);
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeMoreFilters();
+    });
+    document.addEventListener('click', (e) => {
+      if (moreFiltersPanel?.classList.contains('hidden')) return;
+      if (moreFiltersPanel.contains(e.target as Node) || moreFiltersToggle?.contains(e.target as Node)) return;
+      closeMoreFilters();
     });
 
     // Clear all
@@ -475,13 +681,23 @@ const processedListings: ListingCard[] = listings.map((l) => {
       minPrice = 0;
       maxPrice = Infinity;
       minBeds = 0;
+      minBaths = 0;
+      minParking = 0;
+      maxDays = Infinity;
       typeFilter = '';
       searchTerm = '';
+      keyword = '';
       if (priceMinSelect) priceMinSelect.value = '';
       if (priceMaxSelect) priceMaxSelect.value = '';
-      if (bedsSelect) bedsSelect.value = '';
       if (typeSelect) typeSelect.value = '';
+      if (parkingSelect) parkingSelect.value = '';
+      if (daysSelect) daysSelect.value = '';
+      if (keywordInput) keywordInput.value = '';
       if (searchInput) searchInput.value = '';
+      const anyBeds = document.getElementById('p-beds-any') as HTMLInputElement | null;
+      if (anyBeds) anyBeds.checked = true;
+      const anyBaths = document.getElementById('p-baths-any') as HTMLInputElement | null;
+      if (anyBaths) anyBaths.checked = true;
       document.querySelectorAll<HTMLButtonElement>('.filter-btn').forEach((b, i) => {
         b.classList.toggle('bg-gold', i === 0);
         b.classList.toggle('text-navy', i === 0);

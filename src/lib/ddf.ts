@@ -27,7 +27,7 @@ const SELECT_FIELDS = [
   'TaxAnnualAmount',
   'PublicRemarks',
   'ListOfficeKey', 'ListOfficeName', 'ListAgentKey',
-  'ModificationTimestamp',
+  'ModificationTimestamp', 'OriginalEntryTimestamp',
 ].join(',');
 
 export type RawListing = Record<string, unknown> & {
