@@ -153,7 +153,7 @@ const areaServices = [
         </div>
         {areaListings.length > 9 && (
           <div class="text-center mt-10">
-            <a href={`/search/?q=${encodeURIComponent(area.name)}`} class="btn-secondary">View All {areaListings.length} Listings</a>
+            <a href={`/search/?area=${area.slug}`} class="btn-secondary">View All {areaListings.length} Listings</a>
           </div>
         )}
       </div>

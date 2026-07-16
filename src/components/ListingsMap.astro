@@ -6,9 +6,11 @@ interface Props {
   listings: Record<string, unknown>[];
   height?: string;
   showSchools?: boolean;
+  cluster?: boolean;
+  hrefPrefix?: string;
 }
 
-const { listings, height = '600px', showSchools = true } = Astro.props;
+const { listings, height = '600px', showSchools = true, cluster = false, hrefPrefix = '/properties/' } = Astro.props;
 const mapId = `listings-map-${Math.random().toString(36).slice(2, 9)}`;
 
 type MapListing = {
@@ -40,7 +42,7 @@ const mapListings: MapListing[] = listings
       photoUrl: (l._photoUrl as string | null) ?? null,
       mlsNumber: field(l, 'ListingKey', 'ListingId'),
       office: field(l, 'ListOfficeName'),
-      href: `/properties/${listingSlug(l)}/`,
+      href: `${hrefPrefix}${listingSlug(l)}/`,
     };
   })
   .filter((l): l is MapListing => l !== null);
@@ -66,7 +68,7 @@ const geoSchools = showSchools ? SCHOOLS.filter((s) => s.geo) : [];
     )}
   </div>
 
-  <script define:vars={{ mapId, mapListings, geoSchools }}>
+  <script define:vars={{ mapId, mapListings, geoSchools, cluster }}>
     function esc(s) {
       const d = document.createElement('div');
       d.textContent = s ?? '';
@@ -123,7 +125,9 @@ const geoSchools = showSchools ? SCHOOLS.filter((s) => s.geo) : [];
         return L.marker([l.lat, l.lng], { icon: priceIcon(l.priceShort) }).bindPopup(popupHtml, { maxWidth: 260 });
       });
 
-      const listingLayer = L.layerGroup(markers).addTo(map);
+      const listingLayer = cluster && window.L.markerClusterGroup
+        ? L.markerClusterGroup().addLayers(markers).addTo(map)
+        : L.layerGroup(markers).addTo(map);
 
       if (geoSchools.length > 0) {
         const schoolMarkers = geoSchools.map((s) =>
@@ -142,23 +146,36 @@ const geoSchools = showSchools ? SCHOOLS.filter((s) => s.geo) : [];
       return map;
     }
 
-    function loadLeaflet() {
-      return new Promise((resolve) => {
-        if (window.L) { resolve(); return; }
-        const link = document.createElement('link');
-        link.rel = 'stylesheet';
-        link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
-        link.integrity = 'sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H';
-        link.crossOrigin = 'anonymous';
-        document.head.appendChild(link);
+    function loadStylesheet(href, integrity) {
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = href;
+      if (integrity) link.integrity = integrity;
+      link.crossOrigin = 'anonymous';
+      document.head.appendChild(link);
+    }
 
+    function loadScript(src, integrity) {
+      return new Promise((resolve) => {
         const script = document.createElement('script');
-        script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-        script.integrity = 'sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH';
+        script.src = src;
+        if (integrity) script.integrity = integrity;
         script.crossOrigin = 'anonymous';
         script.onload = resolve;
         document.body.appendChild(script);
       });
+    }
+
+    async function loadLeaflet() {
+      if (!window.L) {
+        loadStylesheet('https://unpkg.com/leaflet@1.9.4/dist/leaflet.css', 'sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H');
+        await loadScript('https://unpkg.com/leaflet@1.9.4/dist/leaflet.js', 'sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH');
+      }
+      if (cluster && !window.L.markerClusterGroup) {
+        loadStylesheet('https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css', null);
+        loadStylesheet('https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css', null);
+        await loadScript('https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js', null);
+      }
     }
 
     // Leaflet computes its layout from the container's size at init time — if

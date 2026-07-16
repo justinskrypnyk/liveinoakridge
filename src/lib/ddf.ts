@@ -455,3 +455,61 @@ export async function getAreaMarketListings(areaSlug: string): Promise<RawListin
     })
   );
 }
+
+// "Browse everything, every REALTOR®, then narrow down" — the default view
+// on /search/. Unlike getAreaMarketListings, this covers all of London (or
+// one area slug if given) plus price/type filters and pagination. Photos are
+// only fetched for the current page's grid slice — fetching photos for the
+// full ~1,800-listing citywide set on every load would be far too expensive;
+// map pins for listings outside the current page simply show the existing
+// no-photo fallback in their popup.
+const BROWSE_PAGE_SIZE = 24;
+
+export interface LondonBrowseParams {
+  areaSlug?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  propertyType?: string;
+  page?: number;
+}
+
+export interface LondonBrowseResult {
+  listings: RawListing[];
+  mapListings: RawListing[];
+  totalMatching: number;
+  page: number;
+  pageCount: number;
+}
+
+export async function getLondonBrowseListings(params: LondonBrowseParams = {}): Promise<LondonBrowseResult> {
+  const geocoded = await getGeocodedLondonListings();
+  let filtered: RawListing[] = geocoded;
+
+  if (params.areaSlug) {
+    filtered = filtered.filter((l) => findAreaForPoint(l._geo!.lat, l._geo!.lng) === params.areaSlug);
+  }
+  if (params.minPrice) filtered = filtered.filter((l) => (Number(l.ListPrice) || 0) >= params.minPrice!);
+  if (params.maxPrice) filtered = filtered.filter((l) => (Number(l.ListPrice) || 0) <= params.maxPrice!);
+  if (params.propertyType) {
+    const wanted = params.propertyType.toLowerCase();
+    filtered = filtered.filter((l) =>
+      String(l.PropertySubType || l.PropertyType || '').toLowerCase().includes(wanted)
+    );
+  }
+
+  const totalMatching = filtered.length;
+  const pageCount = Math.max(1, Math.ceil(totalMatching / BROWSE_PAGE_SIZE));
+  const page = Math.min(Math.max(1, params.page || 1), pageCount);
+  const start = (page - 1) * BROWSE_PAGE_SIZE;
+  const pageSlice = filtered.slice(start, start + BROWSE_PAGE_SIZE);
+
+  const enriched = await Promise.all(
+    pageSlice.map(async (listing) => {
+      const key = String(listing.ListingKey || listing.ListingId);
+      const photoUrls = key ? await fetchPhotos(key) : [];
+      return { ...listing, _photoUrls: photoUrls, _photoUrl: photoUrls[0] || null };
+    })
+  );
+
+  return { listings: enriched, mapListings: filtered, totalMatching, page, pageCount };
+}

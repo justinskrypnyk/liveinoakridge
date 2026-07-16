@@ -1,19 +1,28 @@
 ---
 export const prerender = false; // live Ontario-wide DDF search — see src/lib/ddf.ts
 import Base from '@/layouts/Base.astro';
-import { searchMarketListings } from '@/lib/ddf';
-import { fmtPrice, field, buildAddress, realtorUrl } from '@/lib/listings';
+import ListingsMap from '@/components/ListingsMap.astro';
+import { searchMarketListings, getLondonBrowseListings } from '@/lib/ddf';
+import { fmtPrice, field, buildAddress } from '@/lib/listings';
+import { AREAS } from '@/data/areas';
 
 const params = Astro.url.searchParams;
 const q = params.get('q') || '';
+const area = params.get('area') || '';
 const minPrice = Number(params.get('minPrice')) || undefined;
 const maxPrice = Number(params.get('maxPrice')) || undefined;
 const propertyType = params.get('type') || '';
 const page = Number(params.get('page')) || 1;
 
+// No query text -> browse mode: every active London listing, every
+// brokerage, optionally narrowed to one neighbourhood. Typing a query
+// switches to Ontario-wide text search (unchanged, no map since only
+// London listings are geocoded).
 const result = q
   ? await searchMarketListings({ query: q, minPrice, maxPrice, propertyType, page })
-  : { listings: [], totalMatching: 0, page: 1, pageCount: 0 };
+  : await getLondonBrowseListings({ areaSlug: area || undefined, minPrice, maxPrice, propertyType, page });
+
+const mapListings = 'mapListings' in result ? result.mapListings : [];
 
 const priceSteps = Array.from({ length: 40 }, (_, i) => (i + 1) * 50000);
 function shortPrice(n: number): string {
@@ -24,6 +33,15 @@ function shortPrice(n: number): string {
 function pageUrl(p: number): string {
   const u = new URLSearchParams(params);
   u.set('page', String(p));
+  return `/search/?${u.toString()}`;
+}
+
+function areaUrl(slug: string): string {
+  const u = new URLSearchParams(params);
+  u.delete('q');
+  u.delete('page');
+  if (slug) u.set('area', slug);
+  else u.delete('area');
   return `/search/?${u.toString()}`;
 }
 
@@ -46,8 +64,8 @@ const cards = result.listings.map((l) => {
 ---
 
 <Base
-  title="Search Ontario MLS® Listings | Justin Skrypnyk Real Estate Broker"
-  description="Search active MLS® listings across Ontario — London, Toronto, Ottawa, and everywhere in between. Powered by REALTOR.ca data, brought to you by Justin Skrypnyk, Real Estate Broker."
+  title="Browse London MLS® Listings, Every Brokerage | Justin Skrypnyk Real Estate Broker"
+  description="Browse every active MLS® listing in London, Ontario from every brokerage, or search a specific city, address, or MLS® number anywhere in Ontario. Brought to you by Justin Skrypnyk, Real Estate Broker."
   noindex
 >
   <section class="bg-navy py-16 text-white">
@@ -57,10 +75,10 @@ const cards = result.listings.map((l) => {
         <span>/</span>
         <span class="text-white/70">Search Ontario Listings</span>
       </nav>
-      <h1 class="font-serif text-5xl font-bold mb-4">Search Ontario MLS® Listings</h1>
+      <h1 class="font-serif text-5xl font-bold mb-4">Browse & Search MLS® Listings</h1>
       <div class="gold-divider mb-6"></div>
       <p class="text-xl text-white/70 max-w-2xl">
-        Search active listings anywhere in Ontario — not just West London. Looking specifically at Oakridge, Byron, Westmount, and the rest of Justin's home turf? Browse <a href="/properties/" class="text-gold hover:underline">his own listings here</a> instead.
+        Every active London listing, every brokerage, right here — narrow down by neighbourhood or price, or search a specific city, address, or MLS® number anywhere in Ontario.
       </p>
     </div>
   </section>
@@ -68,14 +86,14 @@ const cards = result.listings.map((l) => {
   <section class="py-6 bg-white border-b border-gray-100 sticky top-20 z-30 shadow-sm">
     <div class="container-site">
       <form method="GET" action="/search/" class="flex flex-wrap items-center gap-2.5">
+        <input type="hidden" name="area" value={area} />
         <div class="relative flex-1 min-w-[240px]">
           <svg class="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-navy/40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
           <input
             type="text"
             name="q"
             value={q}
-            placeholder="City, address, or MLS® number (e.g. Toronto, or X13567832)"
-            required
+            placeholder="Leave blank to browse London, or search a city/address/MLS® number (e.g. Toronto, X13567832)"
             class="w-full pl-10 pr-4 py-2.5 rounded-full text-sm bg-cream border border-gray-200 text-navy placeholder-navy/40 focus:border-gold focus:outline-none transition-colors"
           />
         </div>
@@ -103,9 +121,23 @@ const cards = result.listings.map((l) => {
         </div>
         <button type="submit" class="btn-primary !py-2.5 !px-6">Search</button>
       </form>
-      {q && (
+
+      {!q && (
+        <div class="flex flex-wrap items-center gap-2 mt-4">
+          <a href={areaUrl('')} class={`text-xs font-semibold px-3.5 py-1.5 rounded-full transition-colors ${!area ? 'bg-navy text-white' : 'bg-cream text-navy/70 border border-gray-200 hover:border-gold'}`}>All London</a>
+          {AREAS.map((a) => (
+            <a href={areaUrl(a.slug)} class={`text-xs font-semibold px-3.5 py-1.5 rounded-full transition-colors ${area === a.slug ? 'bg-navy text-white' : 'bg-cream text-navy/70 border border-gray-200 hover:border-gold'}`}>{a.shortName}</a>
+          ))}
+        </div>
+      )}
+
+      {q ? (
         <p class="text-sm text-slate mt-3">
           {result.totalMatching} active listing{result.totalMatching !== 1 ? 's' : ''} matching "{q}"
+        </p>
+      ) : (
+        <p class="text-sm text-slate mt-3">
+          {result.totalMatching} active listing{result.totalMatching !== 1 ? 's' : ''}{area ? ` in ${AREAS.find((a) => a.slug === area)?.shortName ?? area}` : ' across London'} · all REALTORS®
         </p>
       )}
     </div>
@@ -113,13 +145,12 @@ const cards = result.listings.map((l) => {
 
   <section class="py-12 bg-cream">
     <div class="container-site">
-      {!q ? (
-        <div class="max-w-xl mx-auto text-center py-16">
-          <div class="text-6xl mb-6">🔎</div>
-          <h2 class="font-serif text-2xl text-navy mb-2">Search anywhere in Ontario</h2>
-          <p class="text-slate">Enter a city, address, or MLS® number above to search active listings across the province.</p>
+      {!q && mapListings.length > 0 && (
+        <div class="mb-10">
+          <ListingsMap listings={mapListings} cluster={true} showSchools={false} hrefPrefix="/search/" height="500px" />
         </div>
-      ) : cards.length === 0 ? (
+      )}
+      {cards.length === 0 ? (
         <div class="max-w-xl mx-auto text-center py-16">
           <div class="text-6xl mb-6">🏡</div>
           <h2 class="font-serif text-2xl text-navy mb-2">No listings found</h2>
