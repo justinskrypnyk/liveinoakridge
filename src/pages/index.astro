@@ -41,6 +41,8 @@ const activeListings = liveListings.slice(0, 6).map((l) => {
     address: buildAddress(L),
     city: field(L, 'City'),
     price: fmtPrice(L.ListPrice),
+    beds: field(L, 'BedroomsTotal'),
+    baths: field(L, 'BathroomsTotalInteger', 'BathroomsTotal'),
     photoUrl: (L._photoUrl as string | null) ?? null,
     url: `/properties/${listingSlug(L)}/`,
   };
@@ -141,7 +143,7 @@ const latestPosts = [...BLOG_POSTS]
         <a href="/services/home-evaluation/" class="btn-primary text-lg py-4 px-8">
           Get a Complimentary Home Evaluation
         </a>
-        <a href="/properties/" class="btn-white text-lg py-4 px-8">
+        <a href="/search/?area=oakridge" class="btn-white text-lg py-4 px-8">
           Browse Oakridge Homes for Sale
         </a>
       </div>
@@ -198,7 +200,7 @@ const latestPosts = [...BLOG_POSTS]
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
           {activeListings.map((l) => (
             <a href={l.url} class="card overflow-hidden hover:border-gold/30 border border-transparent group block">
-              <div class="h-32 bg-cream relative overflow-hidden">
+              <div class="aspect-[4/3] bg-cream relative overflow-hidden">
                 {l.photoUrl ? (
                   <img src={l.photoUrl} alt={`${l.address}, ${l.city}`} class="w-full h-full object-cover" loading="lazy" />
                 ) : (
@@ -210,13 +212,17 @@ const latestPosts = [...BLOG_POSTS]
                   <h3 class="font-serif text-lg text-navy font-bold group-hover:text-gold transition-colors">{l.address}</h3>
                 </div>
                 <p class="text-slate text-sm mb-2">{l.city}</p>
+                <div class="flex items-center gap-3 text-xs text-navy/70 mb-2">
+                  {l.beds && <span>{l.beds} bed</span>}
+                  {l.baths && <span>{l.baths} bath</span>}
+                </div>
                 <span class="text-gold text-sm font-semibold">{l.price}</span>
               </div>
             </a>
           ))}
         </div>
         <div class="text-center mt-10">
-          <a href="/properties/" class="btn-secondary">View All Listings</a>
+          <a href="/search/" class="btn-secondary">View All Listings</a>
         </div>
       </div>
     </section>

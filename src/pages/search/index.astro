@@ -23,6 +23,7 @@ const result = q
   : await getLondonBrowseListings({ areaSlug: area || undefined, minPrice, maxPrice, propertyType, page });
 
 const mapListings = 'mapListings' in result ? result.mapListings : [];
+const showMap = !q && mapListings.length > 0;
 
 const priceSteps = Array.from({ length: 40 }, (_, i) => (i + 1) * 50000);
 function shortPrice(n: number): string {
@@ -145,23 +146,72 @@ const cards = result.listings.map((l) => {
 
   <section class="py-12 bg-cream">
     <div class="container-site">
-      {!q && mapListings.length > 0 && (
-        <div class="mb-10">
-          <ListingsMap listings={mapListings} cluster={true} showSchools={false} hrefPrefix="/search/" height="500px" />
-        </div>
-      )}
       {cards.length === 0 ? (
         <div class="max-w-xl mx-auto text-center py-16">
           <div class="text-6xl mb-6">🏡</div>
           <h2 class="font-serif text-2xl text-navy mb-2">No listings found</h2>
           <p class="text-slate">Try a different city, address, or MLS® number, or widen your price range.</p>
         </div>
+      ) : showMap ? (
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+          <div class="order-2 lg:order-1">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              {cards.map((l) => (
+                <article class="listing-card bg-white rounded-2xl shadow-card overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all border border-gray-100">
+                  <div class="aspect-[4/3] bg-cream relative overflow-hidden">
+                    {l.photoUrl ? (
+                      <img src={l.photoUrl} alt={`${l.address}, ${l.city}`} class="w-full h-full object-cover" loading="lazy" />
+                    ) : (
+                      <div class="flex items-center justify-center h-full"><span class="text-5xl">🏡</span></div>
+                    )}
+                    {l.type && (
+                      <div class="absolute top-2 right-2">
+                        <span class="bg-navy/80 text-white text-xs font-medium px-2 py-0.5 rounded-full">{l.type}</span>
+                      </div>
+                    )}
+                  </div>
+                  <a href={l.detailHref} class="block p-3.5">
+                    <div class="font-serif text-lg text-navy font-bold mb-0.5">{l.price}</div>
+                    <p class="text-slate text-xs leading-snug mb-2 line-clamp-1">{l.address}{l.city ? `, ${l.city}` : ''}</p>
+                    <div class="flex items-center gap-3 text-xs text-navy/70 border-t border-gray-100 pt-2">
+                      {l.beds && <span>{l.beds} bed</span>}
+                      {l.baths && <span>{l.baths} bath</span>}
+                      {l.sqft && <span>{Number(l.sqft).toLocaleString()} sq ft</span>}
+                    </div>
+                    <p class="text-[10px] text-slate/50 mt-1.5">Courtesy of {l.brokerage}</p>
+                  </a>
+                  <div class="flex gap-2 px-3.5 pb-3.5">
+                    <a href={l.detailHref} class="flex-1 bg-navy text-white text-xs font-semibold text-center py-2 rounded-lg hover:bg-navy/80 transition-colors">
+                      View Full Details
+                    </a>
+                  </div>
+                </article>
+              ))}
+            </div>
+
+            {result.pageCount > 1 && (
+              <div class="flex items-center justify-center gap-2 mt-10">
+                {result.page > 1 && (
+                  <a href={pageUrl(result.page - 1)} class="px-4 py-2 rounded-full text-sm font-medium bg-white border border-gray-200 text-navy hover:border-gold transition-colors">Previous</a>
+                )}
+                <span class="text-sm text-slate px-2">Page {result.page} of {result.pageCount}</span>
+                {result.page < result.pageCount && (
+                  <a href={pageUrl(result.page + 1)} class="px-4 py-2 rounded-full text-sm font-medium bg-white border border-gray-200 text-navy hover:border-gold transition-colors">Next</a>
+                )}
+              </div>
+            )}
+          </div>
+
+          <div class="order-1 lg:order-2 lg:sticky lg:top-24">
+            <ListingsMap listings={mapListings} cluster={true} showSchools={false} hrefPrefix="/search/" height="600px" />
+          </div>
+        </div>
       ) : (
         <>
           <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
             {cards.map((l) => (
               <article class="listing-card bg-white rounded-2xl shadow-card overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all border border-gray-100">
-                <div class="h-28 bg-cream relative overflow-hidden">
+                <div class="aspect-[4/3] bg-cream relative overflow-hidden">
                   {l.photoUrl ? (
                     <img src={l.photoUrl} alt={`${l.address}, ${l.city}`} class="w-full h-full object-cover" loading="lazy" />
                   ) : (
