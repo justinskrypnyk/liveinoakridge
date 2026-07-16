@@ -409,19 +409,43 @@ async function getLondonCandidates(): Promise<RawListing[]> {
   }
 }
 
-export async function getAreaMarketListings(areaSlug: string): Promise<RawListing[]> {
-  const candidates = await getLondonCandidates();
+// Every area page independently needs "all London candidates with their
+// cached geo" — cache the resolved (post-Blobs-lookup) result in memory so
+// only the FIRST area page view in a warm function instance pays for the
+// batch of Blobs reads; every other area page load within the TTL just
+// filters the already-resolved list (pure JS, no I/O).
+let geocodedLondonCache: { data: (RawListing & { _geo: { lat: number; lng: number } })[]; fetchedAt: number } | null = null;
+const GEOCODED_LONDON_CACHE_TTL_MS = 10 * 60 * 1000;
+const GEOCODE_LOOKUP_CONCURRENCY = 40;
 
-  const matches: RawListing[] = [];
-  for (const listing of candidates) {
-    const address = String(listing.UnparsedAddress || '');
-    if (!address) continue;
-    const geo = await getCachedGeo(address);
-    if (!geo) continue;
-    if (findAreaForPoint(geo.lat, geo.lng) === areaSlug) {
-      matches.push({ ...listing, _geo: geo });
-    }
+async function getGeocodedLondonListings(): Promise<(RawListing & { _geo: { lat: number; lng: number } })[]> {
+  if (geocodedLondonCache && Date.now() - geocodedLondonCache.fetchedAt < GEOCODED_LONDON_CACHE_TTL_MS) {
+    return geocodedLondonCache.data;
   }
+
+  const candidates = await getLondonCandidates();
+  const results: (RawListing & { _geo: { lat: number; lng: number } })[] = [];
+
+  for (let i = 0; i < candidates.length; i += GEOCODE_LOOKUP_CONCURRENCY) {
+    const batch = candidates.slice(i, i + GEOCODE_LOOKUP_CONCURRENCY);
+    const resolved = await Promise.all(
+      batch.map(async (listing) => {
+        const address = String(listing.UnparsedAddress || '');
+        if (!address) return null;
+        const geo = await getCachedGeo(address);
+        return geo ? { ...listing, _geo: geo } : null;
+      })
+    );
+    for (const r of resolved) if (r) results.push(r);
+  }
+
+  geocodedLondonCache = { data: results, fetchedAt: Date.now() };
+  return results;
+}
+
+export async function getAreaMarketListings(areaSlug: string): Promise<RawListing[]> {
+  const geocoded = await getGeocodedLondonListings();
+  const matches = geocoded.filter((l) => findAreaForPoint(l._geo.lat, l._geo.lng) === areaSlug);
 
   return Promise.all(
     matches.map(async (listing) => {
