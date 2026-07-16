@@ -534,6 +534,21 @@ async function getCachedGeo(address: string): Promise<{ lat: number; lng: number
   }
 }
 
+// Cache-only photo lookup (no live AMPRE Media call) — same store fetchPhotos()
+// writes to, kept warm by netlify/functions/warm-photo-cache-background.mjs.
+// Used for map pins outside the current page, where a live fetch per pin
+// would be too expensive; a cache miss just falls back to the 🏡 emoji until
+// the next scheduled warm run picks it up.
+async function getCachedPhotoUrl(listingKey: string): Promise<string | null> {
+  try {
+    const store = getStore('ddf-photo-cache');
+    const cached = await store.get(listingKey, { type: 'json' }) as { urls: string[] } | null;
+    return cached?.urls?.[0] ?? null;
+  } catch {
+    return null;
+  }
+}
+
 async function getLondonCandidates(): Promise<RawListing[]> {
   if (londonCandidatesCache && Date.now() - londonCandidatesCache.fetchedAt < LONDON_CANDIDATES_CACHE_TTL_MS) {
     return londonCandidatesCache.data;
@@ -607,11 +622,12 @@ export async function getAreaMarketListings(areaSlug: string): Promise<RawListin
 // "Browse everything, every REALTOR®, then narrow down" — the default view
 // on /search/. Unlike getAreaMarketListings, this covers all of London (or
 // one area slug if given) plus price/type filters and pagination. Photos are
-// only fetched for the current page's grid slice — fetching photos for the
-// full ~1,800-listing citywide set on every load would be far too expensive;
-// map pins for listings outside the current page simply show the existing
-// no-photo fallback in their popup.
+// live-fetched only for the current page's grid slice; map pins cover the
+// full filtered set, so they get a cache-only lookup (see getCachedPhotoUrl)
+// kept warm by netlify/functions/warm-photo-cache-background.mjs — a pin
+// whose photo isn't cached yet just shows the emoji fallback in its popup.
 const BROWSE_PAGE_SIZE = 24;
+const MAP_PHOTO_LOOKUP_CONCURRENCY = 40;
 
 export interface LondonBrowseParams {
   areaSlug?: string;
@@ -659,5 +675,24 @@ export async function getLondonBrowseListings(params: LondonBrowseParams = {}): 
     })
   );
 
-  return { listings: enriched, mapListings: filtered, totalMatching, page, pageCount };
+  // Map pins span the whole filtered set (not just this page), so reuse the
+  // already-fetched photos for the current page and do a cheap cache-only
+  // lookup for everything else, instead of leaving them all photo-less.
+  const enrichedByKey = new Map(enriched.map((l) => [String(l.ListingKey || l.ListingId), l]));
+  const mapListings: RawListing[] = [];
+  for (let i = 0; i < filtered.length; i += MAP_PHOTO_LOOKUP_CONCURRENCY) {
+    const batch = filtered.slice(i, i + MAP_PHOTO_LOOKUP_CONCURRENCY);
+    const resolved = await Promise.all(
+      batch.map(async (listing) => {
+        const key = String(listing.ListingKey || listing.ListingId);
+        const already = enrichedByKey.get(key);
+        if (already) return already;
+        const photoUrl = key ? await getCachedPhotoUrl(key) : null;
+        return { ...listing, _photoUrl: photoUrl };
+      })
+    );
+    mapListings.push(...resolved);
+  }
+
+  return { listings: enriched, mapListings, totalMatching, page, pageCount };
 }
