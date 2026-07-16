@@ -1,6 +1,7 @@
 ---
 export const prerender = false; // fetch live DDF listings on-demand — see src/lib/ddf.ts
 import Base from '@/layouts/Base.astro';
+import Schema from '@/components/Schema.astro';
 import { SITE } from '@/data/site';
 import { AREAS } from '@/data/areas';
 import { getActiveListings } from '@/lib/ddf';
@@ -85,6 +86,23 @@ const processedListings: ListingCard[] = listings.map((l) => {
   title="Homes For Sale in West London Ontario | Justin Skrypnyk Real Estate Broker"
   description="Browse current MLS® listings in Oakridge, West London, Whitehills, Byron, Westmount, Riverbend, and Lambeth. Updated from DDF® before every build. Contact Justin Skrypnyk at 519.639.5176."
 >
+  <Fragment slot="head">
+    <Schema
+      type="listing-collection"
+      description="Current MLS® listings represented by Justin Skrypnyk across Oakridge, West London, Whitehills, Byron, Westmount, Riverbend, and Lambeth."
+      itemListName="Homes For Sale in West London Ontario"
+      itemListTotal={totalCount}
+      itemList={processedListings.slice(0, 40).map((l) => ({
+        name: `${l.address}${l.city ? `, ${l.city}` : ''} — ${l.price}`,
+        url: `${SITE.url}${l.detailHref}`,
+      }))}
+      breadcrumbs={[
+        { name: 'Home', url: SITE.url },
+        { name: 'Properties', url: `${SITE.url}/properties/` },
+      ]}
+    />
+  </Fragment>
+
   <!-- Hero -->
   <section class="bg-navy py-20 text-white">
     <div class="container-site">

@@ -39,42 +39,49 @@
   }
 }
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
+/*
+ * Defined with @utility (not @layer utilities + a plain class) so Tailwind
+ * registers these in its own cascade layer ordering — that's what lets
+ * responsive/state variants like `hidden md:inline-flex` on the same
+ * element correctly override the `display` set here. A plain `@layer
+ * utilities { .btn-primary { ... } }` block sits *after* Tailwind's
+ * generated utilities in source order, so equal-specificity rules like
+ * `.hidden` always lost the cascade tie and never actually hid the button.
+ */
+@utility text-balance {
+  text-wrap: balance;
+}
 
-  .container-site {
-    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
-  }
+@utility container-site {
+  @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+}
 
-  .btn-primary {
-    @apply inline-flex items-center gap-2 bg-gold text-navy font-semibold px-7 py-3.5 rounded-lg hover:bg-gold-light transition-all duration-200 shadow-sm hover:shadow-md;
-  }
+@utility btn-primary {
+  @apply inline-flex items-center gap-2 bg-gold text-navy font-semibold px-7 py-3.5 rounded-lg hover:bg-gold-light transition-all duration-200 shadow-sm hover:shadow-md;
+}
 
-  .btn-secondary {
-    @apply inline-flex items-center gap-2 border-2 border-gold text-gold font-semibold px-7 py-3.5 rounded-lg hover:bg-gold hover:text-navy transition-all duration-200;
-  }
+@utility btn-secondary {
+  @apply inline-flex items-center gap-2 border-2 border-gold text-gold font-semibold px-7 py-3.5 rounded-lg hover:bg-gold hover:text-navy transition-all duration-200;
+}
 
-  .btn-white {
-    @apply inline-flex items-center gap-2 bg-white text-navy font-semibold px-7 py-3.5 rounded-lg hover:bg-cream transition-all duration-200 shadow-sm;
-  }
+@utility btn-white {
+  @apply inline-flex items-center gap-2 bg-white text-navy font-semibold px-7 py-3.5 rounded-lg hover:bg-cream transition-all duration-200 shadow-sm;
+}
 
-  .section-heading {
-    @apply text-3xl md:text-4xl font-serif text-navy mb-4;
-  }
+@utility section-heading {
+  @apply text-3xl md:text-4xl font-serif text-navy mb-4;
+}
 
-  .section-subheading {
-    @apply text-lg text-slate max-w-2xl;
-  }
+@utility section-subheading {
+  @apply text-lg text-slate max-w-2xl;
+}
 
-  .card {
-    @apply bg-white rounded-card shadow-card hover:shadow-card-hover transition-shadow duration-300 overflow-hidden;
-  }
+@utility card {
+  @apply bg-white rounded-card shadow-card hover:shadow-card-hover transition-shadow duration-300 overflow-hidden;
+}
 
-  .gold-divider {
-    @apply w-16 h-1 bg-gold rounded-full;
-  }
+@utility gold-divider {
+  @apply w-16 h-1 bg-gold rounded-full;
 }
 
 /* Make tables inside blog prose horizontally scrollable on mobile */

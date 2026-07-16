@@ -32,8 +32,9 @@ import { BLOG_POSTS } from '@/data/blog';
 
 // Featured Listings — live from the DDF feed (every active Chapman listing),
 // not a hand-maintained list, so a sold home can never linger on the
-// homepage by mistake. Homepage shows a handful; "View All" goes to
-// /properties/ for the complete live set.
+// homepage by mistake. Homepage shows a handful, each linking to its own
+// /properties/[listingKey]/ page; "View All Listings" below sends people to
+// /search/ instead, the Ontario-wide browse tool.
 const liveListings = await getActiveListings();
 const activeListings = liveListings.slice(0, 6).map((l) => {
   const L = l as Record<string, unknown>;

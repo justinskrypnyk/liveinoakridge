@@ -1,6 +1,8 @@
 ---
 export const prerender = false; // live Ontario-wide DDF search — see src/lib/ddf.ts
 import Base from '@/layouts/Base.astro';
+import Schema from '@/components/Schema.astro';
+import { SITE } from '@/data/site';
 import { searchMarketListings, searchNationalPoolByBounds } from '@/lib/ddf';
 import { fmtPrice, field, buildAddress, listingSlug } from '@/lib/listings';
 import { AREAS } from '@/data/areas';
@@ -107,8 +109,24 @@ const allAreasBoundsForClient = getAllAreasBounds();
 <Base
   title="Browse London MLS® Listings, Every Brokerage | Justin Skrypnyk Real Estate Broker"
   description="Browse every active MLS® listing in Ontario from every brokerage on one interactive map, or search a specific city, address, or MLS® number. Brought to you by Justin Skrypnyk, Real Estate Broker."
-  noindex
 >
+  <Fragment slot="head">
+    <Schema
+      type="listing-collection"
+      description="Every active MLS® listing in Ontario, every brokerage, browsable on one live map or by neighbourhood, city, address, or MLS® number."
+      itemListName="Browse & Search MLS® Listings"
+      itemListTotal={browseResult?.total ?? browseCards.length}
+      itemList={browseCards.slice(0, 40).map((l) => ({
+        name: `${l.address}${l.city ? `, ${l.city}` : ''} — ${l.price}`,
+        url: `${SITE.url}${l.href}`,
+      }))}
+      breadcrumbs={[
+        { name: 'Home', url: SITE.url },
+        { name: 'Search Ontario Listings', url: `${SITE.url}/search/` },
+      ]}
+    />
+  </Fragment>
+
   <section class="bg-navy py-16 text-white">
     <div class="container-site">
       <nav aria-label="Breadcrumb" class="flex items-center gap-2 text-sm text-white/40 mb-8">

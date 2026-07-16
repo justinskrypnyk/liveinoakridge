@@ -2,14 +2,41 @@
 import { SITE } from '@/data/site';
 import { TESTIMONIALS } from '@/data/testimonials';
 
+interface ListingSchemaInput {
+  name: string;
+  /** Street-level portion only (no city/region/postal) — falls back to `name` if not given. */
+  streetAddress?: string;
+  price: number;
+  image?: string[];
+  beds?: string;
+  baths?: string;
+  sqft?: string;
+  propertyType?: string;
+  yearBuilt?: string;
+  city?: string;
+  postalCode?: string;
+  lat?: number;
+  lng?: number;
+}
+
+interface ItemListEntry {
+  name: string;
+  url: string;
+}
+
 interface Props {
-  type: 'home' | 'service' | 'area' | 'area-service' | 'blog' | 'contact';
+  type: 'home' | 'service' | 'area' | 'area-service' | 'blog' | 'contact' | 'listing' | 'listing-collection' | 'breadcrumb';
   areaName?: string;
   areaGeo?: { lat: number; lng: number };
   serviceName?: string;
   pageUrl?: string;
   description?: string;
   faqs?: { q: string; a: string }[];
+  breadcrumbs?: { name: string; url: string }[];
+  listing?: ListingSchemaInput;
+  itemList?: ItemListEntry[];
+  itemListName?: string;
+  itemListTotal?: number;
 }
 
 const {
@@ -20,6 +47,11 @@ const {
   pageUrl,
   description,
   faqs,
+  breadcrumbs,
+  listing,
+  itemList,
+  itemListName,
+  itemListTotal,
 } = Astro.props;
 
 const faqSchema = faqs && faqs.length > 0 ? {
@@ -334,6 +366,88 @@ if (type === 'blog') {
     ]),
     localBusinessSchema,
   ];
+}
+
+if (type === 'listing' && listing) {
+  const residenceType = /condo|apartment/i.test(listing.propertyType ?? '')
+    ? 'Apartment'
+    : /town/i.test(listing.propertyType ?? '')
+      ? 'Townhouse'
+      : 'SingleFamilyResidence';
+  const beds = Number(listing.beds);
+  const baths = Number(listing.baths);
+  const sqft = Number(listing.sqft);
+
+  schemas = [
+    {
+      '@context': 'https://schema.org',
+      '@type': 'RealEstateListing',
+      '@id': `${currentUrl}#listing`,
+      url: currentUrl,
+      name: listing.name,
+      description,
+      inLanguage: 'en-CA',
+      ...(listing.image?.length ? { image: listing.image.slice(0, 8) } : {}),
+      about: {
+        '@type': residenceType,
+        name: listing.name,
+        address: {
+          '@type': 'PostalAddress',
+          streetAddress: listing.streetAddress || listing.name,
+          addressLocality: listing.city || 'London',
+          addressRegion: 'ON',
+          addressCountry: 'CA',
+          ...(listing.postalCode ? { postalCode: listing.postalCode } : {}),
+        },
+        ...(listing.lat != null && listing.lng != null
+          ? { geo: { '@type': 'GeoCoordinates', latitude: listing.lat, longitude: listing.lng } }
+          : {}),
+        ...(Number.isFinite(beds) && beds > 0 ? { numberOfRooms: beds } : {}),
+        ...(Number.isFinite(baths) && baths > 0 ? { numberOfBathroomsTotal: baths } : {}),
+        ...(Number.isFinite(sqft) && sqft > 0
+          ? { floorSize: { '@type': 'QuantitativeValue', value: sqft, unitCode: 'FTK' } }
+          : {}),
+        ...(listing.yearBuilt ? { yearBuilt: listing.yearBuilt } : {}),
+      },
+      offers: {
+        '@type': 'Offer',
+        price: listing.price,
+        priceCurrency: 'CAD',
+        availability: 'https://schema.org/InStock',
+        businessFunction: 'https://schema.org/Sell',
+        url: currentUrl,
+      },
+    },
+  ];
+  if (breadcrumbs?.length) schemas.push(breadcrumbSchema(breadcrumbs));
+}
+
+if (type === 'listing-collection') {
+  schemas = [
+    {
+      '@context': 'https://schema.org',
+      '@type': 'CollectionPage',
+      '@id': `${currentUrl}#collection`,
+      url: currentUrl,
+      name: itemListName ?? 'MLS® Listings',
+      description,
+      mainEntity: {
+        '@type': 'ItemList',
+        numberOfItems: itemListTotal ?? itemList?.length ?? 0,
+        itemListElement: (itemList ?? []).map((item, index) => ({
+          '@type': 'ListItem',
+          position: index + 1,
+          url: item.url,
+          name: item.name,
+        })),
+      },
+    },
+  ];
+  if (breadcrumbs?.length) schemas.push(breadcrumbSchema(breadcrumbs));
+}
+
+if (type === 'breadcrumb' && breadcrumbs?.length) {
+  schemas = [breadcrumbSchema(breadcrumbs)];
 }
 ---
 

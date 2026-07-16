@@ -56,11 +56,18 @@ Justin's primary service areas are Oakridge, West London, and Whitehills, with B
 **What is the difference between a Real Estate Broker and a REALTOR in Ontario?**
 In Ontario, a Real Estate Broker holds an advanced license that requires additional education and experience beyond a salesperson. A REALTOR® is a member of the Canadian Real Estate Association (CREA). Justin Skrypnyk is both a licensed Broker and a REALTOR®.
 
+## Tools
+
+- [Browse & Search MLS® Listings](/search/) — every active listing in Ontario, every brokerage, on one live map
+- [Home Value Estimate](/home-value-estimate/) — directional estimate range, not an appraisal
+- [Commute Time Calculator](/commute-calculator/)
+- [Which Neighbourhood Fits You? Quiz](/neighbourhood-quiz/)
+- [Mortgage Calculator](/mortgages/calculator/)
+
 ## Optional Content
 
 - [About Justin Skrypnyk](/about/)
 - [Contact](/contact/)
-- [Mortgage Calculator](/mortgages/calculator/)
 - [All Blog Posts](/blog/)
 - [All Neighbourhoods](/areas/)
 - [All Services](/services/)

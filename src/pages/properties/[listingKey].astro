@@ -3,6 +3,7 @@ export const prerender = false; // fetch this listing live on-demand — see src
 import Base from '@/layouts/Base.astro';
 import GoogleMap from '@/components/GoogleMap.astro';
 import ContactForm from '@/components/ContactForm.astro';
+import Schema from '@/components/Schema.astro';
 import { SITE } from '@/data/site';
 import { AREAS } from '@/data/areas';
 import { getListingByKey } from '@/lib/ddf';
@@ -37,6 +38,17 @@ const lotDepth = field(listing, 'LotDepth');
 const mlsNumber = field(listing, 'ListingKey', 'ListingId');
 const remarks = field(listing, 'PublicRemarks');
 const listOfficeName = field(listing, 'ListOfficeName') || SITE.brokerage;
+const postalCode = field(listing, 'PostalCode');
+// Street-level only, for schema's PostalAddress.streetAddress — `address`
+// above may be the full UnparsedAddress string (city/region/postal and all)
+// when that's what the feed gave us, which would double up with the
+// separate addressLocality/postalCode fields.
+const streetAddress = [
+  field(listing, 'UnitNumber') ? `${field(listing, 'UnitNumber')}-` : '',
+  field(listing, 'StreetNumber'),
+  field(listing, 'StreetName'),
+  field(listing, 'StreetSuffix'),
+].filter(Boolean).join(' ') || address;
 const photoUrls = photos(listing);
 const mapQuery = `${address}`;
 
@@ -73,6 +85,34 @@ const facts: [string, string][] = [
   title={`${address} | ${price} | Justin Skrypnyk Real Estate Broker`}
   description={`${address} — ${price}. ${beds ? `${beds} bed` : ''}${baths ? `, ${baths} bath` : ''} ${propertyType} listed by ${listOfficeName}. Contact Justin Skrypnyk for details or to book a showing.`}
 >
+  <Fragment slot="head">
+    <Schema
+      type="listing"
+      description={`${address} — ${price}. ${beds ? `${beds} bed` : ''}${baths ? `, ${baths} bath` : ''} ${propertyType} listed by ${listOfficeName}.`}
+      listing={{
+        name: address,
+        streetAddress,
+        price: rawPrice,
+        image: photoUrls,
+        beds,
+        baths,
+        sqft,
+        propertyType,
+        yearBuilt,
+        city,
+        postalCode,
+        lat: geo?.lat,
+        lng: geo?.lng,
+      }}
+      breadcrumbs={[
+        { name: 'Home', url: SITE.url },
+        { name: 'Properties', url: `${SITE.url}/properties/` },
+        ...(area ? [{ name: area.name, url: `${SITE.url}/areas/${area.slug}/` }] : []),
+        { name: address, url: `${SITE.url}/properties/${listingKey}/` },
+      ]}
+    />
+  </Fragment>
+
   <!-- Breadcrumb -->
   <section class="bg-navy pt-8 pb-4 text-white">
     <div class="container-site">
