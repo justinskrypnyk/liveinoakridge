@@ -1,4 +1,5 @@
 ---
+export const prerender = false; // live "Homes for Sale, all REALTORS®" section — see src/lib/ddf.ts
 import Base from '@/layouts/Base.astro';
 import Schema from '@/components/Schema.astro';
 import GoogleMap from '@/components/GoogleMap.astro';
@@ -6,8 +7,25 @@ import AreaMap from '@/components/AreaMap.astro';
 import ContactForm from '@/components/ContactForm.astro';
 import { getArea, AREAS } from '@/data/areas';
 import { SITE } from '@/data/site';
+import { getAreaMarketListings } from '@/lib/ddf';
+import { fmtPrice, field, buildAddress } from '@/lib/listings';
 
 const area = getArea('oakridge')!;
+
+const areaListings = (await getAreaMarketListings(area.slug)).map((l) => {
+  const L = l as Record<string, unknown>;
+  return {
+    address: buildAddress(L),
+    city: field(L, 'City'),
+    price: fmtPrice(L.ListPrice),
+    beds: field(L, 'BedroomsTotal'),
+    baths: field(L, 'BathroomsTotalInteger', 'BathroomsTotal'),
+    type: field(L, 'PropertySubType', 'PropertyType'),
+    brokerage: field(L, 'ListOfficeName'),
+    photoUrl: (L._photoUrl as string | null) ?? null,
+    detailHref: `/search/${field(L, 'ListingKey', 'ListingId').toLowerCase()}/`,
+  };
+});
 
 const boardBadgeClass: Record<string, string> = {
   TVDSB: 'bg-navy/10 text-navy',
@@ -119,6 +137,56 @@ const subNeighbourhoods = [
       </div>
     </div>
   </nav>
+
+  <!-- Homes for Sale — live, every REALTOR® in the area, not just Justin's -->
+  {areaListings.length > 0 && (
+    <section class="py-16 bg-white">
+      <div class="container-site">
+        <div class="text-center mb-10">
+          <div class="inline-block text-gold text-sm font-semibold tracking-wider uppercase mb-4">
+            {areaListings.length} Active Listing{areaListings.length !== 1 ? 's' : ''} · All REALTORS®
+          </div>
+          <h2 class="section-heading">Homes for Sale in Oakridge</h2>
+          <div class="gold-divider mx-auto mb-4"></div>
+          <p class="text-slate max-w-2xl mx-auto">
+            Every active MLS® listing in Oakridge, from every brokerage — not just Justin's own. Powered by REALTOR.ca data.
+          </p>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {areaListings.slice(0, 9).map((l) => (
+            <a href={l.detailHref} class="card overflow-hidden hover:border-gold/30 border border-transparent group block">
+              <div class="h-28 bg-cream relative overflow-hidden">
+                {l.photoUrl ? (
+                  <img src={l.photoUrl} alt={`${l.address}, ${l.city}`} class="w-full h-full object-cover" loading="lazy" />
+                ) : (
+                  <div class="flex items-center justify-center h-full"><span class="text-5xl">🏡</span></div>
+                )}
+                {l.type && (
+                  <div class="absolute top-2 right-2">
+                    <span class="bg-navy/80 text-white text-xs font-medium px-2 py-0.5 rounded-full">{l.type}</span>
+                  </div>
+                )}
+              </div>
+              <div class="p-3.5">
+                <div class="font-serif text-lg text-navy font-bold mb-0.5 group-hover:text-gold transition-colors">{l.price}</div>
+                <p class="text-slate text-xs leading-snug mb-2 line-clamp-1">{l.address}</p>
+                <div class="flex items-center gap-3 text-xs text-navy/70 border-t border-gray-100 pt-2">
+                  {l.beds && <span>{l.beds} bed</span>}
+                  {l.baths && <span>{l.baths} bath</span>}
+                </div>
+                <p class="text-[10px] text-slate/50 mt-1.5">Courtesy of {l.brokerage}</p>
+              </div>
+            </a>
+          ))}
+        </div>
+        {areaListings.length > 9 && (
+          <div class="text-center mt-10">
+            <a href={`/search/?q=Oakridge`} class="btn-secondary">View All {areaListings.length} Listings</a>
+          </div>
+        )}
+      </div>
+    </section>
+  )}
 
   <!-- About + Map -->
   <section class="py-20 bg-cream">

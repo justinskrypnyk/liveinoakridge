@@ -2,6 +2,7 @@
 // Chapman Realty's listings at request time instead of at build time, so the
 // site never shows stale/sold listings without needing scheduled rebuilds.
 import { getStore } from '@netlify/blobs';
+import { findAreaForPoint } from '@/lib/area-boundaries';
 
 const ACCESS_TOKEN = import.meta.env.DDF_ACCESS_TOKEN;
 const BASE_URL = import.meta.env.DDF_API_BASE_URL;
@@ -363,4 +364,70 @@ export async function getMarketListingByKey(key: string): Promise<RawListing | n
     console.error('Market listing lookup failed:', err instanceof Error ? err.message : err);
     return null;
   }
+}
+
+// "Browse this neighbourhood, every brokerage" — area pages use this.
+// Deliberately never geocodes live: only checks the cache warmed by
+// netlify/functions/warm-geocode-cache-background.mjs, so a page load stays
+// fast (bounded by cheap Blobs reads) no matter how much of the cache is
+// warm. A listing not yet geocoded simply doesn't appear until the next
+// scheduled run picks it up — acceptable staleness for a "browse by area"
+// page, same spirit as CREA's own 24h-refresh minimum.
+let londonCandidatesCache: { data: RawListing[]; fetchedAt: number } | null = null;
+const LONDON_CANDIDATES_CACHE_TTL_MS = 10 * 60 * 1000;
+
+async function getCachedGeo(address: string): Promise<{ lat: number; lng: number } | null> {
+  try {
+    const store = getStore('ddf-geocode-cache');
+    const cached = await store.get(address, { type: 'json' });
+    return (cached as { lat: number; lng: number }) ?? null;
+  } catch {
+    return null;
+  }
+}
+
+async function getLondonCandidates(): Promise<RawListing[]> {
+  if (londonCandidatesCache && Date.now() - londonCandidatesCache.fetchedAt < LONDON_CANDIDATES_CACHE_TTL_MS) {
+    return londonCandidatesCache.data;
+  }
+  if (!ACCESS_TOKEN || !BASE_URL) return [];
+  try {
+    const data = await odataGet('Property', {
+      $filter: `contains(UnparsedAddress,'London')`,
+      $select: SELECT_FIELDS,
+      $top: '5000',
+    });
+    const all: RawListing[] = data.value || [];
+    const active = all.filter(
+      (l) => l.StandardStatus === 'Active' && l.PropertyType !== 'Commercial' && l.TransactionType !== 'For Lease'
+    );
+    londonCandidatesCache = { data: active, fetchedAt: Date.now() };
+    return active;
+  } catch (err) {
+    console.error('London candidates fetch failed:', err instanceof Error ? err.message : err);
+    return londonCandidatesCache?.data ?? [];
+  }
+}
+
+export async function getAreaMarketListings(areaSlug: string): Promise<RawListing[]> {
+  const candidates = await getLondonCandidates();
+
+  const matches: RawListing[] = [];
+  for (const listing of candidates) {
+    const address = String(listing.UnparsedAddress || '');
+    if (!address) continue;
+    const geo = await getCachedGeo(address);
+    if (!geo) continue;
+    if (findAreaForPoint(geo.lat, geo.lng) === areaSlug) {
+      matches.push({ ...listing, _geo: geo });
+    }
+  }
+
+  return Promise.all(
+    matches.map(async (listing) => {
+      const key = String(listing.ListingKey || listing.ListingId);
+      const photoUrls = key ? await fetchPhotos(key) : [];
+      return { ...listing, _photoUrls: photoUrls, _photoUrl: photoUrls[0] || null };
+    })
+  );
 }
