@@ -330,7 +330,7 @@ const allAreasBoundsForClient = getAllAreasBounds();
                 <article class="listing-card bg-white rounded-2xl shadow-card overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all border border-gray-100">
                   <div class="aspect-[4/3] bg-cream relative overflow-hidden">
                     {l.photoUrl ? (
-                      <img src={l.photoUrl} alt={`${l.address}, ${l.city}`} class="w-full h-full object-cover" loading="lazy" />
+                      <img src={l.photoUrl} alt={`${l.address}, ${l.city}`} class="w-full h-full object-contain" loading="lazy" />
                     ) : (
                       <div class="flex items-center justify-center h-full"><span class="text-5xl">🏡</span></div>
                     )}
@@ -387,7 +387,7 @@ const allAreasBoundsForClient = getAllAreasBounds();
                 <article class="listing-card bg-white rounded-2xl shadow-card overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all border border-gray-100" data-mls={l.mls}>
                   <div class="aspect-[4/3] bg-cream relative overflow-hidden">
                     {l.photoUrl ? (
-                      <img src={l.photoUrl} alt={`${l.address}, ${l.city}`} class="w-full h-full object-cover" loading="lazy" />
+                      <img src={l.photoUrl} alt={`${l.address}, ${l.city}`} class="w-full h-full object-contain" loading="lazy" />
                     ) : (
                       <div class="flex items-center justify-center h-full"><span class="text-5xl">🏡</span></div>
                     )}
@@ -504,7 +504,7 @@ const allAreasBoundsForClient = getAllAreasBounds();
         <article class="listing-card bg-white rounded-2xl shadow-card overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all border border-gray-100" data-mls="${esc(l.mls)}">
           <div class="aspect-[4/3] bg-cream relative overflow-hidden">
             ${l.photoUrl
-              ? `<img src="${esc(l.photoUrl)}" alt="" class="w-full h-full object-cover" loading="lazy" />`
+              ? `<img src="${esc(l.photoUrl)}" alt="" class="w-full h-full object-contain" loading="lazy" />`
               : `<div class="flex items-center justify-center h-full"><span class="text-5xl">🏡</span></div>`}
             ${l.type ? `<div class="absolute top-2 right-2"><span class="bg-navy/80 text-white text-xs font-medium px-2 py-0.5 rounded-full">${esc(l.type)}</span></div>` : ''}
           </div>
@@ -527,10 +527,10 @@ const allAreasBoundsForClient = getAllAreasBounds();
 
     function popupHtml(l) {
       return `
-        <a href="${l.href}" style="display:block;width:240px;text-decoration:none;color:inherit;font-family:Inter,sans-serif;">
+        <a href="${l.href}" style="display:block;width:240px;padding-top:18px;text-decoration:none;color:inherit;font-family:Inter,sans-serif;">
           <div style="width:100%;height:130px;border-radius:8px;overflow:hidden;background:#f0f9f6;margin-bottom:8px;">
             ${l.photoUrl
-              ? `<img src="${esc(l.photoUrl)}" alt="" style="width:100%;height:100%;object-fit:cover;" />`
+              ? `<img src="${esc(l.photoUrl)}" alt="" style="width:100%;height:100%;object-fit:contain;" />`
               : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:32px;">🏡</div>`}
           </div>
           <div style="display:flex;align-items:center;justify-content:between;gap:6px;">
@@ -631,7 +631,7 @@ const allAreasBoundsForClient = getAllAreasBounds();
         const markers = listings
           .filter((l) => l.lat && l.lng)
           .map((l) => {
-            const marker = L.marker([l.lat, l.lng], { icon: priceIcon(shortPrice(l.rawPrice)) }).bindPopup(popupHtml(l), { maxWidth: 260 });
+            const marker = L.marker([l.lat, l.lng], { icon: priceIcon(shortPrice(l.rawPrice)) }).bindPopup(popupHtml(l), { maxWidth: 260, autoPanPadding: [24, 40] });
             marker.on('click', () => highlightListingCard(l.mls));
             return marker;
           });
