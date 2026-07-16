@@ -110,11 +110,131 @@ async function fetchPhotos(listingKey: string): Promise<string[]> {
   }
 }
 
+// National Pool (CREA's own ddfapi.realtor.ca) — a separate DDF destination
+// that, unlike AMPRE, actually populates Latitude/Longitude. Join key
+// confirmed empirically 2026-07-16: this feed's `ListingId` equals AMPRE's
+// `ListingKey` (both are the human MLS# string, e.g. "X12367294") — the two
+// systems use different values for their own `ListingKey` field, so that
+// one can't be used to match.
+//
+// Filtering by `OriginatingSystemName eq '...LSTAR...'` (not by City or a
+// UnparsedAddress substring) matters here: National Pool is Canada-wide, so
+// a naive `contains(UnparsedAddress,'London')` mostly returns unrelated
+// "London Road"/"London Street" addresses in other cities/provinces within
+// the API's 100-row page cap, drowning out genuine London, Ontario matches.
+// Filtering by the originating board directly gets the right ~4,600-listing
+// pool (77% overlap with AMPRE's active London listings, verified 2026-07-16
+// — much higher than an earlier, wrongly-filtered check had suggested).
+const NATIONAL_USERNAME = import.meta.env.DDF_NATIONAL_USERNAME;
+const NATIONAL_PASSWORD = import.meta.env.DDF_NATIONAL_PASSWORD;
+const NATIONAL_BASE_URL = 'https://ddfapi.realtor.ca/odata/v1/';
+const NATIONAL_ORIGINATING_SYSTEM = 'London and St. Thomas Association of REALTORS®';
+const NATIONAL_PAGE_SIZE = 100;
+const NATIONAL_PAGE_CONCURRENCY = 10;
+
+let nationalTokenCache: { token: string; expiresAt: number } | null = null;
+
+async function getNationalToken(): Promise<string | null> {
+  if (nationalTokenCache && Date.now() < nationalTokenCache.expiresAt) {
+    return nationalTokenCache.token;
+  }
+  if (!NATIONAL_USERNAME || !NATIONAL_PASSWORD) return null;
+  try {
+    const res = await fetch('https://identity.crea.ca/connect/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        client_id: NATIONAL_USERNAME,
+        client_secret: NATIONAL_PASSWORD,
+        grant_type: 'client_credentials',
+        scope: 'DDFApi_Read',
+      }),
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (!data.access_token) return null;
+    // Token is valid 1h, non-sliding, no refresh token — re-request a bit
+    // early so a borderline-expired token is never handed to a caller.
+    nationalTokenCache = { token: data.access_token, expiresAt: Date.now() + (Number(data.expires_in || 3600) - 60) * 1000 };
+    return nationalTokenCache.token;
+  } catch {
+    return null;
+  }
+}
+
+async function fetchNationalPage(token: string, skip: number): Promise<any[]> {
+  const url = new URL(`${NATIONAL_BASE_URL}Property`);
+  url.searchParams.set('$filter', `OriginatingSystemName eq '${NATIONAL_ORIGINATING_SYSTEM}'`);
+  url.searchParams.set('$select', 'ListingId,Latitude,Longitude,StandardStatus');
+  url.searchParams.set('$top', String(NATIONAL_PAGE_SIZE));
+  url.searchParams.set('$skip', String(skip));
+  const res = await fetch(url, { headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' } });
+  if (!res.ok) return [];
+  const data = await res.json();
+  return data.value || [];
+}
+
+// ListingId -> real coordinates, sourced from the National Pool feed.
+// Cached in memory for an hour (matches the token lifetime) — rebuilding
+// means ~46 paginated requests (4,600+ LSTAR listings / 100 per page), fired
+// with bounded concurrency, so it's not something to redo per pageview.
+let nationalGeoCache: { data: Map<string, { lat: number; lng: number }>; fetchedAt: number } | null = null;
+const NATIONAL_GEO_CACHE_TTL_MS = 60 * 60 * 1000;
+
+async function getNationalGeoMap(): Promise<Map<string, { lat: number; lng: number }>> {
+  if (nationalGeoCache && Date.now() - nationalGeoCache.fetchedAt < NATIONAL_GEO_CACHE_TTL_MS) {
+    return nationalGeoCache.data;
+  }
+
+  const map = new Map<string, { lat: number; lng: number }>();
+  const token = await getNationalToken();
+  if (token) {
+    try {
+      const firstUrl = new URL(`${NATIONAL_BASE_URL}Property`);
+      firstUrl.searchParams.set('$filter', `OriginatingSystemName eq '${NATIONAL_ORIGINATING_SYSTEM}'`);
+      firstUrl.searchParams.set('$select', 'ListingId,Latitude,Longitude,StandardStatus');
+      firstUrl.searchParams.set('$top', String(NATIONAL_PAGE_SIZE));
+      firstUrl.searchParams.set('$count', 'true');
+      const firstRes = await fetch(firstUrl, { headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' } });
+
+      const addRows = (rows: any[]) => {
+        for (const row of rows) {
+          if (row.StandardStatus === 'Active' && row.Latitude && row.Longitude && row.ListingId) {
+            map.set(String(row.ListingId).toLowerCase(), { lat: Number(row.Latitude), lng: Number(row.Longitude) });
+          }
+        }
+      };
+
+      if (firstRes.ok) {
+        const firstData = await firstRes.json();
+        addRows(firstData.value || []);
+        const total = Number(firstData['@odata.count'] || firstData.value?.length || 0);
+
+        const remainingSkips: number[] = [];
+        for (let skip = NATIONAL_PAGE_SIZE; skip < total; skip += NATIONAL_PAGE_SIZE) remainingSkips.push(skip);
+
+        for (let i = 0; i < remainingSkips.length; i += NATIONAL_PAGE_CONCURRENCY) {
+          const batch = remainingSkips.slice(i, i + NATIONAL_PAGE_CONCURRENCY);
+          const pages = await Promise.all(batch.map((skip) => fetchNationalPage(token, skip)));
+          for (const rows of pages) addRows(rows);
+        }
+      }
+    } catch {
+      // National Pool unavailable — callers fall back to Nominatim/Google below.
+    }
+  }
+
+  nationalGeoCache = { data: map, fetchedAt: Date.now() };
+  return map;
+}
+
 // Geocoding — CREA/AMPRE withholds Latitude/Longitude on listing records, so
-// we geocode via Nominatim (OpenStreetMap's free geocoder). Their usage
-// policy caps requests at 1/second, far too slow to run live per pageview —
-// so results are cached durably in Netlify Blobs and only a genuinely new
-// address ever triggers a live geocode call.
+// we check the National Pool feed first (real coordinates, no rate limit,
+// no cost) and only geocode via Nominatim (OpenStreetMap's free geocoder)
+// for listings that feed doesn't cover. Nominatim's usage policy caps
+// requests at 1/second, far too slow to run live per pageview — so results
+// are cached durably in Netlify Blobs and only a genuinely new address ever
+// triggers a live geocode call.
 async function geocodeLive(query: string): Promise<{ lat: number; lng: number } | null> {
   try {
     const url = new URL('https://nominatim.openstreetmap.org/search');
@@ -136,6 +256,11 @@ async function geocodeLive(query: string): Promise<{ lat: number; lng: number } 
 async function geocodeAddress(listing: RawListing): Promise<{ lat: number; lng: number } | null> {
   if (listing.Latitude && listing.Longitude) {
     return { lat: Number(listing.Latitude), lng: Number(listing.Longitude) };
+  }
+  const listingKey = String(listing.ListingKey || '').toLowerCase();
+  if (listingKey) {
+    const national = (await getNationalGeoMap()).get(listingKey);
+    if (national) return national;
   }
   const address = String(listing.UnparsedAddress || '');
   if (!address) return null;
