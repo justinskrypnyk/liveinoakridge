@@ -34,3 +34,34 @@ export function findAreaForPoint(lat: number, lng: number): string | null {
   }
   return null;
 }
+
+export interface Bounds { north: number; south: number; east: number; west: number; }
+
+/** Bounding box of a single area's polygon, or null if the slug isn't known. */
+export function getAreaBounds(slug: string): Bounds | null {
+  const match = polygons.find((p) => p.slug === slug);
+  if (!match || !match.rings[0]) return null;
+  let north = -90, south = 90, east = -180, west = 180;
+  for (const [lng, lat] of match.rings[0]) {
+    if (lat > north) north = lat;
+    if (lat < south) south = lat;
+    if (lng > east) east = lng;
+    if (lng < west) west = lng;
+  }
+  return { north, south, east, west };
+}
+
+/** Union bounding box of every known area — the "All London" default view. */
+export function getAllAreasBounds(): Bounds {
+  let north = -90, south = 90, east = -180, west = 180;
+  for (const { rings } of polygons) {
+    if (!rings[0]) continue;
+    for (const [lng, lat] of rings[0]) {
+      if (lat > north) north = lat;
+      if (lat < south) south = lat;
+      if (lng > east) east = lng;
+      if (lng < west) west = lng;
+    }
+  }
+  return { north, south, east, west };
+}

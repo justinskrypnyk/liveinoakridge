@@ -228,6 +228,160 @@ async function getNationalGeoMap(): Promise<Map<string, { lat: number; lng: numb
   return map;
 }
 
+// Ontario-wide viewport map search — the /search/ default browse view is
+// backed by National Pool, not AMPRE. AMPRE can't do this: it rejects any
+// compound filter (confirmed both for string and numeric conditions), so a
+// "listings within these lat/lng bounds" query is impossible there, and it
+// never has real coordinates anyway. National Pool supports full compound
+// filters (bounds + status + price all combined) and returns real
+// coordinates plus embedded photos on every row — no second Media call
+// needed. Verified 2026-07-16: 114,466 active Ontario listings, 97.7% with
+// real lat/lng.
+//
+// National Pool's own PropertySubType enum is coarse (13 values total, e.g.
+// "Single Family", "Multi-family", "Office", "Vacant Land", "Industrial") —
+// unlike AMPRE's fine-grained per-board values. Restricting to Single
+// Family/Multi-family is how non-residential/commercial/land listings get
+// excluded here, matching this site's "Homes For Sale" scope. The finer
+// Detached/Semi/Townhouse/Condo distinction the UI offers is approximated
+// client-side from the `StructureType` array field, since there's no
+// reliable enum for it at the API level.
+const NATIONAL_SEARCH_SELECT = [
+  'ListingId', 'StandardStatus', 'ListPrice', 'UnparsedAddress', 'City', 'StateOrProvince', 'PostalCode',
+  'Latitude', 'Longitude',
+  'BedroomsTotal', 'BedroomsAboveGrade', 'BedroomsBelowGrade', 'BathroomsTotalInteger',
+  'PropertySubType', 'StructureType', 'ArchitecturalStyle',
+  'BuildingAreaTotal', 'BuildingAreaUnits',
+  'LotSizeArea', 'LotSizeUnits', 'LotSizeDimensions',
+  'ParkingTotal', 'Heating', 'Cooling',
+  'YearBuilt', 'TaxAnnualAmount', 'PublicRemarks',
+  'OriginatingSystemName', 'ModificationTimestamp',
+  'Media', 'PhotosCount',
+].join(',');
+
+// Normalizes a National Pool row into the same RawListing shape AMPRE
+// produces, so every existing component (cards, ListingsMap, the detail
+// page) works unchanged regardless of which feed a listing came from.
+// ListingKey is set to National Pool's ListingId (the human MLS# string,
+// e.g. "X12367294") to match AMPRE's convention — National Pool's own
+// ListingKey field is an unrelated internal numeric id.
+function normalizeNationalListing(row: Record<string, unknown>): RawListing {
+  const media = Array.isArray(row.Media) ? [...(row.Media as any[])].sort((a, b) => (a.Order ?? 0) - (b.Order ?? 0)) : [];
+  const photoUrls = media.map((m: any) => m.MediaURL).filter(Boolean);
+  const lat = Number(row.Latitude) || 0;
+  const lng = Number(row.Longitude) || 0;
+  return {
+    ...row,
+    ListingKey: String(row.ListingId || ''),
+    ListOfficeName: String(row.OriginatingSystemName || ''),
+    _geo: lat && lng ? { lat, lng } : null,
+    _photoUrls: photoUrls,
+    _photoUrl: photoUrls[0] || null,
+  };
+}
+
+const MAP_SEARCH_PAGE_CAP = 300; // ceiling on pins/cards rendered per viewport query
+
+export interface MapBoundsParams {
+  north: number; south: number; east: number; west: number;
+  minPrice?: number; maxPrice?: number; propertyType?: string;
+}
+
+export interface MapBoundsResult { listings: RawListing[]; total: number; capped: boolean; }
+
+async function fetchNationalSearchPage(token: string, filter: string, skip: number): Promise<any[]> {
+  const url = new URL(`${NATIONAL_BASE_URL}Property`);
+  url.searchParams.set('$filter', filter);
+  url.searchParams.set('$select', NATIONAL_SEARCH_SELECT);
+  url.searchParams.set('$top', String(NATIONAL_PAGE_SIZE));
+  url.searchParams.set('$skip', String(skip));
+  const res = await fetch(url, { headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' } });
+  if (!res.ok) return [];
+  const data = await res.json();
+  return data.value || [];
+}
+
+export async function searchNationalPoolByBounds(params: MapBoundsParams): Promise<MapBoundsResult> {
+  const empty: MapBoundsResult = { listings: [], total: 0, capped: false };
+  const token = await getNationalToken();
+  if (!token) return empty;
+
+  const conditions = [
+    `StandardStatus eq 'Active'`,
+    `Latitude gt ${params.south}`,
+    `Latitude lt ${params.north}`,
+    `Longitude gt ${params.west}`,
+    `Longitude lt ${params.east}`,
+    `(PropertySubType eq 'Single Family' or PropertySubType eq 'Multi-family')`,
+  ];
+  if (params.minPrice) conditions.push(`ListPrice ge ${params.minPrice}`);
+  if (params.maxPrice) conditions.push(`ListPrice le ${params.maxPrice}`);
+  const filter = conditions.join(' and ');
+
+  try {
+    const firstUrl = new URL(`${NATIONAL_BASE_URL}Property`);
+    firstUrl.searchParams.set('$filter', filter);
+    firstUrl.searchParams.set('$select', NATIONAL_SEARCH_SELECT);
+    firstUrl.searchParams.set('$top', String(NATIONAL_PAGE_SIZE));
+    firstUrl.searchParams.set('$count', 'true');
+    const firstRes = await fetch(firstUrl, { headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' } });
+    if (!firstRes.ok) return empty;
+    const firstData = await firstRes.json();
+    const total = Number(firstData['@odata.count'] || 0);
+    const rows: any[] = [...(firstData.value || [])];
+
+    const wantRows = Math.min(total, MAP_SEARCH_PAGE_CAP);
+    const remainingSkips: number[] = [];
+    for (let skip = NATIONAL_PAGE_SIZE; skip < wantRows; skip += NATIONAL_PAGE_SIZE) remainingSkips.push(skip);
+
+    for (let i = 0; i < remainingSkips.length; i += NATIONAL_PAGE_CONCURRENCY) {
+      const batch = remainingSkips.slice(i, i + NATIONAL_PAGE_CONCURRENCY);
+      const pages = await Promise.all(batch.map((skip) => fetchNationalSearchPage(token, filter, skip)));
+      for (const page of pages) rows.push(...page);
+    }
+
+    let listings = rows.slice(0, MAP_SEARCH_PAGE_CAP).map(normalizeNationalListing);
+
+    if (params.propertyType) {
+      const keywordMap: Record<string, string[]> = {
+        detached: ['house', 'detached'],
+        semi: ['semi'],
+        townhouse: ['row', 'town'],
+        condo: ['apartment', 'condo'],
+      };
+      const keywords = keywordMap[params.propertyType.toLowerCase()] || [params.propertyType.toLowerCase()];
+      listings = listings.filter((l) => {
+        const struct = Array.isArray((l as any).StructureType) ? (l as any).StructureType.join(' ').toLowerCase() : '';
+        return keywords.some((k) => struct.includes(k));
+      });
+    }
+
+    return { listings, total, capped: total > MAP_SEARCH_PAGE_CAP };
+  } catch (err) {
+    console.error('National Pool bounds search failed:', err instanceof Error ? err.message : err);
+    return empty;
+  }
+}
+
+export async function getNationalPoolListingByListingId(listingId: string): Promise<RawListing | null> {
+  const token = await getNationalToken();
+  if (!token) return null;
+  try {
+    const url = new URL(`${NATIONAL_BASE_URL}Property`);
+    url.searchParams.set('$filter', `ListingId eq '${escapeODataString(listingId)}'`);
+    url.searchParams.set('$select', NATIONAL_SEARCH_SELECT);
+    url.searchParams.set('$top', '1');
+    const res = await fetch(url, { headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' } });
+    if (!res.ok) return null;
+    const data = await res.json();
+    const row = (data.value || [])[0];
+    return row ? normalizeNationalListing(row) : null;
+  } catch (err) {
+    console.error('National Pool listing lookup failed:', err instanceof Error ? err.message : err);
+    return null;
+  }
+}
+
 // Geocoding — CREA/AMPRE withholds Latitude/Longitude on listing records, so
 // we check the National Pool feed first (real coordinates, no rate limit,
 // no cost) and only geocode via Nominatim (OpenStreetMap's free geocoder)

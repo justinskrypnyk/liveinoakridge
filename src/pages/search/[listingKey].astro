@@ -4,11 +4,17 @@ import Base from '@/layouts/Base.astro';
 import GoogleMap from '@/components/GoogleMap.astro';
 import ContactForm from '@/components/ContactForm.astro';
 import { SITE } from '@/data/site';
-import { getMarketListingByKey } from '@/lib/ddf';
+import { getMarketListingByKey, getNationalPoolListingByListingId } from '@/lib/ddf';
 import { fmtPrice, field, buildAddress, realtorUrl, photos } from '@/lib/listings';
 
+// AMPRE first (richer fields for listings it has — e.g. a real
+// ListOfficeName instead of just the originating board), falling back to
+// National Pool for listings outside AMPRE's coverage (most of Ontario's
+// other boards) — see src/lib/ddf.ts for how the two are joined/normalized.
 const { listingKey } = Astro.params;
-const listing = listingKey ? await getMarketListingByKey(listingKey) : null;
+const listing = listingKey
+  ? (await getMarketListingByKey(listingKey)) ?? (await getNationalPoolListingByListingId(listingKey))
+  : null;
 
 if (!listing) {
   return Astro.redirect('/search/', 302);
