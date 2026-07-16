@@ -17,4 +17,9 @@ node_modules/
 
 # Local Netlify folder
 .netlify
+
+# Claude Code local settings — can capture command text (including secrets
+# typed/echoed during a session) verbatim into the permission allowlist;
+# never belongs in a shared/public repo
+.claude/settings.local.json
 src/data/listings.json
