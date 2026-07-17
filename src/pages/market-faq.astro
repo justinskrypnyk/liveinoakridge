@@ -1,0 +1,129 @@
+---
+// SSR (not statically prerendered) so this always reflects the current
+// twice-monthly market-stats snapshot without needing a site rebuild —
+// same reasoning as the static stats block on each area page (see
+// src/components/AreaMarketStatsBlock.astro and
+// netlify/functions/market-stats-snapshot-background.mjs).
+export const prerender = false;
+import Base from '@/layouts/Base.astro';
+import Schema from '@/components/Schema.astro';
+import { SITE } from '@/data/site';
+import { getMarketStatsSnapshot, buildMarketFaqs } from '@/lib/market-stats';
+
+const snapshot = await getMarketStatsSnapshot();
+const faqGroups = buildMarketFaqs(snapshot);
+const allFaqs = faqGroups.flatMap((g) => g.items);
+const lastUpdated = snapshot
+  ? new Date(snapshot.updatedAt).toLocaleDateString('en-CA', { year: 'numeric', month: 'long', day: 'numeric' })
+  : null;
+---
+
+<Base
+  title="London Ontario Market FAQ | Live Neighbourhood Stats | Justin Skrypnyk"
+  description="Direct answers to common buyer and seller questions — median home prices, days on market, active listings, and current market conditions — for Oakridge, Byron, Westmount, Riverbend, Lambeth, Whitehills, and West London. Updated twice monthly from live MLS® data."
+>
+  <Fragment slot="head">
+    <Schema
+      type="breadcrumb"
+      breadcrumbs={[
+        { name: 'Home', url: SITE.url },
+        { name: 'Market FAQ', url: `${SITE.url}/market-faq/` },
+      ]}
+      faqs={allFaqs}
+    />
+  </Fragment>
+
+  <section class="bg-navy py-20 text-white">
+    <div class="container-site">
+      <nav aria-label="Breadcrumb" class="flex items-center gap-2 text-sm text-white/40 mb-8">
+        <a href="/" class="hover:text-gold transition-colors">Home</a>
+        <span>/</span>
+        <span class="text-white/70">Market FAQ</span>
+      </nav>
+      <h1 class="font-serif text-5xl font-bold mb-4">London Ontario Market Questions, Answered by the Numbers</h1>
+      <div class="gold-divider mb-6"></div>
+      <p class="text-xl text-white/70 max-w-2xl leading-relaxed">
+        Median home prices, how fast homes are selling, and current market conditions for every neighbourhood Justin serves — generated directly from live MLS® listing data, not static guesses.
+      </p>
+      {lastUpdated && (
+        <p class="text-sm text-white/40 mt-6 flex items-center gap-2">
+          <span class="w-1.5 h-1.5 rounded-full bg-gold animate-pulse"></span>
+          Last updated {lastUpdated} · refreshed twice monthly from active MLS® listings across every brokerage
+        </p>
+      )}
+    </div>
+  </section>
+
+  {faqGroups.length === 0 ? (
+    <section class="py-20 bg-cream">
+      <div class="container-site max-w-2xl text-center">
+        <div class="text-6xl mb-6">📊</div>
+        <h2 class="font-serif text-2xl text-navy mb-2">Market Data Is Being Compiled</h2>
+        <p class="text-slate leading-relaxed mb-6">
+          This page's answers are generated automatically from the twice-monthly market-stats refresh — check back shortly, or contact Justin directly for current numbers in the meantime.
+        </p>
+        <a href="/contact/" class="btn-primary">Contact Justin</a>
+      </div>
+    </section>
+  ) : (
+    <>
+      <!-- Jump nav -->
+      <nav aria-label="Jump to neighbourhood" class="sticky top-20 z-30 bg-white border-b border-gray-200 shadow-sm">
+        <div class="container-site">
+          <div class="flex items-center gap-1 overflow-x-auto py-3 no-scrollbar">
+            <span class="text-xs font-semibold text-navy/40 uppercase tracking-wider shrink-0 mr-3 hidden sm:block">Jump to:</span>
+            {faqGroups.map((g) => (
+              <a href={`#${g.slug}`} class="shrink-0 px-4 py-2 text-sm font-medium text-navy/70 hover:text-gold hover:bg-gold/10 rounded-lg transition-colors whitespace-nowrap">
+                {g.name}
+              </a>
+            ))}
+          </div>
+        </div>
+      </nav>
+
+      {faqGroups.map((group, gi) => (
+        <section id={group.slug} class={`py-16 scroll-mt-36 ${gi % 2 === 0 ? 'bg-white' : 'bg-cream'}`}>
+          <div class="container-site max-w-3xl">
+            <div class="mb-8">
+              <div class="inline-block text-gold text-sm font-semibold tracking-wider uppercase mb-3">{group.name}</div>
+              <h2 class="section-heading !text-left">{group.name} Market Questions</h2>
+              <div class="gold-divider mb-4"></div>
+            </div>
+            <div class="space-y-4">
+              {group.items.map((item) => (
+                <details class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden group">
+                  <summary class="flex items-center justify-between gap-4 p-6 cursor-pointer list-none font-semibold text-navy hover:text-gold transition-colors">
+                    <span>{item.q}</span>
+                    <svg class="w-5 h-5 shrink-0 text-gold transition-transform group-open:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                      <path d="M19 9l-7 7-7-7"/>
+                    </svg>
+                  </summary>
+                  <div class="px-6 pb-6 text-slate leading-relaxed text-sm border-t border-cream pt-4">
+                    {item.a}
+                  </div>
+                </details>
+              ))}
+            </div>
+            <div class="mt-8 flex flex-wrap gap-3">
+              <a href={`/areas/${group.slug}/`} class="btn-secondary">View {group.name} Listings & Details</a>
+            </div>
+          </div>
+        </section>
+      ))}
+    </>
+  )}
+
+  <section class="py-16 bg-navy text-white">
+    <div class="container-site text-center max-w-2xl mx-auto">
+      <h2 class="font-serif text-3xl mb-4">Want a Read on Your Specific Situation?</h2>
+      <div class="gold-divider mx-auto mb-6"></div>
+      <p class="text-white/70 leading-relaxed mb-8">
+        These answers are generated from live, area-wide listing data — a great starting point, but not a substitute for a real conversation about your home or your search. Justin will walk you through what's actually happening on your street.
+      </p>
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <a href={`tel:${SITE.phone}`} class="btn-primary">Call {SITE.phoneDisplay}</a>
+        <a href="/contact/" class="btn-secondary">Send a Message</a>
+      </div>
+    </div>
+  </section>
+</Base>

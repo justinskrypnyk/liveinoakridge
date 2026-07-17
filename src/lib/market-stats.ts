@@ -5,6 +5,7 @@
 //  - the static "as of [date]..." sentence block on each area page (SSR,
 //    read directly at request time — see src/pages/areas/[area]/index.astro)
 import { getStore } from '@netlify/blobs';
+import { AREAS } from '@/data/areas';
 
 export type ChangeDirection = 'up' | 'down' | 'flat';
 
@@ -48,4 +49,106 @@ export async function getMarketStatsSnapshot(): Promise<MarketStatsSnapshot | nu
 
 export function getAreaStats(snapshot: MarketStatsSnapshot | null, slug: string): AreaMarketStats | null {
   return snapshot?.areas[slug] ?? null;
+}
+
+export interface FaqItem {
+  q: string;
+  a: string;
+}
+
+export interface AreaFaqGroup {
+  slug: string;
+  name: string;
+  items: FaqItem[];
+}
+
+function fmtPrice(n: number): string {
+  return `$${n.toLocaleString('en-CA')}`;
+}
+
+function pace(days: number): string {
+  if (days < 20) return 'a relatively fast pace';
+  if (days <= 40) return 'a moderate pace';
+  return 'a slower pace than average';
+}
+
+// "Buyer's or seller's market" from the DDF feed alone: only active
+// (currently-for-sale) listings are available — no closed/sold prices,
+// which needs VOW-level board access Justin doesn't have yet (see
+// project memory). So this reads days-on-market and active supply as a
+// directional signal, not the sold-vs-list-price comparison a "true"
+// buyer's/seller's market call would use, and says so in the answer
+// rather than implying more certainty than the data supports.
+function marketLean(days: number): { label: string; explanation: string } {
+  if (days < 20) {
+    return {
+      label: "leaning toward a seller's market",
+      explanation: 'homes are being listed and are attracting buyers quickly, with less time for negotiation',
+    };
+  }
+  if (days > 40) {
+    return {
+      label: "leaning toward a buyer's market",
+      explanation: 'listings are staying active longer, giving buyers more room to negotiate',
+    };
+  }
+  return {
+    label: 'fairly balanced between buyers and sellers',
+    explanation: 'homes are neither selling immediately nor sitting for an extended period',
+  };
+}
+
+function fmtDate(iso: string): string {
+  return new Date(iso).toLocaleDateString('en-CA', { year: 'numeric', month: 'long', day: 'numeric' });
+}
+
+// Turns the same snapshot MarketTicker.astro and AreaMarketStatsBlock.astro
+// read into direct, natural-language answers to the questions
+// buyers/sellers actually ask — one group per neighbourhood, grouped for
+// on-page display and flattened into schema.org FAQPage markup by whichever
+// page renders this (see src/pages/market-faq.astro).
+export function buildMarketFaqs(snapshot: MarketStatsSnapshot | null): AreaFaqGroup[] {
+  if (!snapshot) return [];
+  const asOf = fmtDate(snapshot.updatedAt);
+
+  // Canonical AREAS order (Oakridge first, matching the rest of the site)
+  // rather than Record key order, which isn't guaranteed to match.
+  // Every served area gets at least the active-listing-count question
+  // (pushed unconditionally below) even at zero — "no homes for sale right
+  // now" is still a real answer. Only excluded if the snapshot has no entry
+  // for it at all (e.g. an area added after the last successful pull).
+  return AREAS.map((a) => snapshot.areas[a.slug])
+    .filter((area): area is AreaMarketStats => !!area)
+    .map((area) => {
+      const items: FaqItem[] = [];
+
+      if ((area.medianListPrice ?? 0) > 0) {
+        items.push({
+          q: `What is the median home price in ${area.name}?`,
+          a: `As of ${asOf}, the median list price for active MLS® listings in ${area.name} is ${fmtPrice(area.medianListPrice)}. This reflects current asking prices across every brokerage, not just Justin's, and is refreshed twice monthly.`,
+        });
+      }
+
+      items.push({
+        q: `How many homes are currently for sale in ${area.name}?`,
+        a: area.activeCount > 0
+          ? `As of ${asOf}, there ${area.activeCount === 1 ? 'is' : 'are'} ${area.activeCount} active MLS® listing${area.activeCount === 1 ? '' : 's'} in ${area.name}.`
+          : `There are no active MLS® listings in ${area.name} as of ${asOf}. Contact Justin Skrypnyk at 519.639.5176 to be notified when new listings come up.`,
+      });
+
+      if (area.avgDaysOnMarket != null) {
+        items.push({
+          q: `How fast are homes selling in ${area.name} right now?`,
+          a: `Active listings in ${area.name} have been on the market for an average of ${area.avgDaysOnMarket} day${area.avgDaysOnMarket === 1 ? '' : 's'} as of ${asOf} — ${pace(area.avgDaysOnMarket)} for the area. This measures how long current listings have been active, not how long it took past sales to close.`,
+        });
+
+        const lean = marketLean(area.avgDaysOnMarket);
+        items.push({
+          q: `Is ${area.name} a buyer's or seller's market right now?`,
+          a: `Based on current listing activity in ${area.name} as of ${asOf} — ${area.activeCount} active listing${area.activeCount === 1 ? '' : 's'} averaging ${area.avgDaysOnMarket} day${area.avgDaysOnMarket === 1 ? '' : 's'} on the market — conditions are ${lean.label}: ${lean.explanation}. This is a read on current asking-price activity, not closed sale prices, since sold data requires MLS® board access (VOW) Justin doesn't have yet. For a proper read on your specific situation, contact Justin Skrypnyk at 519.639.5176.`,
+        });
+      }
+
+      return { slug: area.slug, name: area.name, items };
+    });
 }
