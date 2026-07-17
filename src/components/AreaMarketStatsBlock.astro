@@ -1,0 +1,37 @@
+---
+// Static, server-rendered market-stats sentence for area pages — reads the
+// same twice-monthly snapshot as MarketTicker.astro (see
+// src/lib/market-stats.ts), but at request time rather than client-side, so
+// it's in the HTML a crawler sees. These area pages are already
+// `prerender = false` (they show live DDF listings on every request), so
+// this reads the Blobs snapshot directly rather than needing its own
+// rebuild/content-collection pipeline — same freshness, far less to
+// maintain.
+import type { AreaMarketStats } from '@/lib/market-stats';
+
+interface Props {
+  areaName: string;
+  stats: AreaMarketStats | null;
+}
+
+const { areaName, stats } = Astro.props;
+
+function fmtPrice(n: number): string {
+  return `$${n.toLocaleString('en-CA')}`;
+}
+
+const hasStats = !!stats && (stats.medianListPrice != null || stats.activeCount > 0);
+---
+
+{hasStats && stats && (
+  <div class="bg-cream/60 border border-gray-100 rounded-xl px-5 py-4 text-sm text-slate leading-relaxed">
+    <p>
+      As of {new Date().toLocaleDateString('en-CA', { year: 'numeric', month: 'long', day: 'numeric' })},
+      {' '}{areaName} has
+      {stats.medianListPrice != null && <> a median list price of <strong class="text-navy">{fmtPrice(stats.medianListPrice)}</strong>,</>}
+      {' '}<strong class="text-navy">{stats.activeCount}</strong> active listing{stats.activeCount !== 1 ? 's' : ''}
+      {stats.avgDaysOnMarket != null && <>, and an average of <strong class="text-navy">{stats.avgDaysOnMarket}</strong> day{stats.avgDaysOnMarket !== 1 ? 's' : ''} on the market</>}.
+    </p>
+    <p class="text-xs text-slate/50 mt-1.5">Based on active MLS® listings from every REALTOR®, not just Justin's — updated twice monthly.</p>
+  </div>
+)}

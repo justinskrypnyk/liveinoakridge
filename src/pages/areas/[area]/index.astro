@@ -5,10 +5,12 @@ import Schema from '@/components/Schema.astro';
 import GoogleMap from '@/components/GoogleMap.astro';
 import AreaMap from '@/components/AreaMap.astro';
 import ContactForm from '@/components/ContactForm.astro';
+import AreaMarketStatsBlock from '@/components/AreaMarketStatsBlock.astro';
 import { AREAS, getArea } from '@/data/areas';
 import { SITE } from '@/data/site';
 import { getAreaMarketListings } from '@/lib/ddf';
-import { fmtPrice, field, buildAddress } from '@/lib/listings';
+import { fmtPrice, field, buildAddress, buildStreetAddress, listingPhotoAlt } from '@/lib/listings';
+import { getMarketStatsSnapshot, getAreaStats } from '@/lib/market-stats';
 
 const DEPRECATED_SLUGS = new Set([
   'masonville', 'old-north', 'sunningdale', 'fox-hollow',
@@ -25,17 +27,27 @@ if (!area) {
 
 const isDeprecated = DEPRECATED_SLUGS.has(area.slug);
 
+const marketStatsSnapshot = await getMarketStatsSnapshot();
+const areaStats = getAreaStats(marketStatsSnapshot, area.slug);
+
 const areaListings = (await getAreaMarketListings(area.slug)).map((l) => {
   const L = l as Record<string, unknown>;
+  const listingAddress = buildAddress(L);
+  const listingCity = field(L, 'City');
+  const listingBeds = field(L, 'BedroomsTotal');
+  const listingType = field(L, 'PropertySubType', 'PropertyType');
   return {
-    address: buildAddress(L),
-    city: field(L, 'City'),
+    address: listingAddress,
+    city: listingCity,
     price: fmtPrice(L.ListPrice),
-    beds: field(L, 'BedroomsTotal'),
+    beds: listingBeds,
     baths: field(L, 'BathroomsTotalInteger', 'BathroomsTotal'),
-    type: field(L, 'PropertySubType', 'PropertyType'),
+    type: listingType,
     brokerage: field(L, 'ListOfficeName'),
     photoUrl: (L._photoUrl as string | null) ?? null,
+    // Already scoped to this one neighbourhood via getAreaMarketListings, so
+    // no geo lookup needed — area.name is the neighbourhood directly.
+    photoAlt: listingPhotoAlt({ address: buildStreetAddress(L), city: listingCity, neighbourhood: area.name, beds: listingBeds, propertyType: listingType }, 0),
     detailHref: `/search/${field(L, 'ListingKey', 'ListingId').toLowerCase()}/`,
   };
 });
@@ -56,6 +68,12 @@ const areaServices = [
       description={area.description}
       pageUrl={`${SITE.url}/areas/${area.slug}/`}
       faqs={area.faqs}
+      marketStats={areaStats ? {
+        medianListPrice: areaStats.medianListPrice,
+        activeCount: areaStats.activeCount,
+        avgDaysOnMarket: areaStats.avgDaysOnMarket,
+        asOf: marketStatsSnapshot!.updatedAt,
+      } : undefined}
     />
   </Fragment>
 
@@ -110,6 +128,16 @@ const areaServices = [
     </div>
   </section>
 
+  <!-- Static, crawlable market-stats sentence — server-rendered from the
+       twice-monthly snapshot (see src/lib/market-stats.ts), not client JS. -->
+  {areaStats && (
+    <section class="py-8 bg-white">
+      <div class="container-site">
+        <AreaMarketStatsBlock areaName={area.name} stats={areaStats} />
+      </div>
+    </section>
+  )}
+
   <!-- Homes for Sale — live, every REALTOR® in the area, not just Justin's -->
   {areaListings.length > 0 && (
     <section class="py-16 bg-white">
@@ -129,7 +157,7 @@ const areaServices = [
             <a href={l.detailHref} class="card overflow-hidden hover:border-gold/30 border border-transparent group block">
               <div class="aspect-[4/3] bg-cream relative overflow-hidden">
                 {l.photoUrl ? (
-                  <img src={l.photoUrl} alt={`${l.address}, ${l.city}`} class="w-full h-full object-cover" loading="lazy" />
+                  <img src={l.photoUrl} alt={l.photoAlt} class="w-full h-full object-cover" loading="lazy" />
                 ) : (
                   <div class="flex items-center justify-center h-full"><span class="text-5xl">🏡</span></div>
                 )}

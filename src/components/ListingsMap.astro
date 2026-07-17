@@ -1,5 +1,5 @@
 ---
-import { fmtPrice, field, buildAddress, listingSlug } from '@/lib/listings';
+import { fmtPrice, field, buildAddress, buildStreetAddress, listingSlug, listingPhotoAlt, neighbourhoodForPoint } from '@/lib/listings';
 import { SCHOOLS } from '@/data/schools';
 
 interface Props {
@@ -15,7 +15,7 @@ const mapId = `listings-map-${Math.random().toString(36).slice(2, 9)}`;
 
 type MapListing = {
   lat: number; lng: number; price: string; priceShort: string; address: string;
-  beds: string; baths: string; sqft: string; photoUrl: string | null;
+  beds: string; baths: string; sqft: string; photoUrl: string | null; photoAlt: string;
   mlsNumber: string; office: string; href: string;
 };
 
@@ -30,16 +30,21 @@ const mapListings: MapListing[] = listings
     const geo = l._geo as { lat: number; lng: number } | null;
     if (!geo) return null;
     const rawPrice = Number(l.ListPrice) || 0;
+    const address = buildAddress(l);
+    const city = field(l, 'City');
+    const beds = field(l, 'BedroomsTotal');
+    const propertyType = field(l, 'PropertySubType', 'PropertyType');
     return {
       lat: geo.lat,
       lng: geo.lng,
       price: fmtPrice(l.ListPrice),
       priceShort: shortPrice(rawPrice),
-      address: buildAddress(l),
-      beds: field(l, 'BedroomsTotal'),
+      address,
+      beds,
       baths: field(l, 'BathroomsTotalInteger', 'BathroomsTotal'),
       sqft: field(l, 'BuildingAreaTotal'),
       photoUrl: (l._photoUrl as string | null) ?? null,
+      photoAlt: listingPhotoAlt({ address: buildStreetAddress(l), city, neighbourhood: neighbourhoodForPoint(geo), beds, propertyType }, 0),
       mlsNumber: field(l, 'ListingKey', 'ListingId'),
       office: field(l, 'ListOfficeName'),
       href: `${hrefPrefix}${listingSlug(l)}/`,
@@ -172,7 +177,7 @@ const geoSchools = showSchools ? SCHOOLS.filter((s) => s.geo) : [];
           <div style="width:240px;font-family:Inter,sans-serif;">
             <div style="width:100%;height:130px;border-radius:8px;overflow:hidden;background:#f0f9f6;margin-bottom:8px;position:relative;">
               ${l.photoUrl
-                ? `<img src="${esc(l.photoUrl)}" alt="" style="width:100%;height:100%;object-fit:cover;" />`
+                ? `<img src="${esc(l.photoUrl)}" alt="${esc(l.photoAlt)}" style="width:100%;height:100%;object-fit:cover;" />`
                 : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:32px;">🏡</div>`}
               <div style="position:absolute;bottom:6px;right:6px;">${heartHtml(l.mlsNumber, l.address)}</div>
             </div>

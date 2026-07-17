@@ -6,7 +6,7 @@ import SaveHeartButton from '@/components/SaveHeartButton.astro';
 import SaveListingModal from '@/components/SaveListingModal.astro';
 import { SITE } from '@/data/site';
 import { searchMarketListings, searchNationalPoolByBounds, getActiveListingKeys } from '@/lib/ddf';
-import { fmtPrice, field, buildAddress, listingSlug } from '@/lib/listings';
+import { fmtPrice, field, buildAddress, buildStreetAddress, listingSlug, listingPhotoAlt, neighbourhoodForPoint } from '@/lib/listings';
 import { AREAS } from '@/data/areas';
 import { getAreaBounds, getAllAreasBounds } from '@/lib/area-boundaries';
 
@@ -63,17 +63,24 @@ const [ownKeys, textResult, browseResult] = await Promise.all([
 
 const textCards = (textResult?.listings ?? []).map((l) => {
   const L = l as Record<string, unknown>;
+  const address = buildAddress(L);
+  const city = field(L, 'City');
+  const beds = field(L, 'BedroomsTotal');
+  const propertyType = field(L, 'PropertySubType', 'PropertyType');
+  // No lat/lng on this AMPRE text-search path (unlike browseCards below), so
+  // neighbourhood falls back to city — see listingPhotoAlt's own fallback.
   return {
-    address: buildAddress(L),
-    city: field(L, 'City'),
+    address,
+    city,
     price: fmtPrice(L.ListPrice),
-    beds: field(L, 'BedroomsTotal'),
+    beds,
     baths: field(L, 'BathroomsTotalInteger', 'BathroomsTotal'),
     sqft: field(L, 'BuildingAreaTotal'),
-    type: field(L, 'PropertySubType', 'PropertyType'),
+    type: propertyType,
     brokerage: field(L, 'ListOfficeName'),
     isOwn: ownKeys.has(field(L, 'ListingKey', 'ListingId').toLowerCase()),
     photoUrl: (L._photoUrl as string | null) ?? null,
+    photoAlt: listingPhotoAlt({ address: buildStreetAddress(L), city, beds, propertyType }, 0),
     detailHref: `/search/${listingSlug(L)}/`,
     mls: field(L, 'ListingKey', 'ListingId'),
   };
@@ -95,21 +102,29 @@ const browseCards = (browseResult?.listings ?? []).map((l) => {
   const L = l as Record<string, unknown>;
   const geo = L._geo as { lat: number; lng: number } | null;
   const mls = field(L, 'ListingKey', 'ListingId');
+  const address = buildAddress(L);
+  const city = field(L, 'City');
+  const beds = field(L, 'BedroomsTotal');
+  const propertyType = field(L, 'PropertySubType');
+  const neighbourhood = neighbourhoodForPoint(geo);
   return {
     lat: geo?.lat ?? null,
     lng: geo?.lng ?? null,
     mls,
     price: fmtPrice(L.ListPrice),
     rawPrice: Number(L.ListPrice) || 0,
-    address: buildAddress(L),
-    city: field(L, 'City'),
-    beds: field(L, 'BedroomsTotal'),
+    address,
+    city,
+    beds,
     baths: field(L, 'BathroomsTotalInteger', 'BathroomsTotal'),
     sqft: field(L, 'BuildingAreaTotal'),
-    type: field(L, 'PropertySubType'),
+    type: propertyType,
     brokerage: field(L, 'ListOfficeName'),
     isOwn: ownKeys.has(mls.toLowerCase()),
     photoUrl: (L._photoUrl as string | null) ?? null,
+    // Same photo/index is used for both the grid card and this listing's
+    // map-popup preview — one alt string covers both.
+    photoAlt: listingPhotoAlt({ address: buildStreetAddress(L), city, neighbourhood, beds, propertyType }, 0),
     href: `/search/${listingSlug(L)}/`,
   };
 });
@@ -363,8 +378,8 @@ const allAreasBoundsForClient = getAllAreasBounds();
                   <div class="aspect-[4/3] bg-cream relative overflow-hidden">
                     {l.photoUrl ? (
                       i < 3
-                        ? <img src={l.photoUrl} alt={`${l.address}, ${l.city}`} class="w-full h-full object-contain" loading="eager" fetchpriority={i === 0 ? 'high' : undefined} />
-                        : <img src={l.photoUrl} alt={`${l.address}, ${l.city}`} class="w-full h-full object-contain" loading="lazy" />
+                        ? <img src={l.photoUrl} alt={l.photoAlt} class="w-full h-full object-contain" loading="eager" fetchpriority={i === 0 ? 'high' : undefined} />
+                        : <img src={l.photoUrl} alt={l.photoAlt} class="w-full h-full object-contain" loading="lazy" />
                     ) : (
                       <div class="flex items-center justify-center h-full"><span class="text-5xl">🏡</span></div>
                     )}
@@ -428,8 +443,8 @@ const allAreasBoundsForClient = getAllAreasBounds();
                   <div class="aspect-[4/3] bg-cream relative overflow-hidden">
                     {l.photoUrl ? (
                       i < 2
-                        ? <img src={l.photoUrl} alt={`${l.address}, ${l.city}`} class="w-full h-full object-contain" loading="eager" fetchpriority={i === 0 ? 'high' : undefined} />
-                        : <img src={l.photoUrl} alt={`${l.address}, ${l.city}`} class="w-full h-full object-contain" loading="lazy" />
+                        ? <img src={l.photoUrl} alt={l.photoAlt} class="w-full h-full object-contain" loading="eager" fetchpriority={i === 0 ? 'high' : undefined} />
+                        : <img src={l.photoUrl} alt={l.photoAlt} class="w-full h-full object-contain" loading="lazy" />
                     ) : (
                       <div class="flex items-center justify-center h-full"><span class="text-5xl">🏡</span></div>
                     )}
@@ -610,7 +625,7 @@ const allAreasBoundsForClient = getAllAreasBounds();
         <article class="listing-card bg-white rounded-2xl shadow-card overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all border border-gray-100" data-mls="${esc(l.mls)}">
           <div class="aspect-[4/3] bg-cream relative overflow-hidden">
             ${l.photoUrl
-              ? `<img src="${esc(l.photoUrl)}" alt="" class="w-full h-full object-contain" loading="lazy" />`
+              ? `<img src="${esc(l.photoUrl)}" alt="${esc(l.photoAlt)}" class="w-full h-full object-contain" loading="lazy" />`
               : `<div class="flex items-center justify-center h-full"><span class="text-5xl">🏡</span></div>`}
             ${l.isOwn ? `<div class="absolute top-2 left-2"><span class="bg-gold text-navy text-xs font-bold px-2 py-0.5 rounded-full">In-House Listing</span></div>` : ''}
             ${l.type ? `<div class="absolute top-2 right-2"><span class="bg-navy/80 text-white text-xs font-medium px-2 py-0.5 rounded-full">${esc(l.type)}</span></div>` : ''}
@@ -639,7 +654,7 @@ const allAreasBoundsForClient = getAllAreasBounds();
         <div style="width:240px;padding-top:18px;font-family:Inter,sans-serif;">
           <div style="width:100%;height:130px;border-radius:8px;overflow:hidden;background:#f0f9f6;margin-bottom:8px;position:relative;">
             ${l.photoUrl
-              ? `<img src="${esc(l.photoUrl)}" alt="" style="width:100%;height:100%;object-fit:contain;" />`
+              ? `<img src="${esc(l.photoUrl)}" alt="${esc(l.photoAlt)}" style="width:100%;height:100%;object-fit:contain;" />`
               : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:32px;">🏡</div>`}
             <div style="position:absolute;bottom:6px;right:6px;">${heartHtml(l.mls, address)}</div>
           </div>

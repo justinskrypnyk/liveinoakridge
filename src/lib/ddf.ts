@@ -14,7 +14,8 @@ const OFFICE_NAME_CONTAINS = 'Chapman';
 
 const SELECT_FIELDS = [
   'ListingKey', 'ListingId', 'StandardStatus', 'TransactionType',
-  'ListPrice', 'UnparsedAddress', 'City', 'CityRegion', 'StateOrProvince', 'PostalCode',
+  'ListPrice', 'UnparsedAddress', 'UnitNumber', 'StreetNumber', 'StreetName', 'StreetSuffix',
+  'City', 'CityRegion', 'StateOrProvince', 'PostalCode',
   'Latitude', 'Longitude',
   'BedroomsTotal', 'BedroomsAboveGrade', 'BedroomsBelowGrade',
   'BathroomsTotalInteger',
@@ -289,7 +290,8 @@ async function getNationalGeoMap(): Promise<Map<string, { lat: number; lng: numb
 // client-side from the `StructureType` array field, since there's no
 // reliable enum for it at the API level.
 const NATIONAL_SEARCH_SELECT = [
-  'ListingId', 'StandardStatus', 'ListPrice', 'UnparsedAddress', 'City', 'StateOrProvince', 'PostalCode',
+  'ListingId', 'StandardStatus', 'ListPrice', 'UnparsedAddress', 'UnitNumber', 'StreetNumber', 'StreetName', 'StreetSuffix',
+  'City', 'StateOrProvince', 'PostalCode',
   'Latitude', 'Longitude',
   'BedroomsTotal', 'BedroomsAboveGrade', 'BedroomsBelowGrade', 'BathroomsTotalInteger',
   'PropertySubType', 'StructureType', 'ArchitecturalStyle',

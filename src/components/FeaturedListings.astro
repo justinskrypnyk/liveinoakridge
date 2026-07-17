@@ -9,18 +9,24 @@
 // index.astro lets the rest of the page stay static/CDN-served while just
 // this section streams in after.
 import { getActiveListings } from '@/lib/ddf';
-import { fmtPrice, field, buildAddress, listingSlug } from '@/lib/listings';
+import { fmtPrice, field, buildAddress, buildStreetAddress, listingSlug, listingPhotoAlt, neighbourhoodForPoint } from '@/lib/listings';
 
 const liveListings = await getActiveListings();
 const activeListings = liveListings.slice(0, 6).map((l) => {
   const L = l as Record<string, unknown>;
+  const address = buildAddress(L);
+  const city = field(L, 'City');
+  const beds = field(L, 'BedroomsTotal');
+  const propertyType = field(L, 'PropertySubType', 'PropertyType');
+  const neighbourhood = neighbourhoodForPoint(L._geo as { lat: number; lng: number } | null);
   return {
-    address: buildAddress(L),
-    city: field(L, 'City'),
+    address,
+    city,
     price: fmtPrice(L.ListPrice),
-    beds: field(L, 'BedroomsTotal'),
+    beds,
     baths: field(L, 'BathroomsTotalInteger', 'BathroomsTotal'),
     photoUrl: (L._photoUrl as string | null) ?? null,
+    photoAlt: listingPhotoAlt({ address: buildStreetAddress(L), city, neighbourhood, beds, propertyType }, 0),
     url: `/search/${listingSlug(L)}/`,
   };
 });
@@ -39,7 +45,7 @@ const activeListings = liveListings.slice(0, 6).map((l) => {
           <a href={l.url} class="card overflow-hidden hover:border-gold/30 border border-transparent group block">
             <div class="aspect-[4/3] bg-cream relative overflow-hidden">
               {l.photoUrl ? (
-                <img src={l.photoUrl} alt={`${l.address}, ${l.city}`} class="w-full h-full object-cover" loading="lazy" />
+                <img src={l.photoUrl} alt={l.photoAlt} class="w-full h-full object-cover" loading="lazy" />
               ) : (
                 <div class="flex items-center justify-center h-full"><span class="text-5xl">🏡</span></div>
               )}

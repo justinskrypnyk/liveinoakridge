@@ -5,7 +5,7 @@ import Schema from '@/components/Schema.astro';
 import { SITE } from '@/data/site';
 import { AREAS } from '@/data/areas';
 import { getActiveListings } from '@/lib/ddf';
-import { fmtPrice, field, buildAddress, realtorUrl, listingSlug, AREA_SLUGS } from '@/lib/listings';
+import { fmtPrice, field, buildAddress, buildStreetAddress, realtorUrl, listingSlug, listingPhotoAlt, AREA_SLUGS } from '@/lib/listings';
 import { findAreaForPoint } from '@/lib/area-boundaries';
 import ListingsMap from '@/components/ListingsMap.astro';
 import SaveHeartButton from '@/components/SaveHeartButton.astro';
@@ -27,7 +27,7 @@ function shortPrice(n: number): string {
 type ListingCard = {
   address: string; city: string; area: string; price: string; rawPrice: number;
   beds: string; baths: string; sqft: string; type: string; garage: string; brokerage: string;
-  photoUrl: string | null; realtorLink: string; detailHref: string; areaSlug: string | null; beds_n: number;
+  photoUrl: string | null; photoAlt: string; realtorLink: string; detailHref: string; areaSlug: string | null; beds_n: number;
   mls: string; baths_n: number; parking_n: number; daysOnMarket: number; remarks: string;
 };
 
@@ -58,19 +58,22 @@ const processedListings: ListingCard[] = listings.map((l) => {
   const areaName = geoSlug
     ? (Object.entries(AREA_SLUGS).find(([, slug]) => slug === geoSlug)?.[0] ?? geoSlug)
     : (areaEntry?.[0] ?? '');
+  const beds = field(L, 'BedroomsTotal');
+  const propertyType = field(L, 'PropertySubType', 'PropertyType');
   return {
     address,
     city,
     area: areaName,
     price: fmtPrice(L.ListPrice),
     rawPrice: Number(L.ListPrice) || 0,
-    beds: field(L, 'BedroomsTotal'),
+    beds,
     baths: field(L, 'BathroomsTotalInteger', 'BathroomsTotal'),
     sqft: field(L, 'BuildingAreaTotal'),
-    type: field(L, 'PropertySubType', 'PropertyType'),
+    type: propertyType,
     garage: field(L, 'CoveredSpaces', 'GarageSpaces'),
     brokerage: field(L, 'ListOfficeName') || SITE.brokerage,
     photoUrl: (L._photoUrl as string | null) ?? null,
+    photoAlt: listingPhotoAlt({ address: buildStreetAddress(L), city, neighbourhood: areaName || null, beds, propertyType }, 0),
     realtorLink: realtorUrl(L),
     // Points at /search/[key]/, not /properties/[key]/ — that URL now 301s
     // there (same underlying AMPRE listing), so linking to it directly
@@ -368,8 +371,8 @@ const processedListings: ListingCard[] = listings.map((l) => {
               <div class="aspect-[4/3] bg-cream relative overflow-hidden">
                 {l.photoUrl ? (
                   i < 3
-                    ? <img src={l.photoUrl} alt={`${l.address}, ${l.city}`} class="w-full h-full object-cover" loading="eager" fetchpriority={i === 0 ? 'high' : undefined} />
-                    : <img src={l.photoUrl} alt={`${l.address}, ${l.city}`} class="w-full h-full object-cover" loading="lazy" />
+                    ? <img src={l.photoUrl} alt={l.photoAlt} class="w-full h-full object-cover" loading="eager" fetchpriority={i === 0 ? 'high' : undefined} />
+                    : <img src={l.photoUrl} alt={l.photoAlt} class="w-full h-full object-cover" loading="lazy" />
                 ) : (
                   <div class="flex items-center justify-center h-full">
                     <span class="text-5xl">🏡</span>

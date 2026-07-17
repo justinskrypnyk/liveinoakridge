@@ -6,6 +6,7 @@ import Base from '@/layouts/Base.astro';
 import Schema from '@/components/Schema.astro';
 import ContactForm from '@/components/ContactForm.astro';
 import FeaturedListings from '@/components/FeaturedListings.astro';
+import MarketTicker from '@/components/MarketTicker.astro';
 import { SITE } from '@/data/site';
 import { AREAS, getArea } from '@/data/areas';
 import { TESTIMONIALS } from '@/data/testimonials';
@@ -160,6 +161,8 @@ const latestPosts = [...BLOG_POSTS]
       </svg>
     </div>
   </section>
+
+  <MarketTicker />
 
   <a href={`/blog/${MARKET_SNAPSHOT.blogSlug}/`} class="block bg-navy-dark border-b border-white/10 py-4 hover:bg-navy transition-colors">
     <div class="container-site">

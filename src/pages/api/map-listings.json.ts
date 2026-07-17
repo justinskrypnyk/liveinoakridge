@@ -6,7 +6,7 @@
 // map pins + grid cards.
 import type { APIRoute } from 'astro';
 import { searchNationalPoolByBounds, getActiveListingKeys } from '@/lib/ddf';
-import { fmtPrice, field, buildAddress, listingSlug } from '@/lib/listings';
+import { fmtPrice, field, buildAddress, buildStreetAddress, listingSlug, listingPhotoAlt, neighbourhoodForPoint } from '@/lib/listings';
 
 export const prerender = false;
 
@@ -43,21 +43,26 @@ export const GET: APIRoute = async ({ url }) => {
     const L = l as Record<string, unknown>;
     const geo = L._geo as { lat: number; lng: number } | null;
     const mls = field(L, 'ListingKey', 'ListingId');
+    const address = buildAddress(L);
+    const city = field(L, 'City');
+    const beds = field(L, 'BedroomsTotal');
+    const propertyType = field(L, 'PropertySubType');
     return {
       lat: geo?.lat ?? null,
       lng: geo?.lng ?? null,
       mls,
       price: fmtPrice(L.ListPrice),
       rawPrice: Number(L.ListPrice) || 0,
-      address: buildAddress(L),
-      city: field(L, 'City'),
-      beds: field(L, 'BedroomsTotal'),
+      address,
+      city,
+      beds,
       baths: field(L, 'BathroomsTotalInteger', 'BathroomsTotal'),
       sqft: field(L, 'BuildingAreaTotal'),
-      type: field(L, 'PropertySubType'),
+      type: propertyType,
       brokerage: field(L, 'ListOfficeName'),
       isOwn: ownKeys.has(mls.toLowerCase()),
       photoUrl: (L._photoUrl as string | null) ?? null,
+      photoAlt: listingPhotoAlt({ address: buildStreetAddress(L), city, neighbourhood: neighbourhoodForPoint(geo), beds, propertyType }, 0),
       href: `/search/${listingSlug(L)}/`,
     };
   });

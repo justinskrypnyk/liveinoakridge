@@ -1,0 +1,139 @@
+---
+// Scrolling per-neighbourhood market ticker — reads
+// /api/market-stats.json client-side only (see src/lib/market-stats.ts and
+// netlify/functions/market-stats-snapshot-background.mjs), so a page
+// refresh always shows the latest twice-monthly snapshot without needing a
+// site rebuild. Hidden entirely until that first fetch resolves with real
+// data, so there's never a broken-looking empty bar before the scheduled
+// function has run once.
+---
+
+<div id="market-ticker" class="hidden bg-navy border-y border-white/10 overflow-hidden">
+  <div class="flex flex-col sm:flex-row sm:items-stretch">
+    <!-- Its own row on mobile (not sharing horizontal space with the
+         scrolling track) — sharing a row squeezed the label and the ticker
+         into a sliver too narrow to read on a phone. From `sm` up there's
+         enough width for the label to sit beside the track instead. -->
+    <div class="shrink-0 flex items-center gap-2 bg-navy-dark px-4 py-1.5 sm:py-3 border-b sm:border-b-0 sm:border-r border-white/10 z-10">
+      <span class="w-1.5 h-1.5 rounded-full bg-gold animate-pulse"></span>
+      <span class="text-gold text-xs font-semibold uppercase tracking-wider whitespace-nowrap">Neighbourhood Pulse</span>
+      <span id="market-ticker-updated" class="text-white/40 text-xs whitespace-nowrap"></span>
+    </div>
+    <div class="relative flex-1 overflow-hidden">
+      <div id="market-ticker-track" class="market-ticker-track flex items-center gap-0 py-3 whitespace-nowrap"></div>
+    </div>
+  </div>
+</div>
+
+<style is:global>
+  /* Global, not scoped: the segments below are injected via client-side
+     innerHTML (see the script), so they never get Astro's scoped
+     data-astro-cid attribute a normal <style> block relies on to match. */
+  .market-ticker-track {
+    animation: market-ticker-scroll 45s linear infinite;
+    width: max-content;
+  }
+  #market-ticker:hover .market-ticker-track {
+    animation-play-state: paused;
+  }
+  @keyframes market-ticker-scroll {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+  @media (max-width: 640px) {
+    .market-ticker-track {
+      animation-duration: 70s;
+    }
+    /* Mobile shows just the neighbourhood name + median price per segment —
+       active count and days-on-market are dropped to keep each segment
+       short enough to read mid-scroll on a small screen. */
+    .market-ticker-extra {
+      display: none;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .market-ticker-track {
+      animation: none;
+    }
+  }
+</style>
+
+<script>
+  function shortPrice(n: number): string {
+    if (n >= 1000000) return `$${(n / 1000000).toFixed(n % 1000000 === 0 ? 0 : 1)}M`;
+    if (n >= 1000) return `$${Math.round(n / 1000)}K`;
+    return `$${n}`;
+  }
+
+  function arrowSvg(direction: 'up' | 'down' | 'flat'): string {
+    if (direction === 'flat') return '';
+    const color = direction === 'up' ? '#10b981' : '#f87171';
+    const path = direction === 'up' ? 'M12 19V5M5 12l7-7 7 7' : 'M12 5v14M5 12l7 7 7-7';
+    return `<svg class="inline-block w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2.5"><path d="${path}"/></svg>`;
+  }
+
+  type StatChange = { value: number; direction: 'up' | 'down' | 'flat' } | null;
+  type AreaMarketStats = {
+    slug: string;
+    name: string;
+    medianListPrice: number | null;
+    activeCount: number;
+    avgDaysOnMarket: number | null;
+    change: { medianListPrice: StatChange; activeCount: StatChange; avgDaysOnMarket: StatChange };
+  };
+
+  function segmentHtml(area: AreaMarketStats): string {
+    const priceChange = area.change.medianListPrice;
+    const domChange = area.change.avgDaysOnMarket;
+    return `
+      <a href="/areas/${area.slug}/" class="market-ticker-segment shrink-0 flex items-center gap-3 px-5 py-1 hover:bg-white/5 transition-colors border-r border-white/10">
+        <span class="font-serif text-white font-bold text-sm whitespace-nowrap">${area.name}</span>
+        ${area.medianListPrice != null ? `
+          <span class="text-white/80 text-xs whitespace-nowrap flex items-center gap-1">
+            ${shortPrice(area.medianListPrice)} median
+            ${priceChange ? arrowSvg(priceChange.direction) : ''}
+          </span>
+        ` : ''}
+        <span class="market-ticker-extra text-white/60 text-xs whitespace-nowrap">${area.activeCount} active</span>
+        ${area.avgDaysOnMarket != null ? `
+          <span class="market-ticker-extra text-white/60 text-xs whitespace-nowrap flex items-center gap-1">
+            ${area.avgDaysOnMarket}d on market
+            ${domChange ? arrowSvg(domChange.direction) : ''}
+          </span>
+        ` : ''}
+      </a>
+    `;
+  }
+
+  async function initMarketTicker() {
+    const container = document.getElementById('market-ticker');
+    const track = document.getElementById('market-ticker-track');
+    const updatedEl = document.getElementById('market-ticker-updated');
+    if (!container || !track) return;
+
+    try {
+      const res = await fetch('/api/market-stats.json');
+      if (!res.ok) return;
+      const data: { updatedAt: string | null; areas: Record<string, AreaMarketStats> } = await res.json();
+      const areas = Object.values(data.areas || {});
+      if (areas.length === 0) return; // nothing yet — leave the ticker hidden rather than show an empty bar
+
+      const segments = areas.map(segmentHtml).join('');
+      // Duplicated once so the CSS animation (translateX 0 -> -50%) loops
+      // seamlessly — the visible track is always showing "real" content,
+      // never a gap.
+      track.innerHTML = segments + segments;
+
+      if (updatedEl && data.updatedAt) {
+        const date = new Date(data.updatedAt);
+        updatedEl.textContent = `Updated ${date.toLocaleDateString('en-CA', { month: 'short', day: 'numeric' })}`;
+      }
+
+      container.classList.remove('hidden');
+    } catch {
+      // Network hiccup — leave the ticker hidden rather than show broken content.
+    }
+  }
+
+  initMarketTicker();
+</script>
