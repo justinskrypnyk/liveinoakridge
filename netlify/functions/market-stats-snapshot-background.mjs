@@ -105,9 +105,17 @@ function computeChange(previous, current) {
   return { value, direction: value > 0 ? 'up' : value < 0 ? 'down' : 'flat' };
 }
 
-export default async () => {
+export default async (req) => {
   const now = new Date();
-  if (!isSnapshotDay(now)) {
+  // `?force=true` bypasses the 15th/last-day gate — lets a real snapshot be
+  // seeded on demand (e.g. right after this feature first ships, rather
+  // than waiting up to ~2 weeks for the next scheduled date) without
+  // touching the automatic cadence for every other run. Deliberately not
+  // gated behind a secret: this function is a background job with no
+  // public link anywhere on the site, and the worst case of someone
+  // guessing the URL is a few extra AMPRE reads, not a data exposure.
+  const forced = req && new URL(req.url).searchParams.get('force') === 'true';
+  if (!forced && !isSnapshotDay(now)) {
     return new Response(`market-stats-snapshot: not a snapshot day (${now.toISOString().slice(0, 10)}), skipping`);
   }
 
