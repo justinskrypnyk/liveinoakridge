@@ -1,11 +1,20 @@
 // Receives Netlify's "form submission" outgoing-webhook notification and
 // upserts the lead into GoHighLevel as a contact. Shared by every Netlify
-// form on the site (contact, home-value-lead, newsletter, ...) — configure
-// ONE outgoing webhook in the Netlify dashboard (Site settings -> Forms ->
-// Form notifications -> Outgoing webhook, applying to "all forms") once
-// deploys are unblocked, pointing at this route with a custom header
-// `X-Webhook-Secret: <GHL_WEBHOOK_SECRET>`.
+// form on the site (contact, home-value-lead, newsletter, save-listing...)
+// — configure ONE outgoing webhook in the Netlify dashboard (Site
+// configuration -> Forms -> Form notifications -> Outgoing webhook,
+// applying to "all forms"), URL https://www.liveinoakridge.ca/api/ghl-lead,
+// with GHL_WEBHOOK_SECRET pasted into the notification's own "JWS secret
+// token" field.
+//
+// That field does NOT make Netlify send a plain header with the raw
+// secret — it signs the request as a compact JWS (HS256) and sends that in
+// `X-Webhook-Signature`, payload `{ sha256: <hex sha256 of the raw body> }`.
+// verifyNetlifySignature() below re-derives that signature and the body
+// hash itself; a plain string-equality check against a header (this
+// endpoint's original approach) would reject every single real request.
 import type { APIRoute } from 'astro';
+import { createHmac, createHash, timingSafeEqual } from 'node:crypto';
 
 export const prerender = false;
 
@@ -13,19 +22,47 @@ const GHL_API_TOKEN = import.meta.env.GHL_API_TOKEN;
 const GHL_LOCATION_ID = import.meta.env.GHL_LOCATION_ID;
 const WEBHOOK_SECRET = import.meta.env.GHL_WEBHOOK_SECRET;
 
+function base64UrlDecode(segment: string): Buffer {
+  return Buffer.from(segment.replace(/-/g, '+').replace(/_/g, '/'), 'base64');
+}
+
+function verifyNetlifySignature(signatureHeader: string, secret: string, rawBody: string): boolean {
+  const parts = signatureHeader.split('.');
+  if (parts.length !== 3) return false;
+  const [headerB64, payloadB64, signatureB64] = parts;
+
+  const expectedSig = createHmac('sha256', secret).update(`${headerB64}.${payloadB64}`).digest();
+  const actualSig = base64UrlDecode(signatureB64);
+  if (expectedSig.length !== actualSig.length || !timingSafeEqual(expectedSig, actualSig)) return false;
+
+  let payload: { sha256?: string };
+  try {
+    payload = JSON.parse(base64UrlDecode(payloadB64).toString('utf-8'));
+  } catch {
+    return false;
+  }
+  const bodyHash = createHash('sha256').update(rawBody).digest('hex');
+  return payload.sha256 === bodyHash;
+}
+
 export const POST: APIRoute = async ({ request }) => {
   if (!GHL_API_TOKEN || !GHL_LOCATION_ID) {
     console.error('GHL env vars missing');
     return new Response('Not configured', { status: 500 });
   }
 
-  if (WEBHOOK_SECRET && request.headers.get('x-webhook-secret') !== WEBHOOK_SECRET) {
-    return new Response('Unauthorized', { status: 401 });
+  const rawBody = await request.text();
+
+  if (WEBHOOK_SECRET) {
+    const signatureHeader = request.headers.get('x-webhook-signature');
+    if (!signatureHeader || !verifyNetlifySignature(signatureHeader, WEBHOOK_SECRET, rawBody)) {
+      return new Response('Unauthorized', { status: 401 });
+    }
   }
 
   let body: any;
   try {
-    body = await request.json();
+    body = JSON.parse(rawBody);
   } catch {
     return new Response('Invalid JSON', { status: 400 });
   }
