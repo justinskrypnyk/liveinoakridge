@@ -1,42 +1,69 @@
 # Live In Oakridge
 
-> Justin Skrypnyk is a licensed Real Estate Broker with Sutton Group Chapman Realty Inc., Brokerage, serving Oakridge and West London Ontario. Contact: 519.639.5176 | info@homeswithjustin.ca | https://www.liveinoakridge.ca
+> Justin Skrypnyk is a licensed Real Estate Broker with Sutton Group Chapman Realty Inc., Brokerage, specializing in Oakridge, West London, and Whitehills in London, Ontario. Contact: 519.639.5176 | info@homeswithjustin.ca | https://www.liveinoakridge.ca
 
-Justin Skrypnyk helps buyers and sellers navigate the West London Ontario real estate market. With deep roots in Oakridge, he brings hyper-local expertise, professional marketing, and honest advice to every transaction. Services include buying, selling, complimentary home evaluations, first-time buyer guidance, downsizing, upsizing, relocation, and investment properties.
+Justin Skrypnyk helps buyers and sellers navigate the West London Ontario real estate market. A third-generation Oakridge resident — his family has called the neighbourhood home since 1959 — he brings hyper-local expertise, professional marketing, and honest advice to every transaction. Services include buying, selling, complimentary home evaluations, first-time buyer guidance, downsizing, upsizing, relocation, and investment properties.
 
 ## Key Facts
 
 - Licensed Real Estate Broker in Ontario, Canada
+- REALTOR®, member of the Canadian Real Estate Association (CREA)
 - Brokerage: Sutton Group Chapman Realty Inc., Brokerage
-- Primary market: Oakridge, West London, and Whitehills, with Byron, Westmount, and Riverbend also served
+- Third-generation Oakridge resident — family in the neighbourhood since 1959
+- Primary market: Oakridge, West London, and Whitehills, with Byron, Westmount, Riverbend, and Lambeth also served
 - Phone: 519.639.5176
 - Email: info@homeswithjustin.ca
 - Google reviews: see https://share.google/swwXpwTpwjv6x4eYg for current rating and review count
 
-## Services
+## Neighbourhood Pages
+
+- [Oakridge, London Ontario](/areas/oakridge/) — London's most established west-end neighbourhood, avg. $650K–$850K, Justin's home community
+- [West London](/areas/west-london/) — Established, convenient, value-driven neighbourhood in the heart of the west end, avg. $520K–$720K
+- [Whitehills, London Ontario](/areas/whitehills/) — Northwest London family community, three schools and five parks, avg. $520K–$720K
+- [Byron, London Ontario](/areas/byron/) — Trails, parks, and timeless community in southwest London, avg. $700K–$950K
+- [Westmount, London Ontario](/areas/westmount/) — Urban-suburban west London, near Western University, avg. $550K–$750K
+- [Riverbend, London Ontario](/areas/riverbend/) — Southwest London's premier new-build, golf-course community, avg. $730K–$900K+
+- [Lambeth, London Ontario](/areas/lambeth/) — Suburban calm with small-town character in southwest London, avg. $700K–$1.1M
+
+## Market Data
+
+Live market statistics — median list price, active listing count, and average days on market — are published directly on each neighbourhood page above and refreshed twice monthly (the 15th and last day of each month) from active MLS® listings across every brokerage, not just Justin's.
+
+- [Oakridge Market Stats](/areas/oakridge/) — live median list price, active listings, average days on market
+- [West London Market Stats](/areas/west-london/)
+- [Whitehills Market Stats](/areas/whitehills/)
+- [Byron Market Stats](/areas/byron/)
+- [Westmount Market Stats](/areas/westmount/)
+- [Riverbend Market Stats](/areas/riverbend/)
+- [Lambeth Market Stats](/areas/lambeth/)
+
+## Guides
 
 - [Buying a Home in London Ontario](/services/buying/) — Buyer representation, MLS® access, negotiation expertise
 - [Selling Your Home in London Ontario](/services/selling/) — Strategic pricing, professional photography, digital marketing
-- [Complimentary Home Evaluation](/services/home-evaluation/) — Data-backed market value analysis at no cost
 - [First-Time Home Buyers](/services/first-time-buyers/) — Step-by-step guidance from mortgage pre-approval to closing
+- [Relocation to London Ontario](/services/relocation/) — Seamless moves into or out of the London area
+- [Complimentary Home Evaluation](/services/home-evaluation/) — Data-backed market value analysis at no cost
 - [Downsizing in London Ontario](/services/downsizing/) — Right-sizing your home with minimal stress
 - [Upsizing in London Ontario](/services/upsizing/) — Moving to a larger home for growing families
-- [Relocation to London Ontario](/services/relocation/) — Seamless moves into or out of the London area
 - [Investment Properties London Ontario](/services/investment/) — Income property strategy and acquisition
 
-## Neighbourhoods Served
+## Tools
 
-- [Oakridge, London Ontario](/areas/oakridge/) — Established west-end community, avg. $650K–$850K
-- [West London](/areas/west-london/) — Value-driven established neighbourhood, avg. $520K–$720K
-- [Whitehills, London Ontario](/areas/whitehills/) — Northwest London family community
-- [Byron, London Ontario](/areas/byron/) — Family-focused, trails, conservation areas, avg. $700K–$950K
-- [Westmount, London Ontario](/areas/westmount/) — Near Western University, strong rental market, avg. $550K–$750K
-- [Riverbend, London Ontario](/areas/riverbend/) — Golf community in SW London
+- [Browse & Search MLS® Listings](/search/) — every active listing in Ontario, every brokerage, on one live map
+- [In-House Listings](/properties/) — every home currently listed by Sutton Group Chapman Realty, Justin's own brokerage
+- [Home Value Estimate](/home-value-estimate/) — directional estimate range, not an appraisal
+- [Mortgage Calculator](/mortgages/calculator/)
+- [Mortgage Pre-Approval](/mortgages/pre-approval/)
+- [Commute Time Calculator](/commute-calculator/)
+- [Which Neighbourhood Fits You? Quiz](/neighbourhood-quiz/)
 
 ## Blog & Market Guides
 
 - [London Ontario Real Estate Market Update — June 2026](/blog/june-2026-london-ontario-market-update/)
+- [London Ontario's Housing Supply Just Tripled — July 2026](/blog/london-ontario-months-of-supply-july-2026/)
 - [Oakridge vs Byron: Which West London Neighbourhood Is Right for You?](/blog/oakridge-vs-byron-west-london-neighbourhoods/)
+- [Lambeth, Ontario Real Estate Guide](/blog/lambeth-london-ontario-real-estate-guide/)
 - [First-Time Home Buyer Guide for London Ontario 2026](/blog/first-time-home-buyer-london-ontario-guide/)
 - [How to Sell Your Home in London Ontario: A Complete Guide](/blog/how-to-sell-your-home-london-ontario/)
 - [Real Estate Broker vs Agent in Ontario — What's the Difference?](/blog/real-estate-broker-vs-agent-ontario/)
@@ -45,25 +72,19 @@ Justin Skrypnyk helps buyers and sellers navigate the West London Ontario real e
 ## Common Questions
 
 **What is the average home price in London Ontario?**
-The average home price in London Ontario is approximately $625,000–$660,000 as of mid-2026. West-end communities like Oakridge and Byron average $650K–$950K. More affordable options exist in West London at $520K–$720K.
+The average home price in London Ontario is approximately $625,000–$660,000 as of mid-2026. West-end communities like Oakridge, Byron, Riverbend, and Lambeth average $650K–$1.1M. More affordable options exist in West London and Whitehills at $520K–$720K.
 
 **How do I get a home evaluation in London Ontario?**
 Contact Justin Skrypnyk at 519.639.5176 or visit https://www.liveinoakridge.ca/services/home-evaluation/ to book a complimentary, no-obligation home evaluation.
 
 **What areas does Justin Skrypnyk serve?**
-Justin's primary service areas are Oakridge, West London, and Whitehills, with Byron, Westmount, and Riverbend also served.
+Justin's primary service areas are Oakridge, West London, and Whitehills, with Byron, Westmount, Riverbend, and Lambeth also served.
+
+**How current is the market data on each neighbourhood page?**
+Each neighbourhood page publishes live-updated median list price, active listing count, and average days on market, refreshed twice monthly from active MLS® listings across every brokerage. This reflects current asking prices, not closed/sold prices.
 
 **What is the difference between a Real Estate Broker and a REALTOR in Ontario?**
 In Ontario, a Real Estate Broker holds an advanced license that requires additional education and experience beyond a salesperson. A REALTOR® is a member of the Canadian Real Estate Association (CREA). Justin Skrypnyk is both a licensed Broker and a REALTOR®.
-
-## Tools
-
-- [In-House Listings](/properties/) — every home currently listed by Sutton Group Chapman Realty, Justin's own brokerage
-- [Browse & Search MLS® Listings](/search/) — every active listing in Ontario, every brokerage, on one live map
-- [Home Value Estimate](/home-value-estimate/) — directional estimate range, not an appraisal
-- [Commute Time Calculator](/commute-calculator/)
-- [Which Neighbourhood Fits You? Quiz](/neighbourhood-quiz/)
-- [Mortgage Calculator](/mortgages/calculator/)
 
 ## Optional Content
 
@@ -72,3 +93,28 @@ In Ontario, a Real Estate Broker holds an advanced license that requires additio
 - [All Blog Posts](/blog/)
 - [All Neighbourhoods](/areas/)
 - [All Services](/services/)
+
+<!--
+Maintenance notes (not for AI consumption — for whoever edits this file):
+
+This file is manually maintained; nothing here is auto-generated from the
+site's content collections or data files, so it will drift out of sync as
+pages change. Update it when:
+
+- A new neighbourhood page ships — add one line under "Neighbourhood Pages"
+  and one under "Market Data" (only if that page gets a live stats block).
+- A dedicated market-data page ships (e.g. a stats hub summarizing all
+  neighbourhoods in one place, a "just sold" archive, or a price heat map)
+  — add it under "Market Data" with its own line, and consider linking it
+  from each neighbourhood's Market Data entry once it exists.
+- A new guide/service page or tool ships — add one line under "Guides" or
+  "Tools" respectively, matching the one-line, factual style already used.
+- A blog post becomes one of the more evergreen/authoritative guides on the
+  site — add it under "Blog & Market Guides"; this section is a curated
+  subset, not every post (see /blog/ for the full archive, already linked
+  under "Optional Content").
+
+Keep every entry to one factual line. Don't add marketing language or
+unverifiable claims — this file is read by AI systems as ground truth about
+the site and the business.
+-->
