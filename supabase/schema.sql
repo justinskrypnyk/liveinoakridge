@@ -35,6 +35,17 @@ create table if not exists market_map_snapshots (
   price_per_sqft numeric,
   price_per_sqft_sample_size integer,
 
+  -- Feed-derived, no board/VOW access needed -- BedroomsTotal and
+  -- BathroomsTotalInteger are 100% filled on this feed; PropertySubType is
+  -- fully categorized. Lot size was considered too (LotSizeArea) but its
+  -- units are inconsistent garbage in this feed (Acres/SquareFeet/Feet/
+  -- Hectares/SquareMeters all mixed, ~15% filled) -- deliberately not
+  -- included rather than ship a metric built on bad unit conversions.
+  median_bedrooms numeric,
+  median_bathrooms numeric,
+  pct_detached numeric,
+  delisted_count integer,
+
   created_at timestamptz not null default now(),
 
   unique (area_slug, capture_date, period_type)

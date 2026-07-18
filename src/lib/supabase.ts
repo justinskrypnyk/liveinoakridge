@@ -22,6 +22,10 @@ export interface MarketMapSnapshotRow {
   avg_sale_to_list_ratio: number | null;
   price_per_sqft: number | null;
   price_per_sqft_sample_size: number | null;
+  median_bedrooms: number | null;
+  median_bathrooms: number | null;
+  pct_detached: number | null;
+  delisted_count: number | null;
 }
 
 export interface MarketMapChangeRow {

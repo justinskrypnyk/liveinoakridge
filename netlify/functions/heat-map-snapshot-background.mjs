@@ -2,9 +2,11 @@
 // London-area boundary polygons (not just the 7 areas the site's content
 // pages serve) and writes aggregate-only snapshots to Supabase. Powers the
 // /market-map heat map's pills (median list price, active count, new
-// listings this period, avg days on market, price-per-sqft where available)
-// plus month-over-month/year-over-year change flags for the monthly
-// blog/GBP/social "top movers" workflow.
+// listings this period, avg days on market, price-per-sqft where available,
+// median bedrooms/bathrooms, % detached homes, listings delisted this
+// period) plus month-over-month/year-over-year change flags for the
+// monthly blog/GBP/social "top movers" workflow (price/DOM-family metrics
+// only -- see METRICS below).
 //
 // Two capture cadences from ONE daily-cron trigger, gated internally (same
 // pattern as market-stats-snapshot-background.mjs, which already runs daily
@@ -146,7 +148,7 @@ export default async (req) => {
   const data = await odataGet('Property', {
     $filter: `contains(UnparsedAddress,'London')`,
     $select:
-      'ListingKey,UnparsedAddress,StandardStatus,PropertyType,TransactionType,ListPrice,OriginalEntryTimestamp,BuildingAreaTotal',
+      'ListingKey,UnparsedAddress,StandardStatus,PropertyType,PropertySubType,TransactionType,ListPrice,OriginalEntryTimestamp,BuildingAreaTotal,BedroomsTotal,BathroomsTotalInteger',
     $top: '5000',
   });
   const all = data.value || [];
@@ -166,6 +168,14 @@ export default async (req) => {
     .maybeSingle();
   const sincePrevious = lastAnyCapture ? new Date(lastAnyCapture.captured_at).getTime() : null;
 
+  // "Listings that left active status this period" — a market-velocity
+  // proxy that needs no sold/VOW data at all: just the previous run's
+  // per-area ListingKey set, diffed against this run's. Stored in Blobs
+  // (not Supabase) since it's pure job-scoped state, same convention as the
+  // geocode cache above.
+  const previousKeysStore = getStore('heat-map-previous-keys');
+  const previousKeysByArea = (await previousKeysStore.get('latest', { type: 'json' }).catch(() => null)) || {};
+
   const byArea = new Map(polygons.map((p) => [p.slug, []]));
   for (const listing of active) {
     const address = listing.UnparsedAddress;
@@ -179,6 +189,8 @@ export default async (req) => {
   const captureDate = now.toISOString().slice(0, 10);
   const capturedAt = now.toISOString();
   const snapshotRows = [];
+
+  const currentKeysByArea = {};
 
   for (const { slug, name } of polygons) {
     const listings = byArea.get(slug) || [];
@@ -196,6 +208,15 @@ export default async (req) => {
       })
       .filter((n) => n !== null);
 
+    const beds = listings.map((l) => Number(l.BedroomsTotal)).filter((n) => Number.isFinite(n) && n >= 0);
+    const baths = listings.map((l) => Number(l.BathroomsTotalInteger)).filter((n) => Number.isFinite(n) && n >= 0);
+    const detachedCount = listings.filter((l) => l.PropertySubType === 'Detached').length;
+
+    const currentKeys = listings.map((l) => l.ListingKey).filter(Boolean);
+    currentKeysByArea[slug] = currentKeys;
+    const previousKeys = previousKeysByArea[slug] || null;
+    const delistedCount = previousKeys ? previousKeys.filter((k) => !currentKeys.includes(k)).length : null;
+
     snapshotRows.push({
       area_slug: slug,
       area_name: name,
@@ -208,8 +229,14 @@ export default async (req) => {
       avg_days_on_market: average(dom),
       price_per_sqft: sqftPrices.length > 0 ? median(sqftPrices) : null,
       price_per_sqft_sample_size: sqftPrices.length,
+      median_bedrooms: median(beds),
+      median_bathrooms: median(baths),
+      pct_detached: listings.length > 0 ? detachedCount / listings.length : null,
+      delisted_count: delistedCount,
     });
   }
+
+  await previousKeysStore.setJSON('latest', currentKeysByArea);
 
   const { error: upsertError } = await supabase
     .from('market_map_snapshots')

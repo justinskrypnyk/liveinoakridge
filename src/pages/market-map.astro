@@ -37,7 +37,7 @@ const sortedByPrice = [...snapshots]
       description="Aggregate, per-neighbourhood real estate market statistics for London, Ontario, captured twice monthly from active MLS listings."
       dataset={{
         name: 'London Ontario Neighbourhood Real Estate Market Snapshot',
-        variableMeasured: ['Median list price', 'Average days on market', 'New listings', 'Price per square foot'],
+        variableMeasured: ['Median list price', 'Average days on market', 'New listings', 'Price per square foot', 'Median bedrooms', 'Median bathrooms', 'Percent detached homes', 'Listings delisted per period'],
         datePublished: asOf ?? new Date().toISOString().slice(0, 10),
       }}
     />

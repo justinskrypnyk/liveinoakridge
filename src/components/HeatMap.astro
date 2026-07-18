@@ -60,6 +60,10 @@ const snapshotsBySlug = Object.fromEntries(snapshots.map((s) => [s.area_slug, s]
     { key: 'avg_days_on_market', label: 'Avg. Days on Market', format: 'days', available: true },
     { key: 'new_listings_count', label: 'New Listings', format: 'count', available: true },
     { key: 'price_per_sqft', label: 'Price / Sq Ft', format: 'currency', available: true, sampleKey: 'price_per_sqft_sample_size' },
+    { key: 'median_bedrooms', label: 'Median Bedrooms', format: 'beds', available: true },
+    { key: 'median_bathrooms', label: 'Median Bathrooms', format: 'baths', available: true },
+    { key: 'pct_detached', label: '% Detached Homes', format: 'percent', available: true },
+    { key: 'delisted_count', label: 'Left Market This Period', format: 'count', available: true },
     { key: 'median_sold_price', label: 'Median Sold Price', format: 'currency', available: false },
     { key: 'units_sold', label: 'Units Sold', format: 'count', available: false },
     { key: 'avg_sale_to_list_ratio', label: 'Sale-to-List Ratio', format: 'percent', available: false },
@@ -84,6 +88,8 @@ const snapshotsBySlug = Object.fromEntries(snapshots.map((s) => [s.area_slug, s]
     }
     if (metric.format === 'days') return `${Math.round(value)} days`;
     if (metric.format === 'percent') return `${(value * 100).toFixed(1)}%`;
+    if (metric.format === 'beds') return `${Math.round(value)} bd`;
+    if (metric.format === 'baths') return `${Math.round(value)} ba`;
     return new Intl.NumberFormat('en-CA').format(Math.round(value));
   }
 

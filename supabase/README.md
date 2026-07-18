@@ -11,7 +11,10 @@ browser.
 1. **Run the schema.** Supabase dashboard → SQL Editor → New query → paste
    the contents of `supabase/schema.sql` → Run. Creates two tables
    (`market_map_snapshots`, `market_map_changes`), both with RLS on and no
-   public policies — only the service_role key can touch them.
+   public policies — only the service_role key can touch them. If your
+   tables already existed before 2026-07-18, also run
+   `supabase/migrations/001_feed_derived_metrics.sql` once to add the newer
+   bedrooms/bathrooms/% detached/delisted-count columns.
 2. **Get your API keys.** Supabase dashboard → Project Settings → API →
    copy the **Project URL** and the **service_role secret key** (not the
    `anon` key — that one's for client-side use, which this feature
@@ -50,6 +53,21 @@ browser.
   capture, same Netlify Forms → `/api/ghl-lead` pattern as every other form
   on the site, tagged `Market Map Subscriber` (see `FORM_TAG_LABELS` in
   `src/pages/api/ghl-lead.ts`) so it doesn't merge with other lead lists.
+
+## Feed-derived metrics (median bedrooms/bathrooms, % detached, delisted count)
+
+Added 2026-07-18, all computed purely from fields already in the DDF feed —
+no new data source, no VOW/board access needed. `BedroomsTotal` and
+`BathroomsTotalInteger` are 100% filled on this feed; `PropertySubType` is
+fully categorized (`% Detached Homes` = share of active listings whose
+`PropertySubType` is exactly `'Detached'`). "Left Market This Period"
+diffs each run's per-area `ListingKey` set against the previous run's
+(stored in a `heat-map-previous-keys` Blobs store, not Supabase — pure
+job-scoped state) — a market-velocity proxy that works without any
+sold-price data. Lot size (`LotSizeArea`) was considered too but dropped:
+only ~15% filled and its units are inconsistent in this feed (`Acres`,
+`SquareFeet`, `Feet`, `Hectares`, `SquareMeters` all mixed on the same
+field) — not reliable enough to convert and show as a real metric.
 
 ## Sold-data metrics ("coming soon" pills)
 
