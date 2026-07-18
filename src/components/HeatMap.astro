@@ -250,11 +250,16 @@ const snapshotsBySlug = Object.fromEntries(snapshots.map((s) => [s.area_slug, s]
       if (e.key === 'Escape') zoomToCity();
     });
 
-    // Thames River — reference orientation only, not a data layer: thin,
-    // muted, non-interactive so it never competes with the neighbourhood
-    // shading or intercepts hover/click.
+    // Thames River — reference orientation only, not a data layer, but
+    // needs to actually read as a river against the choropleth fills
+    // underneath it: a light halo stroke first, then a solid, clearly-blue
+    // line on top. Both non-interactive so neither intercepts hover/click.
     L.geoJSON(thamesRiver, {
-      style: { color: '#5b8fb5', weight: 2, opacity: 0.55, dashArray: '4 3' },
+      style: { color: '#ffffff', weight: 5, opacity: 0.6 },
+      interactive: false,
+    }).addTo(map);
+    L.geoJSON(thamesRiver, {
+      style: { color: '#1c7ed6', weight: 3, opacity: 0.9 },
       interactive: false,
     }).addTo(map);
 
