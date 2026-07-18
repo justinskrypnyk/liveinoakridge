@@ -92,6 +92,10 @@ const sortedByPrice = [...snapshots]
               <th class="px-4 py-3 font-medium">Active Listings</th>
               <th class="px-4 py-3 font-medium">Median List Price</th>
               <th class="px-4 py-3 font-medium">Avg. Days on Market</th>
+              <th class="px-4 py-3 font-medium">Beds</th>
+              <th class="px-4 py-3 font-medium">Baths</th>
+              <th class="px-4 py-3 font-medium">% Detached</th>
+              <th class="px-4 py-3 font-medium">Left Market</th>
             </tr>
           </thead>
           <tbody>
@@ -105,6 +109,10 @@ const sortedByPrice = [...snapshots]
                 <td class="px-4 py-3 text-slate">{s.active_count ?? '—'}</td>
                 <td class="px-4 py-3 text-slate">{s.median_list_price != null ? fmtPrice(s.median_list_price) : '—'}</td>
                 <td class="px-4 py-3 text-slate">{s.avg_days_on_market != null ? `${Math.round(s.avg_days_on_market)} days` : '—'}</td>
+                <td class="px-4 py-3 text-slate">{s.median_bedrooms ?? '—'}</td>
+                <td class="px-4 py-3 text-slate">{s.median_bathrooms ?? '—'}</td>
+                <td class="px-4 py-3 text-slate">{s.pct_detached != null ? `${(s.pct_detached * 100).toFixed(0)}%` : '—'}</td>
+                <td class="px-4 py-3 text-slate">{s.delisted_count ?? '—'}</td>
               </tr>
             ))}
           </tbody>
