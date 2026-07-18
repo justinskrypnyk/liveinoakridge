@@ -25,7 +25,7 @@ interface ItemListEntry {
 }
 
 interface Props {
-  type: 'home' | 'service' | 'area' | 'area-service' | 'blog' | 'contact' | 'listing' | 'listing-collection' | 'breadcrumb';
+  type: 'home' | 'service' | 'area' | 'area-service' | 'blog' | 'contact' | 'listing' | 'listing-collection' | 'breadcrumb' | 'dataset';
   areaName?: string;
   areaGeo?: { lat: number; lng: number };
   serviceName?: string;
@@ -44,6 +44,12 @@ interface Props {
     avgDaysOnMarket: number | null;
     asOf: string;
   };
+  /** type: 'dataset' — the heat map's aggregate neighbourhood snapshot data. */
+  dataset?: {
+    name: string;
+    variableMeasured: string[];
+    datePublished: string;
+  };
 }
 
 const {
@@ -60,6 +66,7 @@ const {
   itemListName,
   itemListTotal,
   marketStats,
+  dataset,
 } = Astro.props;
 
 const marketStatsProperties = marketStats ? [
@@ -482,6 +489,36 @@ if (type === 'listing-collection') {
 
 if (type === 'breadcrumb' && breadcrumbs?.length) {
   schemas = [breadcrumbSchema(breadcrumbs)];
+}
+
+if (type === 'dataset' && dataset) {
+  schemas = [
+    {
+      '@context': 'https://schema.org',
+      '@type': 'Dataset',
+      '@id': `${currentUrl}#dataset`,
+      name: dataset.name,
+      description,
+      url: currentUrl,
+      license: 'https://creativecommons.org/licenses/by/4.0/',
+      creator: {
+        '@id': `${SITE.url}/#realestateagent`,
+        '@type': 'RealEstateAgent',
+        name: SITE.legalName,
+      },
+      datePublished: dataset.datePublished,
+      variableMeasured: dataset.variableMeasured,
+      spatialCoverage: {
+        '@type': 'Place',
+        name: 'London, Ontario, Canada',
+      },
+      temporalCoverage: dataset.datePublished,
+    },
+    breadcrumbSchema([
+      { name: 'Home', url: SITE.url },
+      { name: 'Neighbourhood Heat Map', url: currentUrl },
+    ]),
+  ];
 }
 ---
 

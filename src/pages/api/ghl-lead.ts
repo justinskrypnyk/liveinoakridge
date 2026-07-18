@@ -97,6 +97,7 @@ export const POST: APIRoute = async ({ request }) => {
   const mlsNumber = data['mls-number'];
   const FORM_TAG_LABELS: Record<string, string> = {
     'save-listing': 'Saved Listing Lead',
+    'market-map-notify': 'Market Map Subscriber',
   };
 
   const authHeaders = {

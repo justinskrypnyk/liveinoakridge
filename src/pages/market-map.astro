@@ -1,0 +1,119 @@
+---
+// Server-rendered so it can read the latest Supabase snapshot at request
+// time (see src/lib/supabase.ts) -- but unlike the page this replaces, that
+// read is one cheap indexed query against a twice-monthly cache, not a live
+// DDF/PropTx pull, so `prerender = false` here doesn't carry the cost it
+// would elsewhere on the site.
+export const prerender = false;
+import Base from '@/layouts/Base.astro';
+import Schema from '@/components/Schema.astro';
+import { SITE } from '@/data/site';
+import { fmtPrice } from '@/lib/listings';
+import { getLatestMarketMapSnapshots, getLatestNotableChanges } from '@/lib/supabase';
+import HeatMap from '@/components/HeatMap.astro';
+import MarketMapNotifyForm from '@/components/MarketMapNotifyForm.astro';
+
+const snapshots = await getLatestMarketMapSnapshots();
+const notableChanges = await getLatestNotableChanges(3);
+const asOf = snapshots[0]?.capture_date;
+
+// The 7 areas the site's own content pages serve -- of the 39 shaded on the
+// map, only these get a "View area ->" link; the rest are stats-only.
+const SERVED_AREA_SLUGS = new Set(['oakridge', 'byron', 'westmount', 'riverbend', 'lambeth', 'whitehills', 'west-london']);
+
+const sortedByPrice = [...snapshots]
+  .filter((s) => s.median_list_price != null)
+  .sort((a, b) => (b.median_list_price ?? 0) - (a.median_list_price ?? 0));
+---
+
+<Base
+  title="London Ontario Neighbourhood Heat Map | Live In Oakridge"
+  description="Median list price, days on market, new listings, and more, mapped across all of London Ontario's neighbourhoods -- from Oakridge and Byron to Masonville and Old South. Updated twice a month from live MLS data."
+>
+  <Fragment slot="head">
+    <Schema
+      type="dataset"
+      pageUrl={`${SITE.url}/market-map/`}
+      description="Aggregate, per-neighbourhood real estate market statistics for London, Ontario, captured twice monthly from active MLS listings."
+      dataset={{
+        name: 'London Ontario Neighbourhood Real Estate Market Snapshot',
+        variableMeasured: ['Median list price', 'Average days on market', 'New listings', 'Price per square foot'],
+        datePublished: asOf ?? new Date().toISOString().slice(0, 10),
+      }}
+    />
+  </Fragment>
+
+  <section class="bg-navy py-20 text-white">
+    <div class="container-site">
+      <nav aria-label="Breadcrumb" class="flex items-center gap-2 text-sm text-white/40 mb-8">
+        <a href="/" class="hover:text-gold transition-colors">Home</a>
+        <span>/</span>
+        <span class="text-white/70">Neighbourhood Heat Map</span>
+      </nav>
+      <h1 class="font-serif text-5xl font-bold mb-4">London Ontario Neighbourhood Heat Map</h1>
+      <div class="gold-divider mb-6"></div>
+      <p class="text-xl text-white/70 max-w-2xl">
+        Median list price, days on market, new listings, and more, across every neighbourhood in London -- from Oakridge, Byron, and Riverbend to Masonville, Old South, and Hyde Park. Switch the metric, click a neighbourhood to zoom in.
+      </p>
+      {asOf && <p class="text-sm text-white/40 mt-4">Stats as of {asOf}</p>}
+    </div>
+  </section>
+
+  <section class="py-20 bg-cream">
+    <div class="container-site max-w-5xl">
+      <HeatMap snapshots={snapshots} height="640px" />
+
+      <p class="text-center text-sm text-slate/60 mt-8 max-w-2xl mx-auto">
+        Based on active MLS listings captured twice monthly (mid-month and month-end). Sold-price metrics are shown as "coming soon" -- they require real estate board access this site doesn't have yet. Read this as directional, not exact.
+      </p>
+
+      {notableChanges.length > 0 && (
+        <div class="mt-14">
+          <h2 class="font-serif text-2xl text-navy font-bold mb-4 text-center">Notable Moves This Month</h2>
+          <div class="grid sm:grid-cols-3 gap-4">
+            {notableChanges.map((c) => (
+              <div class="bg-white rounded-2xl shadow-card p-5 text-center">
+                <p class="font-serif text-lg text-navy font-bold">{c.area_name}</p>
+                <p class="text-sm text-slate/70 mb-1">{c.metric.replaceAll('_', ' ')}</p>
+                <p class={`text-xl font-bold ${(c.mom_pct_change ?? 0) > 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                  {(c.mom_pct_change ?? 0) > 0 ? '+' : ''}{((c.mom_pct_change ?? 0) * 100).toFixed(1)}%
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div class="overflow-x-auto mt-14">
+        <table class="w-full text-sm bg-white rounded-2xl shadow-card overflow-hidden">
+          <thead>
+            <tr class="bg-navy text-white text-left">
+              <th class="px-4 py-3 font-medium">Neighbourhood</th>
+              <th class="px-4 py-3 font-medium">Active Listings</th>
+              <th class="px-4 py-3 font-medium">Median List Price</th>
+              <th class="px-4 py-3 font-medium">Avg. Days on Market</th>
+            </tr>
+          </thead>
+          <tbody>
+            {sortedByPrice.map((s) => (
+              <tr class="border-b border-gray-100 last:border-0">
+                <td class="px-4 py-3">
+                  {SERVED_AREA_SLUGS.has(s.area_slug)
+                    ? <a href={`/areas/${s.area_slug}/`} class="text-navy font-medium hover:text-gold transition-colors">{s.area_name}</a>
+                    : <span class="text-navy font-medium">{s.area_name}</span>}
+                </td>
+                <td class="px-4 py-3 text-slate">{s.active_count ?? '—'}</td>
+                <td class="px-4 py-3 text-slate">{s.median_list_price != null ? fmtPrice(s.median_list_price) : '—'}</td>
+                <td class="px-4 py-3 text-slate">{s.avg_days_on_market != null ? `${Math.round(s.avg_days_on_market)} days` : '—'}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="mt-16">
+        <MarketMapNotifyForm />
+      </div>
+    </div>
+  </section>
+</Base>

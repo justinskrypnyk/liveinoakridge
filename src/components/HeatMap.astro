@@ -1,0 +1,309 @@
+---
+// Interactive citywide neighbourhood heat map — pills switch which metric
+// colors the choropleth, legend doubles as a click-to-filter, hover shows
+// the active metric's value, click zooms into that neighbourhood. Data is
+// the latest twice-monthly Supabase snapshot (see
+// netlify/functions/heat-map-snapshot-background.mjs) passed in as a prop —
+// this component makes zero network calls of its own after the page loads,
+// and the Leaflet library + map init are deferred until the map container
+// is actually scrolled near the viewport (see the IntersectionObserver
+// below), so this never blocks initial page render.
+import type { MarketMapSnapshotRow } from '@/lib/supabase';
+import boundaries from '@/data/area-boundaries.json';
+import thamesRiver from '@/data/thames-river.json';
+
+interface Props {
+  snapshots: MarketMapSnapshotRow[];
+  height?: string;
+}
+
+const { snapshots, height = '640px' } = Astro.props;
+const mapId = `heat-map-${Math.random().toString(36).slice(2, 9)}`;
+
+// Western University and Fanshawe College — reference landmarks only, not
+// data points. Fanshawe's actual main campus sits on Fanshawe College Blvd
+// just north of Oxford St (not "Oxford Street West" as originally
+// described) — used the real, verified campus location rather than a
+// guessed one; flag to Justin if this should point somewhere else.
+const LANDMARKS = [
+  { name: 'Western University', lat: 43.0096, lng: -81.2737 },
+  { name: 'Fanshawe College', lat: 43.0075, lng: -81.2001 },
+];
+
+const snapshotsBySlug = Object.fromEntries(snapshots.map((s) => [s.area_slug, s]));
+---
+
+<div>
+  <div id={`${mapId}-pills`} class="flex flex-wrap gap-2 mb-4" role="tablist" aria-label="Map metric">
+  </div>
+
+  <div class="relative isolate rounded-2xl overflow-hidden shadow-card border border-gray-100">
+    <div
+      id={mapId}
+      style={`height: ${height}`}
+      role="region"
+      aria-label="Map of London Ontario neighbourhoods, coloured by the selected metric. The same figures are listed in the table below."
+      class="bg-cream"
+    ></div>
+    <div id={`${mapId}-loading`} class="absolute inset-0 flex items-center justify-center text-sm text-slate/60 pointer-events-none">
+      Loading map…
+    </div>
+  </div>
+
+  <div id={`${mapId}-legend`} class="flex flex-wrap items-center justify-center gap-2 mt-4 text-xs text-slate/80"></div>
+  <p class="text-center text-xs text-slate/50 mt-2">Click a legend colour to highlight just those neighbourhoods. Click a neighbourhood to zoom in, Esc or click the map background to zoom back out.</p>
+</div>
+
+<script define:vars={{ mapId, boundaries, thamesRiver, LANDMARKS, snapshotsBySlug }}>
+  const METRICS = [
+    { key: 'median_list_price', label: 'Median List Price', format: 'currency', available: true },
+    { key: 'avg_days_on_market', label: 'Avg. Days on Market', format: 'days', available: true },
+    { key: 'new_listings_count', label: 'New Listings', format: 'count', available: true },
+    { key: 'price_per_sqft', label: 'Price / Sq Ft', format: 'currency', available: true, sampleKey: 'price_per_sqft_sample_size' },
+    { key: 'median_sold_price', label: 'Median Sold Price', format: 'currency', available: false },
+    { key: 'units_sold', label: 'Units Sold', format: 'count', available: false },
+    { key: 'avg_sale_to_list_ratio', label: 'Sale-to-List Ratio', format: 'percent', available: false },
+  ];
+
+  // Brand-hue (site's --color-gold token) sequential ramp, light->dark,
+  // validated with the dataviz skill's OKLCH checks (5 steps, monotone
+  // lightness, single hue, ΔL >= 0.06 between every adjacent pair). The
+  // lightest step alone doesn't clear 2:1 contrast against a near-white
+  // page in isolation -- mitigated the way the skill prescribes: every
+  // polygon here keeps a visible navy stroke border, plus a hover tooltip
+  // with the exact value and the data table below, so no shade is ever the
+  // only way to read a value.
+  const RAMP = ['#91deb9', '#6ac59b', '#3bab7d', '#008e5d', '#00703d'];
+  const NO_DATA_COLOR = '#e2e8f0';
+  const BORDER_COLOR = '#0c2340';
+
+  function fmt(metric, value) {
+    if (value == null) return '—';
+    if (metric.format === 'currency') {
+      return new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD', maximumFractionDigits: 0 }).format(value);
+    }
+    if (metric.format === 'days') return `${Math.round(value)} days`;
+    if (metric.format === 'percent') return `${(value * 100).toFixed(1)}%`;
+    return new Intl.NumberFormat('en-CA').format(Math.round(value));
+  }
+
+  function getValue(slug, metric) {
+    const row = snapshotsBySlug[slug];
+    if (!row) return null;
+    if (metric.sampleKey && !row[metric.sampleKey]) return null; // e.g. price-per-sqft with zero usable listings
+    return row[metric.key];
+  }
+
+  function computeBuckets(metric) {
+    const values = Object.keys(snapshotsBySlug)
+      .map((slug) => getValue(slug, metric))
+      .filter((v) => v != null)
+      .sort((a, b) => a - b);
+    if (values.length === 0) return [];
+    const bucketCount = Math.min(RAMP.length, new Set(values).size);
+    const buckets = [];
+    for (let i = 0; i < bucketCount; i++) {
+      const lo = values[Math.floor((i / bucketCount) * values.length)];
+      const hi = i === bucketCount - 1 ? values[values.length - 1] : values[Math.floor(((i + 1) / bucketCount) * values.length) - 1];
+      buckets.push({ lo, hi, color: RAMP[Math.floor((i / bucketCount) * RAMP.length)] });
+    }
+    return buckets;
+  }
+
+  function bucketIndexForValue(buckets, value) {
+    if (value == null) return null;
+    for (let i = buckets.length - 1; i >= 0; i--) {
+      if (value >= buckets[i].lo) return i;
+    }
+    return 0;
+  }
+
+  function initHeatMap() {
+    const pillsEl = document.getElementById(`${mapId}-pills`);
+    const legendEl = document.getElementById(`${mapId}-legend`);
+    const loadingEl = document.getElementById(`${mapId}-loading`);
+    if (loadingEl) loadingEl.remove();
+
+    const map = L.map(mapId, { scrollWheelZoom: true });
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      maxZoom: 19,
+    }).addTo(map);
+
+    let activeMetric = METRICS[0];
+    let activeFilterBucket = null; // index into current buckets, or null
+    let geoLayer;
+    let cityBounds;
+
+    function tooltipHtml(feature) {
+      const slug = feature.properties.slug;
+      const row = snapshotsBySlug[slug];
+      const value = getValue(slug, activeMetric);
+      const valueLine = value != null
+        ? `${activeMetric.label}: <strong>${fmt(activeMetric, value)}</strong>`
+        : activeMetric.available
+          ? `${activeMetric.label}: no data yet`
+          : `${activeMetric.label}: coming soon`;
+      return `<strong>${feature.properties.name}</strong><br>${valueLine}` +
+        (row?.active_count != null ? `<br>${row.active_count} active listing${row.active_count === 1 ? '' : 's'}` : '');
+    }
+
+    function styleForFeature(feature) {
+      const slug = feature.properties.slug;
+      const buckets = computeBuckets(activeMetric);
+      const value = getValue(slug, activeMetric);
+      const idx = bucketIndexForValue(buckets, value);
+      const dimmed = activeFilterBucket != null && idx !== activeFilterBucket;
+      return {
+        fillColor: idx === null ? NO_DATA_COLOR : buckets[idx].color,
+        fillOpacity: dimmed ? 0.15 : 0.7,
+        color: BORDER_COLOR,
+        weight: dimmed ? 1 : 1.5,
+        opacity: dimmed ? 0.35 : 1,
+      };
+    }
+
+    function renderLegend() {
+      const buckets = computeBuckets(activeMetric);
+      if (!legendEl) return;
+      const swatch = (color, label, bucketIdx) =>
+        `<button type="button" data-bucket="${bucketIdx ?? ''}" class="heat-map-legend-swatch" style="display:inline-flex;align-items:center;gap:6px;border:1px solid rgba(12,35,64,.15);border-radius:9999px;padding:4px 10px;background:${bucketIdx === activeFilterBucket ? 'rgba(12,35,64,.08)' : 'transparent'};cursor:${bucketIdx != null ? 'pointer' : 'default'};">` +
+        `<span style="width:12px;height:12px;border-radius:3px;background:${color};display:inline-block;border:1px solid rgba(12,35,64,.25);"></span>${label}</button>`;
+
+      if (buckets.length === 0) {
+        legendEl.innerHTML = swatch(NO_DATA_COLOR, 'No data yet', null);
+        return;
+      }
+      legendEl.innerHTML = buckets
+        .map((b, i) => swatch(b.color, `${fmt(activeMetric, b.lo)}–${fmt(activeMetric, b.hi)}`, i))
+        .join('') + swatch(NO_DATA_COLOR, 'No data', null);
+
+      legendEl.querySelectorAll('[data-bucket]').forEach((btn) => {
+        const idx = btn.getAttribute('data-bucket');
+        if (idx === '') return;
+        btn.addEventListener('click', () => {
+          const i = Number(idx);
+          activeFilterBucket = activeFilterBucket === i ? null : i;
+          renderLegend();
+          geoLayer.setStyle(styleForFeature);
+        });
+      });
+    }
+
+    function renderPills() {
+      if (!pillsEl) return;
+      pillsEl.innerHTML = METRICS.map((m, i) => `
+        <button type="button" data-metric="${i}" role="tab" aria-selected="${m === activeMetric}"
+          ${m.available ? '' : 'aria-disabled="true"'}
+          class="px-4 py-2 rounded-full text-sm font-medium transition-colors border ${
+            m === activeMetric
+              ? 'bg-navy text-white border-navy'
+              : m.available
+                ? 'bg-white text-navy border-gray-200 hover:border-navy/40'
+                : 'bg-gray-50 text-slate/40 border-gray-100 cursor-not-allowed'
+          }">
+          ${m.label}${m.available ? '' : ' <span class="text-[10px] opacity-70">(coming soon)</span>'}
+        </button>
+      `).join('');
+
+      pillsEl.querySelectorAll('[data-metric]').forEach((btn) => {
+        const metric = METRICS[Number(btn.getAttribute('data-metric'))];
+        if (!metric.available) return;
+        btn.addEventListener('click', () => {
+          activeMetric = metric;
+          activeFilterBucket = null;
+          renderPills();
+          renderLegend();
+          geoLayer.setStyle(styleForFeature);
+          geoLayer.eachLayer((layer) => layer.setTooltipContent && layer.setTooltipContent(tooltipHtml(layer.feature)));
+        });
+      });
+    }
+
+    geoLayer = L.geoJSON(boundaries, {
+      style: styleForFeature,
+      onEachFeature: (feature, layer) => {
+        layer.bindTooltip(tooltipHtml(feature), { sticky: true });
+        layer.on('mouseover', () => layer.setStyle({ fillOpacity: 0.9 }));
+        layer.on('mouseout', () => geoLayer.resetStyle(layer));
+        layer.on('click', (e) => {
+          L.DomEvent.stopPropagation(e);
+          map.fitBounds(layer.getBounds().pad(0.15));
+        });
+      },
+    }).addTo(map);
+
+    cityBounds = geoLayer.getBounds();
+    if (cityBounds.isValid()) map.fitBounds(cityBounds.pad(0.05));
+
+    function zoomToCity() {
+      if (cityBounds && cityBounds.isValid()) map.fitBounds(cityBounds.pad(0.05));
+    }
+    map.on('click', zoomToCity);
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') zoomToCity();
+    });
+
+    // Thames River — reference orientation only, not a data layer: thin,
+    // muted, non-interactive so it never competes with the neighbourhood
+    // shading or intercepts hover/click.
+    L.geoJSON(thamesRiver, {
+      style: { color: '#5b8fb5', weight: 2, opacity: 0.55, dashArray: '4 3' },
+      interactive: false,
+    }).addTo(map);
+
+    for (const landmark of LANDMARKS) {
+      L.circleMarker([landmark.lat, landmark.lng], {
+        radius: 5,
+        color: '#0c2340',
+        weight: 1.5,
+        fillColor: '#ffffff',
+        fillOpacity: 1,
+      })
+        .bindTooltip(landmark.name, { direction: 'top' })
+        .addTo(map);
+    }
+
+    renderPills();
+    renderLegend();
+  }
+
+  function loadLeafletAndInit() {
+    if (window.L) {
+      initHeatMap();
+      return;
+    }
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+    link.integrity = 'sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H';
+    link.crossOrigin = 'anonymous';
+    document.head.appendChild(link);
+
+    const script = document.createElement('script');
+    script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+    script.integrity = 'sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH';
+    script.crossOrigin = 'anonymous';
+    script.onload = initHeatMap;
+    document.body.appendChild(script);
+  }
+
+  // Lazy-load: Leaflet (~150KB combined) and the map itself only load once
+  // the container is within ~200px of the viewport, so this component never
+  // holds up initial page render.
+  const container = document.getElementById(mapId);
+  if ('IntersectionObserver' in window && container) {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          observer.disconnect();
+          loadLeafletAndInit();
+        }
+      },
+      { rootMargin: '200px' }
+    );
+    observer.observe(container);
+  } else {
+    loadLeafletAndInit();
+  }
+</script>

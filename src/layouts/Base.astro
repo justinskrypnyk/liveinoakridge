@@ -124,5 +124,14 @@ const hideStickyCTA = Astro.url.pathname.startsWith('/contact');
       <input name="property-address" />
       <input name="mls-number" />
     </form>
+
+    <!-- Same static-twin trick as save-listing above -- /market-map/ is also
+         `prerender = false` (needs a server-side Supabase read), so its real
+         form is invisible to Netlify's build-time form bot without this. -->
+    <form name="market-map-notify" data-netlify="true" netlify-honeypot="bot-field" hidden>
+      <input type="hidden" name="form-name" value="market-map-notify" />
+      <input name="bot-field" />
+      <input name="email" />
+    </form>
   </body>
 </html>

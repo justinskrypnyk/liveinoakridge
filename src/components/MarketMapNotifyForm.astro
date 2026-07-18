@@ -1,0 +1,87 @@
+---
+// Email-only lead capture for /market-map/ — "get notified when new numbers
+// drop". Same fetch()/no-reload pattern as SaveListingModal.astro (submits
+// through Netlify Forms -> outgoing webhook -> /api/ghl-lead, same as every
+// other form on the site), but inline on the page rather than a modal, and
+// tagged distinctly ("Market Map Subscriber") so this list doesn't merge
+// with open-house or other leads. See Base.astro for the required static
+// twin of this form.
+---
+
+<div class="bg-navy rounded-2xl p-8 sm:p-10 text-center max-w-xl mx-auto">
+  <h3 class="font-serif text-2xl text-white font-bold mb-2">Get notified when new numbers drop</h3>
+  <p class="text-white/70 text-sm mb-6">
+    New snapshots twice a month — median prices, days on market, and more, by neighbourhood, straight to your inbox.
+  </p>
+
+  <form id="market-map-notify-form" class="flex flex-col sm:flex-row gap-3">
+    <input type="hidden" name="form-name" value="market-map-notify" />
+    <label for="market-map-notify-email" class="sr-only">Email Address</label>
+    <input
+      type="email"
+      id="market-map-notify-email"
+      name="email"
+      required
+      autocomplete="email"
+      placeholder="you@example.com"
+      class="flex-1 px-4 py-3 rounded-lg border border-white/20 bg-white/10 text-white placeholder-white/40 text-sm outline-none focus:border-gold focus:ring-2 focus:ring-gold/20"
+    />
+    <button type="submit" id="market-map-notify-submit" class="btn-primary justify-center whitespace-nowrap">
+      Notify Me
+    </button>
+  </form>
+  <p id="market-map-notify-error" class="hidden text-xs text-red-300 mt-3"></p>
+  <p class="text-xs text-white/40 mt-4">
+    By submitting, you agree to our <a href="/privacy-policy/" class="underline hover:text-gold transition-colors">Privacy Policy</a>. We never share your information.
+  </p>
+
+  <div id="market-map-notify-success" class="hidden text-center py-4">
+    <div class="text-4xl mb-3">📬</div>
+    <p class="font-serif text-lg text-white font-bold mb-1">You're on the list!</p>
+    <p class="text-sm text-white/70">You'll hear from Justin when the next snapshot drops.</p>
+  </div>
+</div>
+
+<script>
+  declare global {
+    interface Window { fbq?: (...args: unknown[]) => void; }
+  }
+
+  const form = document.getElementById('market-map-notify-form') as HTMLFormElement | null;
+  const submitBtn = document.getElementById('market-map-notify-submit') as HTMLButtonElement | null;
+  const errorEl = document.getElementById('market-map-notify-error');
+  const successEl = document.getElementById('market-map-notify-success');
+
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!submitBtn) return;
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Sending...';
+    errorEl?.classList.add('hidden');
+
+    try {
+      const data = new FormData(form);
+      const body = new URLSearchParams();
+      data.forEach((value, key) => body.append(key, String(value)));
+      const res = await fetch('/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: body.toString(),
+      });
+      if (!res.ok) throw new Error(`${res.status}`);
+
+      form.classList.add('hidden');
+      successEl?.classList.remove('hidden');
+      window.fbq?.('track', 'Lead');
+      form.reset();
+    } catch {
+      if (errorEl) {
+        errorEl.textContent = 'Something went wrong sending that — please try again.';
+        errorEl.classList.remove('hidden');
+      }
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Notify Me';
+    }
+  });
+</script>
