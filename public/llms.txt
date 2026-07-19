@@ -29,6 +29,7 @@ Justin Skrypnyk helps buyers and sellers navigate the West London Ontario real e
 
 Live market statistics — median list price, active listing count, and average days on market — are published directly on each neighbourhood page above and refreshed twice monthly (the 15th and last day of each month) from active MLS® listings across every brokerage, not just Justin's.
 
+- [London Neighbourhood Heat Map](/market-map/) — interactive map of all 39 London, Ontario neighbourhoods with switchable metrics (median list price, days on market, new listings, price per square foot, bedrooms, bathrooms, % detached homes), refreshed on the same twice-monthly schedule
 - [Oakridge Market Stats](/areas/oakridge/) — live median list price, active listings, average days on market
 - [West London Market Stats](/areas/west-london/)
 - [Whitehills Market Stats](/areas/whitehills/)
