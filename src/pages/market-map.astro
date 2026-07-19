@@ -10,6 +10,7 @@ import Schema from '@/components/Schema.astro';
 import { SITE } from '@/data/site';
 import { fmtPrice } from '@/lib/listings';
 import { getLatestMarketMapSnapshots, getLatestNotableChanges } from '@/lib/supabase';
+import { summarizeArea } from '@/lib/market-map-summary';
 import HeatMap from '@/components/HeatMap.astro';
 import MarketMapNotifyForm from '@/components/MarketMapNotifyForm.astro';
 
@@ -40,6 +41,19 @@ const sortedByPrice = [...snapshots]
         variableMeasured: ['Median list price', 'Average days on market', 'New listings', 'Price per square foot', 'Median bedrooms', 'Median bathrooms', 'Percent detached homes', 'Listings delisted per period'],
         datePublished: asOf ?? new Date().toISOString().slice(0, 10),
       }}
+    />
+    <Schema
+      type="listing-collection"
+      pageUrl={`${SITE.url}/market-map/`}
+      description="Every London, Ontario neighbourhood shown on the heat map, ranked by median active listing price."
+      itemListName="London Ontario Neighbourhoods by Median List Price"
+      itemListTotal={sortedByPrice.length}
+      itemList={sortedByPrice.map((s) => ({
+        name: s.area_name,
+        url: SERVED_AREA_SLUGS.has(s.area_slug)
+          ? `${SITE.url}/areas/${s.area_slug}/`
+          : `${SITE.url}/market-map/#area-${s.area_slug}`,
+      }))}
     />
   </Fragment>
 
@@ -117,6 +131,22 @@ const sortedByPrice = [...snapshots]
             ))}
           </tbody>
         </table>
+      </div>
+
+      <div class="mt-16">
+        <h2 class="font-serif text-2xl text-navy font-bold mb-6 text-center">Neighbourhood Snapshots</h2>
+        <div class="grid sm:grid-cols-2 gap-4">
+          {sortedByPrice.map((s) => (
+            <div id={`area-${s.area_slug}`} class="bg-white rounded-2xl shadow-card p-5 scroll-mt-24">
+              <p class="font-serif text-lg text-navy font-bold mb-1.5">
+                {SERVED_AREA_SLUGS.has(s.area_slug)
+                  ? <a href={`/areas/${s.area_slug}/`} class="hover:text-gold transition-colors">{s.area_name}</a>
+                  : s.area_name}
+              </p>
+              <p class="text-sm text-slate leading-relaxed">{summarizeArea(s)}</p>
+            </div>
+          ))}
+        </div>
       </div>
 
       <div class="mt-16">
