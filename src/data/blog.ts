@@ -20,7 +20,6 @@ export interface BlogPost {
   content: string;
   charts?: BlogChart[];
   faqs?: Array<{ question: string; answer: string }>;
-  sources?: Array<{ label: string; url: string }>;
 }
 
 export const BLOG_POSTS: BlogPost[] = [
@@ -39,7 +38,7 @@ export const BLOG_POSTS: BlogPost[] = [
       <p>A lot of people leaving Toronto right now aren't leaving because they want to — they're leaving because the math stopped working. London Ontario has quietly become one of the top landing spots for that exact group: close enough to stay connected to the GTA, far enough that your money actually buys a house. Here's what the move really looks like, without the sales pitch.</p>
 
       <h2>The Price Gap Is the Whole Story</h2>
-      <p>As of June 2026, the average home price in London was $594,008. The GTA's benchmark price regularly sits above $1.1 million. That's not a small difference — it's the gap between renting forever in Toronto and owning a detached home with a yard in London.</p>
+      <p>As of June 2026, the <a href="https://www.lstar.ca" target="_blank" rel="noopener noreferrer">average home price in London was $594,008</a>. The GTA's benchmark price regularly sits above $1.1 million. That's not a small difference — it's the gap between renting forever in Toronto and owning a detached home with a yard in London.</p>
       <table>
         <thead>
           <tr><th>Market</th><th>Average Home Price</th><th>What It Buys You</th></tr>
@@ -60,7 +59,7 @@ export const BLOG_POSTS: BlogPost[] = [
         </thead>
         <tbody>
           <tr><td>Highway 401 (driving)</td><td>~2 hours</td><td>Flexibility, moving belongings, occasional trips</td></tr>
-          <tr><td>Via Rail</td><td>Just under 2 hours</td><td>Working or relaxing during the trip, no traffic stress</td></tr>
+          <tr><td><a href="https://www.viarail.ca" target="_blank" rel="noopener noreferrer">Via Rail</a></td><td>Just under 2 hours</td><td>Working or relaxing during the trip, no traffic stress</td></tr>
         </tbody>
       </table>
       <p>That's a genuinely doable commute for people who only need to be in Toronto occasionally, and an easy trip for visiting family or friends who stayed behind. It's not a same-day-every-day commute, and if your job requires you in a Toronto office five days a week, be honest with yourself about whether that's sustainable long-term. But for hybrid workers, remote employees, or anyone who can make the trip a couple of times a month, London puts real distance between you and GTA prices without cutting you off.</p>
@@ -127,11 +126,6 @@ export const BLOG_POSTS: BlogPost[] = [
         answer: 'Yes. A detailed video consultation narrows down neighbourhoods and budget, then a single focused tour day covers the shortlist in person. From there, offers, inspection review, and closing can typically be handled remotely, which is how most relocating buyers complete the process without repeat trips.',
       },
     ],
-    sources: [
-      { label: 'Via Rail — Toronto to London Schedules', url: 'https://www.viarail.ca' },
-      { label: 'Bank of Canada — Key Interest Rate', url: 'https://www.bankofcanada.ca/core-functions/monetary-policy/key-interest-rate/' },
-      { label: 'London and St. Thomas Association of REALTORS® (LSTAR)', url: 'https://www.lstar.ca' },
-    ],
   },
   {
     slug: 'closing-costs-real-estate-london-ontario',
@@ -160,7 +154,7 @@ export const BLOG_POSTS: BlogPost[] = [
           <tr><td>Legal fees</td><td>$1,200 – $1,800</td></tr>
           <tr><td>Title insurance</td><td>$200 – $400</td></tr>
           <tr><td>Home inspection</td><td>$450 – $600</td></tr>
-          <tr><td>CMHC mortgage insurance (if under 20% down)</td><td>2.8% – 4% of the mortgage, usually rolled into it</td></tr>
+          <tr><td><a href="https://www.cmhc-schl.gc.ca/consumers/home-buying/mortgage-loan-insurance-for-consumers" target="_blank" rel="noopener noreferrer">CMHC mortgage insurance</a> (if under 20% down)</td><td>2.8% – 4% of the mortgage, usually rolled into it</td></tr>
           <tr><td>Property tax and utility adjustments</td><td>Varies — you're reimbursing the seller for anything they prepaid</td></tr>
           <tr><td>Moving costs</td><td>$1,000 – $3,000</td></tr>
         </tbody>
@@ -247,11 +241,6 @@ export const BLOG_POSTS: BlogPost[] = [
         question: 'What closing costs do people forget to plan for?',
         answer: "Property tax and utility adjustments (reimbursing the seller for anything they prepaid), condo status certificate fees, HST on new construction, and mortgage discharge fees for sellers. These don't show up on generic checklists because they only apply in certain situations, which is exactly why people get blindsided by them.",
       },
-    ],
-    sources: [
-      { label: 'Ontario.ca — Calculating Land Transfer Tax', url: 'https://www.ontario.ca/document/land-transfer-tax/calculating-land-transfer-tax' },
-      { label: 'CMHC — Mortgage Loan Insurance', url: 'https://www.cmhc-schl.gc.ca/consumers/home-buying/mortgage-loan-insurance-for-consumers' },
-      { label: 'Real Estate Council of Ontario (RECO)', url: 'https://www.reco.on.ca' },
     ],
   },
   {
@@ -363,7 +352,7 @@ export const BLOG_POSTS: BlogPost[] = [
           <tr><td>Total Dollar Volume</td><td>$346,875,205</td><td>+33.5%</td><td>+9.9%</td></tr>
         </tbody>
       </table>
-      <p><em>Source: London and St. Thomas Association of REALTORS® (LSTAR) MLS® data. Data covers all residential property types across London East, London North, and London South (Middlesex). Generated June 16, 2026. Subject to change.</em></p>
+      <p><em>Source: <a href="https://www.lstar.ca" target="_blank" rel="noopener noreferrer">London and St. Thomas Association of REALTORS® (LSTAR)</a> MLS® data. Data covers all residential property types across London East, London North, and London South (Middlesex). Generated June 16, 2026. Subject to change.</em></p>
 
       <h2>How Many Homes Sold in London Ontario in May 2026?</h2>
       <p>543 homes sold in London in May 2026 — up 11.3% compared to May 2025 (488 sales) and up 26.0% from April 2026 (431 sales). That month-over-month jump is the clearest signal yet that London's spring market has arrived. It was the strongest single month of 2026 so far.</p>
@@ -439,11 +428,6 @@ export const BLOG_POSTS: BlogPost[] = [
         answer: 'Selling in London in 2026 requires a strategic approach. Homes priced accurately and presented well are achieving close to asking price and selling within 22 days (median). The spring market has been active — 543 sales in May was the strongest month of 2026. Pricing competitively from day one is essential.',
       },
     ],
-    sources: [
-      { label: 'London and St. Thomas Association of REALTORS® (LSTAR)', url: 'https://www.lstar.ca' },
-      { label: 'Bank of Canada — Key Interest Rate', url: 'https://www.bankofcanada.ca/core-functions/monetary-policy/key-interest-rate/' },
-      { label: 'CMHC — Housing Market Outlook', url: 'https://www.cmhc-schl.gc.ca/en/housing-observer-online' },
-    ],
   },
   {
     slug: 'oakridge-vs-byron-west-london-neighbourhoods',
@@ -461,14 +445,14 @@ export const BLOG_POSTS: BlogPost[] = [
 
       <h2>Location and Feel</h2>
       <p><a href="/areas/oakridge/">Oakridge</a> occupies the Oxford Street corridor between Wonderland Road and Sanatorium Road — west London's true mid-point, with quick access to the city in every direction. The neighbourhood feels settled and self-contained, centred around Oakridge Optimist Park and the Oxford & Hyde Park commercial node with Remark Fresh Markets, Shoppers Drug Mart, and Starbucks within walking distance.</p>
-      <p><a href="/areas/byron/">Byron</a> sits further southwest, bordered by the Thames River and anchored by Springbank Park — London's largest park at over 200 acres. Byron feels almost village-like: quieter streets, a genuine community main street on Commissioners Road, and a sense of remove from the city that Oakridge doesn't quite have.</p>
+      <p><a href="/areas/byron/">Byron</a> sits further southwest, bordered by the Thames River and anchored by <a href="https://en.wikipedia.org/wiki/Springbank_Park" target="_blank" rel="noopener noreferrer">Springbank Park</a> — London's largest park at over 200 acres. Byron feels almost village-like: quieter streets, a genuine community main street on Commissioners Road, and a sense of remove from the city that Oakridge doesn't quite have.</p>
 
       <h2>Home Prices: Oakridge vs. Byron</h2>
       <p>Both neighbourhoods command a premium over the London Ontario average. <a href="/areas/oakridge/">Oakridge</a> homes for sale typically trade in the $650,000 to $850,000 range for detached. <a href="/areas/byron/">Byron</a> commands a modest premium, with detached homes ranging from $700,000 to $950,000 and executive properties exceeding that. If budget is a consideration, Oakridge offers slightly more accessible entry points while still delivering everything West London buyers want.</p>
       <p>For buyers who need more budget flexibility, <a href="/areas/west-london/">West London near Cherry Hill Mall</a> or <a href="/areas/westmount/">Westmount</a> offer established neighbourhoods at lower price points. For a full comparison, see our <a href="/blog/cheapest-area-buy-house-london-ontario/">London Ontario affordability guide</a>, or check current numbers for both neighbourhoods side by side on the <a href="/market-map/">interactive Neighbourhood Heat Map</a>.</p>
 
       <h2>Schools</h2>
-      <p><a href="/areas/oakridge/">Oakridge</a> has long been one of London's strongest school catchments — Oakridge Public School, Mother Teresa Catholic Elementary, and Oakridge Secondary School are all well-regarded. <a href="/areas/byron/">Byron</a> matches this with Byron Northview Public School and Byron Secondary School, which consistently ranks among the region's top high schools academically.</p>
+      <p><a href="/areas/oakridge/">Oakridge</a> has long been one of London's strongest school catchments — <a href="https://www.tvdsb.ca" target="_blank" rel="noopener noreferrer">Oakridge Public School</a>, <a href="https://www.ldcsb.ca" target="_blank" rel="noopener noreferrer">Mother Teresa Catholic Elementary</a>, and Oakridge Secondary School are all well-regarded. <a href="/areas/byron/">Byron</a> matches this with Byron Northview Public School and Byron Secondary School, which consistently ranks among the region's top high schools academically.</p>
       <p>Both neighbourhoods are excellent for families. Byron Secondary School's academic reputation gives it a slight edge for families prioritizing secondary school options specifically.</p>
 
       <h2>Outdoor Lifestyle</h2>
@@ -505,11 +489,6 @@ export const BLOG_POSTS: BlogPost[] = [
         answer: 'Byron wins decisively for outdoor lifestyle. Springbank Park — London\'s largest park at over 200 acres — runs through Byron along the Thames River, and the Thames Valley Parkway trail system is directly accessible. Oakridge has Oakridge Optimist Park and the unique Sifton Bog Conservation Area, but Springbank Park is in a different category for sheer outdoor space.',
       },
     ],
-    sources: [
-      { label: 'Thames Valley District School Board (TVDSB)', url: 'https://www.tvdsb.ca' },
-      { label: 'London District Catholic School Board (LDCSB)', url: 'https://www.ldcsb.ca' },
-      { label: 'Springbank Park — London, Ontario', url: 'https://en.wikipedia.org/wiki/Springbank_Park' },
-    ],
   },
   {
     slug: 'first-time-home-buyer-london-ontario-guide',
@@ -530,7 +509,7 @@ export const BLOG_POSTS: BlogPost[] = [
       <ul>
         <li><strong>Down payment</strong> — Minimum 5% on homes up to $500,000, scaling to 10% on the portion between $500,000 and $999,999</li>
         <li><strong>Ontario Land Transfer Tax</strong> — Payable on closing; use our <a href="/mortgages/calculator/">mortgage calculator</a> to estimate your total costs</li>
-        <li><strong>CMHC mortgage insurance</strong> — Required if your down payment is under 20%; typically 2.8%–4% of the mortgage added to your loan</li>
+        <li><strong><a href="https://www.cmhc-schl.gc.ca/consumers/home-buying/mortgage-loan-insurance-for-consumers" target="_blank" rel="noopener noreferrer">CMHC mortgage insurance</a></strong> — Required if your down payment is under 20%; typically 2.8%–4% of the mortgage added to your loan</li>
         <li><strong>Home inspection</strong> — $450 to $600 in London Ontario</li>
         <li><strong>Legal fees</strong> — Typically $1,200 to $1,800</li>
         <li><strong>Title insurance</strong> — $200 to $400</li>
@@ -595,12 +574,6 @@ export const BLOG_POSTS: BlogPost[] = [
         question: 'What is the difference between a mortgage pre-approval and pre-qualification?',
         answer: 'A pre-qualification is an informal estimate based on self-reported income and expenses — it is not verified by the lender and carries no rate commitment. A pre-approval is a verified, documented assessment by a lender that confirms your maximum purchase price and locks in an interest rate for 90–120 days. In a competitive London Ontario neighbourhood, only a pre-approval gives you the credibility to make an offer.',
       },
-    ],
-    sources: [
-      { label: 'Canada Revenue Agency — First Home Savings Account (FHSA)', url: 'https://www.canada.ca/en/revenue-agency/services/tax/individuals/topics/first-home-savings-account.html' },
-      { label: 'Canada.ca — Home Buyers\' Plan', url: 'https://www.canada.ca/en/revenue-agency/services/tax/individuals/topics/rrsps-related-plans/what-home-buyers-plan.html' },
-      { label: 'CMHC — Mortgage Loan Insurance', url: 'https://www.cmhc-schl.gc.ca/consumers/home-buying/mortgage-loan-insurance-for-consumers' },
-      { label: 'Real Estate Council of Ontario (RECO)', url: 'https://www.reco.on.ca' },
     ],
   },
   {
@@ -669,11 +642,6 @@ export const BLOG_POSTS: BlogPost[] = [
         answer: 'Selling costs in Ontario include real estate commission (negotiated with your broker), legal fees ($1,000–$1,500), any agreed-upon repairs or pre-listing improvements, and moving costs. Unlike buying, there is no Land Transfer Tax on the selling side. The exact costs depend on your sale price, the commission structure, and the condition of your home going into the listing.',
       },
     ],
-    sources: [
-      { label: 'London and St. Thomas Association of REALTORS® (LSTAR)', url: 'https://www.lstar.ca' },
-      { label: 'Real Estate Council of Ontario (RECO) — Information for Sellers', url: 'https://www.reco.on.ca/consumers/information-for-sellers' },
-      { label: 'Realtor.ca — MLS® Listings', url: 'https://www.realtor.ca' },
-    ],
   },
   {
     slug: 'real-estate-broker-vs-agent-ontario',
@@ -690,12 +658,12 @@ export const BLOG_POSTS: BlogPost[] = [
       <p>In Ontario, the terms "real estate agent," "salesperson," and "broker" are often used interchangeably — but they are not the same credential. Understanding the difference helps you make a more informed decision about who you trust with the largest financial transaction of your life.</p>
 
       <h2>Who Regulates Real Estate in Ontario?</h2>
-      <p>All real estate professionals in Ontario are regulated by the <a href="https://www.reco.on.ca" target="_blank" rel="noopener noreferrer">Real Estate Council of Ontario (RECO)</a> under the Trust in Real Estate Services Act (TRESA), which came into force in 2023. RECO licenses all salespeople, brokers, and brokerages, and enforces professional standards and consumer protection rules. If you are working with a professional in Ontario, you can verify their license through <a href="https://www.reco.on.ca/consumers/make-sure-your-real-estate-agent-is-registered" target="_blank" rel="noopener noreferrer">RECO's public registry</a>.</p>
+      <p>All real estate professionals in Ontario are regulated by the <a href="https://www.reco.on.ca" target="_blank" rel="noopener noreferrer">Real Estate Council of Ontario (RECO)</a> under the <a href="https://www.ontario.ca/laws/statute/02r30" target="_blank" rel="noopener noreferrer">Trust in Real Estate Services Act (TRESA)</a>, which came into force in 2023. RECO licenses all salespeople, brokers, and brokerages, and enforces professional standards and consumer protection rules. If you are working with a professional in Ontario, you can verify their license through <a href="https://www.reco.on.ca/consumers/make-sure-your-real-estate-agent-is-registered" target="_blank" rel="noopener noreferrer">RECO's public registry</a>.</p>
 
       <h2>Real Estate Salesperson vs. Real Estate Broker: The Difference</h2>
       <p>In Ontario:</p>
       <ul>
-        <li><strong>Real Estate Salesperson</strong> — The entry-level Ontario licence. Candidates complete the Humber College Real Estate Salesperson program and pass provincial licensing exams. Salespersons must work under the supervision of a registered Broker of Record.</li>
+        <li><strong>Real Estate Salesperson</strong> — The entry-level Ontario licence. Candidates complete the <a href="https://humber.ca" target="_blank" rel="noopener noreferrer">Humber College</a> Real Estate Salesperson program and pass provincial licensing exams. Salespersons must work under the supervision of a registered Broker of Record.</li>
         <li><strong>Real Estate Broker</strong> — A more advanced designation requiring two years of active experience as a registered salesperson, additional coursework through Humber College's Broker program, and successful completion of separate broker licensing exams. Brokers can operate with greater professional autonomy and are qualified to supervise salespersons.</li>
         <li><strong>Broker of Record</strong> — The individual legally responsible for a brokerage's compliance, operations, and supervision of all registered members. Every brokerage in Ontario must have a designated Broker of Record.</li>
       </ul>
@@ -730,12 +698,6 @@ export const BLOG_POSTS: BlogPost[] = [
         question: 'What is a Broker of Record in Ontario real estate?',
         answer: 'A Broker of Record is the individual legally responsible for a brokerage\'s compliance with RECO regulations, day-to-day operations, and supervision of all registered salespeople and brokers within that brokerage. Every Ontario brokerage must have a designated Broker of Record on file with RECO.',
       },
-    ],
-    sources: [
-      { label: 'Real Estate Council of Ontario (RECO)', url: 'https://www.reco.on.ca' },
-      { label: 'RECO — Make Sure Your Real Estate Agent Is Registered', url: 'https://www.reco.on.ca/consumers/make-sure-your-real-estate-agent-is-registered' },
-      { label: 'Ontario — Trust in Real Estate Services Act (TRESA)', url: 'https://www.ontario.ca/laws/statute/02r30' },
-      { label: 'Humber College — Real Estate Education', url: 'https://humber.ca' },
     ],
   },
   {
@@ -787,11 +749,6 @@ export const BLOG_POSTS: BlogPost[] = [
         question: 'What is the Bank of Canada overnight rate and how does it affect mortgages?',
         answer: 'The Bank of Canada overnight rate is the benchmark interest rate that influences the prime rate charged by Canadian banks. Variable mortgage rates and home equity lines of credit are typically priced at prime plus or minus a margin. Fixed mortgage rates are influenced by bond yields, which respond to Bank of Canada policy direction and broader economic conditions.',
       },
-    ],
-    sources: [
-      { label: 'Bank of Canada — Key Interest Rate', url: 'https://www.bankofcanada.ca/core-functions/monetary-policy/key-interest-rate/' },
-      { label: 'Bank of Canada — Monetary Policy Report', url: 'https://www.bankofcanada.ca/publications/mpr/' },
-      { label: 'CMHC — Housing Market Outlook', url: 'https://www.cmhc-schl.gc.ca/en/housing-observer-online' },
     ],
   },
   {
@@ -849,10 +806,6 @@ export const BLOG_POSTS: BlogPost[] = [
         answer: 'Yes — London Ontario home prices are significantly more affordable than Toronto and the GTA. The London Ontario average home price is approximately $625,000–$660,000, while the Toronto area regularly averages over $1.1 million. London consistently ranks among Ontario\'s most accessible mid-sized city real estate markets.',
       },
     ],
-    sources: [
-      { label: 'London and St. Thomas Association of REALTORS® (LSTAR)', url: 'https://www.lstar.ca' },
-      { label: 'CMHC — Housing Market Outlook', url: 'https://www.cmhc-schl.gc.ca/en/housing-observer-online' },
-    ],
   },
   {
     slug: 'house-prices-expected-to-rise-london-ontario',
@@ -872,7 +825,7 @@ export const BLOG_POSTS: BlogPost[] = [
       <p>The London Ontario average home price is currently around $620,000 to $650,000, below the 2022 peak but well above pre-pandemic levels. The correction has softened, and we are seeing balanced-to-slight seller market conditions in desirable West London neighbourhoods like <a href="/areas/oakridge/">Oakridge</a>, <a href="/areas/byron/">Byron</a>, and <a href="/areas/lambeth/">Lambeth</a>.</p>
 
       <h2>Signals Pointing to Modest Price Growth</h2>
-      <p>Several fundamentals support modest price appreciation in 2026–2027. Population growth driven by immigration is maintaining housing demand. <a href="https://www.cmhc-schl.gc.ca/observer" target="_blank" rel="noopener noreferrer">CMHC supply reports</a> confirm that supply remains constrained across Ontario. Interest rates have eased from peak levels. And London's economic base continues to diversify and grow, anchored by Western University, London Health Sciences Centre, and an expanding tech sector.</p>
+      <p>Several fundamentals support modest price appreciation in 2026–2027. <a href="https://www.statcan.gc.ca/en/subjects-start/population_and_demography" target="_blank" rel="noopener noreferrer">Population growth driven by immigration</a> is maintaining housing demand. <a href="https://www.cmhc-schl.gc.ca/observer" target="_blank" rel="noopener noreferrer">CMHC supply reports</a> confirm that supply remains constrained across Ontario. Interest rates have eased from peak levels. And London's economic base continues to diversify and grow, anchored by Western University, London Health Sciences Centre, and an expanding tech sector.</p>
 
       <h2>The Counterweights</h2>
       <p>Affordability remains stretched relative to local incomes, which limits how much prices can rise without commensurate income growth. Inventory is slowly improving as more sellers who delayed listing during rate uncertainty finally come to market. Buyers who are looking for value should look at <a href="/areas/west-london/">West London</a>, <a href="/areas/westmount/">Westmount</a>, and Medway as strong candidates for appreciation that hasn't yet been fully priced in.</p>
@@ -903,12 +856,6 @@ export const BLOG_POSTS: BlogPost[] = [
         answer: 'No credible market analyst is forecasting a significant price drop in London Ontario. Prices may moderate in a sustained high-rate or elevated-inventory environment, but the fundamental demand drivers — population growth, supply constraints, and relative GTA affordability — support long-term stability. Buyers who are financially ready are generally better served buying when right for them than timing the market.',
       },
     ],
-    sources: [
-      { label: 'CMHC — Housing Supply Report', url: 'https://www.cmhc-schl.gc.ca/observer' },
-      { label: 'Bank of Canada — Monetary Policy Report', url: 'https://www.bankofcanada.ca/publications/mpr/' },
-      { label: 'London and St. Thomas Association of REALTORS® (LSTAR)', url: 'https://www.lstar.ca' },
-      { label: 'Statistics Canada — Population Growth Data', url: 'https://www.statcan.gc.ca/en/subjects-start/population_and_demography' },
-    ],
   },
   {
     slug: 'london-ontario-neighbourhood-guide-2026',
@@ -931,7 +878,7 @@ export const BLOG_POSTS: BlogPost[] = [
       <p>Oakridge is the quintessential West London neighbourhood — mature trees, large lots, Sifton Bog conservation area, and some of London's best-regarded schools. Homes for sale in Oakridge typically range from $650,000 to $850,000 for detached. If you want the neighbourhood where residents know their neighbours and community pride runs deep, this is it.</p>
 
       <h3><a href="/areas/byron/">Byron</a> — Best for: Outdoor lifestyle, river trails, village feel</h3>
-      <p>Byron's anchor is Springbank Park — London's largest park — and the Thames River trail system. Byron Secondary School is one of the region's most academically strong. Prices are slightly above Oakridge ($700,000–$950,000) and the community has a quieter, more removed character. Homes for sale in Byron rarely last long.</p>
+      <p>Byron's anchor is Springbank Park — London's largest park — and the Thames River trail system. <a href="https://www.tvdsb.ca" target="_blank" rel="noopener noreferrer">Byron Secondary School</a> is one of the region's most academically strong. Prices are slightly above Oakridge ($700,000–$950,000) and the community has a quieter, more removed character. Homes for sale in Byron rarely last long.</p>
 
       <h3><a href="/areas/westmount/">Westmount</a> — Best for: Diverse housing, proximity to Western University</h3>
       <p>Westmount offers London's widest range of housing options in one neighbourhood — from condos below $350,000 to large detached homes in the $700,000+ range. Proximity to Western University, University Hospital, and Wonderland Road retail makes it exceptionally practical for professionals and investors.</p>
@@ -1013,12 +960,6 @@ export const BLOG_POSTS: BlogPost[] = [
         answer: 'Hyde Park, Lambeth, Oakridge, and Byron are consistently London Ontario\'s top choices for families — combining strong school catchments with parks, community amenities, and safe, walkable streets. Hyde Park and Lambeth offer newer construction with modern family layouts; Oakridge and Byron offer mature, established communities with proven school track records.',
       },
     ],
-    sources: [
-      { label: 'Thames Valley District School Board (TVDSB)', url: 'https://www.tvdsb.ca' },
-      { label: 'London District Catholic School Board (LDCSB)', url: 'https://www.ldcsb.ca' },
-      { label: 'London and St. Thomas Association of REALTORS® (LSTAR)', url: 'https://www.lstar.ca' },
-      { label: 'City of London — Living in London', url: 'https://london.ca/living-london' },
-    ],
   },
   {
     slug: 'riverbend-vs-byron-southwest-london',
@@ -1035,7 +976,7 @@ export const BLOG_POSTS: BlogPost[] = [
       <p>Riverbend and Byron sit next to each other in southwest London, both wrapped around the Thames River, and both attract buyers who want more green space than a typical subdivision offers. But they are built for different buyers — one is a new-build golf community still under construction, the other is a fully established village neighbourhood with decades of character. Here's how they actually compare.</p>
 
       <h2>Location and Feel</h2>
-      <p><a href="/areas/riverbend/">Riverbend</a> is Sifton Properties' landmark golf community at the southwest edge of the city, built around the Riverbend Golf Club with the Thames River tracing its southern and western boundary. It's a newer, gated-community feel — homes built to a single cohesive design vision, still expanding toward a planned 400+ homes. <a href="/areas/byron/">Byron</a> sits just northeast of Riverbend, anchored by Springbank Park and Commissioners Road's village-style main street. Byron has been a distinct community since before amalgamation and feels like it — mature trees, a real mix of housing eras, and decades of neighbourhood identity.</p>
+      <p><a href="/areas/riverbend/">Riverbend</a> is <a href="https://www.sifton.com" target="_blank" rel="noopener noreferrer">Sifton Properties</a>' landmark golf community at the southwest edge of the city, built around the Riverbend Golf Club with the Thames River tracing its southern and western boundary. It's a newer, gated-community feel — homes built to a single cohesive design vision, still expanding toward a planned 400+ homes. <a href="/areas/byron/">Byron</a> sits just northeast of Riverbend, anchored by Springbank Park and Commissioners Road's village-style main street. Byron has been a distinct community since before amalgamation and feels like it — mature trees, a real mix of housing eras, and decades of neighbourhood identity.</p>
 
       <h2>Home Prices: Riverbend vs. Byron</h2>
       <p><a href="/areas/riverbend/">Riverbend</a> commands a premium for its new-build, executive-finish homes — typically $730,000 to $900,000+, with larger estate properties exceeding that. <a href="/areas/byron/">Byron</a> ranges from $700,000 to $950,000 for detached homes, spanning everything from post-war bungalows to executive two-storeys. The price bands overlap, but the product is different: Riverbend buyers are paying for new construction and golf-course lots, while Byron's range reflects a wider mix of home ages and sizes. For current active-listing numbers rather than these ballpark ranges, see both on the <a href="/market-map/">interactive Neighbourhood Heat Map</a>.</p>
@@ -1044,7 +985,7 @@ export const BLOG_POSTS: BlogPost[] = [
       <p>This is the real decision point. Riverbend offers new-build quality — modern layouts, current finishes, and a community built from scratch by a single developer, which means fewer surprises but also fewer mature trees and less architectural variety. Byron offers the opposite trade: established streets, mature landscaping, and genuine architectural variety, but homes that may need updating depending on age. Buyers who want to walk into a move-in-ready new home tend to land in Riverbend; buyers who want character and are comfortable with some renovation tend to land in Byron.</p>
 
       <h2>Schools</h2>
-      <p>Riverbend is served by the new Riverbend Public School (1000 Upperpoint Ave), opening September 2027, plus Saunders Secondary School — the largest high school in the TVDSB, serving the broader west-end catchment. Byron is served by Byron Northview Public School and Byron Secondary School, which consistently ranks among the region's top academic performers. Families prioritizing an established, proven school with a long academic track record often lean Byron; families comfortable with a brand-new school opening in 2027 have that option in Riverbend.</p>
+      <p>Riverbend is served by the new Riverbend Public School (1000 Upperpoint Ave), opening September 2027, plus Saunders Secondary School — the largest high school in the <a href="https://www.tvdsb.ca" target="_blank" rel="noopener noreferrer">TVDSB</a>, serving the broader west-end catchment. Byron is served by Byron Northview Public School and Byron Secondary School, which consistently ranks among the region's top academic performers. Families prioritizing an established, proven school with a long academic track record often lean Byron; families comfortable with a brand-new school opening in 2027 have that option in Riverbend.</p>
 
       <h2>Golf, River Access, and Outdoor Lifestyle</h2>
       <p>Both neighbourhoods are built around outdoor access, but differently. <a href="/areas/riverbend/">Riverbend</a> is centred on its 18-hole golf course, with Thames River valley trails connecting toward Springbank Park. <a href="/areas/byron/">Byron</a> has Springbank Park itself — London's largest park at over 200 acres — directly in the neighbourhood, plus the Thames Valley Parkway trail system. If golf-course living is the draw, Riverbend wins outright. If it's about park size and trail access for walking, running, and cycling, Byron's proximity to Springbank Park is hard to beat.</p>
@@ -1076,11 +1017,6 @@ export const BLOG_POSTS: BlogPost[] = [
         answer: 'Riverbend is directly adjacent to Byron in southwest London, with Thames River valley trails connecting the two communities. Springbank Park, which sits in Byron, is easily accessible from Riverbend via the trail network.',
       },
     ],
-    sources: [
-      { label: 'Thames Valley District School Board (TVDSB)', url: 'https://www.tvdsb.ca' },
-      { label: 'Sifton Properties', url: 'https://www.sifton.com' },
-      { label: 'London and St. Thomas Association of REALTORS® (LSTAR)', url: 'https://www.lstar.ca' },
-    ],
   },
   {
     slug: 'lambeth-london-ontario-real-estate-guide',
@@ -1106,7 +1042,7 @@ export const BLOG_POSTS: BlogPost[] = [
       <p>This is where Lambeth genuinely stands out. Direct access to both Highway 401 and Highway 402 makes it one of the best-positioned neighbourhoods in London for commuters — whether that's a regular drive to Windsor, Kitchener-Waterloo, or occasional trips toward Toronto. Big-box retail on Wellington Road is also just minutes away, so day-to-day errands don't require a highway trip at all.</p>
 
       <h2>Schools and Fraser Institute Ratings</h2>
-      <p>Lambeth is served by Lambeth Public School, St. Nicholas Catholic Elementary, and Sir Frederick Banting Secondary School. Fraser Institute ratings for schools in the area consistently exceed the provincial average, which is a meaningful factor for families weighing Lambeth against other southwest London options.</p>
+      <p>Lambeth is served by <a href="https://www.tvdsb.ca" target="_blank" rel="noopener noreferrer">Lambeth Public School</a>, St. Nicholas Catholic Elementary, and Sir Frederick Banting Secondary School. <a href="https://www.fraserinstitute.org/studies/school-performance" target="_blank" rel="noopener noreferrer">Fraser Institute ratings</a> for schools in the area consistently exceed the provincial average, which is a meaningful factor for families weighing Lambeth against other southwest London options.</p>
 
       <h2>Home Prices in Lambeth</h2>
       <p>Lambeth homes typically range from $700,000 to $1,100,000, reflecting the newer estate-home product common in the area — executive detached and new-construction homes on larger lots. That puts Lambeth above the London city-wide average, in a similar band to <a href="/areas/riverbend/">Riverbend</a>, but with more established community infrastructure already in place.</p>
@@ -1137,11 +1073,6 @@ export const BLOG_POSTS: BlogPost[] = [
         answer: 'Yes, Lambeth is one of the best-positioned neighbourhoods in London for commuters, with direct access to both Highway 401 and Highway 402. It suits buyers who regularly travel toward Windsor, Kitchener-Waterloo, or Toronto.',
       },
     ],
-    sources: [
-      { label: 'Fraser Institute — School Rankings', url: 'https://www.fraserinstitute.org/studies/school-performance' },
-      { label: 'Thames Valley District School Board (TVDSB)', url: 'https://www.tvdsb.ca' },
-      { label: 'London and St. Thomas Association of REALTORS® (LSTAR)', url: 'https://www.lstar.ca' },
-    ],
   },
   {
     slug: 'westmount-vs-west-london-affordable-neighbourhoods',
@@ -1164,7 +1095,7 @@ export const BLOG_POSTS: BlogPost[] = [
       <p><a href="/areas/westmount/">Westmount</a> homes typically range from $550,000 to $750,000. <a href="/areas/west-london/">West London</a> is slightly more accessible still, at $520,000 to $720,000. Both sit well below <a href="/areas/oakridge/">Oakridge</a> and <a href="/areas/byron/">Byron</a>'s $650,000-$950,000 range, making them the go-to answer for buyers who want a west-end address without the premium. For a full breakdown of pricing across all London neighbourhoods, see our <a href="/blog/cheapest-area-buy-house-london-ontario/">affordability guide</a> or the live, current numbers on the <a href="/market-map/">interactive Neighbourhood Heat Map</a>.</p>
 
       <h2>Proximity to Western University and University Hospital</h2>
-      <p>This is Westmount's clearest edge. Its location along Wonderland Road puts it minutes from Western University and University Hospital, making it a natural fit for hospital staff, university faculty, and landlords targeting the student and young-professional rental market. West London is centrally located too, but doesn't have the same direct proximity to either institution.</p>
+      <p>This is Westmount's clearest edge. Its location along Wonderland Road puts it minutes from <a href="https://www.uwo.ca" target="_blank" rel="noopener noreferrer">Western University</a> and University Hospital, making it a natural fit for hospital staff, university faculty, and landlords targeting the student and young-professional rental market. West London is centrally located too, but doesn't have the same direct proximity to either institution.</p>
 
       <h2>Housing Mix and Investment Potential</h2>
       <p>Westmount's diversity of housing types — including apartments and condos alongside detached homes — gives it more investment and rental flexibility than most west-end neighbourhoods. West London's housing stock is more uniformly single-family, which suits owner-occupiers looking for a straightforward detached home rather than investors comparing unit types.</p>
@@ -1198,11 +1129,6 @@ export const BLOG_POSTS: BlogPost[] = [
         question: 'Are Westmount and West London good for families?',
         answer: 'Both are solid family options with established schools and community infrastructure. Westmount offers a wider mix of housing types and proximity to Western University and University Hospital, while West London offers a quieter, more uniformly residential setting with mature lots.',
       },
-    ],
-    sources: [
-      { label: 'Thames Valley District School Board (TVDSB)', url: 'https://www.tvdsb.ca' },
-      { label: 'London and St. Thomas Association of REALTORS® (LSTAR)', url: 'https://www.lstar.ca' },
-      { label: 'Western University', url: 'https://www.uwo.ca' },
     ],
   },
   {
@@ -1255,10 +1181,6 @@ export const BLOG_POSTS: BlogPost[] = [
         question: 'How do I make sure my home does not get terminated?',
         answer: "Price it to actual, recent comparable sales in your specific neighbourhood rather than hopeful expectations or outdated numbers. A proper home evaluation based on current comparables — not an automated estimate — is the most reliable way to land on a price that both sells quickly and gets full value.",
       },
-    ],
-    sources: [
-      { label: 'London and St. Thomas Association of REALTORS® (LSTAR)', url: 'https://www.lstar.ca' },
-      { label: 'WOWA — London Housing Market', url: 'https://wowa.ca/london-housing-market' },
     ],
   },
   {
@@ -1320,10 +1242,6 @@ export const BLOG_POSTS: BlogPost[] = [
         question: 'Did every London Ontario neighbourhood slow down in June 2026?',
         answer: "No. Oakridge was a clear exception, with median days on market dropping to 19 (from 27 in May) and 22.9% of homes selling above asking. While the citywide market cooled heading into summer, strong-fundamental neighbourhoods like Oakridge kept moving quickly.",
       },
-    ],
-    sources: [
-      { label: 'London and St. Thomas Association of REALTORS® (LSTAR)', url: 'https://www.lstar.ca' },
-      { label: 'WOWA — London Housing Market', url: 'https://wowa.ca/london-housing-market' },
     ],
   },
   {
@@ -1389,7 +1307,7 @@ export const BLOG_POSTS: BlogPost[] = [
           <tr><td>Jul 2026</td><td><strong>7.3</strong></td><td>28</td></tr>
         </tbody>
       </table>
-      <p><em>Source: PropTx Innovations Inc. MLS® data, covering London East, London North, and London South (Middlesex), calculated from approximately 67,000 listings.</em></p>
+      <p><em>Source: <a href="https://proptx.ca" target="_blank" rel="noopener noreferrer">PropTx Innovations Inc.</a> MLS® data, covering London East, London North, and London South (Middlesex), calculated from approximately 67,000 listings.</em></p>
 
       <h2>The Big Story: What Happened in July 2026</h2>
       <p>From August 2025 through June 2026, London held firmly in seller's-market territory — months of supply never climbed above 4.3, and it spent the spring of 2026 as low as 2.3 to 2.5. Then July arrived and supply jumped to 7.3 months, crossing well past the 6-month line into buyer's-market conditions. That's roughly a tripling of available supply relative to the pace of sales, in a single month.</p>
@@ -1424,10 +1342,6 @@ export const BLOG_POSTS: BlogPost[] = [
         question: 'Does more housing supply mean lower prices in London Ontario?',
         answer: 'Rising supply typically gives buyers more negotiating leverage and can slow price growth, but a single month of data is a signal, not a confirmed trend. Sellers who price accurately to current conditions can still sell effectively; the risk is for listings priced to earlier, tighter-market conditions.',
       },
-    ],
-    sources: [
-      { label: 'PropTx Innovations Inc.', url: 'https://proptx.ca' },
-      { label: 'London and St. Thomas Association of REALTORS® (LSTAR)', url: 'https://www.lstar.ca' },
     ],
   },
 ];

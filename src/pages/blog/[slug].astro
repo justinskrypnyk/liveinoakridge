@@ -175,20 +175,6 @@ const { post } = Astro.props;
             </div>
           )}
 
-          {post.sources && post.sources.length > 0 && (
-            <div class="mt-6 bg-white rounded-2xl p-6 shadow-sm">
-              <h3 class="font-semibold text-navy text-xs uppercase tracking-wide mb-3">Sources & Data</h3>
-              <ul class="space-y-1.5">
-                {post.sources.map(source => (
-                  <li class="text-xs text-slate flex items-start gap-2">
-                    <span class="text-gold mt-0.5 shrink-0">—</span>
-                    <a href={source.url} target="_blank" rel="noopener noreferrer" class="hover:text-gold transition-colors">{source.label}</a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
           <div class="mt-8 bg-navy text-white rounded-2xl p-8 flex gap-6 items-start">
             <img src="/images/justin-skrypnyk-headshot-avatar.webp" alt="Justin Skrypnyk" width="64" height="64" class="w-16 h-16 rounded-2xl object-cover shrink-0" />
             <div>
