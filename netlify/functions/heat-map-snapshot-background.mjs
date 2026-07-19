@@ -128,9 +128,6 @@ export default async (req) => {
   const forcedKind = req && new URL(req.url).searchParams.get('period_type');
   const kind = forced ? (forcedKind === 'month-end' ? 'month-end' : 'mid-month') : captureKind(now);
 
-  if (!kind) {
-    return new Response(`heat-map-snapshot: not a capture day (${now.toISOString().slice(0, 10)}), skipping`);
-  }
   if (!DDF_ACCESS_TOKEN || !DDF_API_BASE_URL || !SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
     console.error('heat-map-snapshot: missing required env vars', {
       DDF_ACCESS_TOKEN: !!DDF_ACCESS_TOKEN,
@@ -142,6 +139,15 @@ export default async (req) => {
   }
 
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+  if (!kind) {
+    // Supabase free-tier projects auto-pause after 7 days with no API
+    // activity, but real capture days are 14-16 days apart -- a trivial
+    // read on every off-day run keeps the project alive in between.
+    await supabase.from('market_map_snapshots').select('area_slug').limit(1);
+    return new Response(`heat-map-snapshot: not a capture day (${now.toISOString().slice(0, 10)}), keep-alive ping sent`);
+  }
+
   const geocodeStore = getStore('ddf-geocode-cache');
   const polygons = loadAllAreaBoundaries();
 
