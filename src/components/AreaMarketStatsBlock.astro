@@ -35,6 +35,7 @@ const hasStats = !!stats && (stats.medianListPrice != null || stats.activeCount 
     <p class="text-xs text-slate/50 mt-1.5">
       Based on active MLS® listings from every REALTOR®, not just Justin's — updated twice monthly.
       <a href={`/market-faq/#${stats.slug}`} class="text-gold hover:underline font-medium">See more {areaName} market questions, answered →</a>
+      {' '}<a href={`/market-map/#area-${stats.slug}`} class="text-gold hover:underline font-medium">Compare {areaName} to every other London neighbourhood →</a>
     </p>
   </div>
 )}

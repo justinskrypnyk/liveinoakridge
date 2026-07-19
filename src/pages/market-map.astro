@@ -25,6 +25,25 @@ const SERVED_AREA_SLUGS = new Set(['oakridge', 'byron', 'westmount', 'riverbend'
 const sortedByPrice = [...snapshots]
   .filter((s) => s.median_list_price != null)
   .sort((a, b) => (b.median_list_price ?? 0) - (a.median_list_price ?? 0));
+
+const FAQS = [
+  {
+    q: 'How often is this neighbourhood data updated?',
+    a: 'Twice a month -- once mid-month (the 15th) and once at the start of the following month, capturing the previous month\'s close. Every neighbourhood shown is refreshed on the same schedule.',
+  },
+  {
+    q: 'Why don\'t you show sold prices or units sold?',
+    a: 'Those require real estate board access beyond what this site currently has (a Member/VOW-level data feed, not the public active-listings feed this map runs on). Median list price, days on market, and the other live pills are all based on active MLS listings from every REALTOR®, not just Justin\'s.',
+  },
+  {
+    q: 'What does "Left Market This Period" mean?',
+    a: 'It\'s the number of listings that were active in the previous snapshot but are no longer active now -- a rough signal of how quickly homes are moving in that neighbourhood, without needing sold-price data.',
+  },
+  {
+    q: 'Is this every neighbourhood in London, Ontario?',
+    a: 'Yes -- all 39 neighbourhoods in the city are shown, mapped to their real boundaries rather than approximate pins. Only 7 (Oakridge, West London, Whitehills, Byron, Westmount, Riverbend, and Lambeth) have a dedicated area page on this site, but every neighbourhood\'s live stats are shown here.',
+  },
+];
 ---
 
 <Base
@@ -41,6 +60,7 @@ const sortedByPrice = [...snapshots]
         variableMeasured: ['Median list price', 'Average days on market', 'New listings', 'Price per square foot', 'Median bedrooms', 'Median bathrooms', 'Percent detached homes', 'Listings delisted per period'],
         datePublished: asOf ?? new Date().toISOString().slice(0, 10),
       }}
+      faqs={FAQS}
     />
     <Schema
       type="listing-collection"
@@ -144,6 +164,18 @@ const sortedByPrice = [...snapshots]
                   : s.area_name}
               </p>
               <p class="text-sm text-slate leading-relaxed">{summarizeArea(s)}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div class="mt-16 max-w-3xl mx-auto">
+        <h2 class="font-serif text-2xl text-navy font-bold mb-6 text-center">Frequently Asked Questions</h2>
+        <div class="space-y-4">
+          {FAQS.map((faq) => (
+            <div class="bg-white rounded-2xl shadow-card p-5">
+              <p class="font-serif text-navy font-bold mb-1.5">{faq.q}</p>
+              <p class="text-sm text-slate leading-relaxed">{faq.a}</p>
             </div>
           ))}
         </div>
