@@ -1,0 +1,123 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  /* ============================================================
+     MARKET UPDATE GRAPHIC TEMPLATE — 748x340
+     Matches the existing "June 2026" style: navy gradient,
+     photo left, gold divider, headline + hook + stat pills right.
+
+     TO REUSE EACH MONTH: edit the 6 text values marked TEMPLATE
+     below, then screenshot this file at 748x340 to export a PNG.
+     ============================================================ */
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 748px; height: 340px; }
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: linear-gradient(115deg, #071829 0%, #0c2340 55%, #14365a 100%);
+  }
+  .layout {
+    display: flex;
+    width: 748px;
+    height: 340px;
+  }
+  .photo-col {
+    width: 260px;
+    flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  .photo-col img {
+    height: 115%;
+    width: auto;
+    object-fit: cover;
+    object-position: top center;
+  }
+  .divider {
+    width: 3px;
+    flex-shrink: 0;
+    background: linear-gradient(180deg, #34d399, #059669);
+  }
+  .text-col {
+    flex: 1;
+    padding: 26px 32px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 10px;
+    color: white;
+    min-width: 0;
+  }
+  .label {
+    color: #34d399;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .headline {
+    font-size: 28px;
+    font-weight: 800;
+    line-height: 1.15;
+    color: white;
+  }
+  .hook {
+    color: #fbbf24;
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+  }
+  .rule {
+    height: 1px;
+    background: rgba(255,255,255,0.25);
+    margin: 4px 0;
+  }
+  .pills {
+    display: flex;
+    gap: 10px;
+  }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 7px 16px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 700;
+    color: white;
+    white-space: nowrap;
+  }
+  .pill.green { background: #059669; }
+  .pill.red { background: #dc2626; }
+  .caption {
+    color: rgba(255,255,255,0.55);
+    font-size: 12px;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+</style>
+</head>
+<body>
+  <div class="layout">
+    <div class="photo-col">
+      <img src="../public/images/justin-skrypnyk-realtor-london-ontario.webp" alt="Justin Skrypnyk" />
+    </div>
+    <div class="divider"></div>
+    <div class="text-col">
+      <div class="label">LONDON, ON &nbsp;&bull;&nbsp; AUGUST 2026</div> <!-- TEMPLATE: location + month -->
+      <div class="headline">Average Price<br>Holds Steady</div> <!-- TEMPLATE: 2-line headline -->
+      <div class="hook">HERE'S THE STORY.</div> <!-- TEMPLATE: hook line (rarely changes) -->
+      <div class="rule"></div>
+      <div class="pills">
+        <span class="pill green">Sales Up 4.2%</span> <!-- TEMPLATE: stat pill 1 -->
+        <span class="pill red">Supply Still High</span> <!-- TEMPLATE: stat pill 2 -->
+      </div>
+      <div class="caption">THE FULL AUGUST MARKET BREAKDOWN &rarr;</div> <!-- TEMPLATE: caption -->
+    </div>
+  </div>
+</body>
+</html>

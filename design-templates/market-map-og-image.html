@@ -1,0 +1,126 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  /* ============================================================
+     MARKET MAP OG IMAGE — 1200x630 (standard Open Graph size)
+     Same brand template as market-graphic-template.html: navy
+     gradient, gold/green divider, Inter font, pill badges — but a
+     real crop of the live choropleth map instead of a headshot.
+     ============================================================ */
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1200px; height: 630px; }
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: linear-gradient(115deg, #071829 0%, #0c2340 55%, #14365a 100%);
+  }
+  .layout {
+    display: flex;
+    width: 1200px;
+    height: 630px;
+  }
+  .photo-col {
+    width: 460px;
+    flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
+  }
+  .photo-col img {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 145%;
+    height: 145%;
+    transform: translate(-50%, -50%);
+    object-fit: cover;
+  }
+  .photo-col::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, rgba(7,24,41,0) 60%, rgba(7,24,41,0.85) 100%);
+  }
+  .divider {
+    width: 5px;
+    flex-shrink: 0;
+    background: linear-gradient(180deg, #34d399, #059669);
+  }
+  .text-col {
+    flex: 1;
+    padding: 56px 56px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 18px;
+    color: white;
+    min-width: 0;
+  }
+  .label {
+    color: #34d399;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .headline {
+    font-size: 52px;
+    font-weight: 800;
+    line-height: 1.12;
+    color: white;
+  }
+  .hook {
+    color: #fbbf24;
+    font-size: 40px;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+  }
+  .rule {
+    height: 1px;
+    background: rgba(255,255,255,0.25);
+    margin: 6px 0;
+  }
+  .pills {
+    display: flex;
+    gap: 16px;
+  }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 12px 26px;
+    border-radius: 999px;
+    font-size: 22px;
+    font-weight: 700;
+    color: white;
+    white-space: nowrap;
+    background: #059669;
+  }
+  .caption {
+    color: rgba(255,255,255,0.55);
+    font-size: 20px;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    margin-top: 8px;
+  }
+</style>
+</head>
+<body>
+  <div class="layout">
+    <div class="photo-col">
+      <img src="examples/og-map-source.png" alt="London Ontario neighbourhood heat map" />
+    </div>
+    <div class="divider"></div>
+    <div class="text-col">
+      <div class="label">LONDON, ON &nbsp;&bull;&nbsp; ALL 39 NEIGHBOURHOODS</div>
+      <div class="headline">Neighbourhood<br>Heat Map</div>
+      <div class="hook">LIVE MARKET DATA.</div>
+      <div class="rule"></div>
+      <div class="pills">
+        <span class="pill">39 Neighbourhoods</span>
+        <span class="pill">Updated 2x Monthly</span>
+      </div>
+      <div class="caption">SEE THE FULL INTERACTIVE MAP &rarr;</div>
+    </div>
+  </div>
+</body>
+</html>
