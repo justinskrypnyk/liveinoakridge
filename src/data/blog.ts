@@ -1344,6 +1344,375 @@ export const BLOG_POSTS: BlogPost[] = [
       },
     ],
   },
+  {
+    slug: 'london-ontario-realtor',
+    title: 'Looking for a London Ontario Realtor? Here\'s What Actually Matters',
+    description: "Searching for a London Ontario realtor? Here's what separates a good one from a busy one — local data, negotiation, communication, and the questions worth asking before you hire anyone.",
+    date: '2026-07-20',
+    dateDisplay: 'July 20, 2026',
+    category: 'Buyer Guides',
+    author: 'Justin Skrypnyk',
+    readTime: '6 min read',
+    image: '/images/justin-skrypnyk-realtor-london-ontario.webp',
+    imageAlt: 'Justin Skrypnyk, London Ontario realtor, standing in a West London neighbourhood',
+    content: `
+      <p>"Find a good realtor" is easy advice and hard to act on. Every listing has an agent's name on it, every agent's website says they know the market, and from the outside it's genuinely difficult to tell who's actually going to fight for your price versus who's going to list your home and hope. Here's what actually separates the two, and what to ask before you hire anyone in London Ontario.</p>
+
+      <h2>Realtor, Agent, or Broker — Does It Matter?</h2>
+      <p>You'll see all three terms used loosely, and in casual conversation people mean the same thing by them. Legally in Ontario there are real distinctions in licensing and experience between a real estate agent and a real estate broker — worth understanding before you hire, and covered in full in our <a href="/blog/real-estate-broker-vs-agent-ontario/">broker vs. agent breakdown</a>. The short version: the title on a business card tells you less than their actual track record in your specific neighbourhood.</p>
+
+      <h2>What Separates a Good Realtor From a Busy One?</h2>
+      <p>Being busy and being good aren't the same thing — track record, communication, and pricing discipline are what actually matter. A few specifics:</p>
+      <table>
+        <thead>
+          <tr><th>What to Look For</th><th>Why It Matters</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Neighbourhood-level data, not just city averages</td><td>London's 39 neighbourhoods don't move together — Oakridge held a 19-day median time on market in June 2026 while the citywide market cooled. A realtor quoting only city-wide stats isn't looking closely enough.</td></tr>
+          <tr><td>Straight answers on pricing</td><td>An agent who tells you what you want to hear on list price is setting you up for a stale listing. See <a href="/blog/why-listings-get-terminated-london-ontario/">why listings get terminated</a> for what happens when pricing drifts from reality.</td></tr>
+          <tr><td>Responsiveness before you've signed anything</td><td>How an agent communicates during your first few emails or calls is usually exactly how they'll communicate mid-transaction, when it matters more.</td></tr>
+          <tr><td>A negotiation record, not just a sales pitch</td><td>Ask for specifics: recent list-to-sale ratios, how many of their listings sold above asking, how they've handled multiple-offer situations either way.</td></tr>
+        </tbody>
+      </table>
+
+      <h2>Why Does Local Market Knowledge Matter More Than a Citywide Average?</h2>
+      <p>Because London's neighbourhoods don't move together, and a citywide number can hide what's actually happening on your street. <a href="/areas/oakridge/">Oakridge</a> behaves differently than Byron, Westmount, or Whitehills — down to how many days homes actually sit and what percentage sell above asking. Our <a href="/market-map/">interactive Neighbourhood Heat Map</a> tracks this block by block across all of London, and our <a href="/blog/london-ontario-months-of-supply-july-2026/">monthly market updates</a> track how conditions shift over time. If a realtor can't speak to your specific neighbourhood without looking it up, that's worth noticing.</p>
+
+      <h2>What Questions Should You Ask Before You Hire a Realtor?</h2>
+      <table>
+        <thead>
+          <tr><th>Question</th><th>What You're Really Testing For</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>How many homes have you sold in this specific neighbourhood?</td><td>Depth over breadth — citywide volume doesn't guarantee local pricing accuracy.</td></tr>
+          <tr><td>What's your current list-to-sale ratio?</td><td>Whether their pricing advice tends to hold up against what buyers actually pay.</td></tr>
+          <tr><td>How will you market my home beyond the MLS listing?</td><td>Whether they have an actual plan, or are relying on the listing to do all the work.</td></tr>
+          <tr><td>How quickly do you respond, and who do I deal with day-to-day?</td><td>Whether you're working with them, or getting passed to a team member you haven't met.</td></tr>
+        </tbody>
+      </table>
+
+      <h2>Should You Choose a Realtor Who Specializes in One Area?</h2>
+      <p>Yes, if that area is where you're buying or selling — depth beats breadth. Our <a href="/areas/">work centres on Oakridge, West London, and Whitehills</a>, with deep coverage of Byron, Westmount, Riverbend, and Lambeth — seven neighbourhoods tracked daily on the same live heat map and market updates linked above, not looked up on request. Justin has walked families through this exact "who should I hire" decision dozens of times; the ones who ask the questions above before signing anything tend to end up happiest with the result.</p>
+
+      <p>Ready to talk specifics about your neighbourhood, your timeline, and what your home is actually worth right now? <a href="/contact/">Get in touch</a>, or start with a no-pressure <a href="/services/home-evaluation/">home evaluation</a>.</p>
+    `,
+    faqs: [
+      {
+        question: 'How do I choose a good realtor in London Ontario?',
+        answer: "Look past how busy an agent appears and focus on neighbourhood-level knowledge, straight answers on pricing, responsiveness before you've even signed anything, and a track record you can verify — list-to-sale ratios and recent local sales, not just overall volume.",
+      },
+      {
+        question: 'What is the difference between a real estate agent and a realtor in Ontario?',
+        answer: "In everyday use the terms are often interchangeable, but Ontario law draws real distinctions between agents and brokers around licensing and experience level. See our full broker vs. agent breakdown for the specifics.",
+      },
+      {
+        question: 'Does it matter if my realtor specializes in a specific London Ontario neighbourhood?',
+        answer: "Yes. London's neighbourhoods don't move together — days on market, list-to-sale ratios, and pricing pressure vary block by block. A realtor who focuses on your specific area, rather than covering the whole city evenly, typically prices and negotiates more accurately.",
+      },
+      {
+        question: "What questions should I ask before hiring a realtor in London Ontario?",
+        answer: 'Ask how many homes they\'ve sold in your specific neighbourhood, their current list-to-sale ratio, how they plan to market your home beyond the MLS listing, and who you\'ll actually be dealing with day-to-day.',
+      },
+    ],
+  },
+  {
+    slug: 'is-westmount-london-ontario-safe',
+    title: 'Is Westmount, London Ontario Safe? What the Data Actually Shows',
+    description: "Considering Westmount in London Ontario and worried about safety? Here's what the actual crime data shows, what the Westmount Mall incidents were, and how to check any specific street yourself.",
+    date: '2026-07-20',
+    dateDisplay: 'July 20, 2026',
+    category: 'Neighbourhood Guides',
+    author: 'Justin Skrypnyk',
+    readTime: '6 min read',
+    image: '/images/areas/westmount-neighbourhood-london-ontario.webp',
+    imageAlt: 'Residential street in Westmount, London Ontario',
+    content: `
+      <p>If you've searched "is Westmount safe" before looking at a house there, you're not the only one — it's one of the more common questions we get about this neighbourhood, usually tied to a Reddit thread or an old news story about Westmount Mall. Rather than wave that away, here's what the actual data says, what those incidents actually were, and how to check any specific street yourself.</p>
+
+      <h2>Is Westmount, London Ontario Safe?</h2>
+      <p>Broadly, yes. There's no official, published crime statistic specific to Westmount alone — more on why below — but citywide crime in London has fallen sharply over the past two years, and the handful of incidents that show up when you search Westmount online trace back to a small number of isolated events at one commercial plaza, not a pattern across the neighbourhood's residential streets.</p>
+
+      <h2>How Has Crime Changed Citywide in London Ontario?</h2>
+      <p>London's Crime Severity Index (CSI) — the standardized measure Statistics Canada uses to compare crime across Canadian cities — was 61.2 in 2024, down 6% from the year before and roughly 21% below the national average of 77.9. The <a href="https://www.lpsannualreport.ca/safety/crime-analysis" target="_blank" rel="noopener noreferrer">London Police Service's own 2024 annual report</a> shows shootings citywide fell 48% year-over-year, from 27 to 14. Both trends point the same direction: London has been getting measurably safer, not less safe.</p>
+
+      <h2>Why Isn't There an Official Westmount Crime Rate?</h2>
+      <p>Because neither Statistics Canada nor the London Police Service publishes crime data broken down by neighbourhood — their reporting is citywide only. Any site that shows you a specific "Westmount crime score" is generating an estimate from public records and community input, not quoting an official police statistic. That's worth knowing before you weigh one of those scores too heavily either way.</p>
+
+      <h2>What About the Westmount Mall Incidents People Bring Up Online?</h2>
+      <p>A few real, dated incidents are what's actually driving most of the online chatter: an armed robbery in the Westmount Mall parking lot in February 2018, arrests at a nearby townhouse complex in August 2021, a shooting investigation near the mall in July 2022, and a 2024 case where a man following school-aged girls in the area was identified and criminally charged. Each of these is real and each was reported by a legitimate outlet — <a href="https://www.cbc.ca/news/canada/london/girls-followed-by-man-in-car-in-westmount-londoner-arrested-and-charged-1.7245784" target="_blank" rel="noopener noreferrer">CBC</a>, <a href="https://globalnews.ca/news/9023088/suspect-images-london-police-westmount-shooting-probe/" target="_blank" rel="noopener noreferrer">Global News</a>, and the <a href="https://lfpress.com/news/local-news/duo-arrested-as-large-police-presence-swarms-londons-westmount-area" target="_blank" rel="noopener noreferrer">London Free Press</a>. But four dated, resolved incidents spread across six years at a shopping mall — every one of them ending in an arrest or a charge — is a different thing than an unsafe neighbourhood. Malls in most cities see occasional incidents in their parking lots; Westmount's residential streets, a few minutes away, are a different environment entirely.</p>
+
+      <h2>How Can You Check Crime Data for a Specific Street or Block?</h2>
+      <p>Skip the aggregator sites and go to the source. The <a href="https://www.londonpolice.ca/services/crime-map/" target="_blank" rel="noopener noreferrer">London Police Service's live Crime Map</a> lets you search any address in the city and see reported incidents nearby, updated regularly. If you're seriously considering a specific home in Westmount, or anywhere else in London, that tool gives you a real answer for that exact block rather than a neighbourhood-wide estimate.</p>
+
+      <h2>What Do Independent Neighbourhood Ratings Say About Westmount?</h2>
+      <p><a href="https://ratemyneighbourhood.ca/neighbourhood/london/westmount/" target="_blank" rel="noopener noreferrer">RateMyNeighbourhood.ca</a>, an independent site that scores London neighbourhoods from public data and resident input, rates Westmount 7.6 out of 10 and ranks it 4th out of 19 neighbourhoods it covers — solidly above-average by its methodology, for whatever a third-party estimate is worth alongside the primary sources above.</p>
+
+      <p>Weighing Westmount against other West London neighbourhoods on price, schools, or lifestyle? Our <a href="/blog/westmount-vs-west-london-affordable-neighbourhoods/">Westmount vs. West London comparison</a> covers that ground. Have questions specific to a property you're looking at? <a href="/contact/">Reach out to Justin</a> — as a West London specialist working this area daily, he can walk through exactly what a specific street or listing looks like, not just the neighbourhood in general.</p>
+    `,
+    faqs: [
+      {
+        question: 'Is Westmount, London Ontario a safe neighbourhood?',
+        answer: "Broadly yes. There's no official neighbourhood-specific crime statistic — Statistics Canada and the London Police Service only publish citywide data — but London's overall Crime Severity Index fell 6% in 2024 to 61.2, about 21% below the national average, and citywide shootings dropped 48%. The incidents most often raised about Westmount trace back to a small number of dated, resolved events at Westmount Mall, not a pattern across the neighbourhood.",
+      },
+      {
+        question: 'What happened at Westmount Mall?',
+        answer: 'A small number of reported incidents over several years: an armed robbery in the parking lot in February 2018, arrests at a nearby townhouse complex in August 2021, a shooting investigation near the mall in July 2022, and a 2024 case where a suspicious individual was identified and criminally charged. Each was covered by CBC, Global News, or the London Free Press, and each ended in an arrest or charge.',
+      },
+      {
+        question: 'How do I check crime data for a specific address in London Ontario?',
+        answer: "Use the London Police Service's live Crime Map at londonpolice.ca/services/crime-map. You can search any specific address and see reported incidents nearby, which gives a far more useful answer than a neighbourhood-wide estimate from a third-party site.",
+      },
+      {
+        question: 'Why don\'t official sources publish a Westmount-specific crime rate?',
+        answer: "Because Statistics Canada's Crime Severity Index and the London Police Service's own annual reporting are both citywide measures — neither breaks results down by neighbourhood. Any site quoting a specific neighbourhood crime score is producing its own estimate from public records, not citing an official police statistic.",
+      },
+    ],
+  },
+  {
+    slug: 'fastest-slowest-selling-neighbourhoods-london-ontario',
+    title: 'Which London Ontario Neighbourhoods Are Selling Fastest (and Slowest) Right Now?',
+    description: "A data-driven ranking of how long active listings have been sitting across London Ontario's neighbourhoods, using live Neighbourhood Heat Map data from July 2026.",
+    date: '2026-07-20',
+    dateDisplay: 'July 20, 2026',
+    category: 'Market Analysis',
+    author: 'Justin Skrypnyk',
+    readTime: '6 min read',
+    image: '/images/market-map-og.webp',
+    imageAlt: 'London Ontario neighbourhood heat map showing price and market speed data by area',
+    charts: [
+      {
+        title: 'Average Days on Market by Neighbourhood (15+ Active Listings)',
+        color: '#059669',
+        labels: ['Uplands', 'Stoneybrook', 'London North', 'Oakridge', 'Argyle', 'Talbot', 'Sunningdale', 'Lambeth', 'Jackson', 'Woodhull'],
+        values: [33, 35, 35, 37, 51, 65, 71, 71, 72, 89],
+        valueSuffix: 'd',
+      },
+    ],
+    content: `
+      <p>Some London Ontario neighbourhoods are moving noticeably faster than others right now. Using live data from our <a href="/market-map/">Neighbourhood Heat Map</a> — snapshotted July 18, 2026 — here's a genuine, data-backed ranking of where listings are sitting the least time, and where they're sitting the longest, filtered down to neighbourhoods with enough active listings for the numbers to actually mean something.</p>
+
+      <h2>Which London Ontario Neighbourhoods Are Selling Fastest Right Now?</h2>
+      <p>Uplands currently has the shortest average time on market in the city at 33 days, with 34 active listings behind that number. Stoneybrook and London North are close behind at 35 days each, and <a href="/areas/oakridge/">Oakridge</a> rounds out the top four at 37 days across 55 active listings.</p>
+      <table>
+        <thead>
+          <tr><th>Neighbourhood</th><th>Active Listings</th><th>Avg. Days on Market</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Uplands</td><td>34</td><td>33</td></tr>
+          <tr><td>Stoneybrook</td><td>21</td><td>35</td></tr>
+          <tr><td>London North</td><td>35</td><td>35</td></tr>
+          <tr><td>Oakridge</td><td>55</td><td>37</td></tr>
+          <tr><td>Southcrest</td><td>47</td><td>39</td></tr>
+        </tbody>
+      </table>
+
+      <h2>Which Neighbourhoods Are the Slowest to Move?</h2>
+      <p>Jackson stands out here: it has 110 active listings — tied for the most in the city — and averages 72 days on market, meaning it's carrying both the biggest inventory and one of the slowest absorption rates at once. <a href="/blog/lambeth-london-ontario-real-estate-guide/">Lambeth</a> (82 listings, 71 days) and Sunningdale (59 listings, 71 days) aren't far off, and Woodhull's 89-day average tops the list, though its smaller count of 17 active listings makes that number a bit less rock-solid.</p>
+      <table>
+        <thead>
+          <tr><th>Neighbourhood</th><th>Active Listings</th><th>Avg. Days on Market</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Woodhull</td><td>17</td><td>89</td></tr>
+          <tr><td>Jackson</td><td>110</td><td>72</td></tr>
+          <tr><td>Lambeth</td><td>82</td><td>71</td></tr>
+          <tr><td>Sunningdale</td><td>59</td><td>71</td></tr>
+          <tr><td>Talbot</td><td>54</td><td>65</td></tr>
+        </tbody>
+      </table>
+
+      <h2>What Does "Average Days on Market" Actually Measure?</h2>
+      <p>It's the average number of days each currently active listing has been sitting since it was first posted — not how long it took similar homes to actually sell. A neighbourhood with a low number here has fresh inventory moving through quickly; a high number means listings are lingering, which typically points to pricing or demand pressure rather than random chance, especially in neighbourhoods like Jackson where the sample size (110 listings) is large enough to trust.</p>
+
+      <h2>Why Do Some Neighbourhoods Move So Much Faster Than Others?</h2>
+      <p>Price point and buyer pool size explain most of the gap. Uplands, Stoneybrook, and Oakridge all sit in accessible-to-mid price ranges with broad buyer demand and strong day-to-day fundamentals — the same kind of profile behind <a href="/blog/june-2026-london-ontario-market-update/">Oakridge's 19-day median in June</a>. Slower-moving areas like Jackson and Lambeth tend to carry a wider mix of listings, including higher-priced or higher-inventory pockets where buyers have more options and less urgency to act on any single one.</p>
+
+      <h2>What This Means If You're Buying or Selling in These Areas</h2>
+      <p>If you're selling in a slower-moving neighbourhood, this is exactly the environment where accurate pricing matters most — see our <a href="/blog/why-listings-get-terminated-london-ontario/">why listings get terminated</a> post for what happens when list price and local pace of sale drift apart. If you're buying in one of the faster-moving areas, be ready to act — homes aren't sitting long enough to leave much room for a slow decision.</p>
+
+      <p>Want the current numbers for a specific neighbourhood you're considering? Check the live <a href="/market-map/">Neighbourhood Heat Map</a>, or <a href="/contact/">reach out to Justin</a> for a straightforward read on what's happening in your target area right now.</p>
+    `,
+    faqs: [
+      {
+        question: 'What is the fastest-selling neighbourhood in London Ontario right now?',
+        answer: "As of the July 18, 2026 Neighbourhood Heat Map snapshot, Uplands has the shortest average time on market among neighbourhoods with a meaningful number of active listings, at 33 days across 34 active listings. Stoneybrook, London North, and Oakridge follow closely behind at 35-37 days.",
+      },
+      {
+        question: 'What is the slowest-moving neighbourhood in London Ontario?',
+        answer: "Jackson currently averages 72 days on market across 110 active listings — the largest active inventory in the city paired with one of the slowest absorption rates. Lambeth and Sunningdale are similarly slow at 71 days each, both with sample sizes large enough to be meaningful.",
+      },
+      {
+        question: 'What does "average days on market" actually mean?',
+        answer: "It measures how long currently active listings have been sitting since they were first posted -- not how long it took comparable homes to actually sell. A low number suggests fresh inventory moving quickly; a high number suggests listings are lingering, typically due to pricing or demand pressure.",
+      },
+      {
+        question: 'Why does Jackson have so much inventory but such slow sales?',
+        answer: "Jackson carries 110 active listings -- tied for the most of any London Ontario neighbourhood -- while averaging 72 days on market. That combination of high supply and slow absorption typically means buyers in that area have more options and less urgency to commit quickly to any single listing.",
+      },
+    ],
+  },
+  {
+    slug: 'how-to-read-neighbourhood-price-stats-london-ontario',
+    title: 'Why a $9.5 Million "Average" Home Price Doesn\'t Mean What You Think',
+    description: "London Ontario's live neighbourhood data shows a $9.5 million median home price in one area. Here's why that number is real, misleading, and exactly what to check before trusting any neighbourhood statistic.",
+    date: '2026-07-20',
+    dateDisplay: 'July 20, 2026',
+    category: 'Market Analysis',
+    author: 'Justin Skrypnyk',
+    readTime: '5 min read',
+    image: '/images/market-map-og.webp',
+    imageAlt: 'London Ontario neighbourhood heat map showing price data by area',
+    content: `
+      <p>Pull up the live data behind our <a href="/market-map/">Neighbourhood Heat Map</a> and you'll find Bradley, a small pocket of London, showing a median home price of $9.5 million. That number is completely real. It's also almost meaningless on its own — and knowing why is exactly what separates a useful neighbourhood statistic from a misleading one.</p>
+
+      <h2>Why Does Bradley Show a $9.5 Million Median Home Price?</h2>
+      <p>Because Bradley has exactly one active listing right now, and that one property happens to be a $9.5 million estate. A "median" of one data point is just that one number — it tells you nothing about what a typical home in the area costs, because there's no "typical" to measure yet. It's accurate and unhelpful at the same time.</p>
+
+      <h2>What's the Rule for Trusting a Neighbourhood Statistic?</h2>
+      <p>Always check the active listing count before you trust the price, the days-on-market figure, or any other stat attached to it. As a rough guide, anything under about 15 active listings should be treated as a snapshot of a few specific properties rather than a real market signal. Once a neighbourhood has 40, 50, or 100+ active listings, the averages start actually describing the market rather than describing one or two homes.</p>
+
+      <h2>More Examples: Crumlin, Old Victoria, and Sharon Creek</h2>
+      <p>Crumlin shows an average of 2 days on market right now. Read quickly, that sounds like the fastest-selling neighbourhood in the city. Read correctly, it means Crumlin has exactly one active listing, and that listing was posted two days before the snapshot was taken — it says nothing about how fast homes there actually sell. Old Victoria (one listing, $1.175 million) and Sharon Creek (two listings, $2.35 million average) are the same story: real numbers, tiny samples, not yet a market pattern.</p>
+
+      <h2>How Do You Actually Compare Neighbourhoods the Right Way?</h2>
+      <p>Stick to areas with enough active listings for the average to mean something, and compare like against like. Our <a href="/blog/fastest-slowest-selling-neighbourhoods-london-ontario/">fastest and slowest-selling neighbourhoods breakdown</a> does exactly this, filtering out the small-sample outliers so the ranking reflects real market behaviour rather than one unusual listing. The <a href="/market-map/">Neighbourhood Heat Map</a> shows the active listing count right alongside every other figure specifically so you can make that same check yourself before trusting any number on it.</p>
+
+      <p>Considering a specific neighbourhood and want the real picture, not just a headline stat? <a href="/contact/">Reach out to Justin</a> for a straightforward read on what the numbers in your target area actually mean.</p>
+    `,
+    faqs: [
+      {
+        question: 'Why do some London Ontario neighbourhoods show extremely high or low average home prices?',
+        answer: "Usually because the neighbourhood has very few active listings. A median or average calculated from one or two properties reflects those specific homes, not a genuine market trend -- Bradley's $9.5 million median, for example, comes from a single active luxury listing.",
+      },
+      {
+        question: 'What counts as a reliable sample size for neighbourhood real estate statistics?',
+        answer: "As a rough guide, treat anything under about 15 active listings as a snapshot of a few specific properties rather than a dependable market signal. Neighbourhoods with 40 or more active listings give averages that actually describe typical market behaviour.",
+      },
+      {
+        question: 'Does a low "days on market" number always mean a neighbourhood sells fast?',
+        answer: "Not necessarily. It measures how long current active listings have been posted, not how quickly homes there sell. In a neighbourhood with only one active listing, a low days-on-market figure often just means that listing was posted recently -- it isn't evidence of a fast-selling market.",
+      },
+      {
+        question: 'Where can I check real, current numbers for a specific London Ontario neighbourhood?',
+        answer: "The interactive Neighbourhood Heat Map at /market-map/ shows live, twice-monthly-updated data for all of London's neighbourhoods, including the active listing count next to every price and days-on-market figure -- so you can judge for yourself how much weight a given number deserves.",
+      },
+    ],
+  },
+  {
+    slug: 'pockets-of-oakridge-london-ontario',
+    title: 'The Pockets of Oakridge: Hazelden, Oakridge Acres, Hunt Club, and Oakridge Park',
+    description: "Oakridge isn't one uniform neighbourhood — it's four distinct pockets, each with its own parks and character. Here's what sets Hazelden, Oakridge Acres, Hunt Club, and Oakridge Park apart.",
+    date: '2026-07-20',
+    dateDisplay: 'July 20, 2026',
+    category: 'Neighbourhood Guides',
+    author: 'Justin Skrypnyk',
+    readTime: '6 min read',
+    image: '/images/oakridge-aerial-drone-2026.webp',
+    imageAlt: 'Aerial drone view of tree-lined streets in Oakridge, West London Ontario',
+    content: `
+      <p>Ask someone which part of Oakridge they live in, and you'll rarely just hear "Oakridge." You'll hear Hazelden, or Oakridge Acres, or Hunt Club. Oakridge was built in phases from the 1950s through the 1980s, and each phase settled into its own identity — its own park, its own streets, its own feel. If you're house-hunting in Oakridge, knowing which pocket you're actually looking at matters more than the neighbourhood name on the listing.</p>
+
+      <h2>What Are the Named Pockets Inside Oakridge?</h2>
+      <p>Four names come up consistently: Hazelden, Oakridge Acres, Hunt Club, and Oakridge Park. None of these are official City of London planning districts — they're the names residents and longtime agents actually use, tied to the park that anchors each one.</p>
+
+      <h2>Hazelden — Oakridge's Southern Edge</h2>
+      <p>Hazelden takes its name from Hazelden Lane, itself named after a 1890s summer home once surrounded by hazel trees (now 1132 St. Anthony Road). The pocket is served by two parks: Hazelden Park at 430 Hyde Park Road, with a full-size soccer field and baseball diamond, and the quieter St. Anthony's Park on Hampton Crescent with a tennis court and open green space. It's the part of Oakridge closest to Byron and the Thames River, and tends to suit buyers who want mature streets without being right at the Oxford & Hyde Park commercial hub.</p>
+
+      <h2>Oakridge Acres — The Neighbourhood's Social Core</h2>
+      <p>Oakridge Acres is anchored by Oakridge Optimist Community Park at 825 Valetta Street — run in partnership with the Optimist Club of Oakridge Acres, chartered since 1957, serving over 2,000 local youth a year through baseball, soccer, tennis, and an outdoor pool. Kelly Park, a smaller trail-connected green space at 881 Kelly Street, rounds out the pocket. This is the most central, most "classic Oakridge" of the four — the pocket most families picture when they picture the neighbourhood.</p>
+
+      <h2>Hunt Club — Along the Northern Boundary</h2>
+      <p>Hunt Club sits toward Oakridge's northern edge and is served by two parks of its own: Oak Park on Hunt Club Drive, with a soccer field and volleyball net, and Cheltenham Park nearby. It's a quieter, more residential pocket, generally appealing to buyers who want Oakridge's schools and community feel with a bit more distance from the Oxford Street corridor's daily traffic.</p>
+
+      <h2>Oakridge Park — The Northeast Corner</h2>
+      <p>Oakridge Park, near Thornwood Drive, is served by Thornwood Park — a straightforward neighbourhood park with a play structure and walking paths. It's a smaller, tighter-knit pocket, and one of the quieter corners of the neighbourhood overall.</p>
+
+      <h2>What About Deer Ridge and Oakridge Crossing?</h2>
+      <p>These are Oakridge's newest addition, not one of the four historic pockets. Sifton Properties — the same developer behind the original Oakridge build-out — is currently building on the neighbourhood's northern edge, south of Sarnia Road between Wonderland and Hyde Park, with new condos and townhomes from $480,000 to $680,000 and detached homes pushing past $1 million. If you want new construction rather than a character home from the 1950s–80s core, this is where to look without leaving Oakridge entirely.</p>
+
+      <h2>Does It Matter Which Pocket You Buy In?</h2>
+      <p>For day-to-day life, yes — which park is a five-minute walk, which streets your kids will bike to school on, how far you are from Oxford Street's shops versus a quieter cul-de-sac. For resale value and market data, less so: London's MLS® system and our own <a href="/market-map/">Neighbourhood Heat Map</a> track Oakridge as a single area, so pricing and days-on-market figures reflect the whole neighbourhood rather than any one pocket specifically. Character and lifestyle fit is where the pockets genuinely diverge; market fundamentals move together.</p>
+
+      <p>Not sure which pocket fits how your family actually lives day to day? <a href="/contact/">Reach out to Justin</a> — having worked this neighbourhood closely, he can walk you through the practical differences street by street, or start with the full <a href="/areas/oakridge/">Oakridge area guide</a> for schools, amenities, and current listings.</p>
+    `,
+    faqs: [
+      {
+        question: 'What are the different areas within Oakridge, London Ontario?',
+        answer: "Oakridge is generally understood locally as four pockets: Hazelden (the southern edge, near Byron), Oakridge Acres (the central, most classic core, anchored by Oakridge Optimist Community Park), Hunt Club (the northern edge, quieter and more residential), and Oakridge Park (the northeast corner near Thornwood Drive). None are official planning districts -- they're the names residents and local agents actually use.",
+      },
+      {
+        question: 'What is Oakridge Acres?',
+        answer: "Oakridge Acres is the central, most established pocket of Oakridge, anchored by Oakridge Optimist Community Park -- run in partnership with the Optimist Club of Oakridge Acres, chartered in 1957 and still serving over 2,000 local youth a year through sports programs.",
+      },
+      {
+        question: 'Is Hunt Club part of Oakridge?',
+        answer: "Yes. Hunt Club is the pocket along Oakridge's northern boundary, served by Oak Park and Cheltenham Park. It's generally a quieter, more residential corner of the neighbourhood, a bit further from the Oxford Street commercial strip.",
+      },
+      {
+        question: 'Where is new construction available in Oakridge?',
+        answer: "Deer Ridge and Oakridge Crossing, on Oakridge's northern edge south of Sarnia Road between Wonderland and Hyde Park, are where Sifton Properties is currently building new condos, townhomes ($480,000-$680,000), and detached homes priced above $1 million -- the option for buyers who want new construction without leaving Oakridge.",
+      },
+      {
+        question: "Does it matter which pocket of Oakridge I buy in for resale value?",
+        answer: "Less than you might think. London's MLS data and neighbourhood market tracking treat Oakridge as one area, so pricing and days-on-market trends move together across all four pockets. The pockets matter much more for day-to-day lifestyle fit -- which park, school walk, and commercial strip you're closest to -- than for resale fundamentals.",
+      },
+    ],
+  },
+  {
+    slug: 'hidden-history-of-oakridge-london-ontario',
+    title: 'The Hidden History of Oakridge: A Bog, a Sanatorium, and a Championship Golf Course',
+    description: "Before Oakridge was London's most established West-End neighbourhood, it was farmland, a tuberculosis sanatorium, and the site of a wartime army camp. Here's the real story behind the streets.",
+    date: '2026-07-20',
+    dateDisplay: 'July 20, 2026',
+    category: 'Neighbourhood Guides',
+    author: 'Justin Skrypnyk',
+    readTime: '7 min read',
+    image: '/images/history/oakridge-acres-aerial-1942.webp',
+    imageAlt: 'Aerial photograph of the Oakridge area in 1942, showing open farmland and the Sifton Bog before development',
+    content: `
+      <p>Drive down Sanatorium Road or Hazelden Lane in Oakridge today and there's nothing to suggest either name means anything at all — just quiet, tree-lined streets in one of West London's most established neighbourhoods. But every one of those names is a leftover clue from a very different piece of land, decades before Oakridge existed. Here's the story underneath the suburb.</p>
+
+      <h2>What Was Oakridge Before It Was a Neighbourhood?</h2>
+      <p>Open farmland — all of it. A 1942 aerial photograph of the area shows nothing but fields, with one exception: a dark, circular mass at the centre that would later become Sifton Bog. The entire footprint of modern Oakridge was still eight years away from its first house.</p>
+
+      <h2>Why Is There a "Sanatorium Road" in Oakridge?</h2>
+      <p>Because there really was a sanatorium here. Around 1900, tuberculosis was the leading cause of death in Ontario, and organizations across the province built sanatoria — facilities where patients recovered through fresh air, rest, and treatment, usually placed on the edge of a city where open countryside offered the conditions doctors prescribed. London's version stood roughly where Oakridge's western edge sits today. The building is long gone. The road that led to it kept the name.</p>
+
+      <h2>Why Is There a "Hazelden Lane"?</h2>
+      <p>Most London street names honour people. This one honours a house. "Hazelden" — now 1132 St. Anthony Road — was a gracious 1890s summer retreat built for the Little family, set among sweeping lawns and, as the name suggests, a stand of hazel trees. It was a landmark neighbours knew by name long before Oakridge's subdivisions existed, and when the street needed one, that's the name that stuck.</p>
+
+      <h2>What's the Story Behind Thames Valley Golf Course?</h2>
+      <p>Oakridge's golf course exists because of a trip to England. E.V. Buchanan, general manager of London's Public Utilities Commission, came home impressed by the public riverfront golf he'd seen abroad and realized the Commission's own 100 riverside acres — bought years earlier for the city's water supply wells, not recreation — could do double duty. No public money was ever spent building or running it. John Innes, a wounded WWI veteran and PGA of Canada professional with no prior course-design credit to his name, opened it as six holes on June 15, 1924.</p>
+      <p>By 1933, Innes had grown it into a full 6,110-yard championship 18-hole layout. Its grand opening on July 29, 1933 drew four of the biggest names in golf at the time — Sandy Somerville, the London-born U.S. Amateur champion, alongside Jack Nash, Joe Kirkwood, and Gene Sarazen — in front of one of the largest galleries the region had ever seen.</p>
+      <p>The course survived a battering after that. The Great Flood of 1937 sent the Thames over its banks, submerging the pump house and much of the fairways. Three years later, with Canada at war, the Department of National Defence took the grounds over as a training camp — by 1942, more than 5,000 soldiers trained there and golf became impossible. The course didn't reopen until 1946. Some of the camp's infrastructure never left: the water fountain beside the 5th tee on the Classic course still runs through pipes the army laid in 1940.</p>
+
+      <h2>Why Was Sifton Bog Once Called "Byron Bog"?</h2>
+      <p>Because it sat within the boundaries of the old Village of Byron before amalgamation absorbed it into London. It carried that name for decades until 1967, when Sifton Properties Limited — the same company building Oakridge at the time — donated the land to the city, and it was renamed in the company's honour. At its centre, Redmond's Pond was once a 23-hectare glacial lake that has spent roughly 10,000 years quietly filling with peat; today it's shrunk to just 0.2 hectares, sitting atop a peat layer measured at 18 metres deep.</p>
+
+      <h2>When Did Oakridge Actually Get Built?</h2>
+      <p>In phases, through the 1950s to the 1980s. A photograph from around 1961 shows Sifton's billboard for "The New Oakridge Park — Model Homes Entrance" standing alone in an open field, with nothing behind it but a barn and utility poles. By 1978, an aerial survey shows the transformation complete: curved residential streets fully built out, the bog still visible at the centre, the Thames River and Byron along the edge. Fifteen years turned farmland into the neighbourhood that exists today.</p>
+
+      <p>Every one of these photographs, along with the neighbourhood's full history section, lives on our <a href="/areas/oakridge/">Oakridge area page</a> — this is the connected story behind them. Curious how the neighbourhood these events shaped looks today, on the ground? <a href="/contact/">Reach out to Justin</a>, who works this neighbourhood daily and can walk you through it in person.</p>
+    `,
+    faqs: [
+      {
+        question: 'What was Oakridge before it was developed?',
+        answer: "Open farmland. A 1942 aerial photograph shows the entire future footprint of Oakridge as fields, with only the future site of Sifton Bog visible as a distinct feature. Development didn't begin until the 1950s.",
+      },
+      {
+        question: 'Why is there a Sanatorium Road in Oakridge, London Ontario?',
+        answer: "Around 1900, tuberculosis was the leading cause of death in Ontario, and a sanatorium -- a facility where patients recovered through fresh air and rest -- was built on what is now Oakridge's western edge. The building is gone; the road that led to it kept the name.",
+      },
+      {
+        question: 'Why was Sifton Bog originally called Byron Bog?',
+        answer: "The wetland sat within the boundaries of the old Village of Byron before amalgamation into London, and carried that name for decades. It was renamed Sifton Bog in 1967 after Sifton Properties Limited -- the developer building Oakridge at the time -- donated the land to the city.",
+      },
+      {
+        question: 'What is the history of Thames Valley Golf Course in Oakridge?',
+        answer: "It opened as six holes in 1924 on Public Utilities Commission land originally acquired for the city's water supply, built without any public funds by John Innes, a WWI veteran with no prior course-design experience. It grew into a full 18-hole championship course by 1933, survived a major flood in 1937 and conversion into an army training camp during WWII, and reopened in 1946.",
+      },
+    ],
+  },
 ];
 
 export function getBlogPost(slug: string): BlogPost | undefined {
