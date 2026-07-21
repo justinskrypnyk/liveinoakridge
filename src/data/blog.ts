@@ -1713,6 +1713,66 @@ export const BLOG_POSTS: BlogPost[] = [
       },
     ],
   },
+  {
+    slug: 'moving-to-san-antonio-trusted-referral',
+    title: "Moving to San Antonio? Here's Our Trusted Referral",
+    description: "If you or someone in your circle is relocating from Oakridge to the San Antonio, Texas area, here's why we refer clients to Fred Wulff of San Antonio Homes Connection.",
+    date: '2026-07-21',
+    dateDisplay: 'July 21, 2026',
+    category: 'Referral Partners',
+    author: 'Justin Skrypnyk',
+    readTime: '4 min read',
+    image: '/images/fred-wulff-realtor-san-antonio.webp',
+    imageAlt: 'Fred Wulff, REALTOR with RE/MAX Corridor and San Antonio Homes Connection, wearing a Texas star jacket',
+    content: `
+      <p>If you or someone in your circle is relocating from Oakridge to the San Antonio, Texas area, we have a referral partner we're happy to put our name behind: Fred Wulff of <a href="https://www.sanantoniohomesconnection.com/" target="_blank" rel="noopener noreferrer">San Antonio Homes Connection</a>.</p>
+      <p>Real estate works best when it's built on relationships, not transactions. Whether it's a military family with a PCS order, a first-time buyer, or someone chasing warmer weather, having the right boots-on-the-ground agent in a new city makes all the difference. Fred is that person for the San Antonio area, and we wanted to share why.</p>
+
+      <h2>Who Is Fred Wulff?</h2>
+      <p>Fred spent 21 years in the U.S. Air Force as a Special Operations Combat Controller before starting a second career in real estate. In between, he worked as a Warranty Manager for D.R. Horton, gaining hands-on experience with home construction and inspections, and spent time as a middle school science teacher. That mix of discipline, construction knowledge, and teaching shows up in how he works with clients today: patient, thorough, and mission-focused.</p>
+      <p>He calls his client base the "Wuffpack," and the name fits. Fred was the top-selling agent at his brokerage in 2025 and was recognized as #5 in the nation for RE/MAX agent support of the Children's Miracle Network. He also spent four years as Education Director for the San Antonio chapter of the Veterans Association of Real Estate Professionals, training other agents to better serve military and veteran clients.</p>
+
+      <h2>What Areas Does Fred Wulff Cover?</h2>
+      <p>Fred works throughout the greater San Antonio area, with particular depth serving military families connected to Randolph Air Force Base, Lackland Air Force Base, and Fort Sam Houston.</p>
+      <table>
+        <thead>
+          <tr><th>County</th><th>Communities Covered</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Bexar</td><td>San Antonio, Live Oak, Universal City</td></tr>
+          <tr><td>Guadalupe</td><td>Schertz, Cibolo</td></tr>
+          <tr><td>Comal</td><td>New Braunfels</td></tr>
+          <tr><td>Kendall</td><td>Boerne</td></tr>
+          <tr><td>Wilson &amp; Bexar</td><td>Converse, Helotes</td></tr>
+        </tbody>
+      </table>
+
+      <h2>Does Fred Wulff Work With Military Relocations and VA Buyers?</h2>
+      <p>Yes — military relocation and VA home buyers are a core focus of his practice, supported by his own 21 years of Air Force service. If someone in your family is receiving PCS orders to a San Antonio-area base, that firsthand experience with the process is exactly what you want on the other end of the move.</p>
+
+      <h2>Why We're Sharing This</h2>
+      <p>We get asked from time to time if we know anyone reputable in other markets, especially from clients with family or military ties relocating south. Fred's background as a veteran himself, combined with his construction and education experience, makes him a natural fit for anyone navigating a big move with a lot of moving parts.</p>
+      <p>If you're headed to the San Antonio area, or know someone who is, reach out to Fred directly through <a href="https://www.sanantoniohomesconnection.com/" target="_blank" rel="noopener noreferrer">San Antonio Homes Connection</a> or call his office at <a href="tel:12106596700">210-659-6700</a>. And if you're the one relocating into Oakridge or West London from somewhere else, <a href="/contact/">reach out to Justin</a> — the same kind of local, relationship-first approach applies here.</p>
+    `,
+    faqs: [
+      {
+        question: 'Does Fred Wulff work with military relocation and VA buyers?',
+        answer: 'Yes. Military relocation and VA home buyers are a core focus of his practice, supported by his own 21 years of Air Force service as a Special Operations Combat Controller.',
+      },
+      {
+        question: 'What areas does Fred Wulff serve?',
+        answer: 'San Antonio and the surrounding communities, including Converse, Live Oak, Schertz, Cibolo, Universal City, New Braunfels, Boerne, and Helotes, across Bexar, Guadalupe, Comal, Wilson, and Kendall counties.',
+      },
+      {
+        question: 'How do I get in touch with Fred Wulff?',
+        answer: 'Through his website, sanantoniohomesconnection.com, or by calling his office at 210-659-6700.',
+      },
+      {
+        question: 'Why does Justin Skrypnyk refer clients to Fred Wulff specifically?',
+        answer: "Real estate relocations work best with a trusted local agent on the other end. Fred's military background, construction experience from his time as a Warranty Manager for D.R. Horton, and record as a top-producing San Antonio agent make him a natural referral for clients moving to the area, especially military and veteran families.",
+      },
+    ],
+  },
 ];
 
 export function getBlogPost(slug: string): BlogPost | undefined {

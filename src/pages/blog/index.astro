@@ -3,7 +3,7 @@ import Base from '@/layouts/Base.astro';
 import Schema from '@/components/Schema.astro';
 import { BLOG_POSTS } from '@/data/blog';
 
-const categories = ['All', 'Market Updates', 'Neighbourhood Guides', 'Mortgage & Rates', 'Market Analysis', 'Buying Tips', 'Selling Tips'];
+const categories = ['All', 'Market Updates', 'Neighbourhood Guides', 'Mortgage & Rates', 'Market Analysis', 'Buying Tips', 'Selling Tips', 'Referral Partners'];
 const sortedPosts = [...BLOG_POSTS].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 ---
 
