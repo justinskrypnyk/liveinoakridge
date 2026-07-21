@@ -11,6 +11,12 @@ import { SITE } from '@/data/site';
 import { AREAS, getArea } from '@/data/areas';
 import { TESTIMONIALS } from '@/data/testimonials';
 
+const TESTIMONIALS_PER_PAGE = 3;
+const testimonialPages = Array.from(
+  { length: Math.ceil(TESTIMONIALS.length / TESTIMONIALS_PER_PAGE) },
+  (_, i) => TESTIMONIALS.slice(i * TESTIMONIALS_PER_PAGE, i * TESTIMONIALS_PER_PAGE + TESTIMONIALS_PER_PAGE)
+);
+
 const oakridge = getArea('oakridge')!;
 const rootsTimeline = [
   ...oakridge.historyData!.photos
@@ -383,31 +389,85 @@ const latestPosts = [...BLOG_POSTS]
         </p>
       </div>
 
-      <div class={`grid grid-cols-1 gap-6 mx-auto ${TESTIMONIALS.length >= 3 ? 'md:grid-cols-3' : 'md:grid-cols-2 max-w-3xl'}`}>
-        {TESTIMONIALS.map((review) => (
-          <div class="bg-white rounded-xl p-6 shadow-sm border border-transparent hover:border-gold/20 transition-colors flex flex-col">
-            <div class="flex gap-0.5 mb-4">
-              {[...Array(5)].map(() => (
-                <svg class="w-4 h-4 text-gold" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                </svg>
-              ))}
-            </div>
-            <blockquote class="text-slate text-sm leading-relaxed mb-5 flex-1">
-              &ldquo;{review.text}&rdquo;
-            </blockquote>
-            <div class="flex items-center gap-3 pt-4 border-t border-cream">
-              <div class="w-8 h-8 rounded-full bg-navy flex items-center justify-center text-xs text-gold font-bold shrink-0">
-                {review.author[0]}
+      <div id="testimonial-carousel" class="relative">
+        {testimonialPages.map((page, pageIndex) => (
+          <div class="testimonial-page grid grid-cols-1 md:grid-cols-3 gap-6 mx-auto" data-page={pageIndex} style={pageIndex === 0 ? undefined : { display: 'none' }}>
+            {page.map((review) => (
+              <div class="bg-white rounded-xl p-6 shadow-sm border border-transparent hover:border-gold/20 transition-colors flex flex-col">
+                <div class="flex gap-0.5 mb-4">
+                  {[...Array(5)].map(() => (
+                    <svg class="w-4 h-4 text-gold" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                    </svg>
+                  ))}
+                </div>
+                <blockquote class="text-slate text-sm leading-relaxed mb-5 flex-1 whitespace-pre-line">
+                  &ldquo;{review.text}&rdquo;
+                </blockquote>
+                <div class="flex items-center gap-3 pt-4 border-t border-cream">
+                  <div class="w-8 h-8 rounded-full bg-navy flex items-center justify-center text-xs text-gold font-bold shrink-0">
+                    {review.author[0]}
+                  </div>
+                  <div>
+                    <div class="text-sm font-semibold text-navy">{review.author}</div>
+                    <div class="text-xs text-slate">{review.date} · Google Review</div>
+                  </div>
+                </div>
               </div>
-              <div>
-                <div class="text-sm font-semibold text-navy">{review.author}</div>
-                <div class="text-xs text-slate">{review.date} · Google Review</div>
-              </div>
-            </div>
+            ))}
           </div>
         ))}
+
+        {testimonialPages.length > 1 && (
+          <div class="flex justify-center gap-2 mt-10" id="testimonial-dots">
+            {testimonialPages.map((_, i) => (
+              <button
+                type="button"
+                class:list={['w-2.5 h-2.5 rounded-full transition-colors', i === 0 ? 'bg-gold' : 'bg-navy/15']}
+                data-dot={i}
+                aria-label={`Show testimonials page ${i + 1} of ${testimonialPages.length}`}
+              />
+            ))}
+          </div>
+        )}
       </div>
+
+      <script>
+        const root = document.getElementById('testimonial-carousel');
+        if (root) {
+          const pages = root.querySelectorAll<HTMLElement>('.testimonial-page');
+          const dots = root.querySelectorAll<HTMLButtonElement>('#testimonial-dots button');
+          let current = 0;
+          let timer: ReturnType<typeof setInterval> | undefined;
+
+          function show(index: number) {
+            pages.forEach((page, i) => {
+              page.style.display = i === index ? '' : 'none';
+            });
+            dots.forEach((dot, i) => {
+              dot.classList.toggle('bg-gold', i === index);
+              dot.classList.toggle('bg-navy/15', i !== index);
+            });
+            current = index;
+          }
+
+          function resetTimer() {
+            clearInterval(timer);
+            if (pages.length > 1 && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+              timer = setInterval(() => show((current + 1) % pages.length), 6000);
+            }
+          }
+
+          dots.forEach((dot, i) => {
+            dot.addEventListener('click', () => {
+              show(i);
+              resetTimer();
+            });
+          });
+
+          resetTimer();
+        }
+      </script>
 
       <div class="text-center mt-10">
         <a
