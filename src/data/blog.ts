@@ -1773,6 +1773,67 @@ export const BLOG_POSTS: BlogPost[] = [
       },
     ],
   },
+  {
+    slug: 'moving-to-woodstock-oxford-county-trusted-referral',
+    title: "Moving to Woodstock or Oxford County? Here's Our Trusted Referral",
+    description: "If you or someone in your circle is looking east of London toward Woodstock, Ingersoll, Tillsonburg, or Oxford County, here's why we refer clients to Mellissa King of Century 21 Heritage House.",
+    date: '2026-07-21',
+    dateDisplay: 'July 21, 2026',
+    category: 'Referral Partners',
+    author: 'Justin Skrypnyk',
+    readTime: '4 min read',
+    image: '/images/mellissa-king-realtor-woodstock-ontario.webp',
+    imageAlt: 'Mellissa King, Sales Representative with Century 21 Heritage House Ltd., Brokerage, serving Woodstock and Oxford County',
+    content: `
+      <p>Not every move out of Oakridge is a long-distance one. We get plenty of questions from people looking just down the 401 — Woodstock, Ingersoll, Tillsonburg, and the smaller communities across Oxford County. When that comes up, we point people to Mellissa King of <a href="https://www.kingsellsrealestate.com/" target="_blank" rel="noopener noreferrer">Century 21 Heritage House Ltd., Brokerage</a>.</p>
+      <p>A referral only means something if the agent on the other end actually knows the ground they're standing on. Oxford County isn't London — different pricing, different inventory, different pace — and Mellissa works that market every day.</p>
+
+      <h2>Who Is Mellissa King?</h2>
+      <p>Mellissa is a Sales Representative with Century 21 Heritage House Ltd., Brokerage, based out of their Woodstock office on Dundas Street. She works across residential real estate — detached homes, semi-detached, townhouses, and condos — along with commercial properties, first-time buyers, foreclosure and power-of-sale purchases, luxury listings, and rentals. Her profile carries a top-rated badge on Rate My Agent, and she's built her local presence around Woodstock, Ingersoll, and Oxford County specifically, rather than trying to cover the whole region evenly.</p>
+
+      <h2>What Areas Does Mellissa King Cover?</h2>
+      <table>
+        <thead>
+          <tr><th>Community</th><th>What It's Known For</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Woodstock</td><td>Oxford County's largest centre, her home base</td></tr>
+          <tr><td>Ingersoll</td><td>Smaller, established community west of Woodstock, closer to London</td></tr>
+          <tr><td>Tillsonburg</td><td>Growing town to the south, popular with retirees and families alike</td></tr>
+          <tr><td>Norwich &amp; surrounding Oxford County</td><td>Rural and small-town properties throughout the county</td></tr>
+        </tbody>
+      </table>
+
+      <h2>Why Would Someone Look at Oxford County Instead of London?</h2>
+      <p>Woodstock sits about 56 km east of London, roughly a 40-minute drive down Highway 401. That's close enough to stay connected to London or Cambridge/Kitchener-Waterloo for work, but far enough that the math on a home purchase can look different — smaller-town pricing and inventory that simply doesn't exist inside London's boundaries. It's a common move for buyers priced out of their preferred London neighbourhood, or anyone who wants more property for the same budget and doesn't mind the extra drive.</p>
+
+      <h2>Why We're Sharing This</h2>
+      <p>We field questions from time to time about Woodstock, Ingersoll, and the rest of Oxford County from clients weighing it against staying in London. It's a market we don't work day to day, so rather than guess, we point people to someone who does.</p>
+      <p>If you're considering a move toward Oxford County, or know someone who is, reach out to Mellissa directly through <a href="https://www.kingsellsrealestate.com/" target="_blank" rel="noopener noreferrer">King Sells Real Estate</a> or call her at <a href="tel:15193200203">519-320-0203</a>. And if you're moving the other way, into Oakridge or West London, <a href="/contact/">reach out to Justin</a> — same relationship-first approach, just on this side of the county line.</p>
+    `,
+    faqs: [
+      {
+        question: 'Does Mellissa King serve Woodstock and Oxford County?',
+        answer: 'Yes. Mellissa King is a Sales Representative with Century 21 Heritage House Ltd., Brokerage, based in Woodstock, and works across Woodstock, Ingersoll, Tillsonburg, and the surrounding communities in Oxford County.',
+      },
+      {
+        question: 'How far is Woodstock from London Ontario?',
+        answer: "About 56 km, roughly a 40-minute drive east on Highway 401. It's close enough to commute to London or the Kitchener-Waterloo/Cambridge area while offering different pricing and inventory than London itself.",
+      },
+      {
+        question: 'What types of properties does Mellissa King handle?',
+        answer: 'Residential properties including detached homes, semi-detached homes, townhouses, and condos, along with commercial properties, first-time buyer purchases, foreclosure and power-of-sale sales, luxury homes, and rentals.',
+      },
+      {
+        question: 'How do I get in touch with Mellissa King?',
+        answer: 'Through her website, kingsellsrealestate.com, or by calling 519-320-0203.',
+      },
+      {
+        question: 'Why does Justin Skrypnyk refer clients to Mellissa King specifically?',
+        answer: "Oxford County is a market Justin doesn't work day to day, so when clients ask about Woodstock, Ingersoll, or Tillsonburg, he refers them to an agent who focuses on that area specifically rather than guessing at local pricing and inventory himself.",
+      },
+    ],
+  },
 ];
 
 export function getBlogPost(slug: string): BlogPost | undefined {
