@@ -1834,6 +1834,68 @@ export const BLOG_POSTS: BlogPost[] = [
       },
     ],
   },
+  {
+    slug: 'moving-to-hamilton-ontario-trusted-referral',
+    title: "Moving to Hamilton or the Niagara Region? Here's Our Trusted Referral",
+    description: "If you or someone in your circle is headed east toward Hamilton, Burlington, Brantford, or the Niagara Region, here's why we refer clients to Donald Porter of Porter & Associates.",
+    date: '2026-07-21',
+    dateDisplay: 'July 21, 2026',
+    category: 'Referral Partners',
+    author: 'Justin Skrypnyk',
+    readTime: '4 min read',
+    image: '/images/donald-porter-realtor-hamilton-ontario.webp',
+    imageAlt: 'Donald Porter, CEO and REALTOR with Porter & Associates at RE/MAX Escarpment Realty, serving the Hamilton and Niagara Region',
+    content: `
+      <p>Not every referral we send is a cross-border move. Every so often we hear from clients with family or work pulling them toward Hamilton, Burlington, Brantford, or the Niagara Region — about an hour and a half east of us down the 401 and 403. For that part of the province, we point people to Donald Porter of <a href="https://porterassoc.com/" target="_blank" rel="noopener noreferrer">Porter &amp; Associates</a>, RE/MAX Escarpment Realty Inc., Brokerage.</p>
+      <p>A good referral isn't about knowing an agent's name — it's about knowing they'll treat your client the way you would. Donald runs a real team in a market we don't work day to day, which is exactly why we trust him with it.</p>
+
+      <h2>Who Is Donald Porter?</h2>
+      <p>Donald is a Hamilton native and the CEO and REALTOR® behind Porter &amp; Associates, which he built as a team rather than a solo operation — Julia Porter as Chief Operating Officer, REALTORS® Chelsey Harris and Zachary D'Avella, plus dedicated marketing and client-success support. That structure means clients get consistent attention even when Donald himself is juggling multiple files, something a lot of solo agents can't offer. Porter &amp; Associates has helped more than 500 families across the Hamilton, Brantford, and Niagara areas, and Donald's own description of the job centres on the psychology of buying and selling — reading what a client actually needs, not just what they say they want. Outside the office, he's a Hamilton guy through and through: hiking, sports, theatre, and time with his wife and two kids round out the picture.</p>
+
+      <h2>What Areas Does Porter &amp; Associates Cover?</h2>
+      <table>
+        <thead>
+          <tr><th>Region</th><th>Communities Covered</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Greater Hamilton</td><td>Hamilton, Stoney Creek, Dundas, Ancaster, Waterdown</td></tr>
+          <tr><td>Halton</td><td>Burlington</td></tr>
+          <tr><td>Niagara Region</td><td>St. Catharines, Welland, Niagara</td></tr>
+          <tr><td>Brant &amp; Haldimand-Norfolk</td><td>Brantford, Caledonia, Haldimand County, Norfolk County</td></tr>
+        </tbody>
+      </table>
+      <p>The team works with buyers, sellers, first-time buyers, and downsizers across that whole footprint — residential purchases and sales are the core of the business.</p>
+
+      <h2>Why Would Someone Look at Hamilton Instead of London?</h2>
+      <p>Hamilton sits roughly 130 km east of London, about an hour and a half via the 401 and 403. It's a different kind of move than Oxford County — Hamilton is a bigger city in its own right, with its own downtown core, GO Transit access into Toronto, and a real mix of established neighbourhoods and newer growth areas out toward Waterdown and Ancaster. It tends to come up for clients with work pulling them toward the GTA who still want single-family-home pricing rather than a full Toronto commute, or for people with existing family ties on that side of the province.</p>
+
+      <h2>Why We're Sharing This</h2>
+      <p>We get the occasional question about Hamilton, Burlington, or the Niagara Region from clients weighing it against staying in London, usually tied to a job change or family already living out that way. It's outside the market we track daily, so instead of guessing at pricing or neighbourhoods we don't know well, we send people to someone who does.</p>
+      <p>If you're considering a move toward Hamilton or the Niagara Region, or know someone who is, reach out to Donald directly through <a href="https://porterassoc.com/" target="_blank" rel="noopener noreferrer">Porter &amp; Associates</a> or call him at <a href="tel:19057306872">905-730-6872</a>. And if the move is the other way, into Oakridge or West London, <a href="/contact/">reach out to Justin</a> — same relationship-first approach, just closer to home.</p>
+    `,
+    faqs: [
+      {
+        question: 'Does Donald Porter serve Hamilton and the Niagara Region?',
+        answer: 'Yes. Donald Porter is CEO and REALTOR® with Porter & Associates at RE/MAX Escarpment Realty Inc., Brokerage, and his team works across Hamilton, Stoney Creek, Dundas, Ancaster, Waterdown, Burlington, St. Catharines, Welland, Brantford, and Haldimand and Norfolk counties.',
+      },
+      {
+        question: 'How far is Hamilton from London Ontario?',
+        answer: "About 130 km, roughly an hour and a half via Highway 401 and 403. It's a bigger move than an Oxford County relocation, with its own downtown core and GO Transit access toward Toronto.",
+      },
+      {
+        question: 'Is Porter & Associates a solo agent or a team?',
+        answer: "A team. Donald Porter leads it as CEO and REALTOR®, alongside Chief Operating Officer Julia Porter, REALTORS® Chelsey Harris and Zachary D'Avella, and dedicated marketing and client-success staff, which has helped the team serve over 500 families across the region.",
+      },
+      {
+        question: 'How do I get in touch with Donald Porter?',
+        answer: 'Through his website, porterassoc.com, or by calling 905-730-6872.',
+      },
+      {
+        question: 'Why does Justin Skrypnyk refer clients to Donald Porter specifically?',
+        answer: "Hamilton and the Niagara Region are outside the market Justin works day to day, so when clients ask about a move in that direction, he refers them to an established local team rather than guessing at pricing and neighbourhoods he doesn't track closely.",
+      },
+    ],
+  },
 ];
 
 export function getBlogPost(slug: string): BlogPost | undefined {
