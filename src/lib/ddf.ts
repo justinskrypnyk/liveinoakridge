@@ -400,8 +400,14 @@ export async function searchNationalPoolByBounds(params: MapBoundsParams): Promi
   const token = await getNationalToken();
   if (!token) return empty;
 
+  // No StandardStatus condition -- confirmed live (2026-07-23) that this
+  // specific field is rejected by this endpoint's $filter entirely ("The
+  // property 'StandardStatus' cannot be used in the $filter query option"),
+  // and separately confirmed every row this feed returns is already
+  // StandardStatus = 'Active' regardless, so there's nothing to filter for
+  // in the first place -- unlike AMPRE, this feed's scope appears to be
+  // active listings only.
   const conditions = [
-    `StandardStatus eq 'Active'`,
     `Latitude gt ${params.south}`,
     `Latitude lt ${params.north}`,
     `Longitude gt ${params.west}`,
