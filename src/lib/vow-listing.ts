@@ -69,11 +69,19 @@ const SELECT_FIELDS = [
 /** Live lookup by exact ListingKey -- contains() not eq(), same AMPRE filter-syntax restriction as everywhere else in this codebase. Verifies the match client-side since contains() could theoretically substring-match a different key. */
 export async function getSoldListingByKey(listingKey: string): Promise<VowSoldListing | null> {
   if (!VOW_ACCESS_TOKEN || !DDF_API_BASE_URL) return null;
-  const data = await odataGet('Property', {
-    $filter: `contains(ListingKey,'${listingKey}')`,
-    $select: SELECT_FIELDS,
-    $top: '5',
-  });
+
+  let data: { value?: Record<string, unknown>[] };
+  try {
+    data = await odataGet('Property', {
+      $filter: `contains(ListingKey,'${listingKey}')`,
+      $select: SELECT_FIELDS,
+      $top: '5',
+    });
+  } catch (err) {
+    console.error('getSoldListingByKey failed:', listingKey, err instanceof Error ? err.message : err);
+    return null;
+  }
+
   const rows = (data.value || []) as Record<string, unknown>[];
   const row = rows.find((r) => r.ListingKey === listingKey);
   if (!row || row.StandardStatus !== 'Closed') return null;

@@ -192,8 +192,11 @@ if (supabase) {
           <p class="text-slate">{listing.city}{listing.postalCode ? `, ${listing.postalCode}` : ''}</p>
         </div>
         <div class="shrink-0">
-          <div class="font-serif text-4xl md:text-5xl text-navy font-bold mb-1 md:text-right">{closePrice}</div>
-          {listPrice && <p class="text-sm text-slate/60 mb-4 md:text-right">Listed at {listPrice}{saleToListRatio != null ? ` · sold for ${saleToListRatio.toFixed(1)}% of asking` : ''}</p>}
+          <div class="flex items-baseline gap-3 md:justify-end mb-1">
+            {listPrice && <span class="text-xl md:text-2xl text-slate/50 line-through">{listPrice}</span>}
+            <span class="font-serif text-4xl md:text-5xl text-navy font-bold">{closePrice}</span>
+          </div>
+          <p class="text-sm text-slate/60 mb-4 md:text-right">SOLD{saleToListRatio != null ? ` · ${saleToListRatio.toFixed(1)}% of asking price` : ''}</p>
           <div class="flex items-stretch divide-x divide-gray-200 border border-gray-200 rounded-xl overflow-hidden bg-cream/40">
             {listing.bedroomsTotal != null && (
               <div class="flex-1 px-6 py-3.5 text-center min-w-[92px]">
