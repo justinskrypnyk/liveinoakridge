@@ -3,11 +3,12 @@
 // vow-sold-sync-background.mjs), not a live AMPRE call.
 //
 // Gating happens HERE, server-side, not just in the UI: an unauthenticated
-// request gets jittered coordinates (+/- ~150m) and a masked price, never
-// the real values, so opening devtools' network tab doesn't defeat the
-// login gate. Article 6.3(b) of the VOW agreement also caps any single
-// response to a consumer at 100 listings -- enforced below regardless of
-// auth state.
+// request gets jittered coordinates (+/- ~150m), a masked price, and a
+// street-name-only address (no house number/unit -- a teaser, not the real
+// gated value) -- never the exact address or real price, so opening
+// devtools' network tab doesn't defeat the login gate. Article 6.3(b) of
+// the VOW agreement also caps any single response to a consumer at 100
+// listings -- enforced below regardless of auth state.
 import type { APIRoute } from 'astro';
 import { getServiceRoleClient } from '@/lib/supabase';
 import { getVowSession } from '@/lib/vow-session';
@@ -26,6 +27,18 @@ function maskPrice(price: number | null): string {
   if (price == null) return '$???,???';
   const digits = String(Math.round(price)).length;
   return `$${'X'.repeat(digits - 3)},XXX`;
+}
+
+// Street name without the house number or unit -- a common teaser pattern
+// (Zillow/HouseSigma do the same for locked listings): specific enough to
+// feel real, not specific enough to identify which exact house. Full
+// address stays gated behind sign-in, same as price.
+function streetNameOnly(address: string | null): string | null {
+  if (!address) return null;
+  return address
+    .replace(/^\d+\s*-\s*/, '') // leading "16 - " unit prefix
+    .replace(/^\d+[A-Za-z]?\s+/, '') // leading street number, e.g. "1260 " or "123A "
+    .trim() || null;
 }
 
 /** 'd90' -> a from-date 90 days back; 'y2025' -> Jan 1 / Dec 31 of that year; 'all' -> no bound. */
@@ -153,7 +166,7 @@ export const GET: APIRoute = async ({ url, cookies }) => {
       mls: null,
       lat: jitter(row.lat),
       lng: jitter(row.lng),
-      address: null,
+      address: streetNameOnly(row.address),
       city: row.city,
       closePrice: maskPrice(row.close_price),
       closeDate: row.close_date ? row.close_date.slice(0, 7) : null, // month-only, not the exact day

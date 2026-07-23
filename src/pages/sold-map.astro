@@ -273,9 +273,12 @@ const DATE_RANGE_OPTIONS = [
 
   function photoBlockHtml(photoUrl, blurred) {
     if (!photoUrl) {
-      return `<div style="width:100%;height:120px;border-radius:8px;background:#f0f9f6;display:flex;align-items:center;justify-content:center;font-size:32px;margin-bottom:8px;${blurred ? 'filter:blur(6px);' : ''}">🏡</div>`;
+      return `<div style="width:100%;height:120px;border-radius:8px;background:#f0f9f6;display:flex;align-items:center;justify-content:center;font-size:32px;margin-bottom:8px;${blurred ? 'filter:blur(2px);' : ''}">🏡</div>`;
     }
-    return `<div style="width:100%;height:120px;border-radius:8px;overflow:hidden;margin-bottom:8px;"><img src="${esc(photoUrl)}" style="width:100%;height:100%;object-fit:cover;${blurred ? 'filter:blur(10px);transform:scale(1.1);' : ''}" /></div>`;
+    // Light blur -- just enough to obscure identifying detail, not so much
+    // it stops reading as an actual photo of the home (a teaser, matching
+    // the street-name-only address below, not a full hide).
+    return `<div style="width:100%;height:120px;border-radius:8px;overflow:hidden;margin-bottom:8px;"><img src="${esc(photoUrl)}" style="width:100%;height:100%;object-fit:cover;${blurred ? 'filter:blur(2px);transform:scale(1.05);' : ''}" /></div>`;
   }
 
   function popupHtml(l) {
@@ -283,12 +286,13 @@ const DATE_RANGE_OPTIONS = [
       return `
         <div style="width:220px;padding-top:18px;font-family:Inter,sans-serif;text-align:center;">
           ${photoBlockHtml(l.photoUrl, true)}
+          <div style="font-size:12.5px;color:#0c2340;font-weight:700;margin-bottom:2px;">${esc(l.address || l.city || 'London, ON')}</div>
+          ${l.address && l.city ? `<div style="font-size:11px;color:#94a3b8;margin-bottom:6px;">${esc(l.city)}</div>` : ''}
           <div style="filter:blur(3px);pointer-events:none;user-select:none;">
             <div style="font-weight:800;font-size:16px;color:#0c2340;">${esc(l.closePrice)}</div>
-            <div style="font-size:12.5px;color:#334155;margin:3px 0 6px;">${esc(l.city || 'London, ON')}</div>
-            <div style="font-size:11.5px;color:#0c2340;">${l.beds ? `${l.beds} bed` : ''} ${l.baths ? `&middot; ${l.baths} bath` : ''}</div>
+            <div style="font-size:11.5px;color:#0c2340;margin-top:3px;">${l.beds ? `${l.beds} bed` : ''} ${l.baths ? `&middot; ${l.baths} bath` : ''}</div>
           </div>
-          <a href="/vow/login/" style="display:block;margin-top:10px;background:#c9a55c;color:#0c2340;font-weight:700;font-size:12px;padding:8px;border-radius:8px;text-decoration:none;">Sign In to Unlock</a>
+          <a href="/vow/login/" style="display:block;margin-top:10px;background:#10b981;color:#0c2340;font-weight:700;font-size:12px;padding:8px;border-radius:8px;text-decoration:none;">Sign In to Unlock</a>
         </div>
       `;
     }
@@ -380,8 +384,18 @@ const DATE_RANGE_OPTIONS = [
         const markers = (data.listings || [])
           .filter((l) => l.lat && l.lng)
           .map((l) => {
+            // autoPan deliberately off -- when it nudges the map to fit an
+            // edge-of-viewport popup, that pan fires 'moveend', which
+            // schedules a refetch that clears and rebuilds every marker
+            // (including the one just clicked), yanking its own popup shut
+            // a second later. Confirmed live (2026-07-23): pill click ->
+            // popup opens -> autoPan moves the map -> refetch at ~600ms ->
+            // popup gone by ~1.2s. Small tradeoff: a popup opened right at
+            // the viewport edge may render partly clipped instead of
+            // shifting into view -- far better than the popup vanishing
+            // out from under you.
             const marker = L.marker([l.lat, l.lng], { icon: soldIcon(shortPrice(l.closePrice), l.locked, l.isPreConstruction) })
-              .bindPopup(popupHtml(l), { maxWidth: 260, autoPanPadding: [24, 40] });
+              .bindPopup(popupHtml(l), { maxWidth: 260, autoPan: false });
             return marker;
           });
         clusterLayer.addLayers(markers);
