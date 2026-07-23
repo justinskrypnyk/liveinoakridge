@@ -36,7 +36,8 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     {
       id: user.id,
       email: user.email,
-      full_name: typeof meta.full_name === 'string' ? meta.full_name : null,
+      first_name: typeof meta.first_name === 'string' ? meta.first_name : null,
+      last_name: typeof meta.last_name === 'string' ? meta.last_name : null,
       phone: typeof meta.phone === 'string' ? meta.phone : null,
       terms_accepted_at: typeof meta.terms_accepted_at === 'string' ? meta.terms_accepted_at : new Date().toISOString(),
     },

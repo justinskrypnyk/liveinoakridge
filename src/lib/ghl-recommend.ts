@@ -27,7 +27,8 @@ export type RecommendationTag =
   | 'nosy-neighbour-alert'
   | 'similar-homes-match'
   | 'search-area-alert'
-  | 'market-update';
+  | 'market-update'
+  | 'vow-signup';
 
 export interface RecommendedListingLine {
   address: string;

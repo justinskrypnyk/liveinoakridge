@@ -45,17 +45,14 @@ export const POST: APIRoute = async ({ request, cookies }) => {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('full_name, phone')
+    .select('first_name, last_name, phone')
     .eq('id', session.userId)
     .maybeSingle();
 
-  const [firstName, ...rest] = (profile?.full_name || '').split(' ');
-  const lastName = rest.join(' ');
-
   const { error } = await supabase.from('home_watch_subscriptions').insert({
     email: session.email,
-    first_name: firstName || null,
-    last_name: lastName || null,
+    first_name: profile?.first_name || null,
+    last_name: profile?.last_name || null,
     phone: profile?.phone || null,
     address_label: address,
     latitude: geo.lat,

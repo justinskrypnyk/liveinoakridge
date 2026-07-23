@@ -165,7 +165,8 @@ alter table vow_sold_listings enable row level security;
 create table if not exists profiles (
   id uuid primary key references auth.users (id) on delete cascade,
   email text not null,
-  full_name text,
+  first_name text,
+  last_name text,
   phone text,
   terms_accepted_at timestamptz,
   created_at timestamptz not null default now()
