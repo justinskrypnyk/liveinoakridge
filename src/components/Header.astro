@@ -32,7 +32,13 @@ const navItems = [
     ],
   },
   { label: 'Our Listings', href: '/properties/' },
-  { label: 'Search Homes', href: '/search/' },
+  {
+    label: 'Search Homes',
+    href: '/search/',
+    children: [
+      { label: 'See What Homes Sold For', href: '/sold-map/' },
+    ],
+  },
   { label: 'Blog', href: '/blog/' },
   {
     label: 'Community',
