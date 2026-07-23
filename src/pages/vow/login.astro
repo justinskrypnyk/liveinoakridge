@@ -1,0 +1,124 @@
+---
+export const prerender = false;
+import Base from '@/layouts/Base.astro';
+import { getVowSession } from '@/lib/vow-session';
+
+// Already signed in -- straight to the map instead of showing the form again.
+const session = getVowSession(Astro.cookies);
+if (session) return Astro.redirect('/sold-map/');
+---
+
+<Base
+  title="Sign In to View Sold Prices | Live In Oakridge"
+  description="Sign in with a magic link to view sold prices, sale-to-list ratios, and sold listing history across London, Ontario."
+>
+  <section class="bg-navy py-20 text-white">
+    <div class="container-site">
+      <nav aria-label="Breadcrumb" class="flex items-center gap-2 text-sm text-white/40 mb-8">
+        <a href="/" class="hover:text-gold transition-colors">Home</a>
+        <span>/</span>
+        <span class="text-white/70">Sign In</span>
+      </nav>
+      <h1 class="font-serif text-5xl font-bold mb-4">View Sold Prices</h1>
+      <div class="gold-divider mb-6"></div>
+      <p class="text-xl text-white/70 max-w-2xl">
+        Sign in with a magic link -- no password needed -- to unlock sold prices, sale-to-list ratios, and closed-listing history across London, Ontario.
+      </p>
+    </div>
+  </section>
+
+  <section class="py-20 bg-cream">
+    <div class="container-site max-w-md">
+      <div class="bg-white rounded-2xl shadow-card p-8">
+        <form id="vow-login-form" class="space-y-4">
+          <div>
+            <label for="fullName" class="block text-sm font-semibold text-navy mb-1.5">Full Name</label>
+            <input
+              type="text"
+              id="fullName"
+              name="fullName"
+              required
+              class="w-full px-4 py-2.5 rounded-lg text-sm bg-cream border border-gray-200 text-navy placeholder-navy/40 focus:border-gold focus:outline-none transition-colors"
+            />
+          </div>
+          <div>
+            <label for="phone" class="block text-sm font-semibold text-navy mb-1.5">Phone (optional)</label>
+            <input
+              type="tel"
+              id="phone"
+              name="phone"
+              class="w-full px-4 py-2.5 rounded-lg text-sm bg-cream border border-gray-200 text-navy placeholder-navy/40 focus:border-gold focus:outline-none transition-colors"
+            />
+          </div>
+          <div>
+            <label for="email" class="block text-sm font-semibold text-navy mb-1.5">Email</label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              required
+              class="w-full px-4 py-2.5 rounded-lg text-sm bg-cream border border-gray-200 text-navy placeholder-navy/40 focus:border-gold focus:outline-none transition-colors"
+            />
+          </div>
+          <label class="flex items-start gap-2.5 text-xs text-slate/80 leading-relaxed">
+            <input type="checkbox" id="terms" name="terms" required class="mt-0.5" />
+            <span>
+              I have a bona fide interest in the purchase, sale, or lease of real estate, and I agree to the
+              <a href="/terms-of-use/" target="_blank" class="text-gold hover:underline">Terms of Use</a>. This information may not be used for any commercial purpose or any other purpose.
+            </span>
+          </label>
+          <button type="submit" id="vow-login-submit" class="btn-primary w-full justify-center !py-2.5">
+            Send Sign-In Link
+          </button>
+          <p id="vow-login-message" class="text-sm text-center mt-2 hidden"></p>
+        </form>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<script>
+  const form = document.getElementById('vow-login-form') as HTMLFormElement;
+  const submitBtn = document.getElementById('vow-login-submit') as HTMLButtonElement;
+  const message = document.getElementById('vow-login-message') as HTMLParagraphElement;
+
+  function showMessage(text: string, isError: boolean) {
+    message.textContent = text;
+    message.classList.remove('hidden', 'text-red-600', 'text-emerald-600');
+    message.classList.add(isError ? 'text-red-600' : 'text-emerald-600');
+  }
+
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Sending...';
+
+    const data = new FormData(form);
+    try {
+      const res = await fetch('/api/vow/request-link.json', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fullName: data.get('fullName'),
+          phone: data.get('phone'),
+          email: data.get('email'),
+          termsAccepted: data.get('terms') === 'on',
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        showMessage(json.error || 'Something went wrong. Please try again.', true);
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Send Sign-In Link';
+        return;
+      }
+      showMessage('Check your email for a sign-in link.', false);
+      form.reset();
+      submitBtn.textContent = 'Link Sent';
+    } catch {
+      showMessage('Something went wrong. Please try again.', true);
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Send Sign-In Link';
+    }
+  });
+</script>

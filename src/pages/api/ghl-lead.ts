@@ -15,8 +15,15 @@
 // endpoint's original approach) would reject every single real request.
 import type { APIRoute } from 'astro';
 import { createHmac, createHash, timingSafeEqual } from 'node:crypto';
+import { getMarketListingByKey } from '@/lib/ddf';
+import { findSimilarActiveListings } from '@/lib/similar-listings';
+import { findAreaForPoint } from '@/lib/area-boundaries';
+import { getServiceRoleClient } from '@/lib/supabase';
+import { pushRecommendationToGhl } from '@/lib/ghl-recommend';
 
 export const prerender = false;
+
+const SITE_URL = 'https://www.liveinoakridge.ca';
 
 const GHL_API_TOKEN = import.meta.env.GHL_API_TOKEN;
 const GHL_LOCATION_ID = import.meta.env.GHL_LOCATION_ID;
@@ -159,6 +166,77 @@ export const POST: APIRoute = async ({ request }) => {
       }
     } catch (err) {
       console.error('GHL note failed:', err);
+    }
+  }
+
+  // Save-listing "heart" -> similar-homes recommendation. The modal only
+  // ever sends address + MLS# (see SaveListingModal.astro) — re-fetch the
+  // full listing server-side rather than trusting client-supplied
+  // price/beds/type, then persist a real snapshot (the old flow never
+  // stored one anywhere) and push a second, separate GHL upsert tagging the
+  // contact for the "Similar Homes Match" workflow. This is deliberately
+  // its own try/catch block: a failure here must not affect the lead
+  // capture above, which has already succeeded and been returned to the
+  // visitor's browser by the time this runs.
+  if (submission.form_name === 'save-listing' && mlsNumber) {
+    try {
+      const listing = await getMarketListingByKey(String(mlsNumber));
+      if (listing) {
+        const lat = Number(listing.Latitude), lng = Number(listing.Longitude);
+        const areaSlug = Number.isFinite(lat) && Number.isFinite(lng) ? findAreaForPoint(lat, lng) : null;
+        const listPrice = Number(listing.ListPrice) || null;
+
+        const supabase = getServiceRoleClient();
+        if (supabase) {
+          await supabase.from('saved_listings').insert({
+            email,
+            first_name: firstName || null,
+            last_name: lastName || null,
+            phone: data.phone || null,
+            listing_key: String(listing.ListingKey || mlsNumber),
+            address: listing.UnparsedAddress || propertyAddress || null,
+            list_price: listPrice,
+            property_type: listing.PropertyType || null,
+            property_sub_type: listing.PropertySubType || null,
+            bedrooms: Number(listing.BedroomsTotal) || null,
+            bathrooms: Number(listing.BathroomsTotalInteger) || null,
+            building_area_total: Number(listing.BuildingAreaTotal) || null,
+            area_slug: areaSlug,
+            latitude: Number.isFinite(lat) ? lat : null,
+            longitude: Number.isFinite(lng) ? lng : null,
+            photo_url: listing._photoUrl || null,
+          });
+        }
+
+        const similar = await findSimilarActiveListings({
+          listingKey: String(listing.ListingKey || mlsNumber),
+          city: (listing.City as string) || null,
+          listPrice,
+          propertySubType: (listing.PropertySubType as string) || null,
+          propertyType: (listing.PropertyType as string) || null,
+          bedroomsTotal: Number(listing.BedroomsTotal) || null,
+          latitude: Number.isFinite(lat) ? lat : null,
+          longitude: Number.isFinite(lng) ? lng : null,
+        }, 3);
+
+        if (similar.length > 0) {
+          await pushRecommendationToGhl({
+            email,
+            firstName: firstName || undefined,
+            lastName: lastName || undefined,
+            phone: data.phone || undefined,
+            tag: 'similar-homes-match',
+            intro: `Homes like ${listing.UnparsedAddress || propertyAddress || 'the one you saved'}:`,
+            listings: similar.map((l) => ({
+              address: String(l.UnparsedAddress || 'Address unavailable'),
+              price: Number(l.ListPrice) || null,
+              url: `${SITE_URL}/search/${l.ListingKey}/`,
+            })),
+          });
+        }
+      }
+    } catch (err) {
+      console.error('Similar-homes recommendation failed:', err);
     }
   }
 

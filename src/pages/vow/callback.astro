@@ -1,0 +1,57 @@
+---
+// Static/prerendered is fine here -- unlike login.astro this page does no
+// server-side session check of its own; it just needs to run client JS to
+// grab the access_token Supabase appends as a URL FRAGMENT (#access_token=...),
+// which is never sent to the server at all, then POST it to
+// /api/vow/session.json.ts to actually verify it and set the real cookie.
+import Base from '@/layouts/Base.astro';
+---
+
+<Base title="Signing You In... | Live In Oakridge" description="Completing sign-in.">
+  <section class="bg-cream min-h-[60vh] flex items-center justify-center">
+    <div class="text-center">
+      <p id="callback-message" class="text-navy font-medium">Signing you in...</p>
+    </div>
+  </section>
+</Base>
+
+<script>
+  const messageEl = document.getElementById('callback-message');
+
+  function setMessage(text: string) {
+    if (messageEl) messageEl.textContent = text;
+  }
+
+  async function completeSignIn() {
+    const hashParams = new URLSearchParams(window.location.hash.slice(1));
+    const accessToken = hashParams.get('access_token');
+    const errorDescription = hashParams.get('error_description');
+
+    if (errorDescription) {
+      setMessage(`Sign-in failed: ${decodeURIComponent(errorDescription)}`);
+      return;
+    }
+    if (!accessToken) {
+      setMessage('This sign-in link is invalid or has expired. Please request a new one.');
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/vow/session.json', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ access_token: accessToken }),
+      });
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({}));
+        setMessage(json.error || 'Sign-in failed. Please request a new link.');
+        return;
+      }
+      window.location.replace('/sold-map/');
+    } catch {
+      setMessage('Sign-in failed. Please try again.');
+    }
+  }
+
+  completeSignIn();
+</script>

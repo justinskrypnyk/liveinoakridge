@@ -32,8 +32,8 @@ const FAQS = [
     a: 'Twice a month -- once mid-month (the 15th) and once at the start of the following month, capturing the previous month\'s close. Every neighbourhood shown is refreshed on the same schedule.',
   },
   {
-    q: 'Why don\'t you show sold prices or units sold?',
-    a: 'Those require real estate board access beyond what this site currently has (a Member/VOW-level data feed, not the public active-listings feed this map runs on). Median list price, days on market, and the other live pills are all based on active MLS listings from every REALTOR®, not just Justin\'s.',
+    q: 'Where do the sold price and sale-to-list ratio numbers come from?',
+    a: 'A separate, board-authorized VOW (Virtual Office Website) data feed, distinct from the active-listings feed the rest of this map runs on. They\'re rolling 90-day medians per neighbourhood. Individual sold listings (sign-in required) are on the dedicated sold prices map.',
   },
   {
     q: 'What does "Left Market This Period" mean?',
@@ -99,7 +99,8 @@ const FAQS = [
       <HeatMap snapshots={snapshots} height="640px" />
 
       <p class="text-center text-sm text-slate/60 mt-8 max-w-2xl mx-auto">
-        Based on active MLS listings captured twice monthly (mid-month and month-end). Sold-price metrics are shown as "coming soon" -- they require real estate board access this site doesn't have yet. Read this as directional, not exact.
+        Active-listing stats are captured twice monthly (mid-month and month-end); sold-price stats are rolling 90-day medians. Read this as directional, not exact. Want to see individual sold listings?
+        <a href="/sold-map/" class="text-gold hover:underline">View the sold prices map</a> (free sign-in required).
       </p>
 
       {notableChanges.length > 0 && (
@@ -126,6 +127,9 @@ const FAQS = [
               <th class="px-4 py-3 font-medium">Neighbourhood</th>
               <th class="px-4 py-3 font-medium">Active Listings</th>
               <th class="px-4 py-3 font-medium">Median List Price</th>
+              <th class="px-4 py-3 font-medium">Median Sold Price</th>
+              <th class="px-4 py-3 font-medium">Units Sold (90d)</th>
+              <th class="px-4 py-3 font-medium">Sale-to-List</th>
               <th class="px-4 py-3 font-medium">Avg. Days on Market</th>
               <th class="px-4 py-3 font-medium">Beds</th>
               <th class="px-4 py-3 font-medium">Baths</th>
@@ -143,6 +147,9 @@ const FAQS = [
                 </td>
                 <td class="px-4 py-3 text-slate">{s.active_count ?? '—'}</td>
                 <td class="px-4 py-3 text-slate">{s.median_list_price != null ? fmtPrice(s.median_list_price) : '—'}</td>
+                <td class="px-4 py-3 text-slate">{s.median_sold_price != null ? fmtPrice(s.median_sold_price) : '—'}</td>
+                <td class="px-4 py-3 text-slate">{s.units_sold ?? '—'}</td>
+                <td class="px-4 py-3 text-slate">{s.avg_sale_to_list_ratio != null ? `${(s.avg_sale_to_list_ratio * 100).toFixed(1)}%` : '—'}</td>
                 <td class="px-4 py-3 text-slate">{s.avg_days_on_market != null ? `${Math.round(s.avg_days_on_market)} days` : '—'}</td>
                 <td class="px-4 py-3 text-slate">{s.median_bedrooms ?? '—'}</td>
                 <td class="px-4 py-3 text-slate">{s.median_bathrooms ?? '—'}</td>

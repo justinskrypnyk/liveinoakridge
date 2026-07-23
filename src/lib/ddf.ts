@@ -334,8 +334,9 @@ const MAP_SEARCH_PAGE_CAP = 300; // ceiling on pins/cards rendered per viewport 
 // returning empty results almost always.
 export interface MapBoundsParams {
   north: number; south: number; east: number; west: number;
-  minPrice?: number; maxPrice?: number; propertyType?: string;
+  minPrice?: number; maxPrice?: number; propertyTypes?: string[];
   minBeds?: number; minBaths?: number; minParking?: number;
+  minSqft?: number; maxSqft?: number;
   daysOnMarket?: number; // OriginalEntryTimestamp within the last N days
   keyword?: string; // contains() against PublicRemarks
   sortBy?: 'newest' | 'price-asc' | 'price-desc' | 'beds-desc';
@@ -370,8 +371,9 @@ async function fetchNationalSearchPage(token: string, filter: string, orderby: s
 const BOUNDS_CACHE_TTL_MS = 60 * 1000;
 
 function isCacheableBoundsQuery(params: MapBoundsParams): boolean {
-  return !params.minPrice && !params.maxPrice && !params.propertyType &&
+  return !params.minPrice && !params.maxPrice && !params.propertyTypes?.length &&
     !params.minBeds && !params.minBaths && !params.minParking &&
+    !params.minSqft && !params.maxSqft &&
     !params.daysOnMarket && !params.keyword &&
     (params.sortBy === 'newest' || !params.sortBy);
 }
@@ -463,17 +465,30 @@ export async function searchNationalPoolByBounds(params: MapBoundsParams): Promi
 
     let listings = rows.slice(0, MAP_SEARCH_PAGE_CAP).map(normalizeNationalListing);
 
-    if (params.propertyType) {
+    if (params.propertyTypes && params.propertyTypes.length > 0) {
       const keywordMap: Record<string, string[]> = {
         detached: ['house', 'detached'],
         semi: ['semi'],
         townhouse: ['row', 'town'],
         condo: ['apartment', 'condo'],
       };
-      const keywords = keywordMap[params.propertyType.toLowerCase()] || [params.propertyType.toLowerCase()];
+      // OR across every selected category -- StructureType is a single
+      // array field per listing, so a listing matches if ANY selected
+      // category's keywords appear in it.
+      const allKeywords = params.propertyTypes.flatMap((t) => keywordMap[t.toLowerCase()] || [t.toLowerCase()]);
       listings = listings.filter((l) => {
         const struct = Array.isArray((l as any).StructureType) ? (l as any).StructureType.join(' ').toLowerCase() : '';
-        return keywords.some((k) => struct.includes(k));
+        return allKeywords.some((k) => struct.includes(k));
+      });
+    }
+
+    if (params.minSqft) {
+      listings = listings.filter((l) => Number((l as any).BuildingAreaTotal) >= params.minSqft!);
+    }
+    if (params.maxSqft) {
+      listings = listings.filter((l) => {
+        const sqft = Number((l as any).BuildingAreaTotal);
+        return sqft > 0 && sqft <= params.maxSqft!;
       });
     }
 
@@ -630,6 +645,32 @@ export async function geocodeAddressGoogle(listing: RawListing): Promise<{ lat: 
   return geo;
 }
 
+/** Same cached Google geocoding path as geocodeAddressGoogle, for a plain user-typed address string (e.g. the "watch my home" alert signup) rather than a listing record. */
+export async function geocodeFreeformAddress(address: string): Promise<{ lat: number; lng: number } | null> {
+  const trimmed = address.trim();
+  if (!trimmed) return null;
+
+  let store: ReturnType<typeof getStore> | null = null;
+  try {
+    store = getStore('ddf-geocode-cache');
+    const cached = await store.get(trimmed, { type: 'json' });
+    if (cached) return cached as { lat: number; lng: number };
+  } catch {
+    // Blobs unavailable (e.g. local dev without `netlify dev`) — fall through, just uncached.
+  }
+
+  const geo = await geocodeLiveGoogle(/,\s*(Ontario|ON)\b/i.test(trimmed) ? trimmed : `${trimmed}, Ontario, Canada`);
+
+  if (geo && store) {
+    try {
+      await store.setJSON(trimmed, geo);
+    } catch {
+      // best-effort cache write
+    }
+  }
+  return geo;
+}
+
 // Short in-memory cache so concurrent requests hitting the same warm
 // function instance don't each re-fetch from AMPRE independently.
 let listingsCache: { data: RawListing[]; fetchedAt: number } | null = null;
@@ -742,7 +783,12 @@ export interface MarketSearchParams {
   query: string; // address/city/location text, or an MLS number
   minPrice?: number;
   maxPrice?: number;
-  propertyType?: string;
+  propertyTypes?: string[];
+  minBeds?: number;
+  minBaths?: number;
+  minParking?: number;
+  minSqft?: number;
+  maxSqft?: number;
   page?: number;
 }
 
@@ -784,11 +830,22 @@ export async function searchMarketListings(params: MarketSearchParams): Promise<
 
     if (params.minPrice) filtered = filtered.filter((l) => (Number(l.ListPrice) || 0) >= params.minPrice!);
     if (params.maxPrice) filtered = filtered.filter((l) => (Number(l.ListPrice) || 0) <= params.maxPrice!);
-    if (params.propertyType) {
-      const wanted = params.propertyType.toLowerCase();
-      filtered = filtered.filter((l) =>
-        String(l.PropertySubType || l.PropertyType || '').toLowerCase().includes(wanted)
-      );
+    if (params.propertyTypes && params.propertyTypes.length > 0) {
+      const wanted = params.propertyTypes.map((t) => t.toLowerCase());
+      filtered = filtered.filter((l) => {
+        const sub = String(l.PropertySubType || l.PropertyType || '').toLowerCase();
+        return wanted.some((w) => sub.includes(w));
+      });
+    }
+    if (params.minBeds) filtered = filtered.filter((l) => (Number(l.BedroomsTotal) || 0) >= params.minBeds!);
+    if (params.minBaths) filtered = filtered.filter((l) => (Number(l.BathroomsTotalInteger) || 0) >= params.minBaths!);
+    if (params.minParking) filtered = filtered.filter((l) => (Number(l.ParkingTotal) || 0) >= params.minParking!);
+    if (params.minSqft) filtered = filtered.filter((l) => Number(l.BuildingAreaTotal) >= params.minSqft!);
+    if (params.maxSqft) {
+      filtered = filtered.filter((l) => {
+        const sqft = Number(l.BuildingAreaTotal);
+        return sqft > 0 && sqft <= params.maxSqft!;
+      });
     }
 
     const totalMatching = filtered.length;

@@ -1,0 +1,433 @@
+---
+// Individual sold-listing detail page -- gated behind Supabase Auth same as
+// /sold-map/ itself (see src/lib/vow-session.ts). Live VOW lookup (not the
+// pre-synced Supabase table) since this is exactly one record -- see
+// src/lib/vow-listing.ts for why that's the right tradeoff here vs. the
+// browse map's bulk viewport queries.
+export const prerender = false;
+import Base from '@/layouts/Base.astro';
+import GoogleMap from '@/components/GoogleMap.astro';
+import ContactForm from '@/components/ContactForm.astro';
+import Schema from '@/components/Schema.astro';
+import { SITE } from '@/data/site';
+import { fmtPrice } from '@/lib/listings';
+import { getVowSession } from '@/lib/vow-session';
+import { getSoldListingByKey, getSoldListingPhotos } from '@/lib/vow-listing';
+import { getServiceRoleClient } from '@/lib/supabase';
+
+const session = getVowSession(Astro.cookies);
+if (!session) return Astro.redirect('/vow/login/');
+
+const { listingKey } = Astro.params;
+const listing = listingKey ? await getSoldListingByKey(listingKey) : null;
+if (!listing) return Astro.redirect('/sold-map/');
+
+const photoUrls = listingKey ? await getSoldListingPhotos(listingKey) : [];
+
+const address = listing.unparsedAddress;
+const closePrice = fmtPrice(listing.closePrice);
+const listPrice = listing.listPrice != null ? fmtPrice(listing.listPrice) : null;
+const saleToListRatio = listing.listPrice && listing.closePrice ? (listing.closePrice / listing.listPrice) * 100 : null;
+const propertyType = listing.propertySubType || listing.propertyType || '';
+const streetAddress = [
+  listing.unitNumber ? `${listing.unitNumber}-` : '',
+  listing.streetNumber,
+  listing.streetName,
+  listing.streetSuffix,
+].filter(Boolean).join(' ') || address;
+
+const facts: [string, string][] = [
+  ['MLS® Number', listing.listingKey],
+  ['Sold Price', closePrice],
+  ['Sold Date', listing.closeDate || ''],
+  ['List Price', listPrice || ''],
+  ['Sale-to-List Ratio', saleToListRatio != null ? `${saleToListRatio.toFixed(1)}%` : ''],
+  ['Days on Market', listing.daysOnMarket != null ? String(listing.daysOnMarket) : ''],
+  ['Property Type', propertyType],
+  ['Style', listing.architecturalStyle.join(', ')],
+  ['Year Built', listing.yearBuilt || ''],
+  ['Bedrooms', listing.bedroomsAboveGrade || listing.bedroomsBelowGrade
+    ? `${listing.bedroomsAboveGrade || 0} above grade, ${listing.bedroomsBelowGrade || 0} below grade`
+    : (listing.bedroomsTotal != null ? String(listing.bedroomsTotal) : '')],
+  ['Bathrooms', listing.bathroomsTotalInteger != null ? String(listing.bathroomsTotalInteger) : ''],
+  ['Square Footage', listing.buildingAreaTotal ? `${Number(listing.buildingAreaTotal).toLocaleString()} sq ft` : ''],
+  ['Lot Size', listing.lotWidth && listing.lotDepth ? `${listing.lotWidth} ft × ${listing.lotDepth} ft` : ''],
+  ['Parking Total', listing.parkingTotal != null ? String(listing.parkingTotal) : ''],
+  ['Garage / Covered Spaces', listing.coveredSpaces != null ? String(listing.coveredSpaces) : ''],
+  ['Annual Property Taxes', listing.taxAnnualAmount ? fmtPrice(listing.taxAnnualAmount) : ''],
+  ['City', listing.city || ''],
+  ['Listing Brokerage', listing.listOfficeName || ''],
+].filter(([, v]) => v);
+
+// Nearby sold comparables -- same area_slug, excluding this listing, most
+// recent first. Reuses the already-synced vow_sold_listings table (no new
+// live fetch needed) -- a lightweight version of HouseSigma's "Comparables"
+// tab, not the full similar-for-sale/rent-comparables feature set.
+const supabase = getServiceRoleClient();
+let comparables: Array<{ listing_key: string; address: string; close_price: number; close_date: string; beds: number | null; baths: number | null }> = [];
+if (supabase) {
+  const { data: thisRow } = await supabase.from('vow_sold_listings').select('area_slug').eq('listing_key', listing.listingKey).maybeSingle();
+  if (thisRow?.area_slug) {
+    const { data } = await supabase
+      .from('vow_sold_listings')
+      .select('listing_key,address,close_price,close_date,beds,baths')
+      .eq('area_slug', thisRow.area_slug)
+      .neq('listing_key', listing.listingKey)
+      .order('close_date', { ascending: false })
+      .limit(4);
+    comparables = data ?? [];
+  }
+}
+---
+
+<Base
+  title={`${address} | Sold for ${closePrice} | Justin Skrypnyk Real Estate Broker`}
+  description={`${address} sold for ${closePrice} on ${listing.closeDate}. ${listing.bedroomsTotal ? `${listing.bedroomsTotal} bed` : ''}${listing.bathroomsTotalInteger ? `, ${listing.bathroomsTotalInteger} bath` : ''} ${propertyType}.`}
+>
+  <Fragment slot="head">
+    <Schema
+      type="listing"
+      description={`${address} — sold for ${closePrice} on ${listing.closeDate}.`}
+      listing={{
+        name: address,
+        streetAddress,
+        price: listing.closePrice ?? 0,
+        image: photoUrls,
+        beds: listing.bedroomsTotal ? String(listing.bedroomsTotal) : '',
+        baths: listing.bathroomsTotalInteger ? String(listing.bathroomsTotalInteger) : '',
+        sqft: listing.buildingAreaTotal ? String(listing.buildingAreaTotal) : '',
+        propertyType,
+        yearBuilt: listing.yearBuilt || '',
+        city: listing.city || '',
+        postalCode: listing.postalCode || '',
+      }}
+      breadcrumbs={[
+        { name: 'Home', url: SITE.url },
+        { name: 'Sold Prices Map', url: `${SITE.url}/sold-map/` },
+        { name: address, url: `${SITE.url}/sold-map/${listingKey}/` },
+      ]}
+    />
+  </Fragment>
+
+  <section class="bg-navy pt-8 pb-4 text-white">
+    <div class="container-site">
+      <nav aria-label="Breadcrumb" class="flex items-center gap-2 text-sm text-white/40 flex-wrap">
+        <a href="/" class="hover:text-gold transition-colors">Home</a>
+        <span>/</span>
+        <a href="/sold-map/" class="hover:text-gold transition-colors">Sold Prices Map</a>
+        <span>/</span>
+        <span class="text-white/70">{address}</span>
+      </nav>
+    </div>
+  </section>
+
+  <section class="bg-navy pb-8">
+    <div class="container-site">
+      {photoUrls.length > 1 ? (
+        <div class="grid grid-cols-3 grid-rows-1 gap-2 h-72 md:h-80 rounded-2xl overflow-hidden">
+          <button type="button" class="gallery-open-thumb col-span-2 row-span-1 relative group cursor-pointer min-h-0 min-w-0" data-index="0" aria-label={`View all ${photoUrls.length} photos`}>
+            <img src={photoUrls[0]} alt={address} class="w-full h-full object-cover" loading="eager" />
+            <div class="absolute inset-0 bg-navy-dark/0 group-hover:bg-navy-dark/20 transition-colors"></div>
+          </button>
+          <div class="col-span-1 row-span-1 grid grid-rows-2 gap-2 min-h-0">
+            <button type="button" class="gallery-open-thumb relative group cursor-pointer min-h-0 min-w-0" data-index="1" aria-label={`View all ${photoUrls.length} photos`}>
+              <img src={photoUrls[1]} alt={address} class="w-full h-full object-cover" loading="eager" />
+              <div class="absolute inset-0 bg-navy-dark/0 group-hover:bg-navy-dark/20 transition-colors"></div>
+            </button>
+            <button type="button" class="gallery-open-thumb relative group cursor-pointer min-h-0 min-w-0" data-index={photoUrls.length > 2 ? 2 : 0} aria-label={`View all ${photoUrls.length} photos`}>
+              <img src={photoUrls.length > 2 ? photoUrls[2] : photoUrls[0]} alt={address} class="w-full h-full object-cover" loading="eager" />
+              <div class="absolute inset-0 bg-navy-dark/40 group-hover:bg-navy-dark/55 transition-colors flex items-center justify-center">
+                <span class="text-white font-semibold text-xs sm:text-sm text-center px-2">View Gallery<br />({photoUrls.length} photos)</span>
+              </div>
+            </button>
+          </div>
+        </div>
+      ) : photoUrls.length === 1 ? (
+        <button type="button" class="gallery-open-thumb relative w-full h-72 md:h-80 rounded-2xl overflow-hidden block group cursor-pointer" data-index="0" aria-label="View photo">
+          <img src={photoUrls[0]} alt={address} class="w-full h-full object-cover" loading="eager" />
+        </button>
+      ) : (
+        <div class="aspect-[16/9] bg-navy-light rounded-2xl flex items-center justify-center">
+          <span class="text-7xl">🏡</span>
+        </div>
+      )}
+    </div>
+  </section>
+
+  {photoUrls.length > 0 && (
+    <div id="gallery-modal" class="hidden fixed inset-0 z-[100] bg-black/95 flex-col">
+      <div class="flex items-center justify-between px-4 py-3 text-white shrink-0">
+        <span id="gallery-modal-count" class="text-sm">1 / {photoUrls.length}</span>
+        <button id="gallery-close" type="button" aria-label="Close gallery" class="w-9 h-9 rounded-full hover:bg-white/10 flex items-center justify-center transition-colors">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="relative flex-1 flex items-center justify-center min-h-0 px-4">
+        <button id="gallery-modal-prev" type="button" aria-label="Previous photo" class="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-gold hover:text-navy transition-colors">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <img id="gallery-modal-image" src={photoUrls[0]} alt={address} class="max-w-full max-h-full object-contain" />
+        <button id="gallery-modal-next" type="button" aria-label="Next photo" class="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-gold hover:text-navy transition-colors">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+        </button>
+      </div>
+      <div class="flex gap-2 overflow-x-auto px-4 py-3 no-scrollbar shrink-0">
+        {photoUrls.map((url, i) => (
+          <button type="button" class="gallery-modal-thumb shrink-0 w-16 h-12 rounded-md overflow-hidden border-2 border-transparent data-[active=true]:border-gold opacity-60 data-[active=true]:opacity-100 transition-opacity" data-index={i}>
+            <img src={url} alt={address} class="w-full h-full object-cover" loading="lazy" />
+          </button>
+        ))}
+      </div>
+    </div>
+  )}
+
+  <section class="py-8 bg-white border-b border-gray-100">
+    <div class="container-site">
+      <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
+        <div>
+          <div class="flex items-center gap-2 mb-2">
+            <span class="bg-emerald-500 text-navy text-xs font-bold px-3 py-1 rounded-full">SOLD</span>
+          </div>
+          <h1 class="font-serif text-3xl md:text-4xl text-navy font-bold mb-1">{address}</h1>
+          <p class="text-slate">{listing.city}{listing.postalCode ? `, ${listing.postalCode}` : ''}</p>
+        </div>
+        <div class="shrink-0">
+          <div class="font-serif text-4xl md:text-5xl text-navy font-bold mb-1 md:text-right">{closePrice}</div>
+          {listPrice && <p class="text-sm text-slate/60 mb-4 md:text-right">Listed at {listPrice}{saleToListRatio != null ? ` · sold for ${saleToListRatio.toFixed(1)}% of asking` : ''}</p>}
+          <div class="flex items-stretch divide-x divide-gray-200 border border-gray-200 rounded-xl overflow-hidden bg-cream/40">
+            {listing.bedroomsTotal != null && (
+              <div class="flex-1 px-6 py-3.5 text-center min-w-[92px]">
+                <div class="font-serif text-2xl text-navy font-bold leading-none">{listing.bedroomsTotal}</div>
+                <div class="text-[10px] text-slate/70 uppercase tracking-wider font-semibold mt-1">Bedrooms</div>
+              </div>
+            )}
+            {listing.bathroomsTotalInteger != null && (
+              <div class="flex-1 px-6 py-3.5 text-center min-w-[92px]">
+                <div class="font-serif text-2xl text-navy font-bold leading-none">{listing.bathroomsTotalInteger}</div>
+                <div class="text-[10px] text-slate/70 uppercase tracking-wider font-semibold mt-1">Bathrooms</div>
+              </div>
+            )}
+            {listing.buildingAreaTotal && (
+              <div class="flex-1 px-6 py-3.5 text-center min-w-[92px]">
+                <div class="font-serif text-2xl text-navy font-bold leading-none">{Number(listing.buildingAreaTotal).toLocaleString()}</div>
+                <div class="text-[10px] text-slate/70 uppercase tracking-wider font-semibold mt-1">Sq Ft</div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap gap-3 mt-6">
+        <a href="#request-evaluation" class="btn-primary">Get a Free Home Evaluation</a>
+        <a href="/sold-map/" class="btn-secondary">Back to Sold Map</a>
+        <a href={`tel:${SITE.phone}`} class="btn-secondary">Call {SITE.phoneDisplay}</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="py-12 bg-cream">
+    <div class="container-site">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
+        <div class="lg:col-span-2 space-y-10">
+          {listing.publicRemarks && (
+            <div>
+              <h2 class="font-serif text-2xl text-navy mb-4">About This Home</h2>
+              <p class="text-slate leading-relaxed whitespace-pre-line">{listing.publicRemarks}</p>
+            </div>
+          )}
+
+          <div>
+            <h2 class="font-serif text-2xl text-navy mb-4">Facts &amp; Features</h2>
+            <div class="bg-white rounded-2xl shadow-card overflow-hidden">
+              {facts.map(([label, value], i) => (
+                <div class={`flex items-center justify-between px-5 py-3 text-sm ${i % 2 === 0 ? 'bg-cream/50' : ''}`}>
+                  <span class="text-slate">{label}</span>
+                  <span class="text-navy font-semibold">{value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {comparables.length > 0 && (
+            <div>
+              <h2 class="font-serif text-2xl text-navy mb-4">Nearby Sold Comparables</h2>
+              <div class="grid sm:grid-cols-2 gap-4">
+                {comparables.map((c) => (
+                  <a href={`/sold-map/${c.listing_key}/`} class="bg-white rounded-2xl shadow-card p-5 hover:shadow-lg transition-shadow block">
+                    <div class="font-serif text-lg text-navy font-bold mb-1">{fmtPrice(c.close_price)}</div>
+                    <p class="text-xs text-slate/70 mb-2 line-clamp-1">{c.address}</p>
+                    <div class="flex gap-3 text-xs text-navy/70">
+                      {c.beds && <span>{c.beds} bed</span>}
+                      {c.baths && <span>{c.baths} bath</span>}
+                      <span class="ml-auto text-slate/50">Sold {c.close_date}</span>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div>
+            <h2 class="font-serif text-2xl text-navy mb-4">Location</h2>
+            <GoogleMap query={address} title={address} height="360px" />
+          </div>
+
+          <div class="bg-white rounded-2xl shadow-card p-6 md:p-8">
+            <h2 class="font-serif text-2xl text-navy mb-1">Estimate a Payment on a Similar Home</h2>
+            <p class="text-sm text-slate mb-6">Based on this home's sold price of {closePrice}.</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-6">
+              <div>
+                <label for="calc-price" class="block text-sm font-medium text-navy/70 mb-1.5">Home Price ($)</label>
+                <input type="number" id="calc-price" value={listing.closePrice || 500000} min="50000" step="5000"
+                  class="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm focus:border-gold outline-none focus:ring-2 focus:ring-gold/20" />
+              </div>
+              <div>
+                <label for="calc-down" class="block text-sm font-medium text-navy/70 mb-1.5">Down Payment ($)</label>
+                <input type="number" id="calc-down" value={Math.round((listing.closePrice || 500000) * 0.2)} min="0" step="1000"
+                  class="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm focus:border-gold outline-none focus:ring-2 focus:ring-gold/20" />
+                <p id="calc-dp-percent" class="text-xs text-slate mt-1">20.0% down payment</p>
+              </div>
+              <div>
+                <label for="calc-rate" class="block text-sm font-medium text-navy/70 mb-1.5">Interest Rate (%)</label>
+                <input type="number" id="calc-rate" value="5.25" min="0.1" max="20" step="0.05"
+                  class="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm focus:border-gold outline-none focus:ring-2 focus:ring-gold/20" />
+              </div>
+              <div>
+                <label for="calc-amortization" class="block text-sm font-medium text-navy/70 mb-1.5">Amortization (years)</label>
+                <select id="calc-amortization" class="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm focus:border-gold outline-none focus:ring-2 focus:ring-gold/20">
+                  <option value="10">10 years</option>
+                  <option value="15">15 years</option>
+                  <option value="20">20 years</option>
+                  <option value="25" selected>25 years</option>
+                  <option value="30">30 years</option>
+                </select>
+              </div>
+            </div>
+            <div class="bg-gold rounded-xl p-6 text-center">
+              <div class="text-sm text-navy/70 font-medium mb-1">Estimated Monthly Payment</div>
+              <div id="calc-monthly" class="font-serif text-4xl text-navy font-bold">$0</div>
+              <div class="text-xs text-navy/50 mt-2">Principal &amp; interest only — does not include property tax, insurance, or CMHC premiums.</div>
+            </div>
+            <p class="text-xs text-slate mt-4 text-center">Also budget for closing costs — try the <a href="/mortgages/closing-costs/" class="text-gold hover:underline">Closing Costs Calculator</a>.</p>
+          </div>
+        </div>
+
+        <div class="space-y-6">
+          <div class="bg-navy text-white rounded-2xl overflow-hidden">
+            <div class="aspect-[4/5] bg-white">
+              <img src="/images/justin-skrypnyk-realtor-billboard.webp" alt={SITE.agent} class="w-full h-full object-cover object-top" />
+            </div>
+            <div class="px-6 pt-5 pb-4 border-b border-white/10">
+              <div class="font-serif text-2xl leading-none uppercase tracking-wide">{SITE.agent}</div>
+              <div class="text-xs text-gold uppercase tracking-[0.15em] font-semibold mt-2">Real Estate Broker</div>
+              <div class="text-xs text-white/50 mt-0.5">{SITE.brokerage}</div>
+            </div>
+            <div class="p-6">
+              <p class="text-xs text-white/50 mb-4 leading-relaxed">
+                Curious what your own home is worth in today's market? {SITE.agent} can put together a free, no-obligation home evaluation using real comparable sold data like this.
+              </p>
+              <div class="space-y-2 mb-5">
+                <a href={`tel:${SITE.phone}`} class="flex items-center gap-2 text-sm text-white/80 hover:text-gold transition-colors">
+                  <svg class="w-4 h-4 text-gold shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z"/></svg>
+                  {SITE.phoneDisplay}
+                </a>
+                <a href={`mailto:${SITE.email}`} class="flex items-center gap-2 text-sm text-white/80 hover:text-gold transition-colors">
+                  <svg class="w-4 h-4 text-gold shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+                  {SITE.email}
+                </a>
+              </div>
+              <a href="#request-evaluation" class="btn-primary w-full justify-center mb-2">Get a Free Home Evaluation</a>
+              <a href={`tel:${SITE.phone}`} class="btn-secondary w-full justify-center !border-white/30 !text-white hover:!bg-gold hover:!text-navy">Call Now</a>
+            </div>
+          </div>
+
+          <div id="request-evaluation" class="bg-white rounded-2xl shadow-card p-6 scroll-mt-24">
+            <h3 class="font-serif text-xl text-navy mb-1">Get a Free Home Evaluation</h3>
+            <p class="text-sm text-slate mb-5">Wondering what your home is worth, based on real sold data like {address}?</p>
+            <ContactForm subject={`Home Evaluation Request (comp: ${address})`} ctaLabel="Request My Evaluation" />
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Mandatory VOW notices per Article 6.3(i)/(k) of the PropTx VOW Datafeed Agreement -->
+  <section class="py-6 bg-white border-t border-gray-100">
+    <div class="container-site">
+      <p class="text-xs text-slate/60 text-center max-w-3xl mx-auto">
+        The information provided herein is deemed reliable but is not guaranteed accurate by PROPTX. The information provided herein must only be used by consumers that have a bona fide interest in the purchase, sale, or lease of real estate and may not be used for any commercial purpose or any other purpose. Listing content courtesy of {listing.listOfficeName}. See our <a href="/terms-of-use/" class="text-gold hover:underline">Terms of Use</a>.
+      </p>
+    </div>
+  </section>
+</Base>
+
+<script define:vars={{ photoUrls }}>
+  const modal = document.getElementById('gallery-modal');
+  const modalImage = document.getElementById('gallery-modal-image');
+  const modalCount = document.getElementById('gallery-modal-count');
+  const modalThumbs = Array.from(document.querySelectorAll('.gallery-modal-thumb'));
+  let current = 0;
+
+  function showModalPhoto(index) {
+    if (photoUrls.length === 0) return;
+    current = (index + photoUrls.length) % photoUrls.length;
+    if (modalImage) modalImage.src = photoUrls[current];
+    if (modalCount) modalCount.textContent = `${current + 1} / ${photoUrls.length}`;
+    modalThumbs.forEach((t, i) => { t.dataset.active = String(i === current); });
+  }
+
+  function openGalleryModal(index) {
+    showModalPhoto(index);
+    modal?.classList.remove('hidden');
+    modal?.classList.add('flex');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeGalleryModal() {
+    modal?.classList.add('hidden');
+    modal?.classList.remove('flex');
+    document.body.style.overflow = '';
+  }
+
+  document.querySelectorAll('.gallery-open-thumb').forEach((el) => {
+    el.addEventListener('click', () => openGalleryModal(Number(el.dataset.index) || 0));
+  });
+  document.getElementById('gallery-close')?.addEventListener('click', closeGalleryModal);
+  document.getElementById('gallery-modal-prev')?.addEventListener('click', () => showModalPhoto(current - 1));
+  document.getElementById('gallery-modal-next')?.addEventListener('click', () => showModalPhoto(current + 1));
+  modalThumbs.forEach((t) => t.addEventListener('click', () => showModalPhoto(Number(t.dataset.index))));
+  modal?.addEventListener('click', (e) => { if (e.target === modal) closeGalleryModal(); });
+  document.addEventListener('keydown', (e) => {
+    if (modal?.classList.contains('hidden')) return;
+    if (e.key === 'Escape') closeGalleryModal();
+    if (e.key === 'ArrowLeft') showModalPhoto(current - 1);
+    if (e.key === 'ArrowRight') showModalPhoto(current + 1);
+  });
+
+  function calculate() {
+    const price = parseFloat(document.getElementById('calc-price')?.value) || 0;
+    const down = parseFloat(document.getElementById('calc-down')?.value) || 0;
+    const rate = (parseFloat(document.getElementById('calc-rate')?.value) || 0) / 100 / 12;
+    const years = parseInt(document.getElementById('calc-amortization')?.value) || 25;
+    const n = years * 12;
+    const principal = price - down;
+
+    const dpPercent = price > 0 ? ((down / price) * 100).toFixed(1) : '0.0';
+    const dpEl = document.getElementById('calc-dp-percent');
+    if (dpEl) dpEl.textContent = `${dpPercent}% down payment`;
+
+    const payment = rate > 0
+      ? (principal * rate * Math.pow(1 + rate, n)) / (Math.pow(1 + rate, n) - 1)
+      : principal / n;
+
+    const el = document.getElementById('calc-monthly');
+    if (el) el.textContent = payment > 0
+      ? `$${payment.toLocaleString('en-CA', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
+      : '$0';
+  }
+
+  ['calc-price', 'calc-down', 'calc-rate', 'calc-amortization'].forEach((id) => {
+    document.getElementById(id)?.addEventListener('input', calculate);
+  });
+  calculate();
+</script>

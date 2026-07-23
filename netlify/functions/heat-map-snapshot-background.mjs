@@ -20,13 +20,16 @@
 // Eastern depending on DST -- close enough to the spec's "5:00 AM" ask to
 // reuse rather than stand up a second cron.
 //
-// Sold-price, units-sold, and sale-to-list-ratio are NOT computed here: the
-// DDF Member Website feed is active-listings-only (sold data needs
-// VOW-level board access Justin doesn't have yet). Those columns exist in
-// the Supabase schema and stay null until that access exists -- see
-// supabase/schema.sql. Price-per-sqft IS attempted from BuildingAreaTotal,
-// but per Justin, his board likely doesn't release it either; sample_size
-// is stored alongside so the UI can tell "no data" apart from "zero".
+// Sold-price, units-sold, and sale-to-list-ratio: computed from
+// vow_sold_listings (see supabase/schema.sql and
+// vow-sold-sync-background.mjs), which requires the separate VOW datafeed
+// authorization -- active since 2026-07-22 (Membership #9636674). A rolling
+// 90-day window of closed sales per area, not "since the last snapshot":
+// twice-monthly capture periods (~15 days) are too thin a window for a
+// stable per-neighbourhood median on their own. Price-per-sqft IS attempted
+// from BuildingAreaTotal, but per Justin, his board likely doesn't release
+// it either; sample_size is stored alongside so the UI can tell "no data"
+// apart from "zero".
 //
 // Runs standalone (not through Astro/Vite), duplicating the minimal
 // fetch/geocode-lookup logic instead of importing src/lib/ddf.ts -- same
@@ -97,6 +100,13 @@ function average(numbers) {
   return Math.round(numbers.reduce((sum, n) => sum + n, 0) / numbers.length);
 }
 
+// Sale-to-list ratio lives near 1.0 (e.g. 0.98-1.03) -- average()'s
+// integer rounding would flatten that entirely, so this keeps 3 decimals.
+function averageRatio(numbers) {
+  if (numbers.length === 0) return null;
+  return Math.round((numbers.reduce((sum, n) => sum + n, 0) / numbers.length) * 1000) / 1000;
+}
+
 function daysSince(timestamp) {
   const listed = new Date(timestamp).getTime();
   if (Number.isNaN(listed)) return null;
@@ -120,6 +130,13 @@ const METRICS = [
   'new_listings_count',
   'avg_days_on_market',
   'price_per_sqft',
+  'median_sold_price',
+  'units_sold',
+  'avg_sale_to_list_ratio',
+  'median_bedrooms',
+  'median_bathrooms',
+  'pct_detached',
+  'delisted_count',
 ];
 
 export default async (req) => {
@@ -192,6 +209,22 @@ export default async (req) => {
     if (slug && byArea.has(slug)) byArea.get(slug).push(listing);
   }
 
+  // Rolling 90-day window of closed sales per area, from vow_sold_listings
+  // (kept in sync by vow-sold-sync-background.mjs) -- a twice-monthly
+  // capture period is too thin a window on its own for a stable median.
+  const ninetyDaysAgo = new Date(now);
+  ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+  const { data: recentSolds } = await supabase
+    .from('vow_sold_listings')
+    .select('area_slug, close_price, list_price')
+    .gte('close_date', ninetyDaysAgo.toISOString().slice(0, 10))
+    .not('area_slug', 'is', null);
+  const soldsByArea = new Map();
+  for (const row of recentSolds || []) {
+    if (!soldsByArea.has(row.area_slug)) soldsByArea.set(row.area_slug, []);
+    soldsByArea.get(row.area_slug).push(row);
+  }
+
   const captureDate = now.toISOString().slice(0, 10);
   const capturedAt = now.toISOString();
   const snapshotRows = [];
@@ -223,6 +256,12 @@ export default async (req) => {
     const previousKeys = previousKeysByArea[slug] || null;
     const delistedCount = previousKeys ? previousKeys.filter((k) => !currentKeys.includes(k)).length : null;
 
+    const solds = soldsByArea.get(slug) || [];
+    const soldPrices = solds.map((s) => Number(s.close_price)).filter((n) => n > 0);
+    const saleToListRatios = solds
+      .map((s) => (Number(s.list_price) > 0 ? Number(s.close_price) / Number(s.list_price) : null))
+      .filter((n) => n !== null);
+
     snapshotRows.push({
       area_slug: slug,
       area_name: name,
@@ -233,6 +272,9 @@ export default async (req) => {
       active_count: listings.length,
       new_listings_count: newListings,
       avg_days_on_market: average(dom),
+      median_sold_price: soldPrices.length > 0 ? median(soldPrices) : null,
+      units_sold: solds.length,
+      avg_sale_to_list_ratio: averageRatio(saleToListRatios),
       price_per_sqft: sqftPrices.length > 0 ? median(sqftPrices) : null,
       price_per_sqft_sample_size: sqftPrices.length,
       median_bedrooms: median(beds),
@@ -257,7 +299,7 @@ export default async (req) => {
   // this cadence.
   const { data: history } = await supabase
     .from('market_map_snapshots')
-    .select('area_slug, capture_date, median_list_price, active_count, new_listings_count, avg_days_on_market, price_per_sqft')
+    .select('area_slug, capture_date, median_list_price, active_count, new_listings_count, avg_days_on_market, price_per_sqft, median_sold_price, units_sold, avg_sale_to_list_ratio, median_bedrooms, median_bathrooms, pct_detached, delisted_count')
     .eq('period_type', kind)
     .lt('capture_date', captureDate)
     .order('capture_date', { ascending: false });

@@ -4,6 +4,7 @@ import Base from '@/layouts/Base.astro';
 import Schema from '@/components/Schema.astro';
 import SaveHeartButton from '@/components/SaveHeartButton.astro';
 import SaveListingModal from '@/components/SaveListingModal.astro';
+import SaveSearchModal from '@/components/SaveSearchModal.astro';
 import { SITE } from '@/data/site';
 import { searchMarketListings, searchNationalPoolByBounds, getActiveListingKeys } from '@/lib/ddf';
 import { fmtPrice, field, buildAddress, buildStreetAddress, listingSlug, listingPhotoAlt, neighbourhoodForPoint } from '@/lib/listings';
@@ -15,14 +16,32 @@ const q = params.get('q') || '';
 const area = params.get('area') || '';
 const minPrice = Number(params.get('minPrice')) || undefined;
 const maxPrice = Number(params.get('maxPrice')) || undefined;
-const propertyType = params.get('type') || '';
+const propertyTypes = (params.get('types') || '').split(',').filter(Boolean);
 const page = Number(params.get('page')) || 1;
 const minBeds = Number(params.get('minBeds')) || undefined;
 const minBaths = Number(params.get('minBaths')) || undefined;
 const minParking = Number(params.get('minParking')) || undefined;
+const minSqft = Number(params.get('minSqft')) || undefined;
+const maxSqft = Number(params.get('maxSqft')) || undefined;
 const daysOnMarket = Number(params.get('days')) || undefined;
 const keyword = params.get('keyword') || '';
 const sortBy = (params.get('sort') as 'newest' | 'price-asc' | 'price-desc' | 'beds-desc' | null) || 'newest';
+
+// This page only ever reliably distinguishes the 4 coarse categories its
+// underlying feeds' StructureType/PropertySubType matching already supports
+// (see ddf.ts) -- not the full 8-category VOW breakdown, which relies on
+// AMPRE's own precise PropertySubType strings that National Pool (spanning
+// every Ontario board) doesn't share. Reusing PROPERTY_TYPE_OPTIONS' slugs
+// for the ones that DO map cleanly keeps one shared list instead of a
+// second near-duplicate; 'condo-townhouse' is deliberately left off since
+// searchNationalPoolByBounds's keywordMap folds it into the same 'condo'
+// bucket as 'condo-apt' has no separate keyword set for it.
+const SEARCH_PROPERTY_TYPE_OPTIONS = [
+  { slug: 'detached', label: 'Detached' },
+  { slug: 'semi', label: 'Semi-Detached' },
+  { slug: 'townhouse', label: 'Townhouse' },
+  { slug: 'condo', label: 'Condo / Apartment' },
+];
 
 const priceSteps = Array.from({ length: 40 }, (_, i) => (i + 1) * 50000);
 function shortPrice(n: number): string {
@@ -52,11 +71,11 @@ const [ownKeys, textResult, browseResult] = await Promise.all([
   // Text search (a specific address/city/MLS® number anywhere in Ontario)
   // stays on the existing AMPRE-backed path — unrelated to the map below,
   // which is the "browse everything" default view.
-  q ? searchMarketListings({ query: q, minPrice, maxPrice, propertyType, page }) : Promise.resolve(null),
+  q ? searchMarketListings({ query: q, minPrice, maxPrice, propertyTypes, minBeds, minBaths, minParking, minSqft, maxSqft, page }) : Promise.resolve(null),
   !q
     ? searchNationalPoolByBounds({
-        ...initialBounds, minPrice, maxPrice, propertyType: propertyType || undefined,
-        minBeds, minBaths, minParking, daysOnMarket, keyword: keyword || undefined, sortBy,
+        ...initialBounds, minPrice, maxPrice, propertyTypes,
+        minBeds, minBaths, minParking, minSqft, maxSqft, daysOnMarket, keyword: keyword || undefined, sortBy,
       })
     : Promise.resolve(null),
 ]);
@@ -211,13 +230,30 @@ const allAreasBoundsForClient = getAllAreasBounds();
           </select>
         </div>
         <div class="relative">
-          <select name="type" id="type-select" class="appearance-none pl-4 pr-9 py-1.5 rounded-full text-sm font-medium bg-cream text-navy/70 border border-gray-200 hover:border-gold focus:border-gold focus:outline-none transition-colors cursor-pointer">
-            <option value="">Any Type</option>
-            <option value="Detached" selected={propertyType === 'Detached'}>Detached</option>
-            <option value="Semi" selected={propertyType === 'Semi'}>Semi-Detached</option>
-            <option value="Townhouse" selected={propertyType === 'Townhouse'}>Townhouse</option>
-            <option value="Condo" selected={propertyType === 'Condo'}>Condo / Apartment</option>
-          </select>
+          <input type="hidden" form="filters-form" name="types" id="types-hidden-input" value={propertyTypes.join(',')} />
+          <button type="button" id="type-toggle" class="flex items-center gap-1.5 pl-4 pr-3.5 py-1.5 rounded-full text-sm font-medium bg-cream text-navy/70 border border-gray-200 hover:border-gold transition-colors cursor-pointer">
+            <span id="type-toggle-label">{propertyTypes.length === 0 ? 'Any Type' : propertyTypes.length === 1 ? SEARCH_PROPERTY_TYPE_OPTIONS.find((o) => o.slug === propertyTypes[0])?.label : `${propertyTypes.length} Types`}</span>
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div id="type-backdrop" class="hidden fixed inset-0 bg-navy/40 z-40 lg:hidden"></div>
+          <div id="type-panel" class="hidden fixed inset-x-0 bottom-0 z-50 bg-white rounded-t-3xl shadow-2xl p-5 max-h-[85vh] overflow-y-auto lg:absolute lg:inset-x-auto lg:bottom-auto lg:top-full lg:mt-2 lg:left-0 lg:w-64 lg:rounded-2xl lg:border lg:border-gray-100 lg:max-h-none lg:overflow-visible">
+            <p class="font-serif text-lg text-navy font-bold mb-3 lg:hidden">Property Type</p>
+            <label class="flex items-center gap-2.5 py-1.5 text-sm text-navy font-semibold cursor-pointer">
+              <input type="checkbox" id="type-all" checked={propertyTypes.length === 0} class="w-4 h-4 accent-navy" />
+              Any Type
+            </label>
+            <div class="border-t border-gray-100 my-2"></div>
+            {SEARCH_PROPERTY_TYPE_OPTIONS.map((opt) => (
+              <label class="flex items-center gap-2.5 py-1.5 text-sm text-navy/80 cursor-pointer">
+                <input type="checkbox" class="type-option w-4 h-4 accent-navy" value={opt.slug} checked={propertyTypes.includes(opt.slug)} />
+                {opt.label}
+              </label>
+            ))}
+            <div class="flex gap-2 mt-4">
+              <button type="button" id="type-cancel" class="flex-1 text-sm font-semibold px-4 py-2 rounded-lg border border-gray-200 text-navy hover:border-gold transition-colors">Cancel</button>
+              <button type="button" id="type-save" class="flex-1 text-sm font-semibold px-4 py-2 rounded-lg bg-navy text-white hover:bg-navy/80 transition-colors">Save</button>
+            </div>
+          </div>
         </div>
         <div class="relative">
           <button
@@ -271,15 +307,28 @@ const allAreasBoundsForClient = getAllAreasBounds();
               </div>
             </div>
 
+            <div class="mb-5">
+              <div class="text-xs font-semibold uppercase tracking-wider text-navy/50 mb-2">Garage / Covered Parking</div>
+              <div class="flex flex-wrap gap-2">
+                <input type="radio" form="filters-form" name="minParking" id="minParking-any" value="" class="peer/p0 sr-only" checked={!minParking} />
+                <label for="minParking-any" class="cursor-pointer text-xs font-semibold px-3.5 py-1.5 rounded-full border border-gray-200 text-navy/70 peer-checked/p0:bg-navy peer-checked/p0:text-white peer-checked/p0:border-navy transition-colors">Any</label>
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <>
+                    <input type="radio" form="filters-form" name="minParking" id={`minParking-${n}`} value={n} class={`peer/p${n} sr-only`} checked={minParking === n} />
+                    <label for={`minParking-${n}`} class={`cursor-pointer text-xs font-semibold px-3.5 py-1.5 rounded-full border border-gray-200 text-navy/70 peer-checked/p${n}:bg-navy peer-checked/p${n}:text-white peer-checked/p${n}:border-navy transition-colors`}>{n}+</label>
+                  </>
+                ))}
+              </div>
+            </div>
+
             <div class="grid grid-cols-2 gap-4 mb-5">
               <div>
-                <div class="text-xs font-semibold uppercase tracking-wider text-navy/50 mb-2">Parking</div>
-                <select form="filters-form" name="minParking" class="w-full appearance-none pl-4 pr-9 py-2 rounded-full text-sm font-medium bg-cream text-navy/70 border border-gray-200 hover:border-gold focus:border-gold focus:outline-none transition-colors cursor-pointer">
-                  <option value="">Any</option>
-                  <option value="1" selected={minParking === 1}>1+</option>
-                  <option value="2" selected={minParking === 2}>2+</option>
-                  <option value="3" selected={minParking === 3}>3+</option>
-                </select>
+                <div class="text-xs font-semibold uppercase tracking-wider text-navy/50 mb-2">Square Footage</div>
+                <div class="flex items-center gap-2">
+                  <input type="number" form="filters-form" name="minSqft" value={minSqft || ''} placeholder="Min" min="0" step="100" class="w-full px-3 py-2 rounded-lg text-sm bg-cream border border-gray-200 text-navy placeholder-navy/40 focus:border-gold focus:outline-none transition-colors" />
+                  <span class="text-navy/30 text-sm shrink-0">–</span>
+                  <input type="number" form="filters-form" name="maxSqft" value={maxSqft || ''} placeholder="Max" min="0" step="100" class="w-full px-3 py-2 rounded-lg text-sm bg-cream border border-gray-200 text-navy placeholder-navy/40 focus:border-gold focus:outline-none transition-colors" />
+                </div>
               </div>
               <div>
                 <div class="text-xs font-semibold uppercase tracking-wider text-navy/50 mb-2">Days on Market</div>
@@ -332,9 +381,18 @@ const allAreasBoundsForClient = getAllAreasBounds();
       )}
 
       {q ? (
-        <p class="text-sm text-slate mt-2.5">
-          {textResult?.totalMatching ?? 0} active listing{(textResult?.totalMatching ?? 0) !== 1 ? 's' : ''} matching "{q}"
-        </p>
+        <div class="flex flex-wrap items-center justify-between gap-3 mt-2.5">
+          <p class="text-sm text-slate">
+            {textResult?.totalMatching ?? 0} active listing{(textResult?.totalMatching ?? 0) !== 1 ? 's' : ''} matching "{q}"
+          </p>
+          <button
+            type="button"
+            data-save-search-trigger
+            class="flex items-center gap-1.5 pl-4 pr-3.5 py-1.5 rounded-full text-xs font-semibold bg-cream text-navy/70 border border-gray-200 hover:border-gold transition-colors cursor-pointer whitespace-nowrap"
+          >
+            🔔 Notify Me
+          </button>
+        </div>
       ) : (
         <div class="flex flex-wrap items-center justify-between gap-3 mt-2.5">
           <p id="results-count" class="text-sm text-slate">
@@ -342,19 +400,28 @@ const allAreasBoundsForClient = getAllAreasBounds();
               ? `Showing ${browseCards.length} of ${browseResult.total.toLocaleString()} active listings in view — zoom in to narrow down`
               : `${browseResult?.total ?? 0} active listing${(browseResult?.total ?? 0) !== 1 ? 's' : ''} in view · all REALTORS®`}
           </p>
-          <div class="relative">
-            <label for="sort-select" class="sr-only">Sort by</label>
-            <select
-              form="filters-form"
-              name="sort"
-              id="sort-select"
-              class="appearance-none pl-4 pr-9 py-1.5 rounded-full text-xs font-semibold bg-cream text-navy/70 border border-gray-200 hover:border-gold focus:border-gold focus:outline-none transition-colors cursor-pointer"
+          <div class="flex items-center gap-2">
+            <button
+              type="button"
+              data-save-search-trigger
+              class="flex items-center gap-1.5 pl-4 pr-3.5 py-1.5 rounded-full text-xs font-semibold bg-cream text-navy/70 border border-gray-200 hover:border-gold transition-colors cursor-pointer whitespace-nowrap"
             >
-              <option value="newest" selected={sortBy === 'newest'}>Newest First</option>
-              <option value="price-asc" selected={sortBy === 'price-asc'}>Price: Low to High</option>
-              <option value="price-desc" selected={sortBy === 'price-desc'}>Price: High to Low</option>
-              <option value="beds-desc" selected={sortBy === 'beds-desc'}>Most Bedrooms</option>
-            </select>
+              🔔 Notify Me
+            </button>
+            <div class="relative">
+              <label for="sort-select" class="sr-only">Sort by</label>
+              <select
+                form="filters-form"
+                name="sort"
+                id="sort-select"
+                class="appearance-none pl-4 pr-9 py-1.5 rounded-full text-xs font-semibold bg-cream text-navy/70 border border-gray-200 hover:border-gold focus:border-gold focus:outline-none transition-colors cursor-pointer"
+              >
+                <option value="newest" selected={sortBy === 'newest'}>Newest First</option>
+                <option value="price-asc" selected={sortBy === 'price-asc'}>Price: Low to High</option>
+                <option value="price-desc" selected={sortBy === 'price-desc'}>Price: High to Low</option>
+                <option value="beds-desc" selected={sortBy === 'beds-desc'}>Most Bedrooms</option>
+              </select>
+            </div>
           </div>
         </div>
       )}
@@ -502,6 +569,7 @@ const allAreasBoundsForClient = getAllAreasBounds();
   </section>
 
   <SaveListingModal />
+  <SaveSearchModal />
 </Base>
 
 <!-- Terms of Use consent banner — enhanced browse-wrap per CREA DDF Rule 6(d) -->
@@ -840,10 +908,12 @@ const allAreasBoundsForClient = getAllAreasBounds();
         return {
           minPrice: data.get('minPrice') || '',
           maxPrice: data.get('maxPrice') || '',
-          type: data.get('type') || '',
+          types: data.get('types') || '',
           minBeds: data.get('minBeds') || '',
           minBaths: data.get('minBaths') || '',
           minParking: data.get('minParking') || '',
+          minSqft: data.get('minSqft') || '',
+          maxSqft: data.get('maxSqft') || '',
           days: data.get('days') || '',
           keyword: (data.get('keyword') || '').trim(),
           sort: data.get('sort') || '',
@@ -852,7 +922,7 @@ const allAreasBoundsForClient = getAllAreasBounds();
 
       function updateMoreFiltersBadge() {
         const f = currentFilters();
-        const count = [f.minBeds, f.minBaths, f.minParking, f.days, f.keyword].filter(Boolean).length;
+        const count = [f.minBeds, f.minBaths, f.minParking, f.minSqft, f.maxSqft, f.days, f.keyword].filter(Boolean).length;
         const badge = document.getElementById('more-filters-count');
         if (!badge) return;
         if (count > 0) {
@@ -872,7 +942,7 @@ const allAreasBoundsForClient = getAllAreasBounds();
         updateMoreFiltersBadge();
         const myToken = ++fetchToken;
         const bounds = map.getBounds();
-        const { minPrice, maxPrice, type, minBeds, minBaths, minParking, days, keyword, sort } = currentFilters();
+        const { minPrice, maxPrice, types, minBeds, minBaths, minParking, minSqft, maxSqft, days, keyword, sort } = currentFilters();
         const qs = new URLSearchParams({
           north: String(bounds.getNorth()),
           south: String(bounds.getSouth()),
@@ -881,10 +951,12 @@ const allAreasBoundsForClient = getAllAreasBounds();
         });
         if (minPrice) qs.set('minPrice', minPrice);
         if (maxPrice) qs.set('maxPrice', maxPrice);
-        if (type) qs.set('type', type);
+        if (types) qs.set('types', types);
         if (minBeds) qs.set('minBeds', minBeds);
         if (minBaths) qs.set('minBaths', minBaths);
         if (minParking) qs.set('minParking', minParking);
+        if (minSqft) qs.set('minSqft', minSqft);
+        if (maxSqft) qs.set('maxSqft', maxSqft);
         if (days) qs.set('days', days);
         if (keyword) qs.set('keyword', keyword);
         if (sort) qs.set('sort', sort);
@@ -931,6 +1003,67 @@ const allAreasBoundsForClient = getAllAreasBounds();
         e.preventDefault();
         closeMoreFilters();
         fetchForCurrentView();
+      });
+
+      // Property Type: a checkbox multi-select dropdown (same pattern as
+      // /sold-map/'s), writing into a hidden `types` form field so plain
+      // form submission (the text-search path) and the JS-driven map fetch
+      // (currentFilters() -> FormData) both pick up the same value.
+      const typeToggle = document.getElementById('type-toggle');
+      const typePanel = document.getElementById('type-panel');
+      const typeBackdrop = document.getElementById('type-backdrop');
+      const typeAllCheckbox = document.getElementById('type-all');
+      const typeOptionCheckboxes = Array.from(document.querySelectorAll('.type-option'));
+      const typeToggleLabel = document.getElementById('type-toggle-label');
+      const typesHiddenInput = document.getElementById('types-hidden-input');
+      let selectedTypes = (typesHiddenInput?.value || '').split(',').filter(Boolean);
+
+      function openTypePanel() {
+        typePanel?.classList.remove('hidden');
+        typeBackdrop?.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+      }
+      function closeTypePanel() {
+        typePanel?.classList.add('hidden');
+        typeBackdrop?.classList.add('hidden');
+        document.body.style.overflow = '';
+      }
+      typeToggle?.addEventListener('click', openTypePanel);
+      typeBackdrop?.addEventListener('click', closeTypePanel);
+
+      typeAllCheckbox?.addEventListener('change', () => {
+        if (typeAllCheckbox.checked) typeOptionCheckboxes.forEach((c) => { c.checked = false; });
+      });
+      typeOptionCheckboxes.forEach((c) => {
+        c.addEventListener('change', () => {
+          if (c.checked) typeAllCheckbox.checked = false;
+          const anyChecked = typeOptionCheckboxes.some((o) => o.checked);
+          if (!anyChecked) typeAllCheckbox.checked = true;
+        });
+      });
+
+      document.getElementById('type-cancel')?.addEventListener('click', () => {
+        typeOptionCheckboxes.forEach((c) => { c.checked = selectedTypes.includes(c.value); });
+        typeAllCheckbox.checked = selectedTypes.length === 0;
+        closeTypePanel();
+      });
+      document.getElementById('type-save')?.addEventListener('click', () => {
+        selectedTypes = typeOptionCheckboxes.filter((c) => c.checked).map((c) => c.value);
+        if (typesHiddenInput) typesHiddenInput.value = selectedTypes.join(',');
+        if (typeToggleLabel) {
+          typeToggleLabel.textContent = selectedTypes.length === 0
+            ? 'Any Type'
+            : selectedTypes.length === 1
+              ? document.querySelector(`.type-option[value="${selectedTypes[0]}"]`)?.parentElement?.textContent.trim()
+              : `${selectedTypes.length} Types`;
+        }
+        closeTypePanel();
+        fetchForCurrentView();
+      });
+      document.addEventListener('click', (e) => {
+        if (typePanel?.classList.contains('hidden')) return;
+        if (typePanel.contains(e.target) || typeToggle?.contains(e.target)) return;
+        closeTypePanel();
       });
 
       // More Filters: an inline dropdown on desktop, a bottom-sheet drawer

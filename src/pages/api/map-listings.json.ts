@@ -23,18 +23,20 @@ export const GET: APIRoute = async ({ url }) => {
 
   const minPrice = Number(params.get('minPrice')) || undefined;
   const maxPrice = Number(params.get('maxPrice')) || undefined;
-  const propertyType = params.get('type') || undefined;
+  const propertyTypes = (params.get('types') || '').split(',').filter(Boolean);
   const minBeds = Number(params.get('minBeds')) || undefined;
   const minBaths = Number(params.get('minBaths')) || undefined;
   const minParking = Number(params.get('minParking')) || undefined;
+  const minSqft = Number(params.get('minSqft')) || undefined;
+  const maxSqft = Number(params.get('maxSqft')) || undefined;
   const daysOnMarket = Number(params.get('days')) || undefined;
   const keyword = params.get('keyword') || undefined;
   const sortBy = (params.get('sort') as 'newest' | 'price-asc' | 'price-desc' | 'beds-desc' | null) || undefined;
 
   const [{ listings, total, capped }, ownKeys] = await Promise.all([
     searchNationalPoolByBounds({
-      north, south, east, west, minPrice, maxPrice, propertyType,
-      minBeds, minBaths, minParking, daysOnMarket, keyword, sortBy,
+      north, south, east, west, minPrice, maxPrice, propertyTypes,
+      minBeds, minBaths, minParking, minSqft, maxSqft, daysOnMarket, keyword, sortBy,
     }),
     getActiveListingKeys(),
   ]);

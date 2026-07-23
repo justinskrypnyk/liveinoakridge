@@ -1,0 +1,152 @@
+---
+// "Notify me about homes like this" -- captures the visitor's current
+// /search filter criteria (read from the page URL at click time) tied to
+// their email, POSTed directly to /api/save-search.json (no Netlify Forms
+// relay needed here, unlike SaveListingModal -- this is structured filter
+// data, not a handful of text fields). saved-search-alerts-background.mjs
+// emails new matching active listings going forward.
+---
+
+<div id="save-search-modal" class="hidden fixed inset-0 z-[70] flex items-center justify-center p-4">
+  <div id="save-search-backdrop" class="absolute inset-0 bg-navy/50"></div>
+
+  <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 max-h-[90vh] overflow-y-auto">
+    <button
+      type="button"
+      id="save-search-close"
+      aria-label="Close"
+      class="absolute top-4 right-4 w-8 h-8 rounded-full hover:bg-cream flex items-center justify-center"
+    >
+      <svg class="w-5 h-5 text-navy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+
+    <h3 class="font-serif text-xl text-navy font-bold mb-1">Get Notified</h3>
+    <p class="text-sm text-slate mb-5">We'll email you when new homes matching this search hit the market.</p>
+
+    <form id="save-search-form" class="space-y-4">
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label for="save-search-first-name" class="block text-sm font-medium text-navy/70 mb-1.5">First Name</label>
+          <input
+            type="text" id="save-search-first-name" autocomplete="given-name"
+            class="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-navy text-sm outline-none focus:border-gold focus:ring-2 focus:ring-gold/20"
+          />
+        </div>
+        <div>
+          <label for="save-search-last-name" class="block text-sm font-medium text-navy/70 mb-1.5">Last Name</label>
+          <input
+            type="text" id="save-search-last-name" autocomplete="family-name"
+            class="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-navy text-sm outline-none focus:border-gold focus:ring-2 focus:ring-gold/20"
+          />
+        </div>
+      </div>
+
+      <div>
+        <label for="save-search-email" class="block text-sm font-medium text-navy/70 mb-1.5">Email Address *</label>
+        <input
+          type="email" id="save-search-email" required autocomplete="email"
+          class="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-navy text-sm outline-none focus:border-gold focus:ring-2 focus:ring-gold/20"
+        />
+      </div>
+
+      <div>
+        <label for="save-search-frequency" class="block text-sm font-medium text-navy/70 mb-1.5">How often?</label>
+        <select
+          id="save-search-frequency"
+          class="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-navy text-sm outline-none focus:border-gold focus:ring-2 focus:ring-gold/20"
+        >
+          <option value="daily">As it happens</option>
+          <option value="weekly" selected>Weekly</option>
+          <option value="monthly">Monthly</option>
+        </select>
+      </div>
+
+      <p id="save-search-error" class="hidden text-xs text-red-600"></p>
+
+      <button type="submit" id="save-search-submit" class="btn-primary w-full justify-center">
+        Notify Me
+      </button>
+      <p class="text-xs text-center text-slate">
+        By submitting, you agree to our <a href="/privacy-policy/" class="underline hover:text-gold transition-colors">Privacy Policy</a>. We never share your information.
+      </p>
+    </form>
+
+    <div id="save-search-success" class="hidden text-center py-6">
+      <div class="text-4xl mb-3">🔔</div>
+      <p class="font-serif text-lg text-navy font-bold mb-1">You're set!</p>
+      <p class="text-sm text-slate">We'll email you when new homes like this come up.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+  const modal = document.getElementById('save-search-modal');
+  const form = document.getElementById('save-search-form') as HTMLFormElement | null;
+  const successEl = document.getElementById('save-search-success');
+  const errorEl = document.getElementById('save-search-error');
+  const submitBtn = document.getElementById('save-search-submit') as HTMLButtonElement | null;
+
+  function openModal() {
+    errorEl?.classList.add('hidden');
+    successEl?.classList.add('hidden');
+    form?.classList.remove('hidden');
+    modal?.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeModal() {
+    modal?.classList.add('hidden');
+    document.body.style.overflow = '';
+  }
+
+  document.getElementById('save-search-close')?.addEventListener('click', closeModal);
+  document.getElementById('save-search-backdrop')?.addEventListener('click', closeModal);
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !modal?.classList.contains('hidden')) closeModal();
+  });
+  document.querySelectorAll('[data-save-search-trigger]').forEach((btn) => btn.addEventListener('click', openModal));
+
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!submitBtn) return;
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Saving...';
+    errorEl?.classList.add('hidden');
+
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const firstName = (document.getElementById('save-search-first-name') as HTMLInputElement)?.value;
+      const lastName = (document.getElementById('save-search-last-name') as HTMLInputElement)?.value;
+      const email = (document.getElementById('save-search-email') as HTMLInputElement)?.value;
+      const frequency = (document.getElementById('save-search-frequency') as HTMLSelectElement)?.value;
+
+      const res = await fetch('/api/save-search.json', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email, firstName, lastName, frequency,
+          area: params.get('area') || undefined,
+          minPrice: params.get('minPrice') || undefined,
+          maxPrice: params.get('maxPrice') || undefined,
+          propertyTypes: (params.get('types') || '').split(',').filter(Boolean),
+          minBeds: params.get('minBeds') || undefined,
+          minBaths: params.get('minBaths') || undefined,
+        }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json.error || `${res.status}`);
+
+      form.classList.add('hidden');
+      successEl?.classList.remove('hidden');
+      setTimeout(closeModal, 2200);
+      form.reset();
+    } catch (err) {
+      if (errorEl) {
+        errorEl.textContent = err instanceof Error ? err.message : 'Something went wrong -- please try again.';
+        errorEl.classList.remove('hidden');
+      }
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Notify Me';
+    }
+  });
+</script>

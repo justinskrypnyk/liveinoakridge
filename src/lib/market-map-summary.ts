@@ -22,6 +22,13 @@ export function summarizeArea(s: MarketMapSnapshotRow): string {
     : '.';
   sentences.push(priceLine + bedBathLine);
 
+  if (s.median_sold_price != null && s.units_sold != null && s.units_sold > 0) {
+    const ratioNote = s.avg_sale_to_list_ratio != null
+      ? ` at an average of ${(s.avg_sale_to_list_ratio * 100).toFixed(1)}% of asking price`
+      : '';
+    sentences.push(`Over the last 90 days, ${s.units_sold} home${s.units_sold === 1 ? ' sold' : 's sold'} here for a median of ${fmtPrice(s.median_sold_price)}${ratioNote}.`);
+  }
+
   if (s.pct_detached != null) {
     const pct = Math.round(s.pct_detached * 100);
     if (s.pct_detached >= 0.7) {

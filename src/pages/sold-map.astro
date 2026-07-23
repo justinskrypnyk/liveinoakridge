@@ -1,0 +1,578 @@
+---
+// Server-rendered so the initial view can already reflect auth state (no
+// login-status flash) -- but the actual data comes from Supabase
+// (vow_sold_listings, pre-synced -- see vow-sold-sync-background.mjs), not
+// a live AMPRE call, so this doesn't carry the cost that would otherwise
+// come with prerender=false.
+//
+// Filter bar styled after HouseSigma's map-search bar (property type,
+// price, sold-date-range, More Filters flyout) -- per Justin's request,
+// scoped to sold-only (this site keeps active listings on /search/
+// separately, since that's public data and this is gated VOW data).
+export const prerender = false;
+import Base from '@/layouts/Base.astro';
+import { SITE } from '@/data/site';
+import { getAllAreasBounds } from '@/lib/area-boundaries';
+import { getVowSession } from '@/lib/vow-session';
+import { PROPERTY_TYPE_OPTIONS } from '@/lib/vow-property-types';
+
+const session = getVowSession(Astro.cookies);
+const authenticated = session !== null;
+const initialBounds = getAllAreasBounds();
+
+const priceSteps = Array.from({ length: 40 }, (_, i) => (i + 1) * 50000);
+function shortPriceLabel(n: number): string {
+  if (n >= 1000000) return `$${(n / 1000000).toFixed(n % 1000000 === 0 ? 0 : 1)}M`;
+  return `$${Math.round(n / 1000)}K`;
+}
+
+const DATE_RANGE_OPTIONS = [
+  { value: 'd30', label: 'Last 30 days' },
+  { value: 'd90', label: 'Last 90 days' },
+  { value: 'd180', label: 'Last 180 days' },
+  { value: 'd360', label: 'Last 360 days' },
+  { value: 'y2026', label: 'Year 2026' },
+  { value: 'y2025', label: 'Year 2025' },
+  { value: 'y2024', label: 'Year 2024' },
+  { value: 'y2023', label: 'Year 2023' },
+  { value: 'y2022', label: 'Year 2022' },
+  { value: 'all', label: 'All time' },
+];
+---
+
+<Base
+  title="Sold Prices Map | London Ontario Real Estate | Live In Oakridge"
+  description="See recently sold home prices across London, Ontario on an interactive map. Sign in with a free magic link to unlock exact sold prices and sale-to-list ratios."
+>
+  <section class="bg-navy py-16 text-white">
+    <div class="container-site">
+      <nav aria-label="Breadcrumb" class="flex items-center gap-2 text-sm text-white/40 mb-8">
+        <a href="/" class="hover:text-gold transition-colors">Home</a>
+        <span>/</span>
+        <span class="text-white/70">Sold Prices Map</span>
+      </nav>
+      <h1 class="font-serif text-5xl font-bold mb-4">London Ontario Sold Prices Map</h1>
+      <div class="gold-divider mb-6"></div>
+      <p class="text-xl text-white/70 max-w-2xl">
+        See what homes actually sold for across London, Ontario. Pan and zoom to any neighbourhood.
+        {!authenticated && ' Sign in with a free magic link to unlock exact prices.'}
+      </p>
+    </div>
+  </section>
+
+  <section id="sold-filter-bar" class="py-3 bg-white border-b border-gray-100 sticky top-20 z-30 shadow-sm">
+    <div class="container-site">
+      <div class="flex flex-wrap items-center gap-2">
+        <!-- Property Type -->
+        <div class="relative">
+          <button type="button" id="type-toggle" class="flex items-center gap-1.5 pl-4 pr-3.5 py-1.5 rounded-full text-sm font-semibold bg-cream text-navy border border-gray-200 hover:border-gold transition-colors cursor-pointer">
+            <span id="type-toggle-label">All Property Types</span>
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div id="type-backdrop" class="hidden fixed inset-0 bg-navy/40 z-40 lg:hidden"></div>
+          <div id="type-panel" class="hidden fixed inset-x-0 bottom-0 z-50 bg-white rounded-t-3xl shadow-2xl p-5 max-h-[85vh] overflow-y-auto lg:absolute lg:inset-x-auto lg:bottom-auto lg:top-full lg:mt-2 lg:left-0 lg:w-64 lg:rounded-2xl lg:border lg:border-gray-100 lg:max-h-none lg:overflow-visible">
+            <p class="font-serif text-lg text-navy font-bold mb-3 lg:hidden">Property Type</p>
+            <label class="flex items-center gap-2.5 py-1.5 text-sm text-navy font-semibold cursor-pointer">
+              <input type="checkbox" id="type-all" checked class="w-4 h-4 accent-navy" />
+              All Property Types
+            </label>
+            <div class="border-t border-gray-100 my-2"></div>
+            {PROPERTY_TYPE_OPTIONS.map((opt) => (
+              <label class="flex items-center gap-2.5 py-1.5 text-sm text-navy/80 cursor-pointer">
+                <input type="checkbox" class="type-option w-4 h-4 accent-navy" value={opt.slug} />
+                {opt.label}
+              </label>
+            ))}
+            <div class="flex gap-2 mt-4">
+              <button type="button" id="type-cancel" class="flex-1 text-sm font-semibold px-4 py-2 rounded-lg border border-gray-200 text-navy hover:border-gold transition-colors">Cancel</button>
+              <button type="button" id="type-save" class="flex-1 text-sm font-semibold px-4 py-2 rounded-lg bg-navy text-white hover:bg-navy/80 transition-colors">Save</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Price range -->
+        <div class="relative">
+          <select id="minPrice-select" class="appearance-none pl-4 pr-9 py-1.5 rounded-full text-sm font-medium bg-cream text-navy/70 border border-gray-200 hover:border-gold focus:border-gold focus:outline-none transition-colors cursor-pointer">
+            <option value="">No Min</option>
+            {priceSteps.map((p) => <option value={p}>{shortPriceLabel(p)}</option>)}
+          </select>
+        </div>
+        <span class="text-navy/30 text-sm">–</span>
+        <div class="relative">
+          <select id="maxPrice-select" class="appearance-none pl-4 pr-9 py-1.5 rounded-full text-sm font-medium bg-cream text-navy/70 border border-gray-200 hover:border-gold focus:border-gold focus:outline-none transition-colors cursor-pointer">
+            <option value="">No Max</option>
+            {priceSteps.map((p) => <option value={p}>{shortPriceLabel(p)}</option>)}
+          </select>
+        </div>
+
+        <!-- Sold date range -->
+        <div class="relative">
+          <button type="button" id="daterange-toggle" class="flex items-center gap-1.5 pl-4 pr-3.5 py-1.5 rounded-full text-sm font-semibold bg-navy text-white transition-colors cursor-pointer">
+            <span>Sold:</span>
+            <span id="daterange-toggle-label">Last 90 days</span>
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div id="daterange-backdrop" class="hidden fixed inset-0 bg-navy/40 z-40 lg:hidden"></div>
+          <div id="daterange-panel" class="hidden fixed inset-x-0 bottom-0 z-50 bg-white rounded-t-3xl shadow-2xl p-5 max-h-[70vh] overflow-y-auto lg:absolute lg:inset-x-auto lg:bottom-auto lg:top-full lg:mt-2 lg:left-0 lg:w-56 lg:rounded-2xl lg:border lg:border-gray-100 lg:max-h-80">
+            <p class="font-serif text-lg text-navy font-bold mb-3 lg:hidden">Sold Date Range</p>
+            {DATE_RANGE_OPTIONS.map((opt) => (
+              <label class="flex items-center gap-2.5 py-1.5 text-sm text-navy/80 cursor-pointer">
+                <input type="radio" name="daterange" class="daterange-option w-4 h-4 accent-navy" value={opt.value} checked={opt.value === 'd90'} />
+                {opt.label}
+              </label>
+            ))}
+          </div>
+        </div>
+
+        <!-- Pre-Construction toggle -- separate from the resale "Sold" view
+             above since a future closing date can reflect a price locked in
+             years earlier (see subtypesForCategories/preConstruction docs in
+             the API route). Off by default: excluded from the main view. -->
+        <button
+          type="button"
+          id="preconstruction-toggle"
+          data-active="false"
+          class="flex items-center gap-1.5 pl-4 pr-3.5 py-1.5 rounded-full text-sm font-semibold border transition-colors cursor-pointer bg-cream text-navy/70 border-gray-200 hover:border-gold data-[active=true]:bg-amber-500 data-[active=true]:text-white data-[active=true]:border-amber-500"
+        >
+          🏗 Pre-Construction
+        </button>
+
+        <!-- More Filters -->
+        <div class="relative">
+          <button type="button" id="more-toggle" class="flex items-center gap-1.5 pl-4 pr-3.5 py-1.5 rounded-full text-sm font-medium bg-cream text-navy/70 border border-gray-200 hover:border-gold transition-colors cursor-pointer">
+            More Filters
+            <span id="more-count" class="hidden bg-emerald-500 text-navy text-[10px] font-bold w-4 h-4 rounded-full items-center justify-center leading-none"></span>
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div id="more-backdrop" class="hidden fixed inset-0 bg-navy/40 z-40 lg:hidden"></div>
+          <div id="more-panel" class="hidden fixed inset-x-0 bottom-0 z-50 bg-white rounded-t-3xl shadow-2xl p-5 max-h-[85vh] overflow-y-auto lg:absolute lg:inset-x-auto lg:bottom-auto lg:top-full lg:mt-2 lg:right-0 lg:w-[420px] lg:rounded-2xl lg:border lg:border-gray-100 lg:max-h-none lg:overflow-visible">
+            <div class="flex items-center justify-between mb-4 lg:hidden">
+              <span class="font-serif text-lg text-navy font-bold">More Filters</span>
+              <button type="button" id="more-close" aria-label="Close filters" class="w-8 h-8 rounded-full hover:bg-cream flex items-center justify-center">
+                <svg class="w-5 h-5 text-navy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+              </button>
+            </div>
+
+            <div class="mb-5">
+              <div class="text-xs font-semibold uppercase tracking-wider text-navy/50 mb-2">Bedrooms</div>
+              <div class="flex flex-wrap gap-2">
+                {['All', 0, 1, 2, 3, 4, 5].map((n) => (
+                  <button type="button" class="beds-option cursor-pointer text-xs font-semibold px-3.5 py-1.5 rounded-full border border-gray-200 text-navy/70 data-[active=true]:bg-navy data-[active=true]:text-white data-[active=true]:border-navy transition-colors" data-value={n === 'All' ? '' : n} data-active={n === 'All' ? 'true' : 'false'}>{n === 5 ? '5+' : n}</button>
+                ))}
+              </div>
+            </div>
+
+            <div class="mb-5">
+              <div class="text-xs font-semibold uppercase tracking-wider text-navy/50 mb-2">Bathrooms</div>
+              <div class="flex flex-wrap gap-2">
+                {['All', 1, 2, 3, 4, 5].map((n) => (
+                  <button type="button" class="baths-option cursor-pointer text-xs font-semibold px-3.5 py-1.5 rounded-full border border-gray-200 text-navy/70 data-[active=true]:bg-navy data-[active=true]:text-white data-[active=true]:border-navy transition-colors" data-value={n === 'All' ? '' : n} data-active={n === 'All' ? 'true' : 'false'}>{n === 'All' ? 'All' : `${n}+`}</button>
+                ))}
+              </div>
+            </div>
+
+            <div class="mb-5">
+              <div class="text-xs font-semibold uppercase tracking-wider text-navy/50 mb-2">Garage / Covered Parking</div>
+              <div class="flex flex-wrap gap-2">
+                {['All', 1, 2, 3, 4, 5].map((n) => (
+                  <button type="button" class="parking-option cursor-pointer text-xs font-semibold px-3.5 py-1.5 rounded-full border border-gray-200 text-navy/70 data-[active=true]:bg-navy data-[active=true]:text-white data-[active=true]:border-navy transition-colors" data-value={n === 'All' ? '' : n} data-active={n === 'All' ? 'true' : 'false'}>{n === 'All' ? 'All' : `${n}+`}</button>
+                ))}
+              </div>
+            </div>
+
+            <div class="mb-1">
+              <div class="text-xs font-semibold uppercase tracking-wider text-navy/50 mb-2">Square Footage</div>
+              <div class="flex items-center gap-2">
+                <input type="number" id="minSqft-input" placeholder="Min" min="0" step="100" class="w-full px-3 py-2 rounded-lg text-sm bg-cream border border-gray-200 text-navy placeholder-navy/40 focus:border-gold focus:outline-none transition-colors" />
+                <span class="text-navy/30 text-sm shrink-0">–</span>
+                <input type="number" id="maxSqft-input" placeholder="Max" min="0" step="100" class="w-full px-3 py-2 rounded-lg text-sm bg-cream border border-gray-200 text-navy placeholder-navy/40 focus:border-gold focus:outline-none transition-colors" />
+              </div>
+            </div>
+
+            <button type="button" id="more-apply" class="btn-primary w-full justify-center mt-5 lg:hidden">Apply Filters</button>
+          </div>
+        </div>
+
+        <button type="button" id="clear-all" class="text-xs font-semibold px-3.5 py-1.5 rounded-full border border-gray-200 text-navy/60 hover:border-gold hover:text-navy transition-colors">Clear All</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="py-8 bg-cream">
+    <div class="container-site max-w-5xl">
+      {!authenticated && (
+        <div class="bg-white rounded-2xl shadow-card p-5 mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p class="text-sm text-slate">
+            <span class="font-semibold text-navy">Sold prices are blurred.</span> Sign in with a free magic link to see exact sold prices, dates, and addresses.
+          </p>
+          <a href="/vow/login/" class="btn-primary !py-2 !px-6 whitespace-nowrap shrink-0">Sign In to Unlock</a>
+        </div>
+      )}
+
+      <div class="relative isolate rounded-2xl overflow-hidden shadow-card border border-gray-100">
+        <div id="sold-map" style="height: 640px"></div>
+      </div>
+
+      <p id="sold-results-count" class="text-sm text-slate mt-3"></p>
+
+      <p class="text-xs text-slate/60 mt-8 max-w-2xl mx-auto text-center leading-relaxed">
+        The information provided herein is deemed reliable but is not guaranteed accurate by PROPTX. The information provided herein must only be used by consumers that have a bona fide interest in the purchase, sale, or lease of real estate and may not be used for any commercial purpose or any other purpose. Data refreshes at least once every 24 hours.
+      </p>
+    </div>
+  </section>
+</Base>
+
+<script define:vars={{ initialBounds, authenticated, siteUrl: SITE.url }}>
+  function esc(s) {
+    const d = document.createElement('div');
+    d.textContent = s ?? '';
+    return d.innerHTML;
+  }
+
+  function loadStylesheet(href, integrity) {
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = href;
+    if (integrity) link.integrity = integrity;
+    link.crossOrigin = 'anonymous';
+    document.head.appendChild(link);
+  }
+
+  function loadScript(src, integrity) {
+    return new Promise((resolve) => {
+      const script = document.createElement('script');
+      script.src = src;
+      if (integrity) script.integrity = integrity;
+      script.crossOrigin = 'anonymous';
+      script.onload = resolve;
+      document.body.appendChild(script);
+    });
+  }
+
+  async function loadLeaflet() {
+    if (!window.L) {
+      loadStylesheet('https://unpkg.com/leaflet@1.9.4/dist/leaflet.css', 'sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H');
+      await loadScript('https://unpkg.com/leaflet@1.9.4/dist/leaflet.js', 'sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH');
+    }
+    if (!window.L.markerClusterGroup) {
+      loadStylesheet('https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css', null);
+      loadStylesheet('https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css', null);
+      await loadScript('https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js', null);
+    }
+  }
+
+  function soldIcon(label, locked, isPreConstruction) {
+    const bg = locked ? '#94a3b8' : isPreConstruction ? '#f59e0b' : '#0c2340';
+    return L.divIcon({
+      html: `<div style="display:inline-block;background:${bg};color:#fff;font:700 12px Inter,sans-serif;padding:5px 10px;border-radius:999px;box-shadow:0 2px 8px rgba(12,35,64,.35);white-space:nowrap;border:2px solid #fff;${locked ? 'filter:blur(1.5px);' : ''}">${isPreConstruction ? '🏗 ' : ''}${label}</div>`,
+      className: '',
+      iconSize: [0, 0],
+      iconAnchor: [0, 12],
+    });
+  }
+
+  function photoBlockHtml(photoUrl, blurred) {
+    if (!photoUrl) {
+      return `<div style="width:100%;height:120px;border-radius:8px;background:#f0f9f6;display:flex;align-items:center;justify-content:center;font-size:32px;margin-bottom:8px;${blurred ? 'filter:blur(6px);' : ''}">🏡</div>`;
+    }
+    return `<div style="width:100%;height:120px;border-radius:8px;overflow:hidden;margin-bottom:8px;"><img src="${esc(photoUrl)}" style="width:100%;height:100%;object-fit:cover;${blurred ? 'filter:blur(10px);transform:scale(1.1);' : ''}" /></div>`;
+  }
+
+  function popupHtml(l) {
+    if (l.locked) {
+      return `
+        <div style="width:220px;padding-top:18px;font-family:Inter,sans-serif;text-align:center;">
+          ${photoBlockHtml(l.photoUrl, true)}
+          <div style="filter:blur(3px);pointer-events:none;user-select:none;">
+            <div style="font-weight:800;font-size:16px;color:#0c2340;">${esc(l.closePrice)}</div>
+            <div style="font-size:12.5px;color:#334155;margin:3px 0 6px;">${esc(l.city || 'London, ON')}</div>
+            <div style="font-size:11.5px;color:#0c2340;">${l.beds ? `${l.beds} bed` : ''} ${l.baths ? `&middot; ${l.baths} bath` : ''}</div>
+          </div>
+          <a href="/vow/login/" style="display:block;margin-top:10px;background:#c9a55c;color:#0c2340;font-weight:700;font-size:12px;padding:8px;border-radius:8px;text-decoration:none;">Sign In to Unlock</a>
+        </div>
+      `;
+    }
+    return `
+      <a href="/sold-map/${esc(l.mls)}/" style="display:block;width:240px;padding-top:18px;font-family:Inter,sans-serif;text-decoration:none;color:inherit;">
+        ${photoBlockHtml(l.photoUrl, false)}
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span style="font-weight:800;font-size:16px;color:#0c2340;">${esc(l.closePrice)}</span>
+          <span style="margin-left:auto;background:${l.isPreConstruction ? '#f59e0b' : '#10b981'};color:${l.isPreConstruction ? '#fff' : '#0c2340'};font-size:10px;font-weight:700;padding:2px 8px;border-radius:999px;">${l.isPreConstruction ? 'PRE-CON' : 'SOLD'}</span>
+        </div>
+        <div style="font-size:12.5px;color:#334155;margin:3px 0 6px;line-height:1.3;">${esc(l.address)}${l.city ? `, ${esc(l.city)}` : ''}</div>
+        <div style="display:flex;gap:10px;font-size:11.5px;color:#0c2340;font-weight:600;margin-bottom:6px;">
+          ${l.beds ? `<span>${esc(l.beds)} bed</span>` : ''}
+          ${l.baths ? `<span>${esc(l.baths)} bath</span>` : ''}
+          ${l.sqft ? `<span>${Number(l.sqft).toLocaleString()} sq ft</span>` : ''}
+        </div>
+        ${l.isPreConstruction ? '<div style="font-size:10px;color:#b45309;background:#fffbeb;padding:5px 6px;border-radius:6px;margin-bottom:5px;">Price may have been locked in well before this scheduled closing date -- not a direct comp for current market value.</div>' : ''}
+        <div style="font-size:10px;color:#94a3b8;border-top:1px solid #eee;padding-top:5px;">${l.isPreConstruction ? 'Scheduled to close' : 'Sold'} ${esc(l.closeDate || '')} &middot; ${esc(l.mls || '')} &middot; View Full Details &rarr;</div>
+      </a>
+    `;
+  }
+
+  async function initSoldMap() {
+    await loadLeaflet();
+    const mapEl = document.getElementById('sold-map');
+    const countEl = document.getElementById('sold-results-count');
+    if (!mapEl) return;
+
+    const map = L.map(mapEl, { scrollWheelZoom: true });
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      maxZoom: 19,
+    }).addTo(map);
+    map.fitBounds([[initialBounds.south, initialBounds.west], [initialBounds.north, initialBounds.east]]);
+
+    let clusterLayer = L.markerClusterGroup().addTo(map);
+
+    // ---- Filter state ----
+    let selectedTypes = [];
+    let selectedBeds = '';
+    let selectedBaths = '';
+    let selectedParking = '';
+    let selectedDateRange = 'd90';
+    let preConstructionOnly = false;
+
+    function currentFilterParams() {
+      const p = {};
+      const minPrice = document.getElementById('minPrice-select')?.value;
+      const maxPrice = document.getElementById('maxPrice-select')?.value;
+      const minSqft = document.getElementById('minSqft-input')?.value;
+      const maxSqft = document.getElementById('maxSqft-input')?.value;
+      if (minPrice) p.minPrice = minPrice;
+      if (maxPrice) p.maxPrice = maxPrice;
+      if (minSqft) p.minSqft = minSqft;
+      if (maxSqft) p.maxSqft = maxSqft;
+      if (selectedTypes.length > 0) p.types = selectedTypes.join(',');
+      if (selectedBeds) p.minBeds = selectedBeds;
+      if (selectedBaths) p.minBaths = selectedBaths;
+      if (selectedParking) p.minParking = selectedParking;
+      if (preConstructionOnly) {
+        p.preConstruction = 'only';
+      } else if (selectedDateRange && selectedDateRange !== 'all') {
+        p.dateRange = selectedDateRange;
+      }
+      return p;
+    }
+
+    function shortPrice(str) {
+      return str; // already formatted server-side
+    }
+
+    let fetchToken = 0;
+    async function fetchForCurrentView() {
+      const myToken = ++fetchToken;
+      const bounds = map.getBounds();
+      const qs = new URLSearchParams({
+        north: String(bounds.getNorth()),
+        south: String(bounds.getSouth()),
+        east: String(bounds.getEast()),
+        west: String(bounds.getWest()),
+        ...currentFilterParams(),
+      });
+      try {
+        const res = await fetch(`/api/sold-listings.json?${qs.toString()}`);
+        if (!res.ok || myToken !== fetchToken) return;
+        const data = await res.json();
+        if (myToken !== fetchToken) return;
+        clusterLayer.clearLayers();
+        const markers = (data.listings || [])
+          .filter((l) => l.lat && l.lng)
+          .map((l) => {
+            const marker = L.marker([l.lat, l.lng], { icon: soldIcon(shortPrice(l.closePrice), l.locked, l.isPreConstruction) })
+              .bindPopup(popupHtml(l), { maxWidth: 260, autoPanPadding: [24, 40] });
+            return marker;
+          });
+        clusterLayer.addLayers(markers);
+        if (countEl) {
+          const label = preConstructionOnly ? 'pre-construction sale' : 'sold listing';
+          countEl.textContent = data.capped
+            ? `Showing ${data.listings.length} of ${data.total.toLocaleString()} ${label}${data.listings.length !== 1 ? 's' : ''} in view -- zoom in to narrow down`
+            : `${data.total} ${label}${data.total !== 1 ? 's' : ''} in view`;
+        }
+      } catch {
+        // Network hiccup -- leave the previously rendered view as-is.
+      }
+    }
+
+    let fetchTimeout = null;
+    function scheduleRefetch() {
+      clearTimeout(fetchTimeout);
+      fetchTimeout = setTimeout(fetchForCurrentView, 300);
+    }
+
+    map.on('moveend', scheduleRefetch);
+
+    // ---- Property Type dropdown ----
+    const typeToggle = document.getElementById('type-toggle');
+    const typePanel = document.getElementById('type-panel');
+    const typeBackdrop = document.getElementById('type-backdrop');
+    const typeAllCheckbox = document.getElementById('type-all');
+    const typeOptionCheckboxes = Array.from(document.querySelectorAll('.type-option'));
+    const typeToggleLabel = document.getElementById('type-toggle-label');
+
+    function openPanel(panel, backdrop) {
+      panel?.classList.remove('hidden');
+      backdrop?.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    }
+    function closePanel(panel, backdrop) {
+      panel?.classList.add('hidden');
+      backdrop?.classList.add('hidden');
+      document.body.style.overflow = '';
+    }
+
+    typeToggle?.addEventListener('click', () => openPanel(typePanel, typeBackdrop));
+    typeBackdrop?.addEventListener('click', () => closePanel(typePanel, typeBackdrop));
+
+    typeAllCheckbox?.addEventListener('change', () => {
+      if (typeAllCheckbox.checked) typeOptionCheckboxes.forEach((c) => { c.checked = false; });
+    });
+    typeOptionCheckboxes.forEach((c) => {
+      c.addEventListener('change', () => {
+        if (c.checked) typeAllCheckbox.checked = false;
+        const anyChecked = typeOptionCheckboxes.some((o) => o.checked);
+        if (!anyChecked) typeAllCheckbox.checked = true;
+      });
+    });
+
+    document.getElementById('type-cancel')?.addEventListener('click', () => {
+      typeOptionCheckboxes.forEach((c) => { c.checked = selectedTypes.includes(c.value); });
+      typeAllCheckbox.checked = selectedTypes.length === 0;
+      closePanel(typePanel, typeBackdrop);
+    });
+    document.getElementById('type-save')?.addEventListener('click', () => {
+      selectedTypes = typeOptionCheckboxes.filter((c) => c.checked).map((c) => c.value);
+      if (typeToggleLabel) {
+        typeToggleLabel.textContent = selectedTypes.length === 0
+          ? 'All Property Types'
+          : selectedTypes.length === 1
+            ? document.querySelector(`.type-option[value="${selectedTypes[0]}"]`)?.parentElement?.textContent.trim()
+            : `${selectedTypes.length} Property Types`;
+      }
+      closePanel(typePanel, typeBackdrop);
+      scheduleRefetch();
+    });
+
+    // ---- Price ----
+    document.getElementById('minPrice-select')?.addEventListener('change', scheduleRefetch);
+    document.getElementById('maxPrice-select')?.addEventListener('change', scheduleRefetch);
+
+    // ---- Sold Date Range dropdown ----
+    const dateToggle = document.getElementById('daterange-toggle');
+    const datePanel = document.getElementById('daterange-panel');
+    const dateBackdrop = document.getElementById('daterange-backdrop');
+    const dateToggleLabel = document.getElementById('daterange-toggle-label');
+    const dateOptions = Array.from(document.querySelectorAll('.daterange-option'));
+
+    dateToggle?.addEventListener('click', () => {
+      if (preConstructionOnly) return; // date range doesn't apply in pre-construction mode
+      openPanel(datePanel, dateBackdrop);
+    });
+    dateBackdrop?.addEventListener('click', () => closePanel(datePanel, dateBackdrop));
+    dateOptions.forEach((r) => {
+      r.addEventListener('change', () => {
+        selectedDateRange = r.value;
+        if (dateToggleLabel) dateToggleLabel.textContent = r.parentElement?.textContent.trim() ?? '';
+        closePanel(datePanel, dateBackdrop);
+        scheduleRefetch();
+      });
+    });
+
+    // ---- Pre-Construction toggle ----
+    const preConToggle = document.getElementById('preconstruction-toggle');
+    preConToggle?.addEventListener('click', () => {
+      preConstructionOnly = !preConstructionOnly;
+      preConToggle.dataset.active = String(preConstructionOnly);
+      dateToggle?.classList.toggle('opacity-40', preConstructionOnly);
+      dateToggle?.classList.toggle('cursor-not-allowed', preConstructionOnly);
+      scheduleRefetch();
+    });
+
+    // ---- More Filters ----
+    const moreToggle = document.getElementById('more-toggle');
+    const morePanel = document.getElementById('more-panel');
+    const moreBackdrop = document.getElementById('more-backdrop');
+    const moreClose = document.getElementById('more-close');
+    const moreCount = document.getElementById('more-count');
+
+    moreToggle?.addEventListener('click', () => openPanel(morePanel, moreBackdrop));
+    moreBackdrop?.addEventListener('click', () => closePanel(morePanel, moreBackdrop));
+    moreClose?.addEventListener('click', () => closePanel(morePanel, moreBackdrop));
+    document.getElementById('more-apply')?.addEventListener('click', () => closePanel(morePanel, moreBackdrop));
+
+    function updateMoreCount() {
+      const count = [selectedBeds, selectedBaths, selectedParking].filter(Boolean).length
+        + (document.getElementById('minSqft-input')?.value ? 1 : 0)
+        + (document.getElementById('maxSqft-input')?.value ? 1 : 0);
+      if (!moreCount) return;
+      if (count > 0) {
+        moreCount.textContent = String(count);
+        moreCount.classList.remove('hidden');
+        moreCount.classList.add('flex');
+      } else {
+        moreCount.classList.add('hidden');
+        moreCount.classList.remove('flex');
+      }
+    }
+
+    function wirePillGroup(selector, onChange) {
+      const buttons = Array.from(document.querySelectorAll(selector));
+      buttons.forEach((btn) => {
+        btn.addEventListener('click', () => {
+          buttons.forEach((b) => { b.dataset.active = 'false'; });
+          btn.dataset.active = 'true';
+          onChange(btn.dataset.value || '');
+          updateMoreCount();
+          scheduleRefetch();
+        });
+      });
+    }
+    wirePillGroup('.beds-option', (v) => { selectedBeds = v; });
+    wirePillGroup('.baths-option', (v) => { selectedBaths = v; });
+    wirePillGroup('.parking-option', (v) => { selectedParking = v; });
+
+    document.getElementById('minSqft-input')?.addEventListener('input', () => { updateMoreCount(); scheduleRefetch(); });
+    document.getElementById('maxSqft-input')?.addEventListener('input', () => { updateMoreCount(); scheduleRefetch(); });
+
+    // ---- Clear All ----
+    document.getElementById('clear-all')?.addEventListener('click', () => {
+      selectedTypes = [];
+      selectedBeds = '';
+      selectedBaths = '';
+      selectedParking = '';
+      selectedDateRange = 'd90';
+      typeAllCheckbox.checked = true;
+      typeOptionCheckboxes.forEach((c) => { c.checked = false; });
+      if (typeToggleLabel) typeToggleLabel.textContent = 'All Property Types';
+      document.getElementById('minPrice-select').value = '';
+      document.getElementById('maxPrice-select').value = '';
+      document.getElementById('minSqft-input').value = '';
+      document.getElementById('maxSqft-input').value = '';
+      document.querySelectorAll('.beds-option, .baths-option, .parking-option').forEach((b) => {
+        b.dataset.active = b.dataset.value === '' ? 'true' : 'false';
+      });
+      dateOptions.forEach((r) => { r.checked = r.value === 'd90'; });
+      if (dateToggleLabel) dateToggleLabel.textContent = 'Last 90 days';
+      preConstructionOnly = false;
+      preConToggle.dataset.active = 'false';
+      dateToggle?.classList.remove('opacity-40', 'cursor-not-allowed');
+      updateMoreCount();
+      scheduleRefetch();
+    });
+
+    // Close any open panel on outside click (desktop dropdowns; mobile uses the backdrop)
+    document.addEventListener('click', (e) => {
+      [[typePanel, typeToggle, typeBackdrop], [datePanel, dateToggle, dateBackdrop], [morePanel, moreToggle, moreBackdrop]].forEach(([panel, toggle, backdrop]) => {
+        if (!panel || panel.classList.contains('hidden')) return;
+        if (panel.contains(e.target) || toggle?.contains(e.target)) return;
+        closePanel(panel, backdrop);
+      });
+    });
+
+    fetchForCurrentView();
+  }
+
+  initSoldMap();
+</script>

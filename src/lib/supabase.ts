@@ -45,6 +45,11 @@ function getClient() {
   return createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 }
 
+/** Service-role client for server-side auth flows (VOW magic-link request/verify, profile writes) -- same rules as getClient() above: server-only, never imported client-side. */
+export function getServiceRoleClient() {
+  return getClient();
+}
+
 /** Latest snapshot row per area (one per area_slug, most recent capture_date). Empty array if not configured or no data yet. */
 export async function getLatestMarketMapSnapshots(): Promise<MarketMapSnapshotRow[]> {
   const client = getClient();
