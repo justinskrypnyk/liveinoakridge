@@ -5,6 +5,7 @@ import Schema from '@/components/Schema.astro';
 import SaveHeartButton from '@/components/SaveHeartButton.astro';
 import SaveListingModal from '@/components/SaveListingModal.astro';
 import SaveSearchModal from '@/components/SaveSearchModal.astro';
+import WatchNearbyModal from '@/components/WatchNearbyModal.astro';
 import { SITE } from '@/data/site';
 import { searchMarketListings, searchNationalPoolByBounds, getActiveListingKeys } from '@/lib/ddf';
 import { fmtPrice, field, buildAddress, buildStreetAddress, listingSlug, listingPhotoAlt, neighbourhoodForPoint } from '@/lib/listings';
@@ -570,6 +571,15 @@ const allAreasBoundsForClient = getAllAreasBounds();
 
   <SaveListingModal />
   <SaveSearchModal />
+  <WatchNearbyModal />
+
+  <button
+    type="button"
+    data-watch-nearby-trigger
+    class="fixed bottom-6 right-4 md:right-6 z-40 flex items-center gap-2 pl-4 pr-5 py-3 rounded-full bg-navy text-white text-sm font-semibold shadow-2xl hover:bg-navy-light transition-colors"
+  >
+    <span class="text-lg">👀</span> Watch a Home Near You
+  </button>
 </Base>
 
 <!-- Terms of Use consent banner — enhanced browse-wrap per CREA DDF Rule 6(d) -->

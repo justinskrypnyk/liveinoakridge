@@ -1,0 +1,155 @@
+---
+// "Nosy Neighbour" popup for /search -- lets a not-yet-VOW-registered
+// visitor type an address, fill in their info once, and be done: submits
+// to api/vow/watch-signup.json.ts, which sends a magic-link email and
+// stashes the address in the OTP metadata so the actual watch subscription
+// gets created automatically the moment they click that link (see
+// api/vow/session.json.ts). No second form, no separate sold-map signup.
+---
+
+<div id="watch-nearby-modal" class="hidden fixed inset-0 z-[70] flex items-center justify-center p-4">
+  <div id="watch-nearby-backdrop" class="absolute inset-0 bg-navy/50"></div>
+
+  <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 max-h-[90vh] overflow-y-auto">
+    <button
+      type="button"
+      id="watch-nearby-close"
+      aria-label="Close"
+      class="absolute top-4 right-4 w-8 h-8 rounded-full hover:bg-cream flex items-center justify-center"
+    >
+      <svg class="w-5 h-5 text-navy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+
+    <div class="text-3xl mb-2">👀</div>
+    <h3 class="font-serif text-xl text-navy font-bold mb-1">Watch a Home Near You</h3>
+    <p class="text-sm text-slate mb-5">Type an address and we'll email you the moment something sells nearby -- real closed prices, not estimates.</p>
+
+    <form id="watch-nearby-form" class="space-y-4">
+      <div>
+        <label for="watch-nearby-address" class="block text-sm font-medium text-navy/70 mb-1.5">Address to Watch *</label>
+        <input
+          type="text" id="watch-nearby-address" name="address" required placeholder="123 Oak St, London, ON"
+          class="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-navy text-sm outline-none focus:border-gold focus:ring-2 focus:ring-gold/20"
+        />
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label for="watch-nearby-first-name" class="block text-sm font-medium text-navy/70 mb-1.5">First Name *</label>
+          <input
+            type="text" id="watch-nearby-first-name" name="firstName" required autocomplete="given-name"
+            class="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-navy text-sm outline-none focus:border-gold focus:ring-2 focus:ring-gold/20"
+          />
+        </div>
+        <div>
+          <label for="watch-nearby-last-name" class="block text-sm font-medium text-navy/70 mb-1.5">Last Name *</label>
+          <input
+            type="text" id="watch-nearby-last-name" name="lastName" required autocomplete="family-name"
+            class="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-navy text-sm outline-none focus:border-gold focus:ring-2 focus:ring-gold/20"
+          />
+        </div>
+      </div>
+
+      <div>
+        <label for="watch-nearby-email" class="block text-sm font-medium text-navy/70 mb-1.5">Email Address *</label>
+        <input
+          type="email" id="watch-nearby-email" name="email" required autocomplete="email"
+          class="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-navy text-sm outline-none focus:border-gold focus:ring-2 focus:ring-gold/20"
+        />
+      </div>
+
+      <div>
+        <label for="watch-nearby-phone" class="block text-sm font-medium text-navy/70 mb-1.5">Phone Number</label>
+        <input
+          type="tel" id="watch-nearby-phone" name="phone" autocomplete="tel"
+          class="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-navy text-sm outline-none focus:border-gold focus:ring-2 focus:ring-gold/20"
+        />
+      </div>
+
+      <label class="flex items-start gap-2.5 text-xs text-slate/80 leading-relaxed">
+        <input type="checkbox" id="watch-nearby-terms" name="terms" required class="mt-0.5" />
+        <span>
+          I have a bona fide interest in the purchase, sale, or lease of real estate, and I agree to the
+          <a href="/terms-of-use/" target="_blank" class="text-gold hover:underline">Terms of Use</a>. This information may not be used for any commercial purpose or any other purpose.
+        </span>
+      </label>
+
+      <p id="watch-nearby-error" class="hidden text-xs text-red-600"></p>
+
+      <button type="submit" id="watch-nearby-submit" class="btn-primary w-full justify-center">
+        Watch This Address
+      </button>
+    </form>
+
+    <div id="watch-nearby-success" class="hidden text-center py-6">
+      <div class="text-4xl mb-3">📬</div>
+      <p class="font-serif text-lg text-navy font-bold mb-1">Check your email</p>
+      <p class="text-sm text-slate">Click the link we just sent to confirm -- your address watch will be active as soon as you do.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+  const modal = document.getElementById('watch-nearby-modal');
+  const form = document.getElementById('watch-nearby-form') as HTMLFormElement | null;
+  const successEl = document.getElementById('watch-nearby-success');
+  const errorEl = document.getElementById('watch-nearby-error');
+  const submitBtn = document.getElementById('watch-nearby-submit') as HTMLButtonElement | null;
+
+  function openModal() {
+    errorEl?.classList.add('hidden');
+    successEl?.classList.add('hidden');
+    form?.classList.remove('hidden');
+    modal?.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeModal() {
+    modal?.classList.add('hidden');
+    document.body.style.overflow = '';
+  }
+
+  document.querySelectorAll('[data-watch-nearby-trigger]').forEach((btn) => btn.addEventListener('click', openModal));
+  document.getElementById('watch-nearby-close')?.addEventListener('click', closeModal);
+  document.getElementById('watch-nearby-backdrop')?.addEventListener('click', closeModal);
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !modal?.classList.contains('hidden')) closeModal();
+  });
+
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!submitBtn) return;
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Sending...';
+    errorEl?.classList.add('hidden');
+
+    try {
+      const data = new FormData(form);
+      const res = await fetch('/api/vow/watch-signup.json', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          address: data.get('address'),
+          firstName: data.get('firstName'),
+          lastName: data.get('lastName'),
+          email: data.get('email'),
+          phone: data.get('phone'),
+          termsAccepted: data.get('terms') === 'on',
+        }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json.error || 'Something went wrong -- please try again.');
+
+      form.classList.add('hidden');
+      successEl?.classList.remove('hidden');
+    } catch (err) {
+      if (errorEl) {
+        errorEl.textContent = err instanceof Error ? err.message : 'Something went wrong -- please try again.';
+        errorEl.classList.remove('hidden');
+      }
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Watch This Address';
+    }
+  });
+</script>
