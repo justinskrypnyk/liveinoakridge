@@ -102,3 +102,29 @@ export async function getLatestNotableChanges(limit = 10): Promise<MarketMapChan
   }
   return data ?? [];
 }
+
+/** Latest MoM/YoY changes for specific metrics, every area (not just notable ones) — powers the sold-ticker row's up/down arrows. */
+export async function getLatestMarketMapChanges(metrics: string[]): Promise<MarketMapChangeRow[]> {
+  const client = getClient();
+  if (!client) return [];
+
+  const { data: latestRow } = await client
+    .from('market_map_changes')
+    .select('capture_date')
+    .order('capture_date', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (!latestRow) return [];
+
+  const { data, error } = await client
+    .from('market_map_changes')
+    .select('*')
+    .eq('capture_date', latestRow.capture_date)
+    .in('metric', metrics);
+
+  if (error) {
+    console.error('getLatestMarketMapChanges failed:', error.message);
+    return [];
+  }
+  return data ?? [];
+}

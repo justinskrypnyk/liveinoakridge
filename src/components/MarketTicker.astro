@@ -25,6 +25,24 @@
   </div>
 </div>
 
+<!-- Separate hidden bar, same pattern as the actives bar above: stays
+     hidden until the sold-stats fetch resolves with at least one area's
+     data, since market_map_snapshots only gets sold figures once VOW
+     access is live and a snapshot has actually captured them (see
+     getSoldStatsByArea in src/lib/market-stats.ts) -- rather than showing
+     an empty/all-"n/a" row before that first capture happens. -->
+<div id="market-ticker-sold" class="hidden bg-navy-dark border-b border-white/10 overflow-hidden">
+  <div class="flex flex-col sm:flex-row sm:items-stretch">
+    <div class="shrink-0 flex items-center gap-2 bg-navy px-4 py-1.5 sm:py-3 border-b sm:border-b-0 sm:border-r border-white/10 z-10">
+      <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+      <span class="text-emerald-400 text-xs font-semibold uppercase tracking-wider whitespace-nowrap">Recently Sold</span>
+    </div>
+    <div class="relative flex-1 overflow-hidden">
+      <div id="market-ticker-sold-track" class="market-ticker-track flex items-center gap-0 py-3 whitespace-nowrap"></div>
+    </div>
+  </div>
+</div>
+
 <style is:global>
   /* Global, not scoped: the segments below are injected via client-side
      innerHTML (see the script), so they never get Astro's scoped
@@ -33,7 +51,8 @@
     animation: market-ticker-scroll 45s linear infinite;
     width: max-content;
   }
-  #market-ticker:hover .market-ticker-track {
+  #market-ticker:hover .market-ticker-track,
+  #market-ticker-sold:hover .market-ticker-track {
     animation-play-state: paused;
   }
   @keyframes market-ticker-scroll {
@@ -105,31 +124,91 @@
     `;
   }
 
+  type AreaSoldStats = {
+    medianSoldPrice: number | null;
+    unitsSold: number | null;
+    saleToListRatio: number | null;
+    change: { medianSoldPrice: StatChange; unitsSold: StatChange };
+  };
+
+  const AREA_NAMES: Record<string, string> = {
+    oakridge: 'Oakridge',
+    byron: 'Byron',
+    westmount: 'Westmount',
+    riverbend: 'Riverbend',
+    lambeth: 'Lambeth',
+    whitehills: 'Whitehills',
+    'west-london': 'West London',
+  };
+
+  function soldSegmentHtml(slug: string, area: AreaSoldStats): string {
+    const priceChange = area.change.medianSoldPrice;
+    const countChange = area.change.unitsSold;
+    return `
+      <a href="/areas/${slug}/" class="market-ticker-segment shrink-0 flex items-center gap-3 px-5 py-1 hover:bg-white/5 transition-colors border-r border-white/10">
+        <span class="font-serif text-white font-bold text-sm whitespace-nowrap">${AREA_NAMES[slug] ?? slug}</span>
+        ${area.medianSoldPrice != null ? `
+          <span class="text-white/80 text-xs whitespace-nowrap flex items-center gap-1">
+            ${shortPrice(area.medianSoldPrice)} sold
+            ${priceChange ? arrowSvg(priceChange.direction) : ''}
+          </span>
+        ` : ''}
+        ${area.unitsSold != null ? `
+          <span class="market-ticker-extra text-white/60 text-xs whitespace-nowrap flex items-center gap-1">
+            ${area.unitsSold} sold
+            ${countChange ? arrowSvg(countChange.direction) : ''}
+          </span>
+        ` : ''}
+        ${area.saleToListRatio != null ? `
+          <span class="market-ticker-extra text-white/60 text-xs whitespace-nowrap">${(area.saleToListRatio * 100).toFixed(1)}% sale-to-list</span>
+        ` : ''}
+      </a>
+    `;
+  }
+
   async function initMarketTicker() {
     const container = document.getElementById('market-ticker');
     const track = document.getElementById('market-ticker-track');
     const updatedEl = document.getElementById('market-ticker-updated');
+    const soldContainer = document.getElementById('market-ticker-sold');
+    const soldTrack = document.getElementById('market-ticker-sold-track');
     if (!container || !track) return;
 
     try {
       const res = await fetch('/api/market-stats.json');
       if (!res.ok) return;
-      const data: { updatedAt: string | null; areas: Record<string, AreaMarketStats> } = await res.json();
+      const data: {
+        updatedAt: string | null;
+        areas: Record<string, AreaMarketStats>;
+        sold?: Record<string, AreaSoldStats>;
+      } = await res.json();
       const areas = Object.values(data.areas || {});
-      if (areas.length === 0) return; // nothing yet — leave the ticker hidden rather than show an empty bar
+      if (areas.length > 0) {
+        const segments = areas.map(segmentHtml).join('');
+        // Duplicated once so the CSS animation (translateX 0 -> -50%) loops
+        // seamlessly — the visible track is always showing "real" content,
+        // never a gap.
+        track.innerHTML = segments + segments;
 
-      const segments = areas.map(segmentHtml).join('');
-      // Duplicated once so the CSS animation (translateX 0 -> -50%) loops
-      // seamlessly — the visible track is always showing "real" content,
-      // never a gap.
-      track.innerHTML = segments + segments;
+        if (updatedEl && data.updatedAt) {
+          const date = new Date(data.updatedAt);
+          updatedEl.textContent = `Updated ${date.toLocaleDateString('en-CA', { month: 'short', day: 'numeric' })}`;
+        }
 
-      if (updatedEl && data.updatedAt) {
-        const date = new Date(data.updatedAt);
-        updatedEl.textContent = `Updated ${date.toLocaleDateString('en-CA', { month: 'short', day: 'numeric' })}`;
+        container.classList.remove('hidden');
       }
 
-      container.classList.remove('hidden');
+      // Only areas with at least one non-null sold figure -- a capture that
+      // predates VOW access (or hasn't run yet) leaves every field null, and
+      // that's not worth a row.
+      const soldAreas = Object.entries(data.sold || {}).filter(
+        ([, s]) => s.medianSoldPrice != null || s.unitsSold != null
+      );
+      if (soldContainer && soldTrack && soldAreas.length > 0) {
+        const soldSegments = soldAreas.map(([slug, s]) => soldSegmentHtml(slug, s)).join('');
+        soldTrack.innerHTML = soldSegments + soldSegments;
+        soldContainer.classList.remove('hidden');
+      }
     } catch {
       // Network hiccup — leave the ticker hidden rather than show broken content.
     }

@@ -6,6 +6,7 @@
 //    read directly at request time — see src/pages/areas/[area]/index.astro)
 import { getStore } from '@netlify/blobs';
 import { AREAS } from '@/data/areas';
+import { getLatestMarketMapSnapshots, getLatestMarketMapChanges } from '@/lib/supabase';
 
 export type ChangeDirection = 'up' | 'down' | 'flat';
 
@@ -30,6 +31,64 @@ export interface AreaMarketStats {
 export interface MarketStatsSnapshot {
   updatedAt: string; // ISO timestamp of the pull that produced this snapshot
   areas: Record<string, AreaMarketStats>;
+}
+
+export interface AreaSoldStats {
+  medianSoldPrice: number | null;
+  unitsSold: number | null;
+  saleToListRatio: number | null; // e.g. 0.988 -> render as "98.8%"
+  capturedAsOf: string; // capture_date, e.g. "2026-07-31"
+  change: {
+    medianSoldPrice: StatChange | null;
+    unitsSold: StatChange | null;
+  };
+}
+
+function changeFromPct(pct: number | null): StatChange | null {
+  if (pct == null) return null;
+  return { value: pct, direction: pct > 0 ? 'up' : pct < 0 ? 'down' : 'flat' };
+}
+
+// Reads the same twice-monthly market_map_snapshots / market_map_changes
+// tables the heat map and monthly digest already populate (see
+// heat-map-snapshot-background.mjs) -- no separate pipeline needed, just a
+// narrower read scoped to the 7 served areas for the ticker's sold row.
+// Areas with no capture yet (or a capture predating VOW access) come back
+// with null sold fields, same "shows up once real data lands, no rebuild
+// needed" pattern as every other snapshot-fed surface on this site.
+export async function getSoldStatsByArea(): Promise<Record<string, AreaSoldStats>> {
+  try {
+    const [snapshots, changes] = await Promise.all([
+      getLatestMarketMapSnapshots(),
+      getLatestMarketMapChanges(['median_sold_price', 'units_sold']),
+    ]);
+
+    const changesByAreaMetric = new Map<string, Record<string, number | null>>();
+    for (const c of changes) {
+      if (!changesByAreaMetric.has(c.area_slug)) changesByAreaMetric.set(c.area_slug, {});
+      changesByAreaMetric.get(c.area_slug)![c.metric] = c.mom_pct_change;
+    }
+
+    const servedSlugs = new Set(AREAS.map((a) => a.slug));
+    const result: Record<string, AreaSoldStats> = {};
+    for (const row of snapshots) {
+      if (!servedSlugs.has(row.area_slug)) continue;
+      const areaChanges = changesByAreaMetric.get(row.area_slug) || {};
+      result[row.area_slug] = {
+        medianSoldPrice: row.median_sold_price,
+        unitsSold: row.units_sold,
+        saleToListRatio: row.avg_sale_to_list_ratio,
+        capturedAsOf: row.capture_date,
+        change: {
+          medianSoldPrice: changeFromPct(areaChanges.median_sold_price ?? null),
+          unitsSold: changeFromPct(areaChanges.units_sold ?? null),
+        },
+      };
+    }
+    return result;
+  } catch {
+    return {};
+  }
 }
 
 const BLOB_KEY = 'latest';
