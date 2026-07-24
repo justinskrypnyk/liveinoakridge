@@ -114,7 +114,7 @@ const processedListings: ListingCard[] = listings.map((l) => {
   <!-- Hero -->
   <section class="bg-navy py-20 text-white">
     <div class="container-site">
-      <nav aria-label="Breadcrumb" class="flex items-center gap-2 text-sm text-white/40 mb-8">
+      <nav aria-label="Breadcrumb" class="flex items-center gap-2 text-sm text-white/50 mb-8">
         <a href="/" class="hover:text-gold transition-colors">Home</a>
         <span>/</span>
         <span class="text-white/70">Properties</span>
@@ -124,11 +124,11 @@ const processedListings: ListingCard[] = listings.map((l) => {
         <h1 class="font-serif text-5xl font-bold mb-4">Homes For Sale in West London</h1>
         <div class="gold-divider mb-6"></div>
         <p class="text-xl text-white/70 leading-relaxed">
-          Every home currently listed by {SITE.brokerage} — Justin's own brokerage — across Oakridge, Byron, Westmount, Lambeth, and every West London neighbourhood served. Looking for a home listed by someone else? <a href="/search/" class="text-gold hover:underline">Search every MLS® listing in Ontario</a>.
+          Every home currently listed by {SITE.brokerage} — Justin's own brokerage — across Oakridge, Byron, Westmount, Lambeth, and every West London neighbourhood served. Looking for a home listed by someone else? <a href="/search/" class="text-gold underline">Search every MLS® listing in Ontario</a>.
           {totalCount > 0 && <span> {totalCount} homes available.</span>}
         </p>
         {fetchedAt && (
-          <p class="text-sm text-white/40 mt-4">
+          <p class="text-sm text-white/50 mt-4">
             Last updated: {new Date(fetchedAt).toLocaleDateString('en-CA', { year: 'numeric', month: 'long', day: 'numeric' })}
           </p>
         )}
@@ -151,7 +151,7 @@ const processedListings: ListingCard[] = listings.map((l) => {
         </div>
       )}
       <div class="flex flex-wrap gap-2 items-center">
-        <span class="text-sm font-medium text-navy/60 mr-1 shrink-0">Filter:</span>
+        <span class="text-sm font-medium text-navy/70 mr-1 shrink-0">Filter:</span>
         {['All', ...AREAS.map((a) => a.name)].map((area, i) => (
           <button
             data-filter={area === 'All' ? '' : area}
@@ -175,7 +175,7 @@ const processedListings: ListingCard[] = listings.map((l) => {
       {listings.length > 0 && (
         <div class="flex flex-wrap items-center gap-2.5 mt-3">
           <div class="relative">
-            <select id="filter-price-min" class="filter-select appearance-none pl-4 pr-9 py-2 rounded-full text-sm font-medium bg-cream text-navy/70 border border-gray-200 hover:border-gold focus:border-gold focus:outline-none transition-colors cursor-pointer">
+            <select id="filter-price-min" aria-label="Minimum price" class="filter-select appearance-none pl-4 pr-9 py-2 rounded-full text-sm font-medium bg-cream text-navy/70 border border-gray-200 hover:border-gold focus:border-gold focus:outline-none transition-colors cursor-pointer">
               <option value="">No Min</option>
               {priceSteps.map((p) => <option value={p}>{shortPrice(p)}</option>)}
             </select>
@@ -183,7 +183,7 @@ const processedListings: ListingCard[] = listings.map((l) => {
           </div>
           <span class="text-navy/30 text-sm">–</span>
           <div class="relative">
-            <select id="filter-price-max" class="filter-select appearance-none pl-4 pr-9 py-2 rounded-full text-sm font-medium bg-cream text-navy/70 border border-gray-200 hover:border-gold focus:border-gold focus:outline-none transition-colors cursor-pointer">
+            <select id="filter-price-max" aria-label="Maximum price" class="filter-select appearance-none pl-4 pr-9 py-2 rounded-full text-sm font-medium bg-cream text-navy/70 border border-gray-200 hover:border-gold focus:border-gold focus:outline-none transition-colors cursor-pointer">
               <option value="">No Max</option>
               {priceSteps.map((p) => <option value={p}>{shortPrice(p)}</option>)}
             </select>
@@ -194,7 +194,7 @@ const processedListings: ListingCard[] = listings.map((l) => {
                  (Detached/Semi/Townhouse/Condo) — the old "Single Family"
                  option never matched real AMPRE data (Chapman's listings use
                  "Detached"), so it was silently non-functional. -->
-            <select id="filter-type" class="filter-select appearance-none pl-4 pr-9 py-2 rounded-full text-sm font-medium bg-cream text-navy/70 border border-gray-200 hover:border-gold focus:border-gold focus:outline-none transition-colors cursor-pointer">
+            <select id="filter-type" aria-label="Property type" class="filter-select appearance-none pl-4 pr-9 py-2 rounded-full text-sm font-medium bg-cream text-navy/70 border border-gray-200 hover:border-gold focus:border-gold focus:outline-none transition-colors cursor-pointer">
               <option value="">Any Type</option>
               <option value="Detached">Detached</option>
               <option value="Semi">Semi-Detached</option>
@@ -290,7 +290,7 @@ const processedListings: ListingCard[] = listings.map((l) => {
           </div>
 
           <div class="relative">
-            <select id="filter-sort" class="filter-select appearance-none pl-4 pr-9 py-2 rounded-full text-sm font-medium bg-cream text-navy/70 border border-gray-200 hover:border-gold focus:border-gold focus:outline-none transition-colors cursor-pointer">
+            <select id="filter-sort" aria-label="Sort by" class="filter-select appearance-none pl-4 pr-9 py-2 rounded-full text-sm font-medium bg-cream text-navy/70 border border-gray-200 hover:border-gold focus:border-gold focus:outline-none transition-colors cursor-pointer">
               <option value="newest">Newest First</option>
               <option value="price-asc">Price: Low to High</option>
               <option value="price-desc">Price: High to Low</option>
@@ -396,7 +396,7 @@ const processedListings: ListingCard[] = listings.map((l) => {
 
                 {l.area && (
                   <div class="mb-2">
-                    <span class="inline-block bg-cream text-gold text-xs font-semibold px-2 py-0.5 rounded-full">{l.area}</span>
+                    <span class="inline-block bg-cream text-gold-deep text-xs font-semibold px-2 py-0.5 rounded-full">{l.area}</span>
                   </div>
                 )}
 
@@ -435,7 +435,7 @@ const processedListings: ListingCard[] = listings.map((l) => {
                     </div>
                   )}
                 </div>
-                <p class="text-[10px] text-slate/50 mt-1.5">Courtesy of {l.brokerage}</p>
+                <p class="text-[10px] text-slate mt-1.5">Courtesy of {l.brokerage}</p>
               </div>
 
               <!-- Actions -->
@@ -472,7 +472,7 @@ const processedListings: ListingCard[] = listings.map((l) => {
             </p>
             <div class="flex flex-col sm:flex-row gap-4">
               <a href={`tel:${SITE.phone}`} class="btn-primary">Call {SITE.phoneDisplay}</a>
-              <a href="/contact/" class="btn-secondary">Send a Request</a>
+              <a href="/contact/" class="btn-secondary !text-gold">Send a Request</a>
             </div>
           </div>
           <div class="grid grid-cols-2 gap-3">

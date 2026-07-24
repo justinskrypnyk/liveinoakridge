@@ -111,7 +111,7 @@ if (supabase) {
 
   <section class="bg-navy pt-8 pb-4 text-white">
     <div class="container-site">
-      <nav aria-label="Breadcrumb" class="flex items-center gap-2 text-sm text-white/40 flex-wrap">
+      <nav aria-label="Breadcrumb" class="flex items-center gap-2 text-sm text-white/50 flex-wrap">
         <a href="/" class="hover:text-gold transition-colors">Home</a>
         <span>/</span>
         <a href="/sold-map/" class="hover:text-gold transition-colors">Sold Prices Map</a>
@@ -193,27 +193,27 @@ if (supabase) {
         </div>
         <div class="shrink-0">
           <div class="flex items-baseline gap-3 md:justify-end mb-1">
-            {listPrice && <span class="text-xl md:text-2xl text-slate/50 line-through">{listPrice}</span>}
+            {listPrice && <span class="text-xl md:text-2xl text-slate line-through">{listPrice}</span>}
             <span class="font-serif text-4xl md:text-5xl text-navy font-bold">{closePrice}</span>
           </div>
-          <p class="text-sm text-slate/60 mb-4 md:text-right">SOLD{saleToListRatio != null ? ` · ${saleToListRatio.toFixed(1)}% of asking price` : ''}</p>
+          <p class="text-sm text-slate mb-4 md:text-right">SOLD{saleToListRatio != null ? ` · ${saleToListRatio.toFixed(1)}% of asking price` : ''}</p>
           <div class="flex items-stretch divide-x divide-gray-200 border border-gray-200 rounded-xl overflow-hidden bg-cream/40">
             {listing.bedroomsTotal != null && (
               <div class="flex-1 px-6 py-3.5 text-center min-w-[92px]">
                 <div class="font-serif text-2xl text-navy font-bold leading-none">{listing.bedroomsTotal}</div>
-                <div class="text-[10px] text-slate/70 uppercase tracking-wider font-semibold mt-1">Bedrooms</div>
+                <div class="text-[10px] text-slate uppercase tracking-wider font-semibold mt-1">Bedrooms</div>
               </div>
             )}
             {listing.bathroomsTotalInteger != null && (
               <div class="flex-1 px-6 py-3.5 text-center min-w-[92px]">
                 <div class="font-serif text-2xl text-navy font-bold leading-none">{listing.bathroomsTotalInteger}</div>
-                <div class="text-[10px] text-slate/70 uppercase tracking-wider font-semibold mt-1">Bathrooms</div>
+                <div class="text-[10px] text-slate uppercase tracking-wider font-semibold mt-1">Bathrooms</div>
               </div>
             )}
             {listing.buildingAreaTotal && (
               <div class="flex-1 px-6 py-3.5 text-center min-w-[92px]">
                 <div class="font-serif text-2xl text-navy font-bold leading-none">{Number(listing.buildingAreaTotal).toLocaleString()}</div>
-                <div class="text-[10px] text-slate/70 uppercase tracking-wider font-semibold mt-1">Sq Ft</div>
+                <div class="text-[10px] text-slate uppercase tracking-wider font-semibold mt-1">Sq Ft</div>
               </div>
             )}
           </div>
@@ -287,7 +287,7 @@ if (supabase) {
                     <div class="flex gap-3 text-xs text-navy/70">
                       {c.beds && <span>{c.beds} bed</span>}
                       {c.baths && <span>{c.baths} bath</span>}
-                      <span class="ml-auto text-slate/50">Sold {c.close_date}</span>
+                      <span class="ml-auto text-slate">Sold {c.close_date}</span>
                     </div>
                   </a>
                 ))}
@@ -334,9 +334,9 @@ if (supabase) {
             <div class="bg-gold rounded-xl p-6 text-center">
               <div class="text-sm text-navy/70 font-medium mb-1">Estimated Monthly Payment</div>
               <div id="calc-monthly" class="font-serif text-4xl text-navy font-bold">$0</div>
-              <div class="text-xs text-navy/50 mt-2">Principal &amp; interest only — does not include property tax, insurance, or CMHC premiums.</div>
+              <div class="text-xs text-navy/70 mt-2">Principal &amp; interest only — does not include property tax, insurance, or CMHC premiums.</div>
             </div>
-            <p class="text-xs text-slate mt-4 text-center">Also budget for closing costs — try the <a href="/mortgages/closing-costs/" class="text-gold hover:underline">Closing Costs Calculator</a>.</p>
+            <p class="text-xs text-slate mt-4 text-center">Also budget for closing costs — try the <a href="/mortgages/closing-costs/" class="text-gold-deep underline">Closing Costs Calculator</a>.</p>
           </div>
         </div>
 
@@ -382,8 +382,8 @@ if (supabase) {
   <!-- Mandatory VOW notices per Article 6.3(i)/(k) of the PropTx VOW Datafeed Agreement -->
   <section class="py-6 bg-white border-t border-gray-100">
     <div class="container-site">
-      <p class="text-xs text-slate/60 text-center max-w-3xl mx-auto">
-        The information provided herein is deemed reliable but is not guaranteed accurate by PROPTX. The information provided herein must only be used by consumers that have a bona fide interest in the purchase, sale, or lease of real estate and may not be used for any commercial purpose or any other purpose. Listing content courtesy of {listing.listOfficeName}. See our <a href="/terms-of-use/" class="text-gold hover:underline">Terms of Use</a>.
+      <p class="text-xs text-slate text-center max-w-3xl mx-auto">
+        The information provided herein is deemed reliable but is not guaranteed accurate by PROPTX. The information provided herein must only be used by consumers that have a bona fide interest in the purchase, sale, or lease of real estate and may not be used for any commercial purpose or any other purpose. Listing content courtesy of {listing.listOfficeName}. See our <a href="/terms-of-use/" class="text-gold-deep underline">Terms of Use</a>.
       </p>
     </div>
   </section>

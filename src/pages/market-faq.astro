@@ -35,7 +35,7 @@ const lastUpdated = snapshot
 
   <section class="bg-navy py-20 text-white">
     <div class="container-site">
-      <nav aria-label="Breadcrumb" class="flex items-center gap-2 text-sm text-white/40 mb-8">
+      <nav aria-label="Breadcrumb" class="flex items-center gap-2 text-sm text-white/50 mb-8">
         <a href="/" class="hover:text-gold transition-colors">Home</a>
         <span>/</span>
         <span class="text-white/70">Market FAQ</span>
@@ -85,7 +85,7 @@ const lastUpdated = snapshot
         <section id={group.slug} class={`py-16 scroll-mt-36 ${gi % 2 === 0 ? 'bg-white' : 'bg-cream'}`}>
           <div class="container-site max-w-3xl">
             <div class="mb-8">
-              <div class="inline-block text-gold text-sm font-semibold tracking-wider uppercase mb-3">{group.name}</div>
+              <div class="inline-block text-gold-deep text-sm font-semibold tracking-wider uppercase mb-3">{group.name}</div>
               <h2 class="section-heading !text-left">{group.name} Market Questions</h2>
               <div class="gold-divider mb-4"></div>
             </div>
@@ -122,7 +122,7 @@ const lastUpdated = snapshot
       </p>
       <div class="flex flex-col sm:flex-row gap-4 justify-center">
         <a href={`tel:${SITE.phone}`} class="btn-primary">Call {SITE.phoneDisplay}</a>
-        <a href="/contact/" class="btn-secondary">Send a Message</a>
+        <a href="/contact/" class="btn-secondary !text-gold">Send a Message</a>
       </div>
     </div>
   </section>

@@ -8,8 +8,19 @@
   --color-gold: #10b981;
   --color-gold-light: #34d399;
   --color-gold-dark: #059669;
+  /* Same hue as --color-gold, darkened for WCAG AA text contrast on white/
+     cream (base #10b981 is only ~2.5:1 there -- fine as a background/border
+     accent or as text on navy, but too light to read reliably as body text
+     on a light surface). Use this, not --color-gold, for text sitting on
+     white/cream; leave --color-gold alone for buttons/badges/dark-bg text,
+     which already pass and don't need darkening. */
+  --color-gold-deep: #047857;
   --color-cream: #f0f9f6;
-  --color-slate: #6b8fa8;
+  /* Darkened from the original #6b8fa8 (~3.4:1 on white, fails WCAG AA) --
+     this is the site's secondary/meta text color, used almost exclusively
+     on white/cream surfaces, so the whole token could move rather than
+     needing a separate light-bg variant like gold above. */
+  --color-slate: #4f6d85;
 
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
   --font-serif: 'Playfair Display', Georgia, serif;
@@ -61,7 +72,7 @@
 }
 
 @utility btn-secondary {
-  @apply inline-flex items-center gap-2 border-2 border-gold text-gold font-semibold px-7 py-3.5 rounded-lg hover:bg-gold hover:text-navy transition-all duration-200;
+  @apply inline-flex items-center gap-2 border-2 border-gold text-gold-deep font-semibold px-7 py-3.5 rounded-lg hover:bg-gold hover:text-navy transition-all duration-200;
 }
 
 @utility btn-white {

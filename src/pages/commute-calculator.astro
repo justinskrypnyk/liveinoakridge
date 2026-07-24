@@ -24,7 +24,7 @@ const quickPicks = [
 >
   <section class="bg-navy py-20 text-white">
     <div class="container-site">
-      <nav aria-label="Breadcrumb" class="flex items-center gap-2 text-sm text-white/40 mb-8">
+      <nav aria-label="Breadcrumb" class="flex items-center gap-2 text-sm text-white/50 mb-8">
         <a href="/" class="hover:text-gold transition-colors">Home</a>
         <span>/</span>
         <span class="text-white/70">Commute Calculator</span>
@@ -72,14 +72,14 @@ const quickPicks = [
 
       <div id="results" class="hidden" aria-live="polite">
         <h3 class="font-serif text-xl text-navy mb-1" id="results-heading" tabindex="-1"></h3>
-        <p class="text-xs text-slate/60 mb-5">
+        <p class="text-xs text-slate mb-5">
           Estimated drive times based on straight-line distance with a road-network adjustment — not live traffic data. Actual drive times will vary.
         </p>
         <div class="space-y-3" id="results-list"></div>
       </div>
 
-      <p class="text-center text-sm text-slate/60 mt-10">
-        Not sure which neighbourhood is the right fit beyond just commute time? <a href="/contact/" class="text-gold hover:underline">Reach out to Justin</a> or explore <a href="/areas/" class="text-gold hover:underline">all areas we serve</a>.
+      <p class="text-center text-sm text-slate mt-10">
+        Not sure which neighbourhood is the right fit beyond just commute time? <a href="/contact/" class="text-gold-deep underline">Reach out to Justin</a> or explore <a href="/areas/" class="text-gold-deep underline">all areas we serve</a>.
       </p>
     </div>
   </section>
@@ -124,12 +124,12 @@ const quickPicks = [
         'flex items-center justify-between bg-white rounded-xl p-4 shadow-card hover:shadow-lg transition-shadow';
       row.innerHTML = `
         <div class="flex items-center gap-3">
-          <span class="w-7 h-7 rounded-full bg-gold/20 text-gold text-xs font-bold flex items-center justify-center shrink-0">${i + 1}</span>
+          <span class="w-7 h-7 rounded-full bg-gold/20 text-gold-deep text-xs font-bold flex items-center justify-center shrink-0">${i + 1}</span>
           <span class="font-serif text-navy">${area.name}</span>
         </div>
         <div class="text-right">
           <div class="text-navy font-semibold">${area.minutes} min</div>
-          <div class="text-xs text-slate/60">~${area.km.toFixed(1)} km</div>
+          <div class="text-xs text-slate">~${area.km.toFixed(1)} km</div>
         </div>
       `;
       resultsList.appendChild(row);

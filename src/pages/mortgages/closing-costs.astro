@@ -38,7 +38,7 @@ const faqs = [
 
   <section class="bg-navy py-20 text-white">
     <div class="container-site">
-      <nav aria-label="Breadcrumb" class="flex items-center gap-2 text-sm text-white/40 mb-8">
+      <nav aria-label="Breadcrumb" class="flex items-center gap-2 text-sm text-white/50 mb-8">
         <a href="/" class="hover:text-gold transition-colors">Home</a>
         <span>/</span>
         <a href="/mortgages/" class="hover:text-gold transition-colors">Mortgages</a>
@@ -59,7 +59,7 @@ const faqs = [
           <button id="tab-buying" type="button" class="px-8 py-2.5 rounded-full text-sm font-semibold transition-colors bg-gold text-navy" aria-pressed="true">
             I'm Buying
           </button>
-          <button id="tab-selling" type="button" class="px-8 py-2.5 rounded-full text-sm font-semibold transition-colors text-navy/50 hover:text-navy" aria-pressed="false">
+          <button id="tab-selling" type="button" class="px-8 py-2.5 rounded-full text-sm font-semibold transition-colors text-navy/70 hover:text-navy" aria-pressed="false">
             I'm Selling
           </button>
         </div>
@@ -131,9 +131,9 @@ const faqs = [
             </div>
 
             <div class="bg-gold rounded-xl p-6 text-center">
-              <div class="text-sm text-navy/70 font-medium mb-1">Estimated Total Closing Costs</div>
+              <div class="text-sm text-navy font-medium mb-1">Estimated Total Closing Costs</div>
               <div id="b-total" class="font-serif text-4xl text-navy font-bold">$0</div>
-              <div class="text-xs text-navy/50 mt-2">In addition to your down payment.</div>
+              <div class="text-xs text-navy mt-2">In addition to your down payment.</div>
             </div>
           </div>
 
@@ -192,13 +192,13 @@ const faqs = [
             </div>
 
             <div class="bg-gold rounded-xl p-6 text-center">
-              <div class="text-sm text-navy/70 font-medium mb-1">Estimated Total Selling Costs</div>
+              <div class="text-sm text-navy font-medium mb-1">Estimated Total Selling Costs</div>
               <div id="s-total" class="font-serif text-4xl text-navy font-bold">$0</div>
             </div>
             <div class="bg-navy rounded-xl p-6 text-center">
               <div class="text-sm text-white/60 font-medium mb-1">Estimated Net Proceeds</div>
               <div id="s-net" class="font-serif text-3xl text-gold font-bold">$0</div>
-              <div class="text-xs text-white/40 mt-2">Sale price minus selling costs and mortgage payout.</div>
+              <div class="text-xs text-white/50 mt-2">Sale price minus selling costs and mortgage payout.</div>
             </div>
           </div>
         </div>
@@ -239,7 +239,7 @@ const faqs = [
 
           <div class="bg-gold rounded-2xl p-6 text-center">
             <h3 class="font-serif text-xl text-navy mb-3">Want an Exact Number?</h3>
-            <p class="text-navy/70 text-sm mb-5">These are estimates. Justin will walk you through your exact closing costs based on your specific purchase or sale.</p>
+            <p class="text-navy text-sm mb-5">These are estimates. Justin will walk you through your exact closing costs based on your specific purchase or sale.</p>
             <a href="/contact/" class="btn-white w-full justify-center">Talk to Justin</a>
           </div>
 
@@ -351,10 +351,10 @@ const faqs = [
     sellingFields?.classList.toggle('hidden', isBuying);
     tabBuying?.classList.toggle('bg-gold', isBuying);
     tabBuying?.classList.toggle('text-navy', isBuying);
-    tabBuying?.classList.toggle('text-navy/50', !isBuying);
+    tabBuying?.classList.toggle('text-navy/70', !isBuying);
     tabSelling?.classList.toggle('bg-gold', !isBuying);
     tabSelling?.classList.toggle('text-navy', !isBuying);
-    tabSelling?.classList.toggle('text-navy/50', isBuying);
+    tabSelling?.classList.toggle('text-navy/70', isBuying);
     tabBuying?.setAttribute('aria-pressed', String(isBuying));
     tabSelling?.setAttribute('aria-pressed', String(!isBuying));
   }

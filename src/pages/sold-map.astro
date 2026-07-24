@@ -46,7 +46,7 @@ const DATE_RANGE_OPTIONS = [
 >
   <section class="bg-navy py-16 text-white">
     <div class="container-site">
-      <nav aria-label="Breadcrumb" class="flex items-center gap-2 text-sm text-white/40 mb-8">
+      <nav aria-label="Breadcrumb" class="flex items-center gap-2 text-sm text-white/50 mb-8">
         <a href="/" class="hover:text-gold transition-colors">Home</a>
         <span>/</span>
         <span class="text-white/70">Sold Prices Map</span>
@@ -92,14 +92,14 @@ const DATE_RANGE_OPTIONS = [
 
         <!-- Price range -->
         <div class="relative">
-          <select id="minPrice-select" class="appearance-none pl-4 pr-9 py-1.5 rounded-full text-sm font-medium bg-cream text-navy/70 border border-gray-200 hover:border-gold focus:border-gold focus:outline-none transition-colors cursor-pointer">
+          <select id="minPrice-select" aria-label="Minimum price" class="appearance-none pl-4 pr-9 py-1.5 rounded-full text-sm font-medium bg-cream text-navy/70 border border-gray-200 hover:border-gold focus:border-gold focus:outline-none transition-colors cursor-pointer">
             <option value="">No Min</option>
             {priceSteps.map((p) => <option value={p}>{shortPriceLabel(p)}</option>)}
           </select>
         </div>
         <span class="text-navy/30 text-sm">–</span>
         <div class="relative">
-          <select id="maxPrice-select" class="appearance-none pl-4 pr-9 py-1.5 rounded-full text-sm font-medium bg-cream text-navy/70 border border-gray-200 hover:border-gold focus:border-gold focus:outline-none transition-colors cursor-pointer">
+          <select id="maxPrice-select" aria-label="Maximum price" class="appearance-none pl-4 pr-9 py-1.5 rounded-full text-sm font-medium bg-cream text-navy/70 border border-gray-200 hover:border-gold focus:border-gold focus:outline-none transition-colors cursor-pointer">
             <option value="">No Max</option>
             {priceSteps.map((p) => <option value={p}>{shortPriceLabel(p)}</option>)}
           </select>
@@ -193,7 +193,7 @@ const DATE_RANGE_OPTIONS = [
           </div>
         </div>
 
-        <button type="button" id="clear-all" class="text-xs font-semibold px-3.5 py-1.5 rounded-full border border-gray-200 text-navy/60 hover:border-gold hover:text-navy transition-colors">Clear All</button>
+        <button type="button" id="clear-all" class="text-xs font-semibold px-3.5 py-1.5 rounded-full border border-gray-200 text-navy/70 hover:border-gold hover:text-navy transition-colors">Clear All</button>
       </div>
     </div>
   </section>

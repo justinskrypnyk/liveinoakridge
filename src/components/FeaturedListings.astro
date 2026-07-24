@@ -36,7 +36,7 @@ const activeListings = liveListings.slice(0, 6).map((l) => {
   <section class="py-14 md:py-20 bg-cream">
     <div class="container-site">
       <div class="text-center mb-10">
-        <div class="inline-block text-gold text-sm font-semibold tracking-wider uppercase mb-4">Currently Listed</div>
+        <div class="inline-block text-gold-deep text-sm font-semibold tracking-wider uppercase mb-4">Currently Listed</div>
         <h2 class="font-serif text-3xl md:text-4xl text-navy mb-4">Featured Listings</h2>
         <div class="gold-divider mx-auto"></div>
       </div>
@@ -59,7 +59,7 @@ const activeListings = liveListings.slice(0, 6).map((l) => {
                 {l.beds && <span>{l.beds} bed</span>}
                 {l.baths && <span>{l.baths} bath</span>}
               </div>
-              <span class="text-gold text-sm font-semibold">{l.price}</span>
+              <span class="text-gold-deep text-sm font-semibold">{l.price}</span>
             </div>
           </a>
         ))}

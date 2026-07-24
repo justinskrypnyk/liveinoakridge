@@ -178,7 +178,7 @@ const allAreasBoundsForClient = getAllAreasBounds();
 
   <section class="bg-navy py-16 text-white">
     <div class="container-site">
-      <nav aria-label="Breadcrumb" class="flex items-center gap-2 text-sm text-white/40 mb-8">
+      <nav aria-label="Breadcrumb" class="flex items-center gap-2 text-sm text-white/50 mb-8">
         <a href="/" class="hover:text-gold transition-colors">Home</a>
         <span>/</span>
         <span class="text-white/70">Search Ontario Listings</span>
@@ -218,14 +218,14 @@ const allAreasBoundsForClient = getAllAreasBounds();
           />
         </div>
         <div class="relative">
-          <select name="minPrice" id="minPrice-select" class="appearance-none pl-4 pr-9 py-1.5 rounded-full text-sm font-medium bg-cream text-navy/70 border border-gray-200 hover:border-gold focus:border-gold focus:outline-none transition-colors cursor-pointer">
+          <select name="minPrice" id="minPrice-select" aria-label="Minimum price" class="appearance-none pl-4 pr-9 py-1.5 rounded-full text-sm font-medium bg-cream text-navy/70 border border-gray-200 hover:border-gold focus:border-gold focus:outline-none transition-colors cursor-pointer">
             <option value="">No Min</option>
             {priceSteps.map((p) => <option value={p} selected={minPrice === p}>{shortPrice(p)}</option>)}
           </select>
         </div>
         <span class="text-navy/30 text-sm">–</span>
         <div class="relative">
-          <select name="maxPrice" id="maxPrice-select" class="appearance-none pl-4 pr-9 py-1.5 rounded-full text-sm font-medium bg-cream text-navy/70 border border-gray-200 hover:border-gold focus:border-gold focus:outline-none transition-colors cursor-pointer">
+          <select name="maxPrice" id="maxPrice-select" aria-label="Maximum price" class="appearance-none pl-4 pr-9 py-1.5 rounded-full text-sm font-medium bg-cream text-navy/70 border border-gray-200 hover:border-gold focus:border-gold focus:outline-none transition-colors cursor-pointer">
             <option value="">No Max</option>
             {priceSteps.map((p) => <option value={p} selected={maxPrice === p}>{shortPrice(p)}</option>)}
           </select>
@@ -563,8 +563,8 @@ const allAreasBoundsForClient = getAllAreasBounds();
   <!-- Required MLS/REALTOR trademark statement — every page of a National Pool Website must display this -->
   <section class="py-6 bg-white border-t border-gray-100">
     <div class="container-site">
-      <p class="text-xs text-slate/60 text-center max-w-3xl mx-auto">
-        REALTOR®, REALTORS®, and the REALTOR® logo are certification marks owned by REALTOR® Canada Inc. and licensed exclusively to The Canadian Real Estate Association (CREA). MLS® and the MLS® logo are owned by CREA. This website is operated by Justin Skrypnyk, Real Estate Broker, Sutton Group Chapman Realty Inc., Brokerage, a member of CREA. See our <a href="/terms-of-use/" class="text-gold hover:underline">Terms of Use</a>.
+      <p class="text-xs text-slate text-center max-w-3xl mx-auto">
+        REALTOR®, REALTORS®, and the REALTOR® logo are certification marks owned by REALTOR® Canada Inc. and licensed exclusively to The Canadian Real Estate Association (CREA). MLS® and the MLS® logo are owned by CREA. This website is operated by Justin Skrypnyk, Real Estate Broker, Sutton Group Chapman Realty Inc., Brokerage, a member of CREA. See our <a href="/terms-of-use/" class="text-gold-deep underline">Terms of Use</a>.
       </p>
     </div>
   </section>
@@ -586,7 +586,7 @@ const allAreasBoundsForClient = getAllAreasBounds();
 <div id="terms-banner" class="hidden fixed bottom-0 inset-x-0 z-50 bg-navy text-white shadow-2xl">
   <div class="container-site py-4 flex flex-col sm:flex-row items-center gap-4">
     <p class="text-sm text-white/80 flex-1">
-      By using this Ontario-wide listing search, you agree to our <a href="/terms-of-use/" target="_blank" class="text-gold hover:underline">Terms of Use</a>, including the CREA/REALTOR® trademark notices and permitted-use restrictions.
+      By using this Ontario-wide listing search, you agree to our <a href="/terms-of-use/" target="_blank" class="text-gold underline">Terms of Use</a>, including the CREA/REALTOR® trademark notices and permitted-use restrictions.
     </p>
     <button id="terms-accept" type="button" class="btn-primary !py-2 !px-6 whitespace-nowrap shrink-0">Got It</button>
   </div>

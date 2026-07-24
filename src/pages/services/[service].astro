@@ -30,7 +30,7 @@ const { service } = Astro.props;
   <!-- Hero -->
   <section class="bg-navy py-20 text-white">
     <div class="container-site">
-      <nav aria-label="Breadcrumb" class="flex items-center gap-2 text-sm text-white/40 mb-8">
+      <nav aria-label="Breadcrumb" class="flex items-center gap-2 text-sm text-white/50 mb-8">
         <a href="/" class="hover:text-gold transition-colors">Home</a>
         <span>/</span>
         <a href="/services/" class="hover:text-gold transition-colors">Services</a>
@@ -79,7 +79,7 @@ const { service } = Astro.props;
           <div class="space-y-5">
             {service.process.map((item) => (
               <div class="flex gap-4">
-                <div class="text-gold font-serif text-xl font-bold shrink-0 w-8">{item.step}</div>
+                <div class="text-gold-deep font-serif text-xl font-bold shrink-0 w-8">{item.step}</div>
                 <div>
                   <h3 class="font-semibold text-navy mb-1">{item.title}</h3>
                   <p class="text-sm text-slate leading-relaxed">{item.body}</p>
@@ -155,9 +155,9 @@ const { service } = Astro.props;
   <section class="py-16 bg-gold">
     <div class="container-site text-center">
       <h2 class="font-serif text-3xl text-navy mb-4">{service.ctaText}?</h2>
-      <p class="text-navy/70 mb-8 max-w-xl mx-auto">Reach out today — no pressure, no pitch, just an honest conversation.</p>
+      <p class="text-navy mb-8 max-w-xl mx-auto">Reach out today — no pressure, no pitch, just an honest conversation.</p>
       <div class="flex flex-col sm:flex-row gap-4 justify-center">
-        <a href="/contact/" class="btn-secondary">Send a Message</a>
+        <a href="/contact/" class="btn-secondary !border-navy !text-navy hover:!bg-navy hover:!text-white">Send a Message</a>
         <a href={`tel:${SITE.phone}`} class="inline-flex items-center gap-2 bg-navy text-white font-semibold px-7 py-3.5 rounded-lg hover:bg-navy-dark transition-all">
           Call {SITE.phoneDisplay}
         </a>

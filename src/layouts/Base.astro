@@ -49,10 +49,24 @@ const hideStickyCTA = Astro.url.pathname.startsWith('/contact');
          pages; a cheap hint everywhere else, saves a cold DNS+TLS handshake
          once the map script actually loads on pages that need it. -->
     <link rel="preconnect" href="https://unpkg.com" crossorigin />
+    <!-- Loaded non-blocking (preload -> swap to stylesheet on load) rather
+         than a plain <link rel="stylesheet">, which PageSpeed flagged as a
+         render-blocking request (~1s of the mobile score). font-display:swap
+         is already in the URL, so text still renders in a fallback font
+         immediately either way -- this just stops the CSS fetch itself from
+         blocking first paint. noscript fallback covers the no-JS case. -->
     <link
+      rel="preload"
+      as="style"
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap"
-      rel="stylesheet"
+      onload="this.onload=null;this.rel='stylesheet'"
     />
+    <noscript>
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap"
+      />
+    </noscript>
 
     <SEO
       title={title}

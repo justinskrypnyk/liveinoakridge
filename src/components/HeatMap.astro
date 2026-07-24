@@ -45,13 +45,13 @@ const snapshotsBySlug = Object.fromEntries(snapshots.map((s) => [s.area_slug, s]
       aria-label="Map of London Ontario neighbourhoods, coloured by the selected metric. The same figures are listed in the table below."
       class="bg-cream"
     ></div>
-    <div id={`${mapId}-loading`} class="absolute inset-0 flex items-center justify-center text-sm text-slate/60 pointer-events-none">
+    <div id={`${mapId}-loading`} class="absolute inset-0 flex items-center justify-center text-sm text-slate pointer-events-none">
       Loading map…
     </div>
   </div>
 
   <div id={`${mapId}-legend`} class="flex flex-wrap items-center justify-center gap-2 mt-4 text-xs text-slate/80"></div>
-  <p class="text-center text-xs text-slate/50 mt-2">Click a legend colour to highlight just those neighbourhoods. Click a neighbourhood to zoom in, Esc or click the map background to zoom back out.</p>
+  <p class="text-center text-xs text-slate mt-2">Click a legend colour to highlight just those neighbourhoods. Click a neighbourhood to zoom in, Esc or click the map background to zoom back out.</p>
 </div>
 
 <script define:vars={{ mapId, boundaries, thamesRiver, LANDMARKS, snapshotsBySlug }}>

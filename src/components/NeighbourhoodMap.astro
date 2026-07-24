@@ -182,7 +182,7 @@ const areaIndex = Object.fromEntries(AREAS.map(a => [a.slug, { name: a.name, pri
 
       <!-- Right panel -->
       <div class="w-full lg:w-2/5">
-        <div class="text-gold text-xs font-semibold tracking-widest uppercase mb-4">Neighbourhoods</div>
+        <div class="text-gold-deep text-xs font-semibold tracking-widest uppercase mb-4">Neighbourhoods</div>
         <h2 class="font-serif text-4xl md:text-5xl text-navy leading-tight mb-3">
           Explore<br/>All of London
         </h2>
@@ -202,14 +202,14 @@ const areaIndex = Object.fromEntries(AREAS.map(a => [a.slug, { name: a.name, pri
         <!-- Hover state -->
         <div id="map-area-panel" class="hidden">
           <h3 id="map-area-name" class="font-serif text-2xl text-navy mb-1"></h3>
-          <div id="map-area-price" class="text-gold text-sm font-semibold mb-4"></div>
+          <div id="map-area-price" class="text-gold-deep text-sm font-semibold mb-4"></div>
           <p id="map-area-desc" class="text-slate text-sm leading-relaxed mb-6"></p>
           <a id="map-area-link" href="#" class="btn-primary text-sm py-2.5 inline-flex">
             <span id="map-area-link-text">Explore this area</span>
             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
           </a>
           <div class="mt-4">
-            <a href="/areas/" class="text-slate/70 text-sm hover:text-gold transition-colors">← All neighbourhoods</a>
+            <a href="/areas/" class="text-slate text-sm hover:text-gold-deep transition-colors">← All neighbourhoods</a>
           </div>
         </div>
       </div>

@@ -80,7 +80,7 @@ const FAQS = [
 
   <section class="bg-navy py-20 text-white">
     <div class="container-site">
-      <nav aria-label="Breadcrumb" class="flex items-center gap-2 text-sm text-white/40 mb-8">
+      <nav aria-label="Breadcrumb" class="flex items-center gap-2 text-sm text-white/50 mb-8">
         <a href="/" class="hover:text-gold transition-colors">Home</a>
         <span>/</span>
         <span class="text-white/70">Neighbourhood Heat Map</span>
@@ -90,7 +90,7 @@ const FAQS = [
       <p class="text-xl text-white/70 max-w-2xl">
         Median list price, days on market, new listings, and more, across every neighbourhood in London -- from Oakridge, Byron, and Riverbend to Masonville, Old South, and Hyde Park. Switch the metric, click a neighbourhood to zoom in.
       </p>
-      {asOf && <p class="text-sm text-white/40 mt-4">Stats as of {asOf}</p>}
+      {asOf && <p class="text-sm text-white/50 mt-4">Stats as of {asOf}</p>}
     </div>
   </section>
 
@@ -98,9 +98,9 @@ const FAQS = [
     <div class="container-site max-w-5xl">
       <HeatMap snapshots={snapshots} height="640px" />
 
-      <p class="text-center text-sm text-slate/60 mt-8 max-w-2xl mx-auto">
+      <p class="text-center text-sm text-slate mt-8 max-w-2xl mx-auto">
         Active-listing stats are captured twice monthly (mid-month and month-end); sold-price stats are rolling 90-day medians. Read this as directional, not exact. Want to see individual sold listings?
-        <a href="/sold-map/" class="text-gold hover:underline">View the sold prices map</a> (free sign-in required).
+        <a href="/sold-map/" class="text-gold-deep underline">View the sold prices map</a> (free sign-in required).
       </p>
 
       {notableChanges.length > 0 && (

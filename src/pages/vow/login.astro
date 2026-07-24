@@ -14,7 +14,7 @@ if (session) return Astro.redirect('/sold-map/');
 >
   <section class="bg-navy py-20 text-white">
     <div class="container-site">
-      <nav aria-label="Breadcrumb" class="flex items-center gap-2 text-sm text-white/40 mb-8">
+      <nav aria-label="Breadcrumb" class="flex items-center gap-2 text-sm text-white/50 mb-8">
         <a href="/" class="hover:text-gold transition-colors">Home</a>
         <span>/</span>
         <span class="text-white/70">Sign In</span>
@@ -72,11 +72,11 @@ if (session) return Astro.redirect('/sold-map/');
               class="w-full px-4 py-2.5 rounded-lg text-sm bg-cream border border-gray-200 text-navy placeholder-navy/40 focus:border-gold focus:outline-none transition-colors"
             />
           </div>
-          <label class="flex items-start gap-2.5 text-xs text-slate/80 leading-relaxed">
+          <label class="flex items-start gap-2.5 text-xs text-slate leading-relaxed">
             <input type="checkbox" id="terms" name="terms" required class="mt-0.5" />
             <span>
               I have a bona fide interest in the purchase, sale, or lease of real estate, and I agree to the
-              <a href="/terms-of-use/" target="_blank" class="text-gold hover:underline">Terms of Use</a>. This information may not be used for any commercial purpose or any other purpose.
+              <a href="/terms-of-use/" target="_blank" class="text-gold-deep underline">Terms of Use</a>. This information may not be used for any commercial purpose or any other purpose.
             </span>
           </label>
           <button type="submit" id="vow-login-submit" class="btn-primary w-full justify-center !py-2.5">
