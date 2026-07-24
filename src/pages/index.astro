@@ -49,24 +49,6 @@ const latestPosts = [...BLOG_POSTS]
   heroOverlap
 >
   <Fragment slot="head">
-    <!-- Preloads the hero image at the browser's actual-need width (matching
-         the <img>'s own srcset/sizes below) rather than letting discovery
-         wait for HTML parsing to reach the <img> tag -- this is the LCP
-         element on every page load, so PageSpeed's ~8s mobile LCP is largely
-         download+decode time for an image the browser didn't start
-         fetching soon enough. -->
-    <link
-      rel="preload"
-      as="image"
-      href="/images/oakridge-aerial-drone-2026.webp"
-      imagesrcset="/images/oakridge-aerial-drone-2026-640w.webp 640w,
-                   /images/oakridge-aerial-drone-2026-828w.webp 828w,
-                   /images/oakridge-aerial-drone-2026-1080w.webp 1080w,
-                   /images/oakridge-aerial-drone-2026-1920w.webp 1920w,
-                   /images/oakridge-aerial-drone-2026.webp 2400w"
-      imagesizes="100vw"
-      fetchpriority="high"
-    />
     <Schema type="home" />
     <script type="application/ld+json" set:html={JSON.stringify({
       '@context': 'https://schema.org',
