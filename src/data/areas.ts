@@ -90,6 +90,8 @@ export interface HistoryPhoto {
   alt: string;
   caption: string;
   year?: string;
+  width: number;
+  height: number;
 }
 
 export interface HistoryData {
@@ -109,6 +111,13 @@ export interface Area {
   geo: { lat: number; lng: number };
   image: string;
   imageAlt: string;
+  // Real pixel dimensions of `image` -- optional since only the homepage
+  // "Areas We Serve" grid currently needs them (missing width/height was an
+  // image-SEO gap flagged in a competitor audit); not backfilled for every
+  // area since nowhere else renders this field without its own fixed
+  // aspect-ratio container already handling CLS.
+  imageWidth?: number;
+  imageHeight?: number;
   highlights: string[];
   avgPrice: string;
   homingTypes: string[];
@@ -137,6 +146,8 @@ export const AREAS: Area[] = [
     mapEmbedId: 'Oakridge,+London,+Ontario,+Canada',
     geo: { lat: 42.975169, lng: -81.306 },
     image: '/images/oakridge-aerial-drone-2026-thumb.webp',
+    imageWidth: 1200,
+    imageHeight: 675,
     imageAlt: "Aerial drone view of Oakridge's mature tree canopy, London Ontario",
     highlights: [
       'Mature tree-lined streets on generous lots',
@@ -347,36 +358,48 @@ export const AREAS: Area[] = [
       photos: [
         {
           src: '/images/history/oakridge-park-model-homes-1960s.webp',
+          width: 1000,
+          height: 585,
           alt: 'The New Oakridge Park model homes entrance sign standing in an empty field, early 1960s, London Ontario',
           caption: '"The New Oakridge Park — Model Homes Entrance." Sifton\'s billboard for the second phase of development, standing in open farmland. Behind it: a barn, utility poles, and nothing else.',
           year: 'circa 1961',
         },
         {
           src: '/images/history/oakridge-acres-aerial-1942.webp',
+          width: 1111,
+          height: 1400,
           alt: 'Eastman Topographic aerial photograph of the Oakridge area in 1942, showing farmland and the Sifton Bog before development, London Ontario',
           caption: 'Eastman Topographic aerial, 1942. The entire Oakridge footprint is open farmland. The dark circular mass at centre is the Sifton Bog — surrounded by fields eight years before the first homes were built.',
           year: '1942',
         },
         {
           src: '/images/history/oakridge-acres-aerial-1978.webp',
+          width: 700,
+          height: 700,
           alt: 'Northway Survey Corporation aerial photograph of Oakridge, London Ontario, April 25 1978, showing completed residential development',
           caption: 'Northway Survey Corporation aerial, April 25, 1978. Oakridge is nearly fully built out — curved residential streets, the Sifton Bog visible at centre, the Thames River and Byron along the lower left.',
           year: '1978',
         },
         {
           src: '/images/history/thames-valley-golf-course-aerial-1930s.webp',
+          width: 700,
+          height: 474,
           alt: 'Aerial photograph of the Thames Valley Golf Course clubhouse, putting green, and parking lot in Oakridge, London Ontario, circa 1930s',
           caption: "Thames Valley's original clubhouse and practice green from the air. Built on Public Utilities Commission land along the Thames River — acquired for the city's water supply wells, not recreation. Photo courtesy London & Area Golf History (londonandareagolfhistory.com), sourced from \"From Rough to Fairway\" by John Cowie.",
           year: 'circa 1930s',
         },
         {
           src: '/images/history/thames-valley-golf-course-opening-day-1933.webp',
+          width: 439,
+          height: 246,
           alt: 'Golfers Jack Nash, Sandy Somerville, Joe Kirkwood, and Gene Sarazen at the opening of the Thames Valley Classic course, Oakridge, London Ontario, July 29 1933',
           caption: 'Jack Nash, Sandy Somerville, Joe Kirkwood, and Gene Sarazen — four of the biggest names in golf — at Thames Valley\'s championship opening day. Photo courtesy London & Area Golf History (londonandareagolfhistory.com).',
           year: 'July 29, 1933',
         },
         {
           src: '/images/history/thames-valley-golf-course-flood-1937.webp',
+          width: 700,
+          height: 451,
           alt: 'Flooded pump house at Thames Valley Golf Course during the Great Flood in Oakridge, London Ontario, 1937',
           caption: 'The Thames River overflowed its banks in the Great Flood of 1937, submerging the pump house and much of the course. Photo courtesy London & Area Golf History (londonandareagolfhistory.com).',
           year: '1937',
@@ -417,6 +440,8 @@ export const AREAS: Area[] = [
     mapEmbedId: 'Byron,+London,+Ontario,+Canada',
     geo: { lat: 42.9507, lng: -81.2842 },
     image: '/images/areas/byron-neighbourhood-london-ontario.webp',
+    imageWidth: 1280,
+    imageHeight: 853,
     imageAlt: 'Springbank Park in Byron neighbourhood, London Ontario',
     highlights: [
       'Springbank Park — London\'s largest park at your doorstep',
@@ -549,6 +574,8 @@ export const AREAS: Area[] = [
     mapEmbedId: 'Westmount,+London,+Ontario,+Canada',
     geo: { lat: 42.9638, lng: -81.2628 },
     image: '/images/areas/westmount-neighbourhood-london-ontario.webp',
+    imageWidth: 1280,
+    imageHeight: 853,
     imageAlt: 'Residential street in Westmount, London Ontario',
     highlights: [
       'Minutes from Western University and University Hospital',
@@ -874,6 +901,8 @@ export const AREAS: Area[] = [
     mapEmbedId: 'Whitehills,+London,+Ontario,+Canada',
     geo: { lat: 42.998, lng: -81.279 },
     image: '/images/areas/whitehills-neighbourhood-london-ontario.webp',
+    imageWidth: 1280,
+    imageHeight: 853,
     imageAlt: 'Residential street in Whitehills, northwest London Ontario',
     highlights: [
       'Three elementary schools within the neighbourhood — Emily Carr, Wilfrid Jury, St. Marguerite d\'Youville',
@@ -1046,6 +1075,8 @@ export const AREAS: Area[] = [
     mapEmbedId: 'Cherry+Hill+Mall,+Commissioners+Rd+W,+London,+Ontario,+Canada',
     geo: { lat: 42.9601, lng: -81.2171 },
     image: '/images/areas/west-london-neighbourhood-london-ontario.webp',
+    imageWidth: 1280,
+    imageHeight: 853,
     imageAlt: 'Residential street in West London neighbourhood near Cherry Hill Mall, London Ontario',
     highlights: [
       'Cherry Hill Mall — retail anchor at Commissioners & Wharncliffe',
