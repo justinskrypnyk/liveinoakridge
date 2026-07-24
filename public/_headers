@@ -1,0 +1,20 @@
+# Netlify static-headers convention — no Cache-Control config existed at all
+# before this, so every static asset (JS/CSS bundles, images) fell back to a
+# short/no-cache default. PageSpeed Insights flagged this as "use efficient
+# cache lifetimes" (~150 KiB of repeat-view savings). Content here is safe to
+# cache aggressively: build assets are content-hashed by Vite/Astro (a code
+# change produces a new filename, never a stale cache hit), and images in
+# this repo are versioned by filename (e.g. "-2026" suffixes, "-thumb", the
+# new "-640w"/"-828w" responsive variants) rather than overwritten in place.
+
+/_astro/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/images/*
+  Cache-Control: public, max-age=31536000
+
+/favicon.png
+  Cache-Control: public, max-age=31536000
+
+/site.webmanifest
+  Cache-Control: public, max-age=86400

@@ -438,7 +438,7 @@ export const BLOG_POSTS: BlogPost[] = [
     category: 'Neighbourhood Guides',
     author: 'Justin Skrypnyk',
     readTime: '7 min read',
-    image: '/images/oakridge-aerial-drone-2026.webp',
+    image: '/images/oakridge-aerial-drone-2026-thumb.webp',
     imageAlt: 'Aerial drone view of tree-lined streets in Oakridge, West London Ontario',
     content: `
       <p>Oakridge and Byron are West London's two most established, desirable neighbourhoods — and choosing between them is one of the most common decisions buyers face. Both offer mature streets, strong schools, and genuine community character. But they are meaningfully different places to live. This comparison covers the factors that actually matter: price, schools, outdoor lifestyle, daily convenience, and fit.</p>
@@ -1607,7 +1607,7 @@ export const BLOG_POSTS: BlogPost[] = [
     category: 'Neighbourhood Guides',
     author: 'Justin Skrypnyk',
     readTime: '6 min read',
-    image: '/images/oakridge-aerial-drone-2026.webp',
+    image: '/images/oakridge-aerial-drone-2026-thumb.webp',
     imageAlt: 'Aerial drone view of tree-lined streets in Oakridge, West London Ontario',
     content: `
       <p>Ask someone which part of Oakridge they live in, and you'll rarely just hear "Oakridge." You'll hear Hazelden, or Oakridge Acres, or Hunt Club. Oakridge was built in phases from the 1950s through the 1980s, and each phase settled into its own identity — its own park, its own streets, its own feel. If you're house-hunting in Oakridge, knowing which pocket you're actually looking at matters more than the neighbourhood name on the listing.</p>

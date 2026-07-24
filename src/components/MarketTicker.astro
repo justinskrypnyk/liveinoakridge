@@ -3,12 +3,16 @@
 // /api/market-stats.json client-side only (see src/lib/market-stats.ts and
 // netlify/functions/market-stats-snapshot-background.mjs), so a page
 // refresh always shows the latest twice-monthly snapshot without needing a
-// site rebuild. Hidden entirely until that first fetch resolves with real
-// data, so there's never a broken-looking empty bar before the scheduled
-// function has run once.
+// site rebuild. Invisible (not display:none) until that first fetch
+// resolves with real data, so there's never a broken-looking empty bar
+// before the scheduled function has run once -- but the layout space is
+// reserved from first paint via the fixed min-height below, so revealing it
+// doesn't shift anything else on the page (PageSpeed flagged this exact
+// reveal as a CLS contributor: display:none -> block introduces height
+// where there was none, pushing everything below it down).
 ---
 
-<div id="market-ticker" class="hidden bg-navy border-y border-white/10 overflow-hidden">
+<div id="market-ticker" class="market-ticker-bar bg-navy border-y border-white/10 overflow-hidden">
   <div class="flex flex-col sm:flex-row sm:items-stretch">
     <!-- Its own row on mobile (not sharing horizontal space with the
          scrolling track) — sharing a row squeezed the label and the ticker
@@ -31,7 +35,7 @@
      access is live and a snapshot has actually captured them (see
      getSoldStatsByArea in src/lib/market-stats.ts) -- rather than showing
      an empty/all-"n/a" row before that first capture happens. -->
-<div id="market-ticker-sold" class="hidden bg-navy-dark border-b border-white/10 overflow-hidden">
+<div id="market-ticker-sold" class="market-ticker-bar bg-navy-dark border-b border-white/10 overflow-hidden">
   <div class="flex flex-col sm:flex-row sm:items-stretch">
     <div class="shrink-0 flex items-center gap-2 bg-navy px-4 py-1.5 sm:py-3 border-b sm:border-b-0 sm:border-r border-white/10 z-10">
       <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
@@ -47,6 +51,25 @@
   /* Global, not scoped: the segments below are injected via client-side
      innerHTML (see the script), so they never get Astro's scoped
      data-astro-cid attribute a normal <style> block relies on to match. */
+
+  /* Reserves the bar's final rendered height from first paint (measured
+     empirically against real populated content -- see MarketTicker.astro's
+     script) so toggling visibility on/off after the client-side fetch never
+     changes page height. Deliberately visibility:hidden, not display:none:
+     the whole point is that the space is ALREADY there before JS runs. */
+  .market-ticker-bar {
+    visibility: hidden;
+    min-height: 5.25rem; /* mobile: label row + track row stacked */
+  }
+  .market-ticker-bar.is-ready {
+    visibility: visible;
+  }
+  @media (min-width: 640px) {
+    .market-ticker-bar {
+      min-height: 3.5rem; /* desktop: label + track share one stretched row */
+    }
+  }
+
   .market-ticker-track {
     animation: market-ticker-scroll 45s linear infinite;
     width: max-content;
@@ -195,7 +218,7 @@
           updatedEl.textContent = `Updated ${date.toLocaleDateString('en-CA', { month: 'short', day: 'numeric' })}`;
         }
 
-        container.classList.remove('hidden');
+        container.classList.add('is-ready');
       }
 
       // Only areas with at least one non-null sold figure -- a capture that
@@ -207,7 +230,7 @@
       if (soldContainer && soldTrack && soldAreas.length > 0) {
         const soldSegments = soldAreas.map(([slug, s]) => soldSegmentHtml(slug, s)).join('');
         soldTrack.innerHTML = soldSegments + soldSegments;
-        soldContainer.classList.remove('hidden');
+        soldContainer.classList.add('is-ready');
       }
     } catch {
       // Network hiccup — leave the ticker hidden rather than show broken content.
