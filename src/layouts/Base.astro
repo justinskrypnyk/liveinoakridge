@@ -51,20 +51,32 @@ const hideStickyCTA = Astro.url.pathname.startsWith('/contact');
     <link rel="preconnect" href="https://unpkg.com" crossorigin />
     <!-- Loaded non-blocking (preload -> swap to stylesheet on load) rather
          than a plain <link rel="stylesheet">, which PageSpeed flagged as a
-         render-blocking request (~1s of the mobile score). font-display:swap
-         is already in the URL, so text still renders in a fallback font
-         immediately either way -- this just stops the CSS fetch itself from
-         blocking first paint. noscript fallback covers the no-JS case. -->
+         render-blocking request (~1s of the mobile score). noscript fallback
+         covers the no-JS case.
+
+         display=optional, not swap: swap re-flowed the page once the custom
+         font arrived (Playfair/Inter have different metrics than the
+         fallback), and that swap-triggered reflow is real CLS -- confirmed
+         by re-testing after this file's render-blocking fix shipped: CLS
+         went from 0 back up to 0.104, the exact value from before ANY of
+         this round of fixes, once the font started arriving fast enough to
+         swap inside Lighthouse's CLS measurement window. `optional` tells
+         the browser to either use the custom font if it's already available
+         almost immediately, or stick with the fallback for that pageview and
+         never swap later -- trades "custom font on a slow first visit" for
+         "never causes layout shift," which is the right side of that trade
+         for a real estate site where a stable layout matters more than
+         perfect typography on one slow load. -->
     <link
       rel="preload"
       as="style"
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;600;700&display=optional"
       onload="this.onload=null;this.rel='stylesheet'"
     />
     <noscript>
       <link
         rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;600;700&display=optional"
       />
     </noscript>
 
