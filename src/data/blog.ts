@@ -1896,6 +1896,85 @@ export const BLOG_POSTS: BlogPost[] = [
       },
     ],
   },
+  {
+    slug: 'london-ontario-weekly-market-digest-july-20-26-2026',
+    title: 'London Ontario Weekly Market Digest: July 20–26, 2026',
+    description: "223 new listings, 120 resale homes sold, and a look at how Oakridge, Byron, Westmount, and the rest of our 7 served areas performed this week in London Ontario real estate.",
+    date: '2026-07-27',
+    dateDisplay: 'July 27, 2026',
+    category: 'Weekly Market Digest',
+    author: 'Justin Skrypnyk',
+    readTime: '4 min read',
+    image: '/images/market-map-og.webp',
+    imageAlt: 'London Ontario neighbourhood market data map, representing this week\'s real estate digest across Oakridge and West London',
+    content: `
+      <p>Here's a fast, numbers-first look at what happened in London Ontario real estate this past week — citywide, and specifically across the 7 areas we work in every day: Oakridge, Byron, Westmount, Riverbend, Lambeth, Whitehills, and West London.</p>
+
+      <h2>How Many Homes Sold in London Ontario This Week?</h2>
+      <p>120 resale homes sold citywide between July 20 and July 26, 2026 (pre-construction excluded). Against that, 223 new listings came to market, pushing total active inventory to 1,917. The median list price sits at $612,500, and the median sold price came in at $526,250 — a 97.8% average sale-to-list ratio, meaning most homes are selling close to asking rather than deep discounts. Homes took a median of 53 days to sell.</p>
+
+      <h2>How Did Oakridge, Byron, and Our Other Served Areas Perform?</h2>
+      <p>Of our 7 areas, Lambeth and Byron posted the strongest median sold prices this week, while Oakridge saw the most sales activity relative to its size.</p>
+      <table>
+        <thead>
+          <tr><th>Area</th><th>Active Listings</th><th>Sold This Week</th><th>Median Sold Price</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><a href="/areas/oakridge/">Oakridge</a></td><td>55</td><td>6</td><td>$641,632</td></tr>
+          <tr><td><a href="/areas/byron/">Byron</a></td><td>56</td><td>6</td><td>$584,500</td></tr>
+          <tr><td><a href="/areas/westmount/">Westmount</a></td><td>52</td><td>6</td><td>$685,000</td></tr>
+          <tr><td><a href="/areas/riverbend/">Riverbend</a></td><td>45</td><td>2</td><td>$1,003,950</td></tr>
+          <tr><td><a href="/areas/lambeth/">Lambeth</a></td><td>82</td><td>1</td><td>$1,190,000</td></tr>
+          <tr><td><a href="/areas/whitehills/">Whitehills</a></td><td>67</td><td>5</td><td>$555,000</td></tr>
+          <tr><td><a href="/areas/west-london/">West London</a></td><td>48</td><td>1</td><td>$510,000</td></tr>
+        </tbody>
+      </table>
+      <p>Riverbend and Lambeth's high median sold prices this week reflect a small handful of larger executive homes changing hands rather than a broad price shift — worth keeping in mind with sample sizes this small week to week. Oakridge and Byron both had 6 sales against roughly 55 active listings, a healthier absorption pace than the citywide average. Want the same breakdown across all 39 London neighbourhoods, not just the 7 we serve? The <a href="/market-map/">interactive Neighbourhood Heat Map</a> updates with live data.</p>
+
+      <h2>Which Property Types Sold This Week?</h2>
+      <table>
+        <thead>
+          <tr><th>Property Type</th><th>Active Listings</th><th>Sold This Week</th><th>Median Sold Price</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Detached</td><td>1,169</td><td>73</td><td>$635,000</td></tr>
+          <tr><td>Semi-Detached</td><td>50</td><td>5</td><td>$468,000</td></tr>
+          <tr><td>Townhouse</td><td>328</td><td>22</td><td>$412,500</td></tr>
+          <tr><td>Condo/Apartment</td><td>258</td><td>17</td><td>$359,000</td></tr>
+        </tbody>
+      </table>
+      <p>Detached homes accounted for over 60% of resale activity this week, which tracks with London's overall inventory mix. Condos and apartments remain the most affordable entry point at a $359,000 median.</p>
+
+      <h2>What Was the Biggest Sale of the Week?</h2>
+      <p>The top sale citywide this week closed at <strong>$1,299,000</strong> for a home on Plane Tree Drive in London North (N6G 5L6). We'll track fastest-selling homes here starting next week once a full cycle of data is in.</p>
+
+      <h2>What Does This Mean If You're Buying or Selling in Oakridge or West London?</h2>
+      <p>A 97.8% sale-to-list ratio citywide, combined with steady sales in Oakridge and Byron specifically, points to a market that's still rewarding accurately priced homes rather than one that's cooling off broadly. If you're weighing whether to list this week or wait, or want to know exactly where your street sits inside these numbers, a <a href="/services/home-evaluation/">complimentary home evaluation</a> is the fastest way to get a real answer instead of a citywide average. For the bigger monthly picture behind these weekly snapshots, see our <a href="/blog/june-2026-london-ontario-market-update/">June 2026 market update</a> and our look at <a href="/blog/london-ontario-months-of-supply-july-2026/">London's jump in months of supply</a>.</p>
+      <p>Have a question about how this week's numbers apply to your specific street or property? <a href="/contact/">Reach out to Justin</a> directly.</p>
+    `,
+    faqs: [
+      {
+        question: 'How many homes sold in London Ontario this week (July 20–26, 2026)?',
+        answer: '120 resale homes sold citywide (pre-construction excluded), against 223 new listings and 1,917 total active listings. The median sold price was $526,250 with a 97.8% average sale-to-list ratio.',
+      },
+      {
+        question: 'Which of the 7 areas Justin serves had the most sales this week?',
+        answer: 'Oakridge, Byron, and Westmount each recorded 6 sales this week. Oakridge and Byron had the healthiest sales-to-active-listings ratio of the group, each with roughly 55 active listings against those 6 sales.',
+      },
+      {
+        question: "What was the median sold price in Oakridge this week?",
+        answer: 'Oakridge posted a median sold price of $641,632 this week, on 6 sales against 55 active listings.',
+      },
+      {
+        question: 'What property type sold the most in London Ontario this week?',
+        answer: 'Detached homes led with 73 sales, followed by townhouses (22 sales) and condo/apartments (17 sales). Detached homes make up the largest share of both active inventory and completed sales.',
+      },
+      {
+        question: 'Where can I see this data for all of London, not just the 7 areas Justin serves?',
+        answer: "The interactive Neighbourhood Heat Map at /market-map/ breaks down active listings, sales, and median pricing across all 39 London neighbourhoods with live, continuously updated data.",
+      },
+    ],
+  },
 ];
 
 export function getBlogPost(slug: string): BlogPost | undefined {
