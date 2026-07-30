@@ -1975,6 +1975,63 @@ export const BLOG_POSTS: BlogPost[] = [
       },
     ],
   },
+  {
+    slug: 'whitehills-london-ontario-neighbourhood-guide',
+    title: 'Whitehills, London Ontario: Schools, Parks, and the Story Behind the Name',
+    description: "Three in-boundary schools, London's largest indoor pool, and a 1935 dance hall on Wonderland Road — the real neighbourhood guide to Whitehills that nobody's actually written yet.",
+    date: '2026-07-30',
+    dateDisplay: 'July 30, 2026',
+    category: 'Neighbourhood Guides',
+    author: 'Justin Skrypnyk',
+    readTime: '6 min read',
+    image: '/images/areas/whitehills-neighbourhood-london-ontario.webp',
+    imageAlt: 'Residential street in Whitehills, northwest London Ontario',
+    content: `
+      <p>Search for Whitehills online and you'll mostly find listing aggregators and a single old Reddit thread. That's a strange gap for a neighbourhood that has three elementary schools inside its own boundaries, London's largest indoor pool a short walk from most front doors, and a real story behind the road that runs through it. Here's the guide that's actually been missing.</p>
+
+      <h2>What Kind of Neighbourhood Is Whitehills?</h2>
+      <p>Whitehills is an established, family-oriented community in northwest London, built out mostly through the 1970s and 1980s along the Wonderland Road North and Fanshawe Park corridor. The housing stock is what you'd expect from that era — solid detached bungalows, split-levels, and two-storeys on well-kept lots — alongside newer townhouse developments for buyers who want lower maintenance at a more accessible price point. It's not a neighbourhood chasing a trend; it's one that's already settled into knowing what it is.</p>
+
+      <h2>What Schools Are In Whitehills?</h2>
+      <p>Three, and all of them are inside the neighbourhood itself: Emily Carr Public School and Wilfrid Jury Public School (both TVDSB, JK–8), and St. Marguerite d'Youville Catholic School (LDCSB, JK–8). That's a genuinely practical advantage — most Whitehills families never put an elementary-aged kid on a bus. High schoolers move on to Sir Frederick Banting Secondary School, a short drive away on Sherwood Forest Square.</p>
+
+      <h2>What Recreation Does Whitehills Actually Have?</h2>
+      <p>More than most London neighbourhoods its size. The <strong>Canada Games Aquatic Centre</strong> at 1045 Wonderland Road North is London's largest indoor pool, and it sits right in the middle of the neighbourhood — competitive lanes, recreational swimming, diving boards, and lessons, all a short walk or drive from home. Next door, <strong>Medway Park</strong> brings a spray pad and the Medway-Kiwanis Skate Bowls, with the Medway Community Centre's arena attached. <strong>Jaycee Park</strong>, at 12.6 acres, is the neighbourhood's largest green space — a baseball diamond, soccer field, multi-sport court, and real walking trails. <strong>Norwest Optimist Park</strong> sits right beside Emily Carr Public School, making it the natural after-school gathering spot. And for residents who want real nature rather than a manicured park, the Fox Hollow Ravine corridor connects directly into the <strong>Medway Valley Heritage Forest</strong> — one of London's most significant Carolinian forest systems — on foot, without ever leaving the neighbourhood.</p>
+
+      <h2>Where Does the Name "Whitehills" Actually Come From?</h2>
+      <p>From the gentle rises along the Wonderland Road corridor itself — and that road carries more history than most residents realize. In May 1935, the <strong>Wonderland Summer Gardens</strong> opened along Wonderland Road and quickly became one of London's most popular entertainment destinations. Brothers Charles and Wilford Jones ran the place, offering indoor and outdoor dancing, swimming, and fine dining, drawing Londoners from across the city for summer evenings out for decades. The gardens are long gone, but the road that carried people there still runs straight through the middle of modern Whitehills.</p>
+
+      <h2>Is Whitehills a Good Neighbourhood for Families?</h2>
+      <p>By every practical measure, yes. Three in-boundary schools removes the daily bus commute most London families deal with. The park and recreation infrastructure — an aquatic centre, a skate park, a spray pad, two neighbourhood parks, and heritage forest trail access — covers most of what an active family actually uses week to week, all within the neighbourhood itself. Informally, that reputation shows up in how residents describe it too: a long-running <a href="https://www.reddit.com/r/londonontario/comments/t6mj36/moving_to_londons_white_hills_area/">r/londonontario discussion thread</a> on moving to the area describes it plainly as "a lovely established neighborhood," close to Masonville and downtown, with good hiking and jogging through the adjacent forest.</p>
+
+      <h2>How Does Whitehills Compare to Oakridge or West London?</h2>
+      <p>Similar era, different trade-offs. Like <a href="/areas/oakridge/">Oakridge</a> and <a href="/areas/west-london/">West London</a>, Whitehills is built on mostly 1970s–80s stock at accessible prices — but where Oakridge's identity is built around its four internal pockets and West London centres on Cherry Hill Mall's commercial corridor, Whitehills' identity is built around its schools and recreation infrastructure specifically. If having your kids' elementary school and London's best pool both inside walking distance matters more to your day-to-day than a commercial strip or a particular pocket's character, Whitehills is worth weighing directly against those two.</p>
+
+      <p>Whitehills is one of the three primary areas — alongside Oakridge and West London — Justin works closely day to day, not one he looks up on request. Curious what's currently listed, or want a neighbourhood walkthrough that goes beyond what's on a listing sheet? <a href="/contact/">Reach out to Justin</a>, or start with the full <a href="/areas/whitehills/">Whitehills area guide</a> for current schools, parks, and listings data.</p>
+    `,
+    faqs: [
+      {
+        question: 'Where does the name Whitehills come from?',
+        answer: "The name comes from the gentle rises along the Wonderland Road North corridor that runs through the neighbourhood. That same road was once home to the Wonderland Summer Gardens, a popular dance-and-dining destination that opened in May 1935 and drew Londoners from across the city for decades.",
+      },
+      {
+        question: 'What was the Wonderland Summer Gardens?',
+        answer: "An entertainment venue that opened on Wonderland Road in May 1935, run by brothers Charles and Wilford Jones, offering indoor and outdoor dancing, swimming, and dining. It was one of London's most popular summer destinations for decades before closing; the road it stood on still runs through the heart of modern Whitehills.",
+      },
+      {
+        question: 'Is Whitehills a good neighbourhood for families in London Ontario?',
+        answer: "Yes -- three elementary schools (Emily Carr, Wilfrid Jury, St. Marguerite d'Youville) sit within the neighbourhood's own boundaries, meaning most kids never need a bus for elementary school. Recreation is unusually strong for the area's size too: the Canada Games Aquatic Centre (London's largest indoor pool), Medway Park's spray pad and skate bowls, Jaycee Park's 12.6 acres, and direct trail access to the Medway Valley Heritage Forest are all inside or bordering the neighbourhood.",
+      },
+      {
+        question: 'How does Whitehills compare to Oakridge for home buyers?',
+        answer: "Both are established West/Northwest London neighbourhoods built mostly in the 1970s-80s at similar price points, but the character differs: Oakridge is defined by its four internal pockets (Hazelden, Oakridge Acres, Hunt Club, Oakridge Park), while Whitehills is defined by its schools and recreation -- three in-boundary elementary schools and London's largest indoor pool. Buyers prioritizing walk-to-school access and recreation infrastructure specifically tend to lean toward Whitehills.",
+      },
+      {
+        question: 'Is Whitehills within walking distance of the Medway Valley Heritage Forest?',
+        answer: "Yes. The Fox Hollow Ravine corridor connects Whitehills residential streets directly to the Medway Valley Heritage Forest, one of London's most significant Carolinian forest systems, without needing to drive to a conservation area.",
+      },
+    ],
+  },
 ];
 
 export function getBlogPost(slug: string): BlogPost | undefined {
