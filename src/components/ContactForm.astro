@@ -3,12 +3,18 @@ interface Props {
   subject?: string;
   ctaLabel?: string;
   dark?: boolean;
+  // GA4 generate_lead event param, imported into Google Ads via the GA4
+  // link -- lets Justin choose in GA4 which form types actually count as an
+  // ads conversion (e.g. showing-request) vs. which are just visibility
+  // (e.g. a generic contact-page inquiry) without any code changes later.
+  formType?: string;
 }
 
 const {
   subject = 'General Inquiry',
   ctaLabel = 'Send Message',
   dark = false,
+  formType = 'contact',
 } = Astro.props;
 
 const inputClass = dark
@@ -18,6 +24,7 @@ const inputClass = dark
 const labelClass = dark ? 'text-white/70' : 'text-navy/70';
 ---
 
+<div data-contact-form data-form-type={formType}>
 <form
   name="contact"
   method="POST"
@@ -125,7 +132,77 @@ const labelClass = dark ? 'text-white/70' : 'text-navy/70';
     </svg>
   </button>
 
+  <p data-contact-error class="hidden text-xs text-red-600"></p>
+
   <p class={`text-xs text-center ${dark ? 'text-white/50' : 'text-slate'}`}>
     By submitting, you agree to our <a href="/privacy-policy/" class="underline hover:text-gold transition-colors">Privacy Policy</a>. We never share your information.
   </p>
 </form>
+
+<div data-contact-success class="hidden text-center py-6">
+  <div class="text-4xl mb-3">✅</div>
+  <p class={`font-serif text-lg font-bold mb-1 ${dark ? 'text-white' : 'text-navy'}`}>Message sent!</p>
+  <p class={`text-sm ${dark ? 'text-white/70' : 'text-slate'}`}>Justin will get back to you shortly.</p>
+</div>
+</div>
+
+<script>
+  import { getStoredAttribution } from '@/lib/attribution-client';
+
+  // Netlify's form-processing layer only intercepts POSTs to *statically
+  // rendered* pages -- it never sees a POST to a prerender=false route (e.g.
+  // /search/[listingKey]/, /sold-map/[listingKey]/, both live-MLS on-demand
+  // pages), since those go straight into the Astro SSR function instead,
+  // which just re-renders the normal page and silently drops the
+  // submission. A native <form> POST (this component's original approach)
+  // worked fine on static pages but went nowhere on those two -- confirmed
+  // via Netlify's submission API showing 0 new submissions after a raw POST
+  // there. Submitting via fetch() to '/' (a static page) instead, same
+  // pattern as SaveListingModal/MarketMapNotifyForm, works everywhere
+  // regardless of which page renders the form.
+  declare global {
+    interface Window { gtag?: (...args: unknown[]) => void; }
+  }
+
+  document.querySelectorAll('[data-contact-form]').forEach((wrapper) => {
+    const form = wrapper.querySelector('form');
+    const formType = (wrapper as HTMLElement).dataset.formType || 'contact';
+    const successEl = wrapper.querySelector('[data-contact-success]');
+    const errorEl = wrapper.querySelector('[data-contact-error]');
+    const submitBtn = form?.querySelector('button[type="submit"]');
+    if (!form || !(submitBtn instanceof HTMLButtonElement)) return;
+    const originalLabel = submitBtn.innerHTML;
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Sending...';
+      errorEl?.classList.add('hidden');
+
+      try {
+        const data = new FormData(form);
+        const body = new URLSearchParams();
+        data.forEach((value, key) => body.append(key, String(value)));
+        Object.entries(getStoredAttribution()).forEach(([key, value]) => body.append(key, value));
+        const res = await fetch('/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: body.toString(),
+        });
+        if (!res.ok) throw new Error(`${res.status}`);
+
+        form.classList.add('hidden');
+        successEl?.classList.remove('hidden');
+        window.gtag?.('event', 'generate_lead', { form_type: formType });
+        form.reset();
+      } catch {
+        if (errorEl) {
+          errorEl.textContent = 'Something went wrong sending that — please try again, or call/text Justin directly.';
+          errorEl.classList.remove('hidden');
+        }
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalLabel;
+      }
+    });
+  });
+</script>

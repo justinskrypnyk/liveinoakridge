@@ -101,6 +101,11 @@
 
 <script>
   import { isListingSaved, markListingSaved, setHeartVisual, syncHeartButtons } from '@/lib/save-listing-client';
+  import { getStoredAttribution } from '@/lib/attribution-client';
+
+  declare global {
+    interface Window { gtag?: (...args: unknown[]) => void; }
+  }
 
   syncHeartButtons();
 
@@ -181,6 +186,7 @@
       const data = new FormData(form);
       const body = new URLSearchParams();
       data.forEach((value, key) => body.append(key, String(value)));
+      Object.entries(getStoredAttribution()).forEach(([key, value]) => body.append(key, value));
       const res = await fetch('/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -195,6 +201,7 @@
       }
       form.classList.add('hidden');
       successEl?.classList.remove('hidden');
+      window.gtag?.('event', 'generate_lead', { form_type: 'save-listing' });
       setTimeout(closeModal, 2200);
       form.reset();
     } catch {

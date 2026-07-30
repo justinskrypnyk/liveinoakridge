@@ -100,12 +100,25 @@ export const POST: APIRoute = async ({ request }) => {
   // whatever the person typed in the message/comment as a note on the
   // contact instead — simpler than guessing at custom-field IDs that may not
   // exist in his GHL account, and easier to actually read.
-  const propertyAddress = data['property-address'];
+  const propertyAddress = data['property-address'] || data['address'];
   const mlsNumber = data['mls-number'];
   const FORM_TAG_LABELS: Record<string, string> = {
     'save-listing': 'Saved Listing Lead',
     'market-map-notify': 'Market Map Subscriber',
   };
+
+  // "Request a Showing" and "Request More Info" on /search/[listingKey]/ are
+  // both the shared ContactForm (form_name is always "contact" for every
+  // instance of it sitewide) -- the only thing that tells them apart from a
+  // generic contact-page inquiry is the `subject` prefix Astro passed in as
+  // a prop. Tag them distinctly so Justin can route/prioritize these (real
+  // buyer looking at a specific home right now) ahead of slower nurture
+  // leads in a GHL Workflow.
+  const SUBJECT_TAG_PREFIXES: [string, string][] = [
+    ['Showing Request:', 'showing-request'],
+    ['Listing Inquiry:', 'listing-inquiry'],
+  ];
+  const subjectTag = SUBJECT_TAG_PREFIXES.find(([prefix]) => data.subject?.startsWith(prefix))?.[1];
 
   const authHeaders = {
     'Content-Type': 'application/json',
@@ -127,9 +140,10 @@ export const POST: APIRoute = async ({ request }) => {
       // form_name tags each lead by which form sent it (e.g. "home-value-lead",
       // "newsletter", "contact") so they're segmentable in GHL; data.service
       // adds the "I'm interested in..." selection from the contact form;
-      // FORM_TAG_LABELS adds a friendlier, distinctly-filterable tag for
-      // forms that want one (e.g. "Saved Listing Lead").
-      tags: ['website-lead', submission.form_name, FORM_TAG_LABELS[submission.form_name], data.service].filter(Boolean),
+      // FORM_TAG_LABELS/subjectTag add a friendlier, distinctly-filterable
+      // tag for forms/subjects that want one (e.g. "Saved Listing Lead",
+      // "showing-request").
+      tags: ['website-lead', submission.form_name, FORM_TAG_LABELS[submission.form_name], subjectTag, data.service].filter(Boolean),
       source: `Website — ${data.subject || submission.form_name || 'Contact Form'}`,
     }),
   });
@@ -140,14 +154,30 @@ export const POST: APIRoute = async ({ request }) => {
     return new Response('GHL upsert failed', { status: 502 });
   }
 
-  // Property/MLS context (save-listing) and the free-text message/comment
-  // (any form with one) go on the contact as a note rather than jammed into
-  // `source` or a tag. A note failure shouldn't fail the whole request — the
-  // contact itself is already saved at this point.
+  // Property/MLS context (save-listing), the home-value-estimate calculator's
+  // inputs/result (previously collected by the page but silently dropped
+  // here -- Justin had no way to see what someone actually estimated), the
+  // free-text message/comment (any form with one), and first-touch campaign
+  // attribution (captured client-side in attribution-client.ts from the
+  // landing URL's UTM params/gclid, carried through every fetch()-based
+  // form) go on the contact as a note rather than jammed into `source` or a
+  // tag. A note failure shouldn't fail the whole request -- the contact
+  // itself is already saved at this point.
   const noteLines = [
     propertyAddress && `Property: ${propertyAddress}`,
     mlsNumber && `MLS®: ${mlsNumber}`,
+    data['rough-estimate-range'] && `Estimated range: ${data['rough-estimate-range']}`,
+    data['neighbourhood'] && `Neighbourhood: ${data['neighbourhood']}`,
+    data['property-type'] && `Property type: ${data['property-type']}`,
+    data['sqft'] && `Sqft: ${data['sqft']}`,
+    data['bedrooms'] && `Bedrooms: ${data['bedrooms']}`,
+    data['finished-basement'] && `Finished basement: ${data['finished-basement']}`,
     data.message,
+    data.utm_source && `Campaign source: ${data.utm_source}${data.utm_medium ? ' / ' + data.utm_medium : ''}`,
+    data.utm_campaign && `Campaign: ${data.utm_campaign}`,
+    data.utm_term && `Keyword: ${data.utm_term}`,
+    data.utm_content && `Ad content: ${data.utm_content}`,
+    data.gclid && `GCLID: ${data.gclid}`,
   ].filter(Boolean);
 
   if (noteLines.length > 0) {

@@ -82,7 +82,7 @@ const sortedPosts = [...BLOG_POSTS].sort((a, b) => new Date(b.date).getTime() - 
     <div class="container-site max-w-2xl text-center">
       <h2 class="font-serif text-3xl mb-4">Stay Ahead of the London Ontario Market</h2>
       <p class="text-white/60 mb-8">Get monthly market updates, neighbourhood insights, and real estate tips delivered to your inbox.</p>
-      <form name="newsletter" method="POST" data-netlify="true" class="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
+      <form id="newsletter-form" name="newsletter" method="POST" data-netlify="true" class="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
         <input type="hidden" name="form-name" value="newsletter" />
         <input
           type="email"
@@ -93,6 +93,58 @@ const sortedPosts = [...BLOG_POSTS].sort((a, b) => new Date(b.date).getTime() - 
         />
         <button type="submit" class="btn-primary text-sm py-3 px-6 shrink-0">Subscribe</button>
       </form>
+      <p id="newsletter-error" class="hidden text-xs text-red-300 mt-3"></p>
+      <div id="newsletter-success" class="hidden text-white/70 text-sm">You're subscribed — thanks!</div>
     </div>
   </section>
 </Base>
+
+<script>
+  import { getStoredAttribution } from '@/lib/attribution-client';
+
+  // Same fetch()-instead-of-native-POST pattern as ContactForm.astro -- this
+  // page is static so Netlify Forms catches a native POST fine, but this
+  // avoids bouncing the visitor to Netlify's generic unbranded default
+  // success page and gives GA4's generate_lead event a success callback.
+  const form = document.getElementById('newsletter-form') as HTMLFormElement | null;
+  const successEl = document.getElementById('newsletter-success');
+  const errorEl = document.getElementById('newsletter-error');
+  const submitBtn = form?.querySelector('button[type="submit"]') as HTMLButtonElement | null;
+
+  declare global {
+    interface Window { gtag?: (...args: unknown[]) => void; }
+  }
+
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!submitBtn) return;
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Sending...';
+    errorEl?.classList.add('hidden');
+
+    try {
+      const data = new FormData(form);
+      const body = new URLSearchParams();
+      data.forEach((value, key) => body.append(key, String(value)));
+      Object.entries(getStoredAttribution()).forEach(([key, value]) => body.append(key, value));
+      const res = await fetch('/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: body.toString(),
+      });
+      if (!res.ok) throw new Error(`${res.status}`);
+
+      form.classList.add('hidden');
+      successEl?.classList.remove('hidden');
+      window.gtag?.('event', 'generate_lead', { form_type: 'newsletter' });
+      form.reset();
+    } catch {
+      if (errorEl) {
+        errorEl.textContent = 'Something went wrong subscribing — please try again.';
+        errorEl.classList.remove('hidden');
+      }
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Subscribe';
+    }
+  });
+</script>

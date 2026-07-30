@@ -100,7 +100,7 @@ const propertyTypes = [
           <h3 class="font-serif text-xl text-navy mb-2">Want a Number You Can Actually Trust?</h3>
           <p class="text-sm text-slate mb-6">Justin will walk your home in person, look at real comparable sales, and give you an accurate valuation — completely free, no obligation.</p>
 
-          <form name="home-value-lead" method="POST" data-netlify="true" netlify-honeypot="bot-field" class="space-y-4">
+          <form id="home-value-lead-form" name="home-value-lead" method="POST" data-netlify="true" netlify-honeypot="bot-field" class="space-y-4">
             <input type="hidden" name="form-name" value="home-value-lead" />
             <input type="hidden" name="rough-estimate-range" id="hidden-estimate-range" />
             <input type="hidden" name="neighbourhood" id="hidden-area" />
@@ -117,6 +117,8 @@ const propertyTypes = [
             <input type="tel" name="phone" placeholder="Phone Number" class="w-full px-4 py-3 rounded-lg border border-gray-200 text-navy placeholder-slate/50 text-sm outline-none focus:border-gold" />
             <input type="text" name="address" placeholder="Property Address (optional)" class="w-full px-4 py-3 rounded-lg border border-gray-200 text-navy placeholder-slate/50 text-sm outline-none focus:border-gold" />
 
+            <p id="home-value-lead-error" class="hidden text-xs text-red-600"></p>
+
             <button type="submit" class="btn-primary w-full justify-center text-base py-4">
               Request My Free In-Person Evaluation
             </button>
@@ -124,6 +126,12 @@ const propertyTypes = [
               By submitting, you agree to our <a href="/privacy-policy/" class="underline hover:text-gold transition-colors">Privacy Policy</a>. We never share your information.
             </p>
           </form>
+
+          <div id="home-value-lead-success" class="hidden text-center py-6">
+            <div class="text-4xl mb-3">✅</div>
+            <p class="font-serif text-lg text-navy font-bold mb-1">Request sent!</p>
+            <p class="text-sm text-slate">Justin will reach out to schedule your free in-person evaluation.</p>
+          </div>
         </div>
       </div>
     </div>
@@ -131,6 +139,8 @@ const propertyTypes = [
 </Base>
 
 <script>
+  import { getStoredAttribution } from '@/lib/attribution-client';
+
   const BASELINE_SQFT = 1650;
   const BASELINE_BEDS = 3;
   const SQFT_STEP_VALUE = 180; // $ per sqft above/below baseline
@@ -171,5 +181,52 @@ const propertyTypes = [
     document.getElementById('estimate-result').classList.remove('hidden');
     document.getElementById('estimate-result').scrollIntoView({ behavior: 'smooth', block: 'start' });
     document.getElementById('estimate-disclaimer').focus();
+  });
+
+  declare global {
+    interface Window { gtag?: (...args: unknown[]) => void; }
+  }
+
+  // Same fetch()-instead-of-native-POST pattern as ContactForm.astro -- here
+  // it's not a broken-pipeline bug (this page is statically rendered, so
+  // Netlify Forms catches a native POST fine), just so the visitor doesn't
+  // get bounced to Netlify's generic unbranded default success page, and so
+  // a GA4 generate_lead event has a success callback to fire from.
+  const leadForm = document.getElementById('home-value-lead-form') as HTMLFormElement | null;
+  const leadSuccessEl = document.getElementById('home-value-lead-success');
+  const leadErrorEl = document.getElementById('home-value-lead-error');
+  const leadSubmitBtn = leadForm?.querySelector('button[type="submit"]') as HTMLButtonElement | null;
+
+  leadForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!leadSubmitBtn) return;
+    leadSubmitBtn.disabled = true;
+    leadSubmitBtn.textContent = 'Sending...';
+    leadErrorEl?.classList.add('hidden');
+
+    try {
+      const data = new FormData(leadForm);
+      const body = new URLSearchParams();
+      data.forEach((value, key) => body.append(key, String(value)));
+      Object.entries(getStoredAttribution()).forEach(([key, value]) => body.append(key, value));
+      const res = await fetch('/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: body.toString(),
+      });
+      if (!res.ok) throw new Error(`${res.status}`);
+
+      leadForm.classList.add('hidden');
+      leadSuccessEl?.classList.remove('hidden');
+      window.gtag?.('event', 'generate_lead', { form_type: 'home-value-estimate' });
+      leadForm.reset();
+    } catch {
+      if (leadErrorEl) {
+        leadErrorEl.textContent = 'Something went wrong sending that — please try again, or call/text Justin directly.';
+        leadErrorEl.classList.remove('hidden');
+      }
+      leadSubmitBtn.disabled = false;
+      leadSubmitBtn.textContent = 'Request My Free In-Person Evaluation';
+    }
   });
 </script>

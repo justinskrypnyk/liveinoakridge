@@ -159,5 +159,30 @@ const hideStickyCTA = Astro.url.pathname.startsWith('/contact');
       <input name="bot-field" />
       <input name="email" />
     </form>
+
+    <script>
+      import { captureAttribution } from '@/lib/attribution-client';
+
+      // Real estate ad clicks convert to phone calls at least as often as
+      // form fills, but until now nothing tracked them -- every generate_lead
+      // event so far only fired from form success handlers (see
+      // ContactForm.astro etc.). One delegated listener here catches every
+      // tel: link sitewide (15+ places) without editing each page. Reuses
+      // the same generate_lead event name (not a separate one) so it's
+      // covered automatically once Justin marks generate_lead as a GA4 Key
+      // Event / imports it into Google Ads -- form_type distinguishes it
+      // from form-based leads in reporting.
+      declare global {
+        interface Window { gtag?: (...args: unknown[]) => void; }
+      }
+
+      captureAttribution();
+
+      document.addEventListener('click', (e) => {
+        const link = (e.target as HTMLElement).closest('a[href^="tel:"]');
+        if (!link) return;
+        window.gtag?.('event', 'generate_lead', { form_type: 'phone-click' });
+      });
+    </script>
   </body>
 </html>

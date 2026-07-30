@@ -343,13 +343,13 @@ const facts: [string, string][] = [
           <div id="request-showing" class="bg-white rounded-2xl shadow-card p-6 scroll-mt-24">
             <h3 class="font-serif text-xl text-navy mb-1">Request a Showing</h3>
             <p class="text-sm text-slate mb-5">{address}</p>
-            <ContactForm subject={`Showing Request: ${address}`} ctaLabel="Request Showing" />
+            <ContactForm subject={`Showing Request: ${address}`} ctaLabel="Request Showing" formType="showing-request" />
           </div>
 
           <div id="request-info" class="bg-white rounded-2xl shadow-card p-6 scroll-mt-24">
             <h3 class="font-serif text-xl text-navy mb-1">Request More Info</h3>
             <p class="text-sm text-slate mb-5">Have a question about this listing? Ask Justin directly.</p>
-            <ContactForm subject={`Listing Inquiry: ${address}`} ctaLabel="Send Inquiry" />
+            <ContactForm subject={`Listing Inquiry: ${address}`} ctaLabel="Send Inquiry" formType="listing-inquiry" />
           </div>
         </div>
       </div>

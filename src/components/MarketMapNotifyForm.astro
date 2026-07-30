@@ -43,8 +43,13 @@
 </div>
 
 <script>
+  import { getStoredAttribution } from '@/lib/attribution-client';
+
   declare global {
-    interface Window { fbq?: (...args: unknown[]) => void; }
+    interface Window {
+      fbq?: (...args: unknown[]) => void;
+      gtag?: (...args: unknown[]) => void;
+    }
   }
 
   const form = document.getElementById('market-map-notify-form') as HTMLFormElement | null;
@@ -63,6 +68,7 @@
       const data = new FormData(form);
       const body = new URLSearchParams();
       data.forEach((value, key) => body.append(key, String(value)));
+      Object.entries(getStoredAttribution()).forEach(([key, value]) => body.append(key, value));
       const res = await fetch('/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -73,6 +79,7 @@
       form.classList.add('hidden');
       successEl?.classList.remove('hidden');
       window.fbq?.('track', 'Lead');
+      window.gtag?.('event', 'generate_lead', { form_type: 'market-map-notify' });
       form.reset();
     } catch {
       if (errorEl) {
