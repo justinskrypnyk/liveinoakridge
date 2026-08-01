@@ -227,6 +227,11 @@ const snapshotsBySlug = Object.fromEntries(snapshots.map((s) => [s.area_slug, s]
     }
 
     geoLayer = L.geoJSON(boundaries, {
+      // Whitehills stays fully wired for listings/geocoding (see
+      // getAreaMarketListings) but Justin doesn't want it drawn on this
+      // visual map -- its traced shape overlaps Medway's and he'd rather
+      // not show that overlap here.
+      filter: (feature) => feature.properties.slug !== 'whitehills',
       style: styleForFeature,
       onEachFeature: (feature, layer) => {
         layer.bindTooltip(tooltipHtml(feature), { sticky: true });

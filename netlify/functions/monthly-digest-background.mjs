@@ -407,7 +407,10 @@ export async function renderNeighbourhoodMapPng(snapshotRows, captureDate) {
   const LEGEND_H = 34;
 
   const priceByArea = new Map(snapshotRows.map((r) => [r.area_slug, r.median_sold_price]));
-  const polygons = loadAreaBoundaries();
+  // Whitehills stays fully wired for listings/geocoding elsewhere -- Justin
+  // just doesn't want it drawn on this map (its traced shape overlaps
+  // Medway's, and he'd rather not show that overlap here).
+  const polygons = loadAreaBoundaries().filter((p) => p.slug !== 'whitehills');
   const logoBase64 = loadLogoBase64();
   const riverLines = loadRiverLines(); // both Thames branches, hand-traced by Justin via geojson.io
 
