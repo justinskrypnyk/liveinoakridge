@@ -108,6 +108,7 @@ export default async () => {
     .from('vow_sold_listings')
     .select('listing_key, address, close_price, close_date, lat, lng')
     .gte('close_date', since)
+    .eq('is_lease', false)
     .not('lat', 'is', null)
     .not('lng', 'is', null);
 

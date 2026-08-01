@@ -214,10 +214,13 @@ export default async (req) => {
   // capture period is too thin a window on its own for a stable median.
   const ninetyDaysAgo = new Date(now);
   ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+  // is_lease excluded -- leases stay in vow_sold_listings for the website
+  // (sold-map etc.) but must never factor into reported price stats.
   const { data: recentSolds } = await supabase
     .from('vow_sold_listings')
     .select('area_slug, close_price, list_price')
     .gte('close_date', ninetyDaysAgo.toISOString().slice(0, 10))
+    .eq('is_lease', false)
     .not('area_slug', 'is', null);
   const soldsByArea = new Map();
   for (const row of recentSolds || []) {

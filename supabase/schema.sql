@@ -152,6 +152,17 @@ alter table vow_sold_listings add column if not exists parking_total integer;
 -- treatment already used for locked listings.
 alter table vow_sold_listings add column if not exists photo_url text;
 
+-- Justin wants leases visible on the site (sold-map, watch-address, etc.)
+-- but never counted in his own market reports -- vow-sold-sync-background
+-- was pulling in "Closed" lease listings with no way to tell them apart
+-- from a real sale (a $3,200 lease reads identically to a low sale price),
+-- silently dragging down median-price stats sitewide. Rather than exclude
+-- leases at ingestion (which would also hide them from the site), this
+-- column tags them so reporting queries can filter them out while the
+-- website's own queries keep showing everything.
+alter table vow_sold_listings add column if not exists is_lease boolean not null default false;
+create index if not exists vow_sold_listings_is_lease_idx on vow_sold_listings (is_lease);
+
 create index if not exists vow_sold_listings_area_idx on vow_sold_listings (area_slug);
 create index if not exists vow_sold_listings_close_date_idx on vow_sold_listings (close_date desc);
 

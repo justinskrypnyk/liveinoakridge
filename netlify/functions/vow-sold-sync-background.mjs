@@ -47,7 +47,7 @@ const PAGE_SIZE = 100;
 // entire invocation indefinitely instead of failing fast and moving on.
 const FETCH_TIMEOUT_MS = 15000;
 const SELECT_FIELDS =
-  'ListingKey,UnparsedAddress,City,StandardStatus,PropertyType,PropertySubType,ClosePrice,CloseDate,ListPrice,BedroomsTotal,BathroomsTotalInteger,BuildingAreaTotal,ParkingTotal,ListingContractDate';
+  'ListingKey,UnparsedAddress,City,StandardStatus,PropertyType,PropertySubType,TransactionType,ClosePrice,CloseDate,ListPrice,BedroomsTotal,BathroomsTotalInteger,BuildingAreaTotal,ParkingTotal,ListingContractDate';
 
 function loadAllAreaBoundaries() {
   const dataPath = fileURLToPath(new URL('../../src/data/area-boundaries.json', import.meta.url));
@@ -189,6 +189,12 @@ export default async () => {
     pagesFetched++;
     const rows = data.value || [];
 
+    // Leases stay in this table (Justin wants them visible on the site --
+    // sold-map, watch-address, etc.) but get tagged is_lease below so
+    // reporting queries (heat-map-snapshot, digests) can exclude them --
+    // this file previously had no TransactionType check at all, so a
+    // $3,200/mo lease closing read identically to a real low-price sale and
+    // silently corrupted median-price stats sitewide.
     const closed = rows.filter(
       (l) => l.StandardStatus === 'Closed' && l.PropertyType !== 'Commercial' && Number(l.ClosePrice) > 0
     );
@@ -247,6 +253,7 @@ export default async () => {
         property_type: listing.PropertyType ?? null,
         property_sub_type: listing.PropertySubType ?? null,
         photo_url: photoUrl,
+        is_lease: listing.TransactionType === 'For Lease',
         updated_at: new Date().toISOString(),
       });
     }

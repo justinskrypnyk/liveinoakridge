@@ -219,7 +219,8 @@ export default async () => {
     .from('vow_sold_listings')
     .select('address, area_slug, close_price, list_price, close_date, listing_contract_date, property_sub_type')
     .gte('close_date', weekStartStr)
-    .lte('close_date', soldDateTo);
+    .lte('close_date', soldDateTo)
+    .eq('is_lease', false);
   const sold = soldRows || [];
 
   const soldPrices = sold.map((r) => Number(r.close_price)).filter((n) => n > 0);
