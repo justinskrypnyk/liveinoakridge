@@ -35,6 +35,11 @@ const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 const PAGES_PER_RUN = 15; // ~15 x 500 = 7,500 records/run -- comfortably inside Netlify's background function time budget
 const PAGE_SIZE = 500;
+// A run was observed hard-hanging for 20+ minutes with zero progress --
+// none of this file's fetch() calls had a timeout, so a single unresponsive
+// call to Google Geocoding or the AMPRE Media endpoint could block the
+// entire invocation indefinitely instead of failing fast and moving on.
+const FETCH_TIMEOUT_MS = 15000;
 const SELECT_FIELDS =
   'ListingKey,UnparsedAddress,City,StandardStatus,PropertyType,PropertySubType,ClosePrice,CloseDate,ListPrice,BedroomsTotal,BathroomsTotalInteger,BuildingAreaTotal,ParkingTotal,ListingContractDate';
 
@@ -72,7 +77,7 @@ async function geocodeGoogle(address) {
     const url = new URL('https://maps.googleapis.com/maps/api/geocode/json');
     url.searchParams.set('address', `${address}, Ontario, Canada`);
     url.searchParams.set('key', GOOGLE_GEOCODING_API_KEY);
-    const res = await fetch(url);
+    const res = await fetch(url, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
     if (!res.ok) return null;
     const data = await res.json();
     if (data.status !== 'OK' || !data.results?.[0]) return null;
@@ -93,7 +98,10 @@ async function fetchPrimaryPhoto(listingKey) {
     url.searchParams.set('$select', 'MediaURL,MediaCategory,MediaType,ImageSizeDescription,Order');
     url.searchParams.set('$orderby', 'Order');
     url.searchParams.set('$top', '10');
-    const res = await fetch(url, { headers: { Authorization: `Bearer ${VOW_ACCESS_TOKEN}`, Accept: 'application/json' } });
+    const res = await fetch(url, {
+      headers: { Authorization: `Bearer ${VOW_ACCESS_TOKEN}`, Accept: 'application/json' },
+      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+    });
     if (!res.ok) return null;
     const data = await res.json();
     const rows = data.value || [];
@@ -117,6 +125,7 @@ async function fetchPage(nextLink) {
       })();
   const res = await fetch(url, {
     headers: { Authorization: `Bearer ${VOW_ACCESS_TOKEN}`, Accept: 'application/json' },
+    signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
   });
   if (!res.ok) throw new Error(`Property fetch failed -> HTTP ${res.status}: ${await res.text().catch(() => '')}`);
   return res.json();
