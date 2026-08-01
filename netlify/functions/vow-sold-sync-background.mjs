@@ -33,8 +33,14 @@ const GOOGLE_GEOCODING_API_KEY = process.env.GOOGLE_GEOCODING_API_KEY;
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-const PAGES_PER_RUN = 15; // ~15 x 500 = 7,500 records/run -- comfortably inside Netlify's background function time budget
-const PAGE_SIZE = 500;
+const PAGES_PER_RUN = 15;
+// A page can be far more "Closed"-heavy than expected (200+/500 seen in
+// practice) -- with a live geocode + photo lookup per never-before-seen
+// closed listing, a single dense page could take 30+ minutes even with the
+// per-call timeout below, since those lookups run one at a time. Smaller
+// pages bound that worst case and mean the per-page cursor checkpoint fires
+// much more often, so a run that does get cut off loses far less work.
+const PAGE_SIZE = 100;
 // A run was observed hard-hanging for 20+ minutes with zero progress --
 // none of this file's fetch() calls had a timeout, so a single unresponsive
 // call to Google Geocoding or the AMPRE Media endpoint could block the
