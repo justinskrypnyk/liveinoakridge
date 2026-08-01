@@ -327,10 +327,17 @@ function polygonToPathD(rings, project) {
   return rings.map((ring) => `M${ring.map((pt) => project(pt).join(',')).join('L')}Z`).join(' ');
 }
 
+// vow-sold-sync-background hit a real production hang from an unbounded
+// fetch() to this same AMPRE endpoint -- this function makes the same kind
+// of live call (8x, one per outlying town) with no timeout of its own, so
+// carrying the same guard here rather than risk the identical failure mode.
 async function odataGet(resource, params) {
   const url = new URL(`${DDF_API_BASE_URL}${resource}`);
   for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
-  const res = await fetch(url, { headers: { Authorization: `Bearer ${VOW_ACCESS_TOKEN}`, Accept: 'application/json' } });
+  const res = await fetch(url, {
+    headers: { Authorization: `Bearer ${VOW_ACCESS_TOKEN}`, Accept: 'application/json' },
+    signal: AbortSignal.timeout(15000),
+  });
   if (!res.ok) throw new Error(`${resource} -> HTTP ${res.status}: ${await res.text().catch(() => '')}`);
   return res.json();
 }
