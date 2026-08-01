@@ -216,12 +216,29 @@ export default async (req) => {
   ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
   // is_lease excluded -- leases stay in vow_sold_listings for the website
   // (sold-map etc.) but must never factor into reported price stats.
-  const { data: recentSolds } = await supabase
-    .from('vow_sold_listings')
-    .select('area_slug, close_price, list_price')
-    .gte('close_date', ninetyDaysAgo.toISOString().slice(0, 10))
-    .eq('is_lease', false)
-    .not('area_slug', 'is', null);
+  //
+  // Paginated explicitly -- a plain .select() silently caps at Supabase's
+  // default 1,000-row limit with no error, and this window already exceeds
+  // that (2,150+ rows sitewide as of Aug 2026 and growing), so every area's
+  // stats were being computed from an arbitrarily-truncated slice with no
+  // indication anything was missing.
+  const recentSolds = [];
+  const SOLDS_PAGE_SIZE = 1000;
+  for (let from = 0; ; from += SOLDS_PAGE_SIZE) {
+    const { data: page, error: soldsError } = await supabase
+      .from('vow_sold_listings')
+      .select('area_slug, close_price, list_price')
+      .gte('close_date', ninetyDaysAgo.toISOString().slice(0, 10))
+      .eq('is_lease', false)
+      .not('area_slug', 'is', null)
+      .range(from, from + SOLDS_PAGE_SIZE - 1);
+    if (soldsError) {
+      console.error('heat-map-snapshot: recentSolds query failed:', soldsError.message);
+      break;
+    }
+    recentSolds.push(...(page || []));
+    if (!page || page.length < SOLDS_PAGE_SIZE) break;
+  }
   const soldsByArea = new Map();
   for (const row of recentSolds || []) {
     if (!soldsByArea.has(row.area_slug)) soldsByArea.set(row.area_slug, []);
