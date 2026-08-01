@@ -139,7 +139,13 @@ export default async () => {
   const cursorStore = getStore('vow-sold-sync-cursor');
   const polygons = loadAllAreaBoundaries();
 
-  let nextLink = await cursorStore.get('nextLink', { type: 'text' }).catch(() => null);
+  let nextLink = null;
+  try {
+    nextLink = await cursorStore.get('nextLink', { type: 'text' });
+  } catch (err) {
+    console.error('vow-sold-sync: cursor read failed:', err.message);
+  }
+  console.log(`vow-sold-sync: cursor read -> ${nextLink ? `${nextLink.length} chars, starts "${nextLink.slice(0, 60)}"` : '(none/empty)'}`);
   let pagesFetched = 0;
   let closedSeen = 0;
   let upserted = 0;
@@ -230,7 +236,13 @@ export default async () => {
     }
   }
 
-  await cursorStore.set('nextLink', reachedEnd ? '' : nextLink || '');
+  const cursorToSave = reachedEnd ? '' : nextLink || '';
+  try {
+    await cursorStore.set('nextLink', cursorToSave);
+    console.log(`vow-sold-sync: cursor saved -> ${cursorToSave ? `${cursorToSave.length} chars` : '(empty/reset)'}`);
+  } catch (err) {
+    console.error('vow-sold-sync: cursor write failed:', err.message);
+  }
 
   const summary = `vow-sold-sync done: ${pagesFetched} pages, ${closedSeen} closed listings seen, ${upserted} upserted, ${geocodedNew} newly geocoded, ${photosNew} new photos fetched${reachedEnd ? ' -- reached end of feed, cursor reset to start' : ' -- cursor saved, continuing next run'}`;
   console.log(summary);
