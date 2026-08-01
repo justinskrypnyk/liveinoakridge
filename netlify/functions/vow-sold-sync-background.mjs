@@ -152,8 +152,24 @@ export default async () => {
   let geocodedNew = 0;
   let photosNew = 0;
   let reachedEnd = false;
+  let stoppedEarly = false;
+
+  // Netlify background functions are killed outright (~15 min) with no
+  // chance to run cleanup code -- a run that's still deep in live
+  // geocode/photo lookups when that happens previously lost ALL its
+  // progress, because the cursor was only ever saved once at the very end.
+  // This wall-clock budget bails out (and checkpoints below) well before
+  // that hard kill, and every page now saves its own cursor position as it
+  // goes, so a run that stops early -- by budget or by the hard kill --
+  // never re-walks pages it already paid the geocode/photo cost for.
+  const startedAt = Date.now();
+  const TIME_BUDGET_MS = 12 * 60 * 1000;
 
   while (pagesFetched < PAGES_PER_RUN) {
+    if (Date.now() - startedAt > TIME_BUDGET_MS) {
+      stoppedEarly = true;
+      break;
+    }
     const data = await fetchPage(nextLink || undefined);
     pagesFetched++;
     const rows = data.value || [];
@@ -230,19 +246,24 @@ export default async () => {
     }
 
     nextLink = data['@odata.nextLink'] || null;
+
+    // Checkpoint after every page rather than once at the end -- if this
+    // invocation gets killed by Netlify's hard timeout partway through,
+    // the pages already paid for (geocoded/upserted above) stay banked
+    // instead of being silently redone next run.
+    try {
+      await cursorStore.set('nextLink', nextLink || '');
+    } catch (err) {
+      console.error('vow-sold-sync: cursor checkpoint failed:', err.message);
+    }
+
     if (!nextLink) {
       reachedEnd = true;
       break;
     }
   }
 
-  const cursorToSave = reachedEnd ? '' : nextLink || '';
-  try {
-    await cursorStore.set('nextLink', cursorToSave);
-    console.log(`vow-sold-sync: cursor saved -> ${cursorToSave ? `${cursorToSave.length} chars` : '(empty/reset)'}`);
-  } catch (err) {
-    console.error('vow-sold-sync: cursor write failed:', err.message);
-  }
+  console.log(`vow-sold-sync: cursor at exit -> ${nextLink ? `${nextLink.length} chars` : '(empty/reset)'}${stoppedEarly ? ' (stopped early on time budget)' : ''}`);
 
   const summary = `vow-sold-sync done: ${pagesFetched} pages, ${closedSeen} closed listings seen, ${upserted} upserted, ${geocodedNew} newly geocoded, ${photosNew} new photos fetched${reachedEnd ? ' -- reached end of feed, cursor reset to start' : ' -- cursor saved, continuing next run'}`;
   console.log(summary);
