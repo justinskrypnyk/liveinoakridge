@@ -104,17 +104,28 @@ export default async () => {
   // per-subscription query -- cheap in-memory distance filtering scales
   // fine at this data size and avoids N round-trips to Supabase.
   const since = new Date(Date.now() - 40 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
-  const { data: recentSold, error: soldError } = await supabase
-    .from('vow_sold_listings')
-    .select('listing_key, address, close_price, close_date, lat, lng')
-    .gte('close_date', since)
-    .eq('is_lease', false)
-    .not('lat', 'is', null)
-    .not('lng', 'is', null);
-
-  if (soldError) {
-    console.error('home-watch-alerts: sold-listings query failed:', soldError.message);
-    return new Response('Query failed', { status: 500 });
+  // Paginated explicitly -- a plain .select() silently caps at Supabase's
+  // default 1,000-row limit with no error, and this 40-day window already
+  // exceeds that (1,500+ rows sitewide as of Aug 2026). An unpaginated
+  // query here meant some home-watch subscribers could silently miss the
+  // actual nearest/most relevant comparable sale in their alert email.
+  const recentSold = [];
+  const SOLD_PAGE_SIZE = 1000;
+  for (let from = 0; ; from += SOLD_PAGE_SIZE) {
+    const { data: page, error: soldError } = await supabase
+      .from('vow_sold_listings')
+      .select('listing_key, address, close_price, close_date, lat, lng')
+      .gte('close_date', since)
+      .eq('is_lease', false)
+      .not('lat', 'is', null)
+      .not('lng', 'is', null)
+      .range(from, from + SOLD_PAGE_SIZE - 1);
+    if (soldError) {
+      console.error('home-watch-alerts: sold-listings query failed:', soldError.message);
+      return new Response('Query failed', { status: 500 });
+    }
+    recentSold.push(...(page || []));
+    if (!page || page.length < SOLD_PAGE_SIZE) break;
   }
 
   let sent = 0;
