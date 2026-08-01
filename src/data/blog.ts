@@ -2032,6 +2032,95 @@ export const BLOG_POSTS: BlogPost[] = [
       },
     ],
   },
+  {
+    slug: 'july-2026-london-ontario-market-update',
+    title: 'July 2026 London Ontario Real Estate Market Update',
+    description: "537 homes sold across London Ontario in July 2026. Here's the full breakdown by price, by neighbourhood, and what it means if you're buying or selling this fall.",
+    date: '2026-08-01',
+    dateDisplay: 'August 1, 2026',
+    category: 'Market Updates',
+    author: 'Justin Skrypnyk',
+    readTime: '6 min read',
+    image: '/images/london-ontario-months-of-supply-july-2026.png',
+    imageAlt: 'July 2026 London Ontario real estate market update — resale home prices and sales volume by neighbourhood',
+    content: `
+      <p>July is usually a quieter month in London real estate, and 2026 held to that pattern — sales volume eased slightly from June, but prices held together better than the headline number suggests. Here's the full breakdown of what actually happened, and what it means heading into fall.</p>
+
+      <h2>What Happened in the London Ontario Housing Market in July 2026?</h2>
+      <table>
+        <thead>
+          <tr><th>Metric</th><th>July 2026</th><th>June 2026</th><th>Month-Over-Month</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Homes Sold</td><td>537</td><td>568</td><td>-5.5%</td></tr>
+          <tr><td>Median Sale Price</td><td>$560,000</td><td>$570,000</td><td>-1.8%</td></tr>
+          <tr><td>Average Sale Price</td><td>$627,687</td><td>$609,483</td><td>+3.0%</td></tr>
+          <tr><td>Avg. Sale Price / List Price</td><td>97.8%</td><td>97.4%</td><td>+0.4 pts</td></tr>
+          <tr><td>Homes Sold Above List</td><td>18.4%</td><td>16.5%</td><td>+1.9 pts</td></tr>
+        </tbody>
+      </table>
+      <p><em>Source: MLS® resale data via the LSTAR (London and St. Thomas Association of REALTORS®) board feed, compiled from closed residential transactions across London East, London North, and London South. Leases and non-residential transactions excluded. Compiled August 1, 2026.</em></p>
+      <p>Want to see how your own neighbourhood compares? The <a href="/market-map/">interactive Neighbourhood Heat Map</a> breaks these same numbers out across all of London's mapped neighbourhoods, not just the citywide average.</p>
+
+      <h2>Are Home Prices Going Up or Down in London Ontario?</h2>
+      <p>Both, depending on which number you look at — and that split is the real story of July. The <strong>median</strong> sale price dipped 1.8% to $560,000, which on its own reads like a soft month. But the <strong>average</strong> sale price climbed 3.0% to $627,687. That gap between median and average almost always means the same thing: a handful of higher-end sales pulled the average up while the bulk of the market — the $400K–$600K range where most buyers actually shop — softened slightly.</p>
+      <p>The sale-to-list ratio backs that up. At 97.8% average and 18.4% of homes selling above asking, both numbers actually improved from June rather than weakened. Sellers who priced accurately in July generally got close to what they were asking for, sometimes more. This isn't a market falling apart — it's a market where pricing discipline matters more than it did in the spring.</p>
+
+      <h2>How Did Oakridge Perform in July 2026?</h2>
+      <p>Thirty homes sold in Oakridge in July at a median price of $695,278 and an average of $710,743 — both comfortably above the citywide median. Just as notable: 30% of Oakridge sales closed above asking price, well ahead of the 18.4% citywide rate, and the average sale-to-list ratio came in at 98.5%.</p>
+      <p>That pattern has held for months now. Oakridge continues to trade at a premium to the city average while showing more competitive-offer activity than most neighbourhoods, even in a month where citywide sales volume eased back. For a closer look at the neighbourhood itself, see our <a href="/areas/oakridge/">Oakridge neighbourhood guide</a>.</p>
+
+      <h2>How Are West London's Neighbourhoods Comparing This Month?</h2>
+      <table>
+        <thead>
+          <tr><th>Neighbourhood</th><th>Homes Sold</th><th>Median Price</th><th>Average Price</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><a href="/areas/lambeth/">Lambeth</a></td><td>11</td><td>$949,900</td><td>$975,239</td></tr>
+          <tr><td><a href="/areas/riverbend/">Riverbend</a></td><td>19</td><td>$785,000</td><td>$943,504</td></tr>
+          <tr><td><a href="/areas/westmount/">Westmount</a></td><td>23</td><td>$735,000</td><td>$726,917</td></tr>
+          <tr><td><a href="/areas/byron/">Byron</a></td><td>26</td><td>$707,500</td><td>$778,626</td></tr>
+          <tr><td><a href="/areas/oakridge/">Oakridge</a></td><td>30</td><td>$695,278</td><td>$710,743</td></tr>
+          <tr><td><a href="/areas/whitehills/">Whitehills</a></td><td>15</td><td>$555,000</td><td>$522,283</td></tr>
+          <tr><td><a href="/areas/west-london/">West London</a></td><td>7</td><td>$510,000</td><td>$510,429</td></tr>
+        </tbody>
+      </table>
+      <p>Lambeth posted the highest median of our served areas this month, driven by a small number of larger, newer-build sales rather than a broad price shift — worth keeping in mind with only 11 transactions behind that number. Whitehills and West London remain the more accessible entry points on this list, both landing close to the citywide median rather than above it.</p>
+      <p>One neighbourhood worth flagging outside our usual seven: Medway, tucked between Fox Hollow, Masonville, and West London, had a genuinely strong July — sixteen closings, with real sale prices ranging from the high $300,000s up to $1.44 million and a median right around $675,000. It's not an area we get asked about as often as Oakridge or Byron, but the activity there this month says it deserves more attention than it usually gets.</p>
+
+      <h2>Is Now a Good Time to Sell in London Ontario?</h2>
+      <p>If your home is priced to the current market, yes. The improvement in sale-to-list ratio and above-asking sales from June to July, even as overall volume eased, points to real demand for accurately priced homes — buyers are still willing to compete, they're just not willing to overpay on something priced ahead of the market. That's especially true in <a href="/areas/oakridge/">Oakridge</a>, <a href="/areas/byron/">Byron</a>, and <a href="/areas/westmount/">Westmount</a>, where above-list sales are running well ahead of the citywide rate.</p>
+      <p>Not sure where your own home stands? A <a href="/services/home-evaluation/">complimentary home evaluation</a> gets you a real, current number rather than a guess based on last spring's market.</p>
+
+      <h2>Is Now a Good Time to Buy in London Ontario?</h2>
+      <p>For most of the city, yes — a slight pullback in sales volume combined with a softer median price gives buyers a bit more room than they had a few months ago. That room is thinner in the neighbourhoods carrying the July average higher; homes in <a href="/areas/oakridge/">Oakridge</a> and similar pockets are still drawing competitive offers close to a third of the time, so buyers there should be ready to move decisively rather than count on a long negotiation.</p>
+      <p>Buyers weighing where their budget goes furthest may want to start with our <a href="/blog/cheapest-area-buy-house-london-ontario/">London Ontario affordability guide</a>, or explore all <a href="/areas/">areas we serve</a> directly.</p>
+
+      <p>For where the market stood the month before, see our <a href="/blog/june-2026-london-ontario-market-update/">June 2026 London Ontario Real Estate Market Update</a>.</p>
+    `,
+    faqs: [
+      {
+        question: 'How many homes sold in London Ontario in July 2026?',
+        answer: '537 homes sold in London Ontario in July 2026, down 5.5% from 568 sales in June 2026.',
+      },
+      {
+        question: 'Did home prices go up or down in London Ontario in July 2026?',
+        answer: "It depends on the measure. The median sale price fell 1.8% month-over-month to $560,000, while the average sale price rose 3.0% to $627,687. The gap suggests a handful of higher-end sales lifted the average while the bulk of the $400K-$600K market softened slightly.",
+      },
+      {
+        question: 'Is London Ontario a buyer\'s or seller\'s market right now?',
+        answer: "Conditions are close to balanced. Sales volume eased slightly in July, but the average sale-to-list ratio (97.8%) and share of homes selling above asking (18.4%) both improved from June — accurately priced homes are still finding motivated buyers.",
+      },
+      {
+        question: 'What is the best-performing London Ontario neighbourhood right now?',
+        answer: "Among our seven served areas, Oakridge had the strongest July for competitive activity — 30% of sales closed above asking, nearly double the citywide rate, at a median price of $695,278.",
+      },
+      {
+        question: 'Is now a good time to sell a home in London Ontario?',
+        answer: "For accurately priced homes, yes. Sale-to-list ratios and above-asking sales both improved from June to July even as overall volume eased — a sign buyers are still competing for well-priced homes, just not overpaying for overpriced ones.",
+      },
+    ],
+  },
 ];
 
 export function getBlogPost(slug: string): BlogPost | undefined {
