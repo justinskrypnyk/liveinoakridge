@@ -1,3 +1,8 @@
+# Non-www -> www — the Site Explorer report (2 Aug 2026) found the non-www
+# host serving the homepage with a backlink spam score of 72 against the
+# domain's own score of 2. Force everything onto the canonical www host.
+https://liveinoakridge.ca/*   https://www.liveinoakridge.ca/:splat   301!
+
 # Legacy Wix URLs — redirect to their Astro equivalents with 301
 # force flag (!) ensures the redirect always wins even if a static file
 # ever exists at the same path (Netlify lets files shadow non-forced redirects)

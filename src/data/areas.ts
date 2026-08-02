@@ -424,9 +424,9 @@ export const AREAS: Area[] = [
         a: 'Oakridge has some of London\'s highest-rated schools. Oakridge Public School and Mother Teresa Catholic Elementary serve younger students, and Oakridge Secondary School is well-regarded for academics and extracurriculars. The school catchments are a major reason families specifically seek out Oakridge homes.',
       },
     ],
-    metaTitle: 'Oakridge Homes for Sale | London Ontario Real Estate | Justin Skrypnyk',
+    metaTitle: 'Homes for Sale in Oakridge, London Ontario | Live In Oakridge',
     metaDescription:
-      'Oakridge homes for sale in London Ontario. Justin Skrypnyk is the local expert — explore listings, get a complimentary evaluation, and find out why Oakridge is West London\'s best-kept secret.',
+      'Every active MLS® listing in Oakridge, London Ontario, from every brokerage, plus the full neighbourhood guide — schools, parks, prices, and sub-areas. Complimentary evaluations from local Broker Justin Skrypnyk.',
   },
   {
     slug: 'byron',
@@ -436,7 +436,7 @@ export const AREAS: Area[] = [
     description:
       'Nestled along the Thames River with Springbank Park as its backyard, Byron blends outdoor living with a small-town feel inside a big city.',
     longDescription:
-      'Byron is one of London\'s most desirable southwest communities, bordered by the Thames River and anchored by Springbank Park — the largest park in London. Originally a village before amalgamation, Byron has retained its unique character, quiet streets, and strong community pride. Homes range from post-war bungalows to large executive two-storeys. Byron Secondary School consistently ranks among the region\'s top high schools. Whether you\'re cycling the river trails at sunrise or grabbing a coffee on Commissioners Road, Byron delivers a lifestyle that buyers rarely leave.',
+      'Byron is one of London\'s most desirable southwest communities, bordered by the Thames River and anchored by Springbank Park — the largest park in London. Originally a village before amalgamation, Byron has retained its unique character, quiet streets, and strong community pride, from the executive homes along Colonel Talbot Road and around Wychwood Park to the pockets bordering the Warbler Woods Environmentally Significant Area. Homes range from post-war bungalows to large executive two-storeys. High schoolers attend Saunders Secondary School, the largest high school in the TVDSB, serving the broader southwest London catchment. Whether you\'re cycling the river trails at sunrise or grabbing a coffee on Commissioners Road, Byron delivers a lifestyle that buyers rarely leave.',
     mapEmbedId: 'Byron,+London,+Ontario,+Canada',
     geo: { lat: 42.9507, lng: -81.2842 },
     image: '/images/areas/byron-neighbourhood-london-ontario.webp',
@@ -446,14 +446,14 @@ export const AREAS: Area[] = [
     highlights: [
       'Springbank Park — London\'s largest park at your doorstep',
       'Thames River trail system for cycling and walking',
-      'Byron Secondary School — top academic ranking',
+      'Saunders Secondary School — the largest high school in the TVDSB',
       'Strong community identity and active neighbourhood association',
       'Diverse housing from bungalows to executive estates',
       'Village-feel shops and cafés along Commissioners Road',
     ],
     avgPrice: '$700,000–$950,000',
     homingTypes: ['Detached', 'Bungalows', 'Executive Homes', 'Semi-Detached'],
-    schools: ['Byron Northview Public School', 'St. John French Immersion', 'Byron Secondary School'],
+    schools: ['Byron Northview Public School', 'St. John French Immersion', 'Saunders Secondary School'],
     nearbyAmenities: ['Springbank Park', 'Thames Valley Parkway', 'Commissioners Road Shops'],
     localBusinesses: [
       {
@@ -547,18 +547,18 @@ export const AREAS: Area[] = [
       },
       {
         q: 'How much do homes cost in Byron, London Ontario?',
-        a: 'Byron homes for sale typically range from $700,000 to $950,000 for detached properties, with executive homes near Springbank Park exceeding $1 million. The neighbourhood commands a premium over the London Ontario average reflecting its unique lifestyle, Springbank Park access, and Byron Secondary School\'s academic reputation.',
+        a: 'Byron homes for sale typically range from $700,000 to $950,000 for detached properties, with executive homes near Springbank Park exceeding $1 million. The neighbourhood commands a premium over the London Ontario average reflecting its unique lifestyle, Springbank Park access, and its established village character.',
       },
       {
         q: 'Is Byron a good neighbourhood to buy a home in London Ontario?',
-        a: 'Byron is one of London\'s most consistently desirable communities. Springbank Park — London\'s largest park — is at residents\' doorstep, the Thames River trail system provides direct active transportation, Byron Secondary School ranks among the top high schools in the region, and the Commissioners Road corridor gives the neighbourhood an authentic village-feel. Properties hold their value well.',
+        a: 'Byron is one of London\'s most consistently desirable communities. Springbank Park — London\'s largest park — is at residents\' doorstep, the Thames River trail system provides direct active transportation, Saunders Secondary School (the largest high school in the TVDSB) serves the area, and the Commissioners Road corridor gives the neighbourhood an authentic village-feel. Properties hold their value well.',
       },
       {
         q: 'How does Byron compare to Oakridge for buying a home?',
         a: 'Byron typically commands a modest price premium over Oakridge and offers a quieter, more nature-focused lifestyle anchored by Springbank Park and the Thames River. Oakridge offers slightly more walkable everyday amenities and a more central West London location. Both are excellent — the right choice depends on whether outdoor lifestyle or daily convenience is your priority.',
       },
     ],
-    metaTitle: 'Byron Homes for Sale | London Ontario Real Estate | Justin Skrypnyk',
+    metaTitle: 'Homes for Sale in Byron, London Ontario | Live In Oakridge',
     metaDescription:
       'Byron homes for sale in London Ontario. Local Real Estate Broker Justin Skrypnyk can help you find homes near Springbank Park, great schools, and Thames River trails. Get a complimentary home evaluation today.',
   },
@@ -570,7 +570,7 @@ export const AREAS: Area[] = [
     description:
       'Westmount offers convenient access to everything London has to offer, with a diverse mix of housing and a strong commercial corridor.',
     longDescription:
-      'Westmount developed primarily in the 1960s and has since evolved into one of West London\'s most versatile communities. The neighbourhood offers a wide range of housing — from modest bungalows to larger detached homes and high-rise apartments along Wonderland and Commissioners. Westmount residents enjoy easy access to Western University, University Hospital, White Oaks Mall, and the extensive retail corridor along Wonderland Road South. The area\'s central location makes it attractive for young professionals, growing families, and downsizers who want proximity to amenities without sacrificing neighbourhood feel.',
+      'Westmount developed primarily in the 1960s and has since evolved into one of West London\'s most versatile communities, roughly bounded by Wharncliffe Road to the east and Southdale Road to the south. The neighbourhood offers a wide range of housing — from modest bungalows to larger detached homes and high-rise apartments along Wonderland and Commissioners. Westmount residents enjoy easy access to Western University, University Hospital, Westmount Shopping Centre, White Oaks Mall, and the extensive retail corridor along Wonderland Road South. The area\'s central location makes it attractive for young professionals, growing families, and downsizers who want proximity to amenities without sacrificing neighbourhood feel.',
     mapEmbedId: 'Westmount,+London,+Ontario,+Canada',
     geo: { lat: 42.9638, lng: -81.2628 },
     image: '/images/areas/westmount-neighbourhood-london-ontario.webp',
@@ -586,7 +586,7 @@ export const AREAS: Area[] = [
     ],
     avgPrice: '$550,000–$750,000',
     homingTypes: ['Detached', 'Semi-Detached', 'Condos', 'Townhomes', 'Apartments'],
-    schools: ['Princess Anne French Immersion', 'St. Thomas Aquinas Catholic', 'Westmount Secondary School'],
+    schools: ['Princess Anne French Immersion', 'St. Thomas Aquinas Catholic', 'Saunders Secondary School'],
     nearbyAmenities: ['White Oaks Mall', 'Wonderland Road Retail', 'University Hospital'],
     localBusinesses: [
       {
@@ -669,10 +669,10 @@ export const AREAS: Area[] = [
       },
       {
         q: 'What is Westmount like as a neighbourhood for families?',
-        a: 'Westmount works well for families thanks to its strong schools (Princess Anne French Immersion, St. Thomas Aquinas Catholic, Westmount Secondary), proximity to University Hospital, and excellent transit connections. The Wonderland Road and Commissioners corridors put every daily need within easy reach.',
+        a: 'Westmount works well for families thanks to its schools (Princess Anne French Immersion, St. Thomas Aquinas Catholic, and Saunders Secondary — the largest high school in the TVDSB), proximity to University Hospital, and excellent transit connections. The Wonderland Road and Commissioners corridors put every daily need within easy reach.',
       },
     ],
-    metaTitle: 'Westmount Homes for Sale | London Ontario Real Estate | Justin Skrypnyk',
+    metaTitle: 'Homes for Sale in Westmount, London Ontario | Live In Oakridge',
     metaDescription:
       'Westmount homes for sale in London Ontario. Justin Skrypnyk helps buyers and sellers navigate this diverse West London neighbourhood. Complimentary home evaluation available.',
   },
@@ -831,7 +831,7 @@ export const AREAS: Area[] = [
     ],
     avgPrice: '$700,000–$1,100,000',
     homingTypes: ['Executive Detached', 'Estate Homes', 'New Construction'],
-    schools: ['Lambeth Public School', 'St. Nicholas Catholic Elementary', 'Sir Frederick Banting Secondary'],
+    schools: ['Lambeth Public School', 'St. Nicholas Catholic Elementary', 'Saunders Secondary School'],
     nearbyAmenities: ['Wellington Road Big Box Retail', 'Lambeth Arena', 'Springwater Conservation Area'],
     localBusinesses: [
       {
@@ -885,7 +885,7 @@ export const AREAS: Area[] = [
         a: 'Lambeth is approximately 15 to 20 minutes from downtown London by car, and quick access to Highways 401 and 402 makes it ideal for commuters heading to Windsor, Kitchener-Waterloo, or Toronto. Wellington Road provides a straight shot to the city\'s south commercial corridor.',
       },
     ],
-    metaTitle: 'Lambeth London Ontario Real Estate | Justin Skrypnyk Real Estate Broker',
+    metaTitle: 'Homes for Sale in Lambeth, London Ontario | Live In Oakridge',
     metaDescription:
       'Buy or sell a home in Lambeth, London Ontario with Real Estate Broker Justin Skrypnyk. Estate communities, great schools, and quick highway access. Contact us for a complimentary evaluation.',
   },

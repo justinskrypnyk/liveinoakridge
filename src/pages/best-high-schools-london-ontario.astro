@@ -1,0 +1,225 @@
+---
+import Base from '@/layouts/Base.astro';
+import Schema from '@/components/Schema.astro';
+import { SITE } from '@/data/site';
+import { HIGH_SCHOOLS, PROVINCIAL_TOTAL, FRASER_REPORT_YEAR } from '@/data/high-schools';
+
+const boardTypeBadge: Record<string, string> = {
+  Public: 'bg-blue-100 text-blue-800',
+  Catholic: 'bg-purple-100 text-purple-800',
+  'French Public': 'bg-rose-100 text-rose-800',
+  'French Catholic': 'bg-rose-100 text-rose-800',
+};
+
+function fraserStars(rating: number): string {
+  const full = Math.round(rating);
+  return '★'.repeat(full) + '☆'.repeat(10 - full);
+}
+
+const faqs = [
+  {
+    question: 'What are the best high schools in London, Ontario?',
+    answer:
+      'By Fraser Institute rating, London Central Secondary School (8.7/10) and Oakridge Secondary School (8.0/10) are the two highest-rated high schools in London, Ontario, both ranking in the top 90 of 747 Ontario secondary schools.',
+  },
+  {
+    question: 'What school serves Oakridge, Byron, Westmount, Riverbend and Lambeth for high school?',
+    answer:
+      'Oakridge is served by Oakridge Secondary School, rated 8.0/10 by the Fraser Institute. Byron, Westmount, Riverbend and Lambeth are all served by Saunders Secondary School, the largest high school in the Thames Valley District School Board, rated 5.6/10.',
+  },
+  {
+    question: 'Are Fraser Institute school ratings the whole picture?',
+    answer:
+      'No. Fraser Institute ratings reflect academic performance on provincial EQAO testing only — not extracurriculars, arts programs, special education supports, or school culture. Always visit a school and speak with current families before deciding.',
+  },
+];
+---
+
+<Base
+  title="Best High Schools in London, Ontario, Ranked (2025 Fraser Institute)"
+  description="All 19 secondary schools in London, Ontario ranked by Fraser Institute rating, with school board, address, and which neighbourhood each one serves."
+>
+  <Fragment slot="head">
+    <Schema type="breadcrumb" breadcrumbs={[{ name: 'Home', url: SITE.url }, { name: 'Best High Schools in London Ontario', url: `${SITE.url}/best-high-schools-london-ontario/` }]} />
+    <script type="application/ld+json" set:html={JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: faqs.map((f) => ({
+        '@type': 'Question',
+        name: f.question,
+        acceptedAnswer: { '@type': 'Answer', text: f.answer },
+      })),
+    })} />
+  </Fragment>
+
+  <!-- Hero -->
+  <section class="bg-navy py-20 text-white">
+    <div class="container-site">
+      <nav aria-label="Breadcrumb" class="flex items-center gap-2 text-sm text-white/50 mb-8">
+        <a href="/" class="hover:text-gold transition-colors">Home</a>
+        <span>/</span>
+        <span class="text-white/70">Best High Schools in London Ontario</span>
+      </nav>
+      <div class="max-w-3xl">
+        <div class="inline-flex items-center gap-2 bg-gold/15 text-gold text-sm font-semibold px-4 py-2 rounded-full mb-6 border border-gold/30">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3L1 9l11 6 9-4.91V17h2V9L12 3z"/>
+          </svg>
+          {FRASER_REPORT_YEAR} Fraser Institute Report Card
+        </div>
+        <h1 class="font-serif text-5xl font-bold mb-4 leading-tight">
+          Best High Schools in London, Ontario, Ranked
+        </h1>
+        <div class="gold-divider mb-6"></div>
+        <p class="text-xl text-white/70 leading-relaxed mb-4">
+          All 19 secondary schools in London, Ontario, ranked by Fraser Institute rating out of 10 — with the school board, address, and which West London neighbourhood each one serves.
+        </p>
+        <p class="text-white/50 text-sm">
+          Sourced from the Fraser Institute's <a href="https://www.compareschoolrankings.org/" target="_blank" rel="noopener noreferrer" class="text-gold hover:text-gold-light underline">Compare School Rankings</a> ({FRASER_REPORT_YEAR} Report Card on Ontario's Secondary Schools, based on 2023-24 EQAO results). For a deeper look at the 11 schools serving Oakridge specifically — including elementary — see the <a href="/community/" class="text-gold hover:text-gold-light underline">Oakridge Community Guide</a>.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Ranked Table -->
+  <section class="py-16 bg-cream">
+    <div class="container-site">
+      <div class="mb-10">
+        <h2 class="section-heading">All 19 Schools, Ranked</h2>
+        <div class="gold-divider mb-4"></div>
+        <p class="section-subheading">
+          Ranked by Fraser Institute rating out of 10. Provincial rank is out of {PROVINCIAL_TOTAL} Ontario secondary schools.
+        </p>
+      </div>
+
+      <div class="overflow-x-auto rounded-xl border border-gray-200 bg-white">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-gray-200 text-left">
+              <th class="px-4 py-3 font-semibold text-navy/70">#</th>
+              <th class="px-4 py-3 font-semibold text-navy/70">School</th>
+              <th class="px-4 py-3 font-semibold text-navy/70">Fraser Rating</th>
+              <th class="px-4 py-3 font-semibold text-navy/70">Provincial Rank</th>
+              <th class="px-4 py-3 font-semibold text-navy/70">Board</th>
+              <th class="px-4 py-3 font-semibold text-navy/70">Serves</th>
+            </tr>
+          </thead>
+          <tbody>
+            {HIGH_SCHOOLS.map((school, i) => (
+              <tr class:list={['border-b border-gray-100 last:border-0', school.servesAreas ? 'bg-gold/5' : '']}>
+                <td class="px-4 py-3 text-navy/50 font-medium">{i + 1}</td>
+                <td class="px-4 py-3">
+                  <div class="font-semibold text-navy">{school.name}</div>
+                  {school.address && <div class="text-xs text-slate">{school.address}</div>}
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap">
+                  <span class="text-gold-deep font-bold">{school.fraserRating.toFixed(1)}</span>
+                  <span class="text-navy/40 text-xs">/10</span>
+                  <div class="text-gold-deep/80 text-xs tracking-tighter">{fraserStars(school.fraserRating)}</div>
+                </td>
+                <td class="px-4 py-3 text-navy/70 whitespace-nowrap">{school.provincialRank} of {PROVINCIAL_TOTAL}</td>
+                <td class="px-4 py-3">
+                  <span class={`text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap ${boardTypeBadge[school.boardType]}`}>{school.boardType}</span>
+                  <div class="text-xs text-slate mt-1">{school.board}</div>
+                </td>
+                <td class="px-4 py-3">
+                  {school.servesAreas ? (
+                    <div class="flex flex-wrap gap-1.5">
+                      {school.servesAreas.map((a) => (
+                        <a href={`/areas/${a.slug}/`} class="text-xs font-semibold text-gold-deep hover:text-gold-light underline whitespace-nowrap">{a.name}</a>
+                      ))}
+                    </div>
+                  ) : (
+                    <span class="text-xs text-slate">—</span>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Fraser Institute Note -->
+      <div class="mt-10 p-6 bg-white rounded-xl border border-gray-200">
+        <div class="flex gap-4 items-start">
+          <div class="w-10 h-10 bg-gold/10 rounded-lg flex items-center justify-center shrink-0">
+            <svg class="w-5 h-5 text-gold" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+            </svg>
+          </div>
+          <div>
+            <h4 class="font-semibold text-navy mb-1">About Fraser Institute Ratings</h4>
+            <p class="text-sm text-slate leading-relaxed">
+              The Fraser Institute rates Ontario's secondary schools out of 10 using academic indicators from provincial EQAO test results — the grade 9 math assessment and the Ontario Secondary School Literacy Test. Ratings reflect academic performance only, not extracurriculars, arts programs, special education supports, or school culture. Always visit a school and speak with current families before deciding.
+              <a href="https://www.compareschoolrankings.org/" target="_blank" rel="noopener noreferrer" class="text-gold-deep underline ml-1">View all ratings at compareschoolrankings.org →</a>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Neighbourhood Callout -->
+  <section class="py-16 bg-navy-dark text-white">
+    <div class="container-site">
+      <div class="text-center mb-12">
+        <div class="inline-block text-gold text-sm font-semibold tracking-wider uppercase mb-4">By Neighbourhood</div>
+        <h2 class="font-serif text-3xl md:text-4xl mb-4">Which School Serves Which West London Neighbourhood</h2>
+        <div class="gold-divider mx-auto mb-4"></div>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+        <div class="bg-white/5 border border-white/10 rounded-xl p-6">
+          <h3 class="font-serif text-xl text-gold mb-2">Oakridge</h3>
+          <p class="text-white/70 text-sm leading-relaxed mb-3">
+            Oakridge Secondary School — rated 8.0/10, 86th of {PROVINCIAL_TOTAL} Ontario secondary schools. One of the highest-rated high schools in the city.
+          </p>
+          <a href="/areas/oakridge/" class="text-gold text-sm font-semibold hover:underline">Explore Oakridge homes →</a>
+        </div>
+        <div class="bg-white/5 border border-white/10 rounded-xl p-6">
+          <h3 class="font-serif text-xl text-gold mb-2">Byron, Westmount, Riverbend &amp; Lambeth</h3>
+          <p class="text-white/70 text-sm leading-relaxed mb-3">
+            All four share Saunders Secondary School — the largest high school in the TVDSB — rated 5.6/10, 453rd of {PROVINCIAL_TOTAL}. A bigger school with broader programming, at a more middling academic rating than Oakridge Secondary.
+          </p>
+          <div class="flex flex-wrap gap-x-3 gap-y-1">
+            <a href="/areas/byron/" class="text-gold text-sm font-semibold hover:underline">Byron →</a>
+            <a href="/areas/westmount/" class="text-gold text-sm font-semibold hover:underline">Westmount →</a>
+            <a href="/areas/riverbend/" class="text-gold text-sm font-semibold hover:underline">Riverbend →</a>
+            <a href="/areas/lambeth/" class="text-gold text-sm font-semibold hover:underline">Lambeth →</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="py-16 bg-cream">
+    <div class="container-site max-w-3xl">
+      <h2 class="section-heading text-center mb-10">Common Questions</h2>
+      <div class="space-y-6">
+        {faqs.map((f) => (
+          <div class="bg-white rounded-xl p-6 border border-gray-200">
+            <h3 class="font-serif text-lg text-navy mb-2">{f.question}</h3>
+            <p class="text-sm text-slate leading-relaxed">{f.answer}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="py-16 bg-white">
+    <div class="container-site">
+      <div class="bg-cream rounded-2xl p-10 text-center">
+        <h2 class="font-serif text-3xl text-navy mb-3">Buying a Home Near a Specific School?</h2>
+        <div class="gold-divider mx-auto mb-4"></div>
+        <p class="text-slate max-w-xl mx-auto mb-8 leading-relaxed">
+          As a local Real Estate Broker, I can help you find a home in the right catchment for your family — not just the right neighbourhood.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+          <a href="/areas/" class="btn-primary">Explore Areas We Serve</a>
+          <a href="/contact/" class="btn-secondary">Ask Justin a Question</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</Base>

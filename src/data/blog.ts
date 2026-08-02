@@ -431,7 +431,7 @@ export const BLOG_POSTS: BlogPost[] = [
   },
   {
     slug: 'oakridge-vs-byron-west-london-neighbourhoods',
-    title: "Oakridge vs. Byron: Comparing West London's Two Best Neighbourhoods",
+    title: "Oakridge vs. Byron: West London Neighbourhood Guide",
     description: "Deciding between Oakridge and Byron in West London Ontario? Here is a detailed comparison covering prices, schools, outdoor lifestyle, and which community fits you best.",
     date: '2026-06-10',
     dateDisplay: 'June 10, 2026',
@@ -441,7 +441,7 @@ export const BLOG_POSTS: BlogPost[] = [
     image: '/images/oakridge-aerial-drone-2026-thumb.webp',
     imageAlt: 'Aerial drone view of tree-lined streets in Oakridge, West London Ontario',
     content: `
-      <p>Oakridge and Byron are West London's two most established, desirable neighbourhoods — and choosing between them is one of the most common decisions buyers face. Both offer mature streets, strong schools, and genuine community character. But they are meaningfully different places to live. This comparison covers the factors that actually matter: price, schools, outdoor lifestyle, daily convenience, and fit.</p>
+      <p>Oakridge and Byron are West London's two most established, desirable neighbourhoods — and choosing between them is one of the most common decisions buyers face. Both offer mature streets, strong schools, and genuine community character. But they are meaningfully different places to live. This comparison covers the factors that actually matter: price, schools, outdoor lifestyle, daily convenience, and fit. If you already know Oakridge is the one, skip ahead to the <a href="/areas/oakridge/">full Oakridge guide</a> for current listings, prices, and sub-neighbourhood detail.</p>
 
       <h2>Location and Feel</h2>
       <p><a href="/areas/oakridge/">Oakridge</a> occupies the Oxford Street corridor between Wonderland Road and Sanatorium Road — west London's true mid-point, with quick access to the city in every direction. The neighbourhood feels settled and self-contained, centred around Oakridge Optimist Park and the Oxford & Hyde Park commercial node with Remark Fresh Markets, Shoppers Drug Mart, and Starbucks within walking distance.</p>
@@ -452,8 +452,8 @@ export const BLOG_POSTS: BlogPost[] = [
       <p>For buyers who need more budget flexibility, <a href="/areas/west-london/">West London near Cherry Hill Mall</a> or <a href="/areas/westmount/">Westmount</a> offer established neighbourhoods at lower price points. For a full comparison, see our <a href="/blog/cheapest-area-buy-house-london-ontario/">London Ontario affordability guide</a>, or check current numbers for both neighbourhoods side by side on the <a href="/market-map/">interactive Neighbourhood Heat Map</a>.</p>
 
       <h2>Schools</h2>
-      <p><a href="/areas/oakridge/">Oakridge</a> has long been one of London's strongest school catchments — <a href="https://www.tvdsb.ca" target="_blank" rel="noopener noreferrer">Oakridge Public School</a>, <a href="https://www.ldcsb.ca" target="_blank" rel="noopener noreferrer">Mother Teresa Catholic Elementary</a>, and Oakridge Secondary School are all well-regarded. <a href="/areas/byron/">Byron</a> matches this with Byron Northview Public School and Byron Secondary School, which consistently ranks among the region's top high schools academically.</p>
-      <p>Both neighbourhoods are excellent for families. Byron Secondary School's academic reputation gives it a slight edge for families prioritizing secondary school options specifically.</p>
+      <p><a href="/areas/oakridge/">Oakridge</a> has long been one of London's strongest school catchments — <a href="https://www.tvdsb.ca" target="_blank" rel="noopener noreferrer">Oakridge Public School</a>, <a href="https://www.ldcsb.ca" target="_blank" rel="noopener noreferrer">Mother Teresa Catholic Elementary</a>, and Oakridge Secondary School are all well-regarded, with Oakridge Secondary rated 8.0/10 by the <a href="https://www.compareschoolrankings.org/" target="_blank" rel="noopener noreferrer">Fraser Institute</a> (86th of 747 Ontario secondary schools). <a href="/areas/byron/">Byron</a> is served by Byron Northview Public School at the elementary level and Saunders Secondary School — the largest high school in the TVDSB — at the secondary level.</p>
+      <p>Both neighbourhoods are excellent for families, but on Fraser Institute ratings specifically, Oakridge Secondary's 8.0/10 is well ahead of Saunders' 5.6/10 (453rd of 747). Saunders makes up ground on program breadth simply by being the biggest school in the board, but families prioritizing top-end academic ranking specifically should weigh that difference.</p>
 
       <h2>Outdoor Lifestyle</h2>
       <p><a href="/areas/byron/">Byron</a> wins this category decisively. Springbank Park is London's largest green space, and the Thames River trail system runs directly through the community. Cyclists, runners, and outdoor-focused families rarely need to leave Byron to access world-class natural amenity.</p>
@@ -464,7 +464,7 @@ export const BLOG_POSTS: BlogPost[] = [
 
       <h2>Who Should Choose Each Neighbourhood?</h2>
       <p><strong>Choose <a href="/areas/oakridge/">Oakridge</a> if:</strong> You want a central west-end location, strong schools, walkable amenities, and a mature community with a slightly more accessible price point.</p>
-      <p><strong>Choose <a href="/areas/byron/">Byron</a> if:</strong> Outdoor lifestyle is your priority, you want a more village-like feel, and Byron Secondary School's academic profile is important to your family.</p>
+      <p><strong>Choose <a href="/areas/byron/">Byron</a> if:</strong> Outdoor lifestyle is your priority and you want a more village-like feel. Families weighing secondary-school ranking specifically should note Oakridge Secondary rates higher with the Fraser Institute than Byron's Saunders Secondary, though Saunders offers a larger school with broader programming.</p>
       <p>If you are still not sure which fits you better, <a href="/contact/">reach out to Justin</a> for a no-pressure conversation. He has helped families make this exact decision dozens of times and knows both neighbourhoods inside out. You can also explore all <a href="/areas/">areas we serve</a> or read our <a href="/blog/london-ontario-neighbourhood-guide-2026/">complete London Ontario neighbourhood guide</a> for further context.</p>
     `,
     faqs: [
@@ -474,11 +474,11 @@ export const BLOG_POSTS: BlogPost[] = [
       },
       {
         question: 'Which has better schools, Oakridge or Byron?',
-        answer: 'Both neighbourhoods have strong school catchments. Oakridge is served by Oakridge Public School, Mother Teresa Catholic Elementary, and Oakridge Secondary School. Byron is served by Byron Northview Public School and Byron Secondary School. Byron Secondary School has a slight academic edge at the secondary level and is frequently cited among the region\'s top-performing high schools.',
+        answer: 'Both neighbourhoods have strong school catchments. Oakridge is served by Oakridge Public School, Mother Teresa Catholic Elementary, and Oakridge Secondary School, which the Fraser Institute rates 8.0/10 (86th of 747 Ontario secondary schools). Byron is served by Byron Northview Public School and Saunders Secondary School — the largest high school in the TVDSB, rated 5.6/10 (453rd of 747). On Fraser Institute ranking specifically, Oakridge Secondary has the clear edge; Saunders offers a bigger school with broader programming.',
       },
       {
         question: 'Is Oakridge or Byron better for families with young children?',
-        answer: 'Both are excellent choices for families. Oakridge offers strong schools, Oakridge Optimist Park with a splash pad, and highly walkable everyday amenities. Byron offers Springbank Park\'s 200+ acres, the Thames River trail system, and Byron Secondary School. The right fit depends on whether you prioritize outdoor space (Byron) or central convenience (Oakridge).',
+        answer: 'Both are excellent choices for families. Oakridge offers strong schools, Oakridge Optimist Park with a splash pad, and highly walkable everyday amenities. Byron offers Springbank Park\'s 200+ acres, the Thames River trail system, and Saunders Secondary School. The right fit depends on whether you prioritize outdoor space (Byron) or central convenience and higher-rated secondary schooling (Oakridge).',
       },
       {
         question: 'What is the average home price in Oakridge vs Byron in 2026?',
@@ -878,7 +878,7 @@ export const BLOG_POSTS: BlogPost[] = [
       <p>Oakridge is the quintessential West London neighbourhood — mature trees, large lots, Sifton Bog conservation area, and some of London's best-regarded schools. Homes for sale in Oakridge typically range from $650,000 to $850,000 for detached. If you want the neighbourhood where residents know their neighbours and community pride runs deep, this is it.</p>
 
       <h3><a href="/areas/byron/">Byron</a> — Best for: Outdoor lifestyle, river trails, village feel</h3>
-      <p>Byron's anchor is Springbank Park — London's largest park — and the Thames River trail system. <a href="https://www.tvdsb.ca" target="_blank" rel="noopener noreferrer">Byron Secondary School</a> is one of the region's most academically strong. Prices are slightly above Oakridge ($700,000–$950,000) and the community has a quieter, more removed character. Homes for sale in Byron rarely last long.</p>
+      <p>Byron's anchor is Springbank Park — London's largest park — and the Thames River trail system. Byron falls in the <a href="https://www.tvdsb.ca" target="_blank" rel="noopener noreferrer">Saunders Secondary School</a> catchment, the largest high school in the TVDSB. Prices are slightly above Oakridge ($700,000–$950,000) and the community has a quieter, more removed character. Homes for sale in Byron rarely last long.</p>
 
       <h3><a href="/areas/westmount/">Westmount</a> — Best for: Diverse housing, proximity to Western University</h3>
       <p>Westmount offers London's widest range of housing options in one neighbourhood — from condos below $350,000 to large detached homes in the $700,000+ range. Proximity to Western University, University Hospital, and Wonderland Road retail makes it exceptionally practical for professionals and investors.</p>
@@ -945,7 +945,7 @@ export const BLOG_POSTS: BlogPost[] = [
       },
       {
         question: 'Which area of London Ontario has the best schools?',
-        answer: 'Oakridge, Byron, and Lambeth consistently rank among London Ontario\'s strongest school catchments. Byron Secondary School and Oakridge Secondary School are frequently cited as the region\'s top-performing high schools. Hyde Park and Sunningdale have strong newer schools as well. School catchments can be verified through the Thames Valley District School Board (TVDSB) and London District Catholic School Board (LDCSB).',
+        answer: 'Oakridge, Byron, and Lambeth consistently rank among London Ontario\'s strongest school catchments. Oakridge Secondary School is one of the region\'s highest Fraser Institute-rated high schools; Byron and Lambeth are both served by Saunders Secondary School, the largest high school in the TVDSB. Hyde Park and Sunningdale have strong newer schools as well. School catchments can be verified through the Thames Valley District School Board (TVDSB) and London District Catholic School Board (LDCSB).',
       },
       {
         question: 'What is the most expensive neighbourhood in London Ontario?',
@@ -963,7 +963,7 @@ export const BLOG_POSTS: BlogPost[] = [
   },
   {
     slug: 'riverbend-vs-byron-southwest-london',
-    title: 'Riverbend vs. Byron: Southwest London\'s Two Golf-and-River Communities Compared',
+    title: 'Riverbend vs. Byron: Southwest London Comparison',
     description: 'New-build golf community or established riverside village? Here is how Riverbend and Byron compare on price, schools, construction, and lifestyle for southwest London buyers.',
     date: '2026-07-13',
     dateDisplay: 'July 13, 2026',
@@ -973,7 +973,7 @@ export const BLOG_POSTS: BlogPost[] = [
     image: '/images/areas/riverbend-neighbourhood-london-ontario.webp',
     imageAlt: 'Riverbend Golf Community homes in southwest London Ontario',
     content: `
-      <p>Riverbend and Byron sit next to each other in southwest London, both wrapped around the Thames River, and both attract buyers who want more green space than a typical subdivision offers. But they are built for different buyers — one is a new-build golf community still under construction, the other is a fully established village neighbourhood with decades of character. Here's how they actually compare.</p>
+      <p>Riverbend and Byron sit next to each other in southwest London, both wrapped around the Thames River, and both attract buyers who want more green space than a typical subdivision offers. But they are built for different buyers — one is a new-build golf community still under construction, the other is a fully established village neighbourhood with decades of character. Here's how they actually compare. Already know which one you want? Jump straight to the <a href="/areas/riverbend/">Riverbend guide</a> or the <a href="/areas/byron/">Byron guide</a> for current listings and prices.</p>
 
       <h2>Location and Feel</h2>
       <p><a href="/areas/riverbend/">Riverbend</a> is <a href="https://www.sifton.com" target="_blank" rel="noopener noreferrer">Sifton Properties</a>' landmark golf community at the southwest edge of the city, built around the Riverbend Golf Club with the Thames River tracing its southern and western boundary. It's a newer, gated-community feel — homes built to a single cohesive design vision, still expanding toward a planned 400+ homes. <a href="/areas/byron/">Byron</a> sits just northeast of Riverbend, anchored by Springbank Park and Commissioners Road's village-style main street. Byron has been a distinct community since before amalgamation and feels like it — mature trees, a real mix of housing eras, and decades of neighbourhood identity.</p>
@@ -985,7 +985,7 @@ export const BLOG_POSTS: BlogPost[] = [
       <p>This is the real decision point. Riverbend offers new-build quality — modern layouts, current finishes, and a community built from scratch by a single developer, which means fewer surprises but also fewer mature trees and less architectural variety. Byron offers the opposite trade: established streets, mature landscaping, and genuine architectural variety, but homes that may need updating depending on age. Buyers who want to walk into a move-in-ready new home tend to land in Riverbend; buyers who want character and are comfortable with some renovation tend to land in Byron.</p>
 
       <h2>Schools</h2>
-      <p>Riverbend is served by the new Riverbend Public School (1000 Upperpoint Ave), opening September 2027, plus Saunders Secondary School — the largest high school in the <a href="https://www.tvdsb.ca" target="_blank" rel="noopener noreferrer">TVDSB</a>, serving the broader west-end catchment. Byron is served by Byron Northview Public School and Byron Secondary School, which consistently ranks among the region's top academic performers. Families prioritizing an established, proven school with a long academic track record often lean Byron; families comfortable with a brand-new school opening in 2027 have that option in Riverbend.</p>
+      <p>Riverbend and Byron actually share the same secondary school: <a href="https://www.tvdsb.ca" target="_blank" rel="noopener noreferrer">Saunders Secondary School</a>, the largest high school in the TVDSB, serves the broader west-end catchment including both neighbourhoods. The real difference is at the elementary level. Riverbend is served by the new Riverbend Public School (1000 Upperpoint Ave), opening September 2027; Byron is served by the established Byron Northview Public School. Families who want a long-proven elementary school often lean Byron; families comfortable with a brand-new school opening in 2027 have that option in Riverbend.</p>
 
       <h2>Golf, River Access, and Outdoor Lifestyle</h2>
       <p>Both neighbourhoods are built around outdoor access, but differently. <a href="/areas/riverbend/">Riverbend</a> is centred on its 18-hole golf course, with Thames River valley trails connecting toward Springbank Park. <a href="/areas/byron/">Byron</a> has Springbank Park itself — London's largest park at over 200 acres — directly in the neighbourhood, plus the Thames Valley Parkway trail system. If golf-course living is the draw, Riverbend wins outright. If it's about park size and trail access for walking, running, and cycling, Byron's proximity to Springbank Park is hard to beat.</p>
@@ -1010,7 +1010,7 @@ export const BLOG_POSTS: BlogPost[] = [
       },
       {
         question: 'Which is better for families, Riverbend or Byron?',
-        answer: 'Both are strong family choices. Byron has a long-established, top-ranked school (Byron Secondary School) and immediate access to Springbank Park. Riverbend offers new-build homes and golf-course living but has a school opening in 2027 rather than an existing proven one. Families prioritizing school track record often lean Byron; those prioritizing new construction often lean Riverbend.',
+        answer: 'Both are strong family choices, and both share the same secondary school — Saunders, the largest high school in the TVDSB. At the elementary level, Byron has the long-established Byron Northview Public School and immediate access to Springbank Park. Riverbend offers new-build homes and golf-course living but has an elementary school opening in 2027 rather than an existing one. Families prioritizing an established elementary track record often lean Byron; those prioritizing new construction often lean Riverbend.',
       },
       {
         question: 'How close is Riverbend to Byron and Springbank Park?',
@@ -1042,7 +1042,7 @@ export const BLOG_POSTS: BlogPost[] = [
       <p>This is where Lambeth genuinely stands out. Direct access to both Highway 401 and Highway 402 makes it one of the best-positioned neighbourhoods in London for commuters — whether that's a regular drive to Windsor, Kitchener-Waterloo, or occasional trips toward Toronto. Big-box retail on Wellington Road is also just minutes away, so day-to-day errands don't require a highway trip at all.</p>
 
       <h2>Schools and Fraser Institute Ratings</h2>
-      <p>Lambeth is served by <a href="https://www.tvdsb.ca" target="_blank" rel="noopener noreferrer">Lambeth Public School</a>, St. Nicholas Catholic Elementary, and Sir Frederick Banting Secondary School. <a href="https://www.fraserinstitute.org/studies/school-performance" target="_blank" rel="noopener noreferrer">Fraser Institute ratings</a> for schools in the area consistently exceed the provincial average, which is a meaningful factor for families weighing Lambeth against other southwest London options.</p>
+      <p>Lambeth is served by <a href="https://www.tvdsb.ca" target="_blank" rel="noopener noreferrer">Lambeth Public School</a>, St. Nicholas Catholic Elementary, and Saunders Secondary School — the largest high school in the TVDSB, serving the broader southwest London catchment. <a href="https://www.fraserinstitute.org/studies/school-performance" target="_blank" rel="noopener noreferrer">Fraser Institute ratings</a> for the elementary schools in the area are solid, which is a meaningful factor for families weighing Lambeth against other southwest London options.</p>
 
       <h2>Home Prices in Lambeth</h2>
       <p>Lambeth homes typically range from $700,000 to $1,100,000, reflecting the newer estate-home product common in the area — executive detached and new-construction homes on larger lots. That puts Lambeth above the London city-wide average, in a similar band to <a href="/areas/riverbend/">Riverbend</a>, but with more established community infrastructure already in place.</p>
@@ -1054,7 +1054,7 @@ export const BLOG_POSTS: BlogPost[] = [
     faqs: [
       {
         question: 'Is Lambeth a good place to raise a family?',
-        answer: 'Yes. Lambeth is served by Lambeth Public School, St. Nicholas Catholic Elementary, and Sir Frederick Banting Secondary School, with Fraser Institute ratings consistently above the provincial average. Newer estate communities like Heathwoods and Privé add larger homes on generous lots, which appeals to growing families.',
+        answer: 'Yes. Lambeth is served by Lambeth Public School, St. Nicholas Catholic Elementary, and Saunders Secondary School, the largest high school in the TVDSB. Newer estate communities like Heathwoods and Privé add larger homes on generous lots, which appeals to growing families.',
       },
       {
         question: 'How far is Lambeth from downtown London?',
@@ -1076,7 +1076,7 @@ export const BLOG_POSTS: BlogPost[] = [
   },
   {
     slug: 'westmount-vs-west-london-affordable-neighbourhoods',
-    title: 'Westmount vs. West London: Comparing the West End\'s Best-Value Neighbourhoods',
+    title: 'Westmount vs. West London: Best-Value Neighbourhoods',
     description: 'Priced out of Oakridge or Byron? Westmount and West London offer established communities, strong access to amenities, and some of the west end\'s most accessible home prices.',
     date: '2026-07-13',
     dateDisplay: 'July 13, 2026',
@@ -1086,7 +1086,7 @@ export const BLOG_POSTS: BlogPost[] = [
     image: '/images/areas/westmount-neighbourhood-london-ontario.webp',
     imageAlt: 'Residential street in Westmount, London Ontario',
     content: `
-      <p>Not every west-end buyer needs or wants Oakridge or Byron pricing. Westmount and West London are the two neighbourhoods we point value-focused buyers toward most often — both established, both centrally located, and both offering meaningfully more accessible entry points than the west end's premium communities. Here's how they compare.</p>
+      <p>Not every west-end buyer needs or wants Oakridge or Byron pricing. Westmount and West London are the two neighbourhoods we point value-focused buyers toward most often — both established, both centrally located, and both offering meaningfully more accessible entry points than the west end's premium communities. Here's how they compare. Already know which one you want? Jump straight to the <a href="/areas/westmount/">Westmount guide</a> or the <a href="/areas/west-london/">West London guide</a> for current listings and prices.</p>
 
       <h2>Location and Feel</h2>
       <p><a href="/areas/westmount/">Westmount</a> developed primarily in the 1960s along the Wonderland Road corridor, evolving into one of the west end's most versatile communities — a genuine mix of bungalows, larger detached homes, and high-rise apartments, with an urban-suburban feel. <a href="/areas/west-london/">West London</a> centres on the Commissioners Road West corridor near Cherry Hill Mall, with mature, tree-lined streets of bungalows and two-storeys built between the 1960s and 1980s. Westmount feels busier and more mixed-use; West London feels quieter and more purely residential.</p>
