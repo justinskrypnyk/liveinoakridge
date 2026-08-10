@@ -23,10 +23,12 @@ import { getLatestMarketMapSnapshots, type MarketMapSnapshotRow } from '@/lib/su
 
 export const prerender = false;
 
-const SYNC_SECRET = import.meta.env.MARKET_MAP_SYNC_SECRET;
+// .trim() guards against a stray trailing newline/space from pasting the
+// value into Netlify's env var UI -- an easy way to silently 401 forever.
+const SYNC_SECRET = import.meta.env.MARKET_MAP_SYNC_SECRET?.trim();
 
 export const GET: APIRoute = async ({ request }) => {
-  if (!SYNC_SECRET || request.headers.get('x-api-key') !== SYNC_SECRET) {
+  if (!SYNC_SECRET || request.headers.get('x-api-key')?.trim() !== SYNC_SECRET) {
     return new Response('Unauthorized', {
       status: 401,
       headers: { 'Cache-Control': 'private, no-store' },
