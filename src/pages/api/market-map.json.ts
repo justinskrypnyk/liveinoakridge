@@ -27,23 +27,8 @@ export const prerender = false;
 // value into Netlify's env var UI -- an easy way to silently 401 forever.
 const SYNC_SECRET = import.meta.env.MARKET_MAP_SYNC_SECRET?.trim();
 
-export const GET: APIRoute = async ({ request, url }) => {
+export const GET: APIRoute = async ({ request }) => {
   const received = request.headers.get('x-api-key')?.trim() ?? null;
-
-  // TEMPORARY -- diagnosing a 2026-08-10 mismatch between the value pasted
-  // into Netlify's UI and the value actually configured/generated. Reveals
-  // only string lengths and a match boolean, never either actual value, so
-  // it's safe to leave reachable while debugging. Remove once resolved.
-  if (url.searchParams.get('debug') === 'length') {
-    return new Response(
-      JSON.stringify({
-        configuredLength: SYNC_SECRET?.length ?? null,
-        receivedLength: received?.length ?? null,
-        match: !!SYNC_SECRET && received === SYNC_SECRET,
-      }),
-      { status: 200, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'private, no-store' } }
-    );
-  }
 
   if (!SYNC_SECRET || received !== SYNC_SECRET) {
     return new Response('Unauthorized', {
