@@ -28,6 +28,11 @@ const {
 } = Astro.props;
 
 const hideStickyCTA = Astro.url.pathname.startsWith('/contact');
+
+// Keep local/dev builds from sending real events into the live GA4 property
+// and Meta Pixel -- import.meta.env.PROD is false for `astro dev` and true
+// for the actual Netlify production build.
+const isProd = import.meta.env.PROD;
 ---
 
 <!doctype html>
@@ -91,29 +96,33 @@ const hideStickyCTA = Astro.url.pathname.startsWith('/contact');
 
     <slot name="head" />
 
-    <!-- Google Analytics (GA4) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-Z2M94KRVTT"></script>
-    <script is:inline>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-Z2M94KRVTT');
-    </script>
+    {isProd && (
+      <>
+        <!-- Google Analytics (GA4) -->
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-Z2M94KRVTT"></script>
+        <script is:inline>
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', 'G-Z2M94KRVTT');
+        </script>
 
-    <!-- Meta Pixel -->
-    <script is:inline>
-      !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-      n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
-      n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
-      t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}
-      (window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
-      fbq('init','3837845766512267');
-      fbq('track','PageView');
-    </script>
-    <noscript>
-      <img height="1" width="1" style="display:none"
-        src="https://www.facebook.com/tr?id=3837845766512267&ev=PageView&noscript=1" alt="" />
-    </noscript>
+        <!-- Meta Pixel -->
+        <script is:inline>
+          !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+          n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+          n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+          t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}
+          (window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+          fbq('init','3837845766512267');
+          fbq('track','PageView');
+        </script>
+        <noscript>
+          <img height="1" width="1" style="display:none"
+            src="https://www.facebook.com/tr?id=3837845766512267&ev=PageView&noscript=1" alt="" />
+        </noscript>
+      </>
+    )}
   </head>
   <body class:list={['bg-white text-navy', !hideStickyCTA && 'pb-[calc(4.5rem+env(safe-area-inset-bottom))] sm:pb-0']}>
     <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-gold text-navy px-4 py-2 rounded-md font-semibold z-[100]">
