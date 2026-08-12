@@ -44,9 +44,21 @@ export type RawListing = Record<string, unknown> & {
   _geo?: { lat: number; lng: number } | null;
 };
 
+// Deliberately NOT built via url.searchParams.set(): URLSearchParams
+// serializes spaces as '+' (application/x-www-form-urlencoded convention),
+// but this AMPRE deployment only decodes %20 for spaces in $filter values --
+// '+' is passed through literally into the string comparison, so a
+// multi-word contains() filter (e.g. UnparsedAddress 'White Oaks') silently
+// matches zero rows instead of erroring. Confirmed empirically 2026-08-12
+// against query.ampre.ca (National Pool's ddfapi.realtor.ca does NOT have
+// this bug -- tested separately, same query, both encodings match). Building
+// the query string manually with encodeURIComponent() (which always emits
+// %20) sidesteps the whole issue.
 async function odataGet(resource: string, params: Record<string, string>) {
-  const url = new URL(`${BASE_URL}${resource}`);
-  for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
+  const query = Object.entries(params)
+    .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
+    .join('&');
+  const url = `${BASE_URL}${resource}?${query}`;
 
   const res = await fetch(url, {
     headers: {
