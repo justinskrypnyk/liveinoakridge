@@ -424,9 +424,9 @@ export const AREAS: Area[] = [
         a: 'Oakridge has some of London\'s highest-rated schools. Oakridge Public School and Mother Teresa Catholic Elementary serve younger students, and Oakridge Secondary School is well-regarded for academics and extracurriculars. The school catchments are a major reason families specifically seek out Oakridge homes.',
       },
     ],
-    metaTitle: 'Homes for Sale in Oakridge, London Ontario | Live In Oakridge',
+    metaTitle: 'Oakridge, London Ontario Real Estate — Homes & Neighbourhood Guide',
     metaDescription:
-      'Every active MLS® listing in Oakridge, London Ontario, from every brokerage, plus the full neighbourhood guide — schools, parks, prices, and sub-areas. Complimentary evaluations from local Broker Justin Skrypnyk.',
+      'Every active MLS® listing in Oakridge, London Ontario, from every brokerage — plus the full neighbourhood guide: schools, parks, prices, and sub-areas. Free home evaluations from local Broker Justin Skrypnyk.',
   },
   {
     slug: 'byron',
