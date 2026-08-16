@@ -1,4 +1,4 @@
-// Reads the twice-monthly neighbourhood market-stats snapshot written by
+// Reads the weekly neighbourhood market-stats snapshot written by
 // netlify/functions/market-stats-snapshot-background.mjs into the
 // 'market-stats' Blobs store. One snapshot feeds two different surfaces:
 //  - src/pages/api/market-stats.json.ts, fetched client-side by MarketTicker.astro
@@ -184,7 +184,7 @@ export function buildMarketFaqs(snapshot: MarketStatsSnapshot | null): AreaFaqGr
       if ((area.medianListPrice ?? 0) > 0) {
         items.push({
           q: `What is the median home price in ${area.name}?`,
-          a: `As of ${asOf}, the median list price for active MLS® listings in ${area.name} is ${fmtPrice(area.medianListPrice)}. This reflects current asking prices across every brokerage, not just Justin's, and is refreshed twice monthly.`,
+          a: `As of ${asOf}, the median list price for active MLS® listings in ${area.name} is ${fmtPrice(area.medianListPrice)}. This reflects current asking prices across every brokerage, not just Justin's, and is refreshed weekly.`,
         });
       }
 

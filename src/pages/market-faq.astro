@@ -1,6 +1,6 @@
 ---
 // SSR (not statically prerendered) so this always reflects the current
-// twice-monthly market-stats snapshot without needing a site rebuild —
+// weekly market-stats snapshot without needing a site rebuild —
 // same reasoning as the static stats block on each area page (see
 // src/components/AreaMarketStatsBlock.astro and
 // netlify/functions/market-stats-snapshot-background.mjs).
@@ -20,7 +20,7 @@ const lastUpdated = snapshot
 
 <Base
   title="London Ontario Market FAQ | Live Neighbourhood Stats | Justin Skrypnyk"
-  description="Direct answers to common buyer and seller questions — median home prices, days on market, active listings, and current market conditions — for Oakridge, Byron, Westmount, Riverbend, Lambeth, Whitehills, and West London. Updated twice monthly from live MLS® data."
+  description="Direct answers to common buyer and seller questions — median home prices, days on market, active listings, and current market conditions — for Oakridge, Byron, Westmount, Riverbend, Lambeth, Whitehills, and West London. Updated weekly from live MLS® data."
 >
   <Fragment slot="head">
     <Schema
@@ -48,7 +48,7 @@ const lastUpdated = snapshot
       {lastUpdated && (
         <p class="text-sm text-white/40 mt-6 flex items-center gap-2">
           <span class="w-1.5 h-1.5 rounded-full bg-gold animate-pulse"></span>
-          Last updated {lastUpdated} · refreshed twice monthly from active MLS® listings across every brokerage
+          Last updated {lastUpdated} · refreshed weekly from active MLS® listings across every brokerage
         </p>
       )}
     </div>
@@ -60,7 +60,7 @@ const lastUpdated = snapshot
         <div class="text-6xl mb-6">📊</div>
         <h2 class="font-serif text-2xl text-navy mb-2">Market Data Is Being Compiled</h2>
         <p class="text-slate leading-relaxed mb-6">
-          This page's answers are generated automatically from the twice-monthly market-stats refresh — check back shortly, or contact Justin directly for current numbers in the meantime.
+          This page's answers are generated automatically from the weekly market-stats refresh — check back shortly, or contact Justin directly for current numbers in the meantime.
         </p>
         <a href="/contact/" class="btn-primary">Contact Justin</a>
       </div>

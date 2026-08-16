@@ -1,6 +1,6 @@
 ---
 // Static, server-rendered market-stats sentence for area pages — reads the
-// same twice-monthly snapshot as MarketTicker.astro (see
+// same weekly snapshot as MarketTicker.astro (see
 // src/lib/market-stats.ts), but at request time rather than client-side, so
 // it's in the HTML a crawler sees. These area pages are already
 // `prerender = false` (they show live DDF listings on every request), so
@@ -33,7 +33,7 @@ const hasStats = !!stats && (stats.medianListPrice != null || stats.activeCount 
       {stats.avgDaysOnMarket != null && <>, and an average of <strong class="text-navy">{stats.avgDaysOnMarket}</strong> day{stats.avgDaysOnMarket !== 1 ? 's' : ''} on the market</>}.
     </p>
     <p class="text-xs text-slate mt-1.5">
-      Based on active MLS® listings from every REALTOR®, not just Justin's — updated twice monthly.
+      Based on active MLS® listings from every REALTOR®, not just Justin's — updated weekly.
       <a href={`/market-faq/#${stats.slug}`} class="text-gold-deep underline font-medium">See more {areaName} market questions, answered →</a>
       {' '}<a href={`/market-map/#area-${stats.slug}`} class="text-gold-deep underline font-medium">Compare {areaName} to every other London neighbourhood →</a>
     </p>

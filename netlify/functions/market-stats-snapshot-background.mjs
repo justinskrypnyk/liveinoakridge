@@ -1,17 +1,21 @@
 // Scheduled job — computes per-neighbourhood market stats (median list
 // price, active listing count, average days on market, and change since
-// the last pull) twice a month, on the 15th and the last day of the month,
-// and writes one JSON snapshot to Blobs. Two different pages read that same
-// snapshot afterwards:
+// the last pull) weekly, every Monday, and writes one JSON snapshot to
+// Blobs. Two different pages read that same snapshot afterwards:
 //  - src/pages/api/market-stats.json.ts -> MarketTicker.astro (client-side)
 //  - src/pages/areas/[area]/index.astro / oakridge/index.astro's static
 //    "as of [date]..." sentence block (server-rendered, read at request time)
 //
-// Netlify cron has no native "last day of month" expression (month lengths
-// vary), so this runs on a DAILY schedule and no-ops unless today is
-// actually the 15th or the last day — exact, rather than approximating with
-// e.g. "28-31" which would fire inconsistently across different month
-// lengths.
+// This is independent of the heat map's own twice-monthly snapshot
+// (heat-map-snapshot-background.mjs, backing /market-map/ and the
+// "Recently Sold" ticker row via getSoldStatsByArea) — bumped to weekly
+// 2026-08-15 per Justin, scoped to just this active-listings pipeline
+// rather than touching the heat map's shared Supabase cadence.
+//
+// Runs on a DAILY cron and no-ops on every day but Monday, rather than a
+// native weekly cron expression, to match the existing daily-schedule/
+// internal-guard pattern this file (and heat-map-snapshot-background.mjs)
+// already used for the old twice-a-month cadence.
 //
 // Runs standalone (not through Astro/Vite), so it can't use import.meta.env
 // like the rest of the DDF code does — reads process.env directly and
@@ -42,8 +46,7 @@ const AREAS = [
 ];
 
 function isSnapshotDay(date) {
-  const isLastDayOfMonth = date.getDate() === new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
-  return date.getDate() === 15 || isLastDayOfMonth;
+  return date.getDay() === 1; // Monday
 }
 
 function loadAreaBoundaries() {
@@ -107,9 +110,9 @@ function computeChange(previous, current) {
 
 export default async (req) => {
   const now = new Date();
-  // `?force=true` bypasses the 15th/last-day gate — lets a real snapshot be
+  // `?force=true` bypasses the Monday-only gate — lets a real snapshot be
   // seeded on demand (e.g. right after this feature first ships, rather
-  // than waiting up to ~2 weeks for the next scheduled date) without
+  // than waiting up to a week for the next scheduled Monday) without
   // touching the automatic cadence for every other run. Deliberately not
   // gated behind a secret: this function is a background job with no
   // public link anywhere on the site, and the worst case of someone
@@ -186,5 +189,5 @@ export default async (req) => {
 };
 
 export const config = {
-  schedule: '0 9 * * *', // daily, 9am UTC — internal isSnapshotDay() guard makes this an effective 15th/last-day-of-month cadence
+  schedule: '0 9 * * *', // daily, 9am UTC — internal isSnapshotDay() guard makes this an effective weekly (Monday) cadence
 };
