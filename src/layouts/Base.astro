@@ -98,17 +98,20 @@ const isProd = import.meta.env.PROD;
 
     {isProd && (
       <>
-        <!-- Google Analytics (GA4) -->
-        <script async src="https://www.googletagmanager.com/gtag/js?id=G-Z2M94KRVTT"></script>
-        <script is:inline>
+        <!-- Google Analytics (GA4) — type="text/partytown" runs this off the
+             main thread (see astro.config.mjs's `forward` list, which is what
+             lets window.gtag(...) calls elsewhere on the site still reach
+             this). -->
+        <script type="text/partytown" src="https://www.googletagmanager.com/gtag/js?id=G-Z2M94KRVTT"></script>
+        <script type="text/partytown">
           window.dataLayer = window.dataLayer || [];
           function gtag(){dataLayer.push(arguments);}
           gtag('js', new Date());
           gtag('config', 'G-Z2M94KRVTT');
         </script>
 
-        <!-- Meta Pixel -->
-        <script is:inline>
+        <!-- Meta Pixel — same off-main-thread treatment as GA4 above. -->
+        <script type="text/partytown">
           !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
           n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
           n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
