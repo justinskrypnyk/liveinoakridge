@@ -1081,8 +1081,8 @@ export const BLOG_POSTS: BlogPost[] = [
   },
   {
     slug: 'westmount-vs-west-london-affordable-neighbourhoods',
-    title: 'Westmount vs. West London: Best-Value Neighbourhoods',
-    description: 'Priced out of Oakridge or Byron? Westmount and West London offer established communities, strong access to amenities, and some of the west end\'s most accessible home prices.',
+    title: 'Westmount vs. West London, Ontario: $520K–$750K Compared',
+    description: 'Westmount runs $550K–$750K, West London $520K–$720K — both well under Oakridge/Byron pricing. Compare location, schools, and Western University access.',
     date: '2026-07-13',
     dateDisplay: 'July 13, 2026',
     category: 'Neighbourhood Guides',
@@ -1251,8 +1251,8 @@ export const BLOG_POSTS: BlogPost[] = [
   },
   {
     slug: 'london-ontario-months-of-supply-july-2026',
-    title: "London Ontario's Housing Supply Just Tripled: What July 2026 Means for Buyers and Sellers",
-    description: "London Ontario's months of supply jumped from 2.5 to 7.3 in a single month. Here is a full year of data on what that means, and whether you're now in a buyer's or seller's market.",
+    title: 'London Ontario Housing Supply Tripled: 2.5 to 7.3 Months',
+    description: "Months of supply jumped from 2.5 to 7.3 in a single month — the clearest sign yet this is now a buyer's market. A full year of data and what it means for you.",
     date: '2026-07-14',
     dateDisplay: 'July 14, 2026',
     category: 'Market Analysis',

@@ -1002,11 +1002,19 @@ export async function getAreaMarketListings(areaSlug: string): Promise<RawListin
   const geocoded = await getGeocodedLondonListings();
   const matches = geocoded.filter((l) => findAreaForPoint(l._geo.lat, l._geo.lng) === areaSlug);
 
+  // Cache-only lookup, same as getLondonBrowseListings' map-pin path -- area
+  // pages' listing cards only ever render `_photoUrl` (a single thumbnail),
+  // never the full `_photoUrls` gallery, so there's no reason to pay for a
+  // live AMPRE Media fetch per listing here. That live fallback (fetchPhotos)
+  // was measured taking area pages to 9-16s TTFB whenever a listing's photo
+  // wasn't already warm (2026-08-16) -- an uncached listing now just shows
+  // no photo until the next daily warm-photo-cache-background.mjs run picks
+  // it up, exactly like an unwarmed /search/ map pin already does.
   return Promise.all(
     matches.map(async (listing) => {
       const key = String(listing.ListingKey || listing.ListingId);
-      const { full, thumb } = key ? await fetchPhotos(key) : { full: [], thumb: [] };
-      return { ...listing, _photoUrls: full, _photoUrl: thumb[0] || null };
+      const photoUrl = key ? await getCachedPhotoUrl(key) : null;
+      return { ...listing, _photoUrl: photoUrl };
     })
   );
 }
