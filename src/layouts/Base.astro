@@ -110,8 +110,15 @@ const isProd = import.meta.env.PROD;
           gtag('config', 'G-Z2M94KRVTT');
         </script>
 
-        <!-- Meta Pixel — same off-main-thread treatment as GA4 above. -->
-        <script type="text/partytown">
+        <!-- Meta Pixel — deliberately NOT type="text/partytown" like GA4 above.
+             Its tracking beacon is normally a plain image-style request, which
+             browsers exempt from CORS; Partytown's worker sandbox turns that
+             into a real network request that DOES get CORS-checked, and
+             Meta's endpoint doesn't return the headers that requires. Verified
+             2026-08-16: running this through Partytown produced a CORS error
+             on the actual tracking beacon in production, so it stays on the
+             main thread. -->
+        <script is:inline>
           !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
           n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
           n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;

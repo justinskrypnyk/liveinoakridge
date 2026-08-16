@@ -21,21 +21,23 @@ export default defineConfig({
       customPages: [],
     }),
     mdx(),
-    // Moves GA4 (gtag.js) and the Meta Pixel (fbevents.js) off the main
-    // thread into a web worker -- both are third-party marketing scripts
-    // with no site-authored JS anywhere near their size, and were the
-    // measured source of ~238ms Total Blocking Time on the homepage
-    // (2026-08-16 GTmetrix audit). `forward` lists every global function
-    // main-thread code calls on these scripts, so Partytown proxies those
-    // calls into the worker instead of dropping them: `gtag`/`dataLayer.push`
-    // are called directly from Base.astro's tel: click listener and
-    // ContactForm/MarketTicker/newsletter success handlers (see
-    // `window.gtag?.('event', 'generate_lead', ...)` in those files); `fbq`
-    // is only called from the Meta Pixel snippet itself but is forwarded
-    // for the same reason should that change.
+    // Moves GA4 (gtag.js) off the main thread into a web worker -- a
+    // third-party marketing script with no site-authored JS anywhere near
+    // its size, and (alongside the Meta Pixel) the measured source of
+    // ~238ms Total Blocking Time on the homepage (2026-08-16 GTmetrix
+    // audit). `forward` lists every global function main-thread code calls
+    // on it, so Partytown proxies those calls into the worker instead of
+    // dropping them: `gtag`/`dataLayer.push` are called directly from
+    // Base.astro's tel: click listener and ContactForm/MarketTicker/
+    // newsletter success handlers (see `window.gtag?.('event',
+    // 'generate_lead', ...)` in those files).
+    //
+    // The Meta Pixel is deliberately NOT routed through Partytown -- see the
+    // comment above its script tag in Base.astro for why (a real CORS
+    // failure on its tracking beacon, confirmed 2026-08-16).
     partytown({
       config: {
-        forward: ['dataLayer.push', 'gtag', 'fbq'],
+        forward: ['dataLayer.push', 'gtag'],
       },
     }),
   ],
