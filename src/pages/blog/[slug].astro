@@ -6,7 +6,10 @@ import { SITE } from '@/data/site';
 import { BLOG_POSTS } from '@/data/blog';
 
 export function getStaticPaths() {
-  return BLOG_POSTS.map((post) => ({
+  // Entries with `href` (e.g. best-high-schools-london-ontario) are standalone
+  // pages that already live at their own URL -- skip them here so we don't
+  // generate a duplicate /blog/[slug]/ page for content that already exists.
+  return BLOG_POSTS.filter((post) => !post.href).map((post) => ({
     params: { slug: post.slug },
     props: { post },
   }));
@@ -207,7 +210,7 @@ const { post } = Astro.props;
             <ul class="space-y-3">
               {BLOG_POSTS.filter((p) => p.slug !== post.slug).slice(0, 3).map((p) => (
                 <li>
-                  <a href={`/blog/${p.slug}/`} class="text-sm text-slate hover:text-gold transition-colors leading-snug block">{p.title}</a>
+                  <a href={p.href ?? `/blog/${p.slug}/`} class="text-sm text-slate hover:text-gold transition-colors leading-snug block">{p.title}</a>
                 </li>
               ))}
             </ul>

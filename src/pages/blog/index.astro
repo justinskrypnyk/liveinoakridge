@@ -44,7 +44,7 @@ const sortedPosts = [...BLOG_POSTS].sort((a, b) => new Date(b.date).getTime() - 
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
         {sortedPosts.map((post, i) => (
-          <a href={`/blog/${post.slug}/`} class={`bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden group ${i === 0 ? 'md:col-span-2' : ''}`}>
+          <a href={post.href ?? `/blog/${post.slug}/`} class={`bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden group ${i === 0 ? 'md:col-span-2' : ''}`}>
             <div class={`relative bg-gradient-to-br from-navy-light to-navy flex items-end p-6 ${i === 0 ? 'h-64' : 'h-48'}`}>
               {post.image && (
                 <img

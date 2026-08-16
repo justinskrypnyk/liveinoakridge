@@ -17,9 +17,14 @@ export interface BlogPost {
   readTime: string;
   image?: string;
   imageAlt?: string;
-  content: string;
+  content?: string;
   charts?: BlogChart[];
   faqs?: Array<{ question: string; answer: string }>;
+  /** Set for standalone pages (not rendered via /blog/[slug]/) that should still
+   *  appear as a card on /blog/ — e.g. reference pages like the high schools
+   *  ranking. When set, the listing links here instead of /blog/{slug}/, and
+   *  [slug].astro excludes the entry from getStaticPaths. */
+  href?: string;
 }
 
 export const BLOG_POSTS: BlogPost[] = [
@@ -2120,6 +2125,17 @@ export const BLOG_POSTS: BlogPost[] = [
         answer: "For accurately priced homes, yes. Sale-to-list ratios and above-asking sales both improved from June to July even as overall volume eased — a sign buyers are still competing for well-priced homes, just not overpaying for overpriced ones.",
       },
     ],
+  },
+  {
+    slug: 'best-high-schools-london-ontario',
+    title: 'High Schools in London Ontario, Ranked 2025 (All 19)',
+    description: 'Fraser Institute ratings for all 19 London, Ontario high schools, plus school board, address, and which neighbourhood each one serves — so you know where to live for the school you want.',
+    date: '2026-08-02',
+    dateDisplay: 'August 2, 2026',
+    category: 'Neighbourhood Guides',
+    author: 'Justin Skrypnyk',
+    readTime: '5 min read',
+    href: '/best-high-schools-london-ontario/',
   },
 ];
 
