@@ -64,9 +64,9 @@ const snapshotsBySlug = Object.fromEntries(snapshots.map((s) => [s.area_slug, s]
     { key: 'median_bathrooms', label: 'Median Bathrooms', format: 'baths', available: true },
     { key: 'pct_detached', label: '% Detached Homes', format: 'percent', available: true },
     { key: 'delisted_count', label: 'Left Market This Period', format: 'count', available: true },
-    { key: 'median_sold_price', label: 'Median Sold Price', format: 'currency', available: false },
-    { key: 'units_sold', label: 'Units Sold', format: 'count', available: false },
-    { key: 'avg_sale_to_list_ratio', label: 'Sale-to-List Ratio', format: 'percent', available: false },
+    { key: 'median_sold_price', label: 'Median Sold Price', format: 'currency', available: true },
+    { key: 'units_sold', label: 'Units Sold', format: 'count', available: true },
+    { key: 'avg_sale_to_list_ratio', label: 'Sale-to-List Ratio', format: 'percent', available: true },
   ];
 
   // Brand-hue (site's --color-gold token) sequential ramp, light->dark,
