@@ -1,0 +1,463 @@
+// Scheduled job -- writes and publishes a monthly market-update blog post
+// with NO human review step, per Justin's explicit choice (2026-08-25).
+// That choice only holds up because this file guarantees one thing: no LLM
+// call happens anywhere in this pipeline. Every sentence is picked from a
+// fixed phrase bank keyed by direction + magnitude of a number this script
+// computed itself -- same "plain JS math, template output" rule every other
+// automated email on this site already follows (weekly-digest-background,
+// monthly-digest-background), extended here to public, indexed content
+// instead of an inbox. A template can't hallucinate a wrong price; a
+// generative call could -- that's the actual justification for skipping
+// review, not just a VOW Article 6.2(a) technicality (though it also
+// satisfies that: VOW forbids an AI system from interpreting sold-price
+// data, and nothing here interprets anything -- it selects).
+//
+// Runs after monthly-digest-background.mjs (1pm UTC) so it works from data
+// Justin's own inbox already saw an hour earlier. Publishes by having this
+// job commit directly to `main` via GitHub's Contents API -- the same
+// git-push-triggers-Netlify-deploy pipeline every manual change already
+// uses, just with a bot driving the commit instead of a person. Requires
+// GITHUB_TOKEN (fine-grained PAT, contents:write, scoped to this repo only)
+// -- Justin has to create that himself, it can't be generated on his behalf.
+//
+// Self-contained rather than importing monthly-digest-background.mjs's
+// helpers -- same isolation convention as every function in this
+// directory (see that file's own header comment for the fuller reasoning).
+import { createClient } from '@supabase/supabase-js';
+import sharp from 'sharp';
+
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const RESEND_API_KEY = process.env.RESEND_API_KEY;
+const DIGEST_TO_EMAIL = process.env.DIGEST_TO_EMAIL || 'info@homeswithjustin.ca';
+const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+
+const GITHUB_OWNER = 'justinskrypnyk';
+const GITHUB_REPO = 'liveinoakridge';
+const BLOG_DATA_PATH = 'src/data/blog.ts';
+const SITE_URL = 'https://www.liveinoakridge.ca';
+
+const SERVED_AREA_ORDER = ['oakridge', 'byron', 'westmount', 'riverbend', 'lambeth', 'whitehills', 'west-london'];
+
+function sortAreasServedFirst(areas) {
+  return [...areas].sort((a, b) => {
+    const aIdx = SERVED_AREA_ORDER.indexOf(a.area_slug);
+    const bIdx = SERVED_AREA_ORDER.indexOf(b.area_slug);
+    if (aIdx !== -1 && bIdx !== -1) return aIdx - bIdx;
+    if (aIdx !== -1) return -1;
+    if (bIdx !== -1) return 1;
+    return a.area_name.localeCompare(b.area_name);
+  });
+}
+
+// Subset of monthly-digest's REPORT_METRICS this post actually narrates --
+// same column names/formatters, trimmed to what's readable as prose rather
+// than a full 12-column table dump.
+const REPORT_METRICS = [
+  { key: 'units_sold', label: 'homes sold', shortLabel: 'Homes Sold', fmt: (n) => (n == null ? 'n/a' : String(n)) },
+  { key: 'median_sold_price', label: 'median sale price', shortLabel: 'Median Sale Price', fmt: fmtPrice },
+  { key: 'avg_days_on_market', label: 'days on market', shortLabel: 'Days on Market', fmt: (n) => (n == null ? 'n/a' : String(Math.round(n))) },
+  { key: 'avg_sale_to_list_ratio', label: 'sale-to-list ratio', shortLabel: 'Sale-to-List', fmt: (n) => (n == null ? 'n/a' : `${(n * 100).toFixed(1)}%`) },
+  { key: 'new_listings_count', label: 'new listings', shortLabel: 'New Listings', fmt: (n) => (n == null ? 'n/a' : String(n)) },
+];
+const METRIC_BY_KEY = Object.fromEntries(REPORT_METRICS.map((m) => [m.key, m]));
+
+function fmtPrice(n) {
+  if (n == null) return 'n/a';
+  return new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD', maximumFractionDigits: 0 }).format(n);
+}
+function fmtPct(n) {
+  if (n == null) return 'n/a';
+  return `${n > 0 ? '+' : ''}${(n * 100).toFixed(1)}%`;
+}
+function esc(s) {
+  return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+function escJs(s) {
+  // For splicing into a JS/TS template literal in blog.ts -- backticks and
+  // ${ are the two things that would actually break the generated file.
+  return String(s ?? '').replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/\$\{/g, '\\${');
+}
+
+// ---- Deterministic phrase banks -------------------------------------
+// Every sentence below is picked, never generated. `pick(seed, bank)`
+// selects a variant using a seed derived from real data (the area name +
+// metric key), not randomness -- so a re-run of the same month always
+// reads identically, and different areas in the same post don't all read
+// with the exact same sentence.
+function seedIndex(seed, len) {
+  let h = 0;
+  for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
+  return h % len;
+}
+function pick(seed, bank) {
+  return bank[seedIndex(seed, bank.length)];
+}
+
+const UP_VERBS = ['climbed', 'rose', 'moved up', 'gained ground'];
+const DOWN_VERBS = ['eased', 'pulled back', 'softened', 'came down'];
+const FLAT_PHRASES = ['held essentially steady', 'stayed close to flat', 'barely moved'];
+
+function directionPhrase(seed, pctChange) {
+  if (pctChange == null) return null;
+  if (Math.abs(pctChange) < 0.02) return pick(seed, FLAT_PHRASES);
+  const bank = pctChange > 0 ? UP_VERBS : DOWN_VERBS;
+  return pick(seed, bank);
+}
+
+function magnitudeWord(pctChange) {
+  const abs = Math.abs(pctChange ?? 0);
+  if (abs >= 0.15) return pctChange > 0 ? 'jumped' : 'dropped sharply';
+  if (abs >= 0.08) return pctChange > 0 ? 'climbed' : 'fell';
+  if (abs >= 0.02) return pctChange > 0 ? 'ticked up' : 'ticked down';
+  return 'held steady';
+}
+
+// ---- GitHub Contents API ---------------------------------------------
+async function githubGet(path, branch) {
+  const res = await fetch(`https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${path}?ref=${branch}`, {
+    headers: {
+      Authorization: `Bearer ${GITHUB_TOKEN}`,
+      Accept: 'application/vnd.github+json',
+      'X-GitHub-Api-Version': '2022-11-28',
+    },
+  });
+  if (!res.ok) throw new Error(`GitHub GET ${path} -> HTTP ${res.status}: ${await res.text().catch(() => '')}`);
+  const json = await res.json();
+  return { content: Buffer.from(json.content, 'base64').toString('utf-8'), sha: json.sha };
+}
+
+async function githubPut(path, contentUtf8, sha, message, branch) {
+  const res = await fetch(`https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${path}`, {
+    method: 'PUT',
+    headers: {
+      Authorization: `Bearer ${GITHUB_TOKEN}`,
+      Accept: 'application/vnd.github+json',
+      'X-GitHub-Api-Version': '2022-11-28',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      message,
+      content: Buffer.isBuffer(contentUtf8) ? contentUtf8.toString('base64') : Buffer.from(contentUtf8, 'utf-8').toString('base64'),
+      sha, // omit (undefined -> not sent) when creating a brand-new file
+      branch,
+    }),
+  });
+  if (!res.ok) throw new Error(`GitHub PUT ${path} -> HTTP ${res.status}: ${await res.text().catch(() => '')}`);
+  return res.json();
+}
+
+// ---- Card image (branded stat card, not a photo/AI image) ------------
+async function renderStatCardWebp({ monthLabel, headlineValue, headlineLabel, subline }) {
+  const W = 1200, H = 630; // standard blog og-image aspect, matches other post images
+  const svg = `
+    <svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#0c2340" />
+          <stop offset="100%" stop-color="#16345c" />
+        </linearGradient>
+      </defs>
+      <rect width="${W}" height="${H}" fill="url(#bg)" />
+      <text x="70" y="120" font-family="Georgia, serif" font-size="34" font-weight="bold" fill="#e8b84b" letter-spacing="1">${esc(monthLabel)}</text>
+      <text x="70" y="230" font-family="Georgia, serif" font-size="30" fill="#ffffff" opacity="0.85">London Ontario Real Estate</text>
+      <text x="70" y="360" font-family="Arial, sans-serif" font-size="96" font-weight="bold" fill="#ffffff">${esc(headlineValue)}</text>
+      <text x="70" y="410" font-family="Arial, sans-serif" font-size="26" fill="#e8b84b" letter-spacing="0.5">${esc(headlineLabel).toUpperCase()}</text>
+      <line x1="70" y1="460" x2="330" y2="460" stroke="#e8b84b" stroke-width="2" />
+      <text x="70" y="510" font-family="Arial, sans-serif" font-size="22" fill="#ffffff" opacity="0.75">${esc(subline)}</text>
+    </svg>
+  `;
+  return sharp(Buffer.from(svg)).webp({ quality: 88 }).toBuffer();
+}
+
+async function sendNotifyEmail(subject, html) {
+  if (!RESEND_API_KEY) return; // don't let a missing key take down the alert path itself
+  try {
+    await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        from: 'Live In Oakridge Reports <onboarding@resend.dev>',
+        to: [DIGEST_TO_EMAIL, 'smile@homeswithjustin.ca'],
+        subject,
+        html,
+      }),
+    });
+  } catch (err) {
+    console.error('monthly-blog-post: notify email itself failed:', err.message);
+  }
+}
+
+export default async (req) => {
+  // Real scheduled invocations (Netlify's own cron trigger) carry no usable
+  // JSON body -- branch defaults to 'main'. A manual test POST can override
+  // it, e.g. {"branch": "test/auto-blog-dry-run"}, so a first real run can
+  // be pointed at a throwaway branch instead of production before this is
+  // ever trusted unattended. isTest just labels the slug/email so a test
+  // run can never be mistaken for the real monthly post even if the branch
+  // gets merged by accident.
+  let branch = 'main';
+  try {
+    const body = await req?.json?.();
+    if (body?.branch && typeof body.branch === 'string') branch = body.branch;
+  } catch {
+    // no body / not JSON -- fine, stay on 'main'
+  }
+  const isTest = branch !== 'main';
+
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY || !RESEND_API_KEY || !GITHUB_TOKEN) {
+    const msg = 'monthly-blog-post: missing required env vars';
+    console.error(msg, {
+      SUPABASE_URL: !!SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY: !!SUPABASE_SERVICE_ROLE_KEY,
+      RESEND_API_KEY: !!RESEND_API_KEY, GITHUB_TOKEN: !!GITHUB_TOKEN,
+    });
+    await sendNotifyEmail('⚠️ Monthly blog post FAILED to publish', `<p>${esc(msg)}</p><p>Check Netlify env vars, especially GITHUB_TOKEN.</p>`);
+    return new Response(msg, { status: 500 });
+  }
+
+  try {
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+    const { data: latestMonthEnd } = await supabase
+      .from('market_map_snapshots')
+      .select('capture_date')
+      .eq('period_type', 'month-end')
+      .order('capture_date', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (!latestMonthEnd) {
+      // Same "gate not met yet, quiet no-op" convention as
+      // market-stats-snapshot-background.mjs on a non-trigger day -- not
+      // an error, nothing to alert about.
+      console.log('monthly-blog-post: no month-end snapshot yet, skipping');
+      return new Response('No month-end snapshot yet');
+    }
+    const captureDate = latestMonthEnd.capture_date; // 'YYYY-MM-DD'
+    const dateObj = new Date(`${captureDate}T00:00:00Z`);
+    const monthLabel = dateObj.toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+    const monthShort = dateObj.toLocaleDateString('en-US', { month: 'long', timeZone: 'UTC' }).toLowerCase();
+    const year = dateObj.getUTCFullYear();
+    const slug = `${monthShort}-${year}-london-ontario-market-update-auto${isTest ? '-test' : ''}`;
+
+    // ---- Idempotency guard: check blog.ts BEFORE doing any real work ----
+    const { content: blogTsContent, sha: blogTsSha } = await githubGet(BLOG_DATA_PATH, branch);
+    if (blogTsContent.includes(`slug: '${slug}'`)) {
+      console.log(`monthly-blog-post: ${slug} already published, skipping`);
+      return new Response(`Already published: ${slug}`);
+    }
+
+    // ---- Pull the same data monthly-digest-background.mjs already computed ----
+    const [{ data: snapshotRows, error: snapError }, { data: changeRows, error: changeError }] = await Promise.all([
+      supabase
+        .from('market_map_snapshots')
+        .select(['area_slug', 'area_name', 'capture_date', ...REPORT_METRICS.map((m) => m.key)].join(','))
+        .eq('period_type', 'month-end')
+        .eq('capture_date', captureDate),
+      supabase
+        .from('market_map_changes')
+        .select('area_slug, area_name, metric, current_value, mom_pct_change, yoy_pct_change, is_notable')
+        .eq('period_type', 'month-end')
+        .eq('capture_date', captureDate)
+        .in('metric', REPORT_METRICS.map((m) => m.key)),
+    ]);
+    if (snapError || changeError || !snapshotRows) {
+      throw new Error(`Supabase query failed: ${snapError?.message || changeError?.message}`);
+    }
+
+    const changesByAreaMetric = new Map();
+    for (const c of changeRows || []) {
+      if (!changesByAreaMetric.has(c.area_slug)) changesByAreaMetric.set(c.area_slug, {});
+      changesByAreaMetric.get(c.area_slug)[c.metric] = c;
+    }
+    const rows = sortAreasServedFirst(snapshotRows).map((s) => ({ ...s, changes: changesByAreaMetric.get(s.area_slug) || {} }));
+    const servedRows = rows.filter((r) => SERVED_AREA_ORDER.includes(r.area_slug));
+
+    const totalSold = snapshotRows.reduce((sum, r) => sum + (r.units_sold || 0), 0);
+    const totalNewListings = snapshotRows.reduce((sum, r) => sum + (r.new_listings_count || 0), 0);
+
+    // ---- Headline metric: deterministic rule, not a judgment call ----
+    // Largest |MoM%| among the 7 served areas, across the narrated metrics.
+    let headline = null;
+    for (const r of servedRows) {
+      for (const m of REPORT_METRICS) {
+        const c = r.changes[m.key];
+        if (c?.mom_pct_change == null) continue;
+        if (!headline || Math.abs(c.mom_pct_change) > Math.abs(headline.change.mom_pct_change)) {
+          headline = { area: r, metric: m, change: c };
+        }
+      }
+    }
+
+    // ---- Prose: template + phrase bank, zero generation ----
+    const introSentence = headline
+      ? `${totalSold} homes sold across London Ontario in ${monthLabel}, with ${esc(headline.area.area_name)}'s ${headline.metric.label} the biggest mover of the month -- ${magnitudeWord(headline.change.mom_pct_change)} ${fmtPct(headline.change.mom_pct_change)} from the month before.`
+      : `${totalSold} homes sold across London Ontario in ${monthLabel}. Here's the full neighbourhood-by-neighbourhood breakdown.`;
+
+    const servedTableRows = servedRows.map((r) => {
+      const soldChange = r.changes.units_sold;
+      const priceChange = r.changes.median_sold_price;
+      return `<tr>
+        <td><a href="/areas/${esc(r.area_slug)}/">${esc(r.area_name)}</a></td>
+        <td>${r.units_sold ?? 'n/a'}</td>
+        <td>${fmtPrice(r.median_sold_price)}</td>
+        <td>${fmtPct(priceChange?.mom_pct_change)}</td>
+      </tr>`;
+    }).join('');
+
+    const areaNarratives = servedRows.map((r) => {
+      const priceChange = r.changes.median_sold_price;
+      const dirWord = directionPhrase(r.area_slug + 'median_sold_price', priceChange?.mom_pct_change);
+      if (!dirWord || r.median_sold_price == null) {
+        return `<li><strong>${esc(r.area_name)}</strong>: ${r.units_sold ?? 'n/a'} homes sold, median price ${fmtPrice(r.median_sold_price)}.</li>`;
+      }
+      return `<li><strong>${esc(r.area_name)}</strong>: ${r.units_sold ?? 'n/a'} homes sold, median price ${dirWord} to ${fmtPrice(r.median_sold_price)} (${fmtPct(priceChange.mom_pct_change)} month-over-month).</li>`;
+    }).join('');
+
+    const notable = (changeRows || [])
+      .filter((c) => c.is_notable && SERVED_AREA_ORDER.includes(c.area_slug))
+      .sort((a, b) => Math.abs(b.mom_pct_change) - Math.abs(a.mom_pct_change))
+      .slice(0, 5);
+    const notableHtml = notable.length > 0
+      ? `<ul>${notable.map((c) => {
+          const m = METRIC_BY_KEY[c.metric];
+          const dir = c.mom_pct_change > 0 ? '▲' : '▼';
+          return `<li>${dir} <strong>${esc(c.area_name)}</strong> -- ${esc(m?.shortLabel || c.metric)}: ${fmtPct(c.mom_pct_change)} month-over-month (now ${m ? m.fmt(c.current_value) : c.current_value}).</li>`;
+        }).join('')}</ul>`
+      : '<p>No single-metric move of 10%+ this month among our 7 served areas -- a comparatively steady month.</p>';
+
+    const closingHtml = `
+      <p>Not sure where your own home stands this month? A <a href="/services/home-evaluation/">complimentary home evaluation</a> gets you a real, current number. Buyers can explore <a href="/areas/">all the areas we serve</a> or dig into the numbers themselves on the <a href="/market-map/">interactive Neighbourhood Heat Map</a>.</p>
+    `;
+
+    const bodyHtml = `
+      <p>${introSentence}</p>
+
+      <h2>How Did London Ontario's Housing Market Perform in ${esc(monthLabel)}?</h2>
+      <p>${totalSold} homes sold citywide, with ${totalNewListings} new listings coming onto the market across all 39 mapped neighbourhoods.</p>
+
+      <h2>How Are West London's Neighbourhoods Comparing This Month?</h2>
+      <table>
+        <thead><tr><th>Neighbourhood</th><th>Homes Sold</th><th>Median Price</th><th>Month-over-Month</th></tr></thead>
+        <tbody>${servedTableRows}</tbody>
+      </table>
+      <ul>${areaNarratives}</ul>
+
+      <h2>Notable Moves This Month</h2>
+      ${notableHtml}
+
+      ${closingHtml}
+
+      <p style="font-size:12px;color:#888;">Source: MLS® resale data, compiled ${esc(captureDate)}. This post is generated automatically from live market data -- every number above is a direct lookup or plain arithmetic against already-computed aggregates; no AI system interprets or writes commentary on the underlying sold-price data.</p>
+    `;
+
+    // ---- Chart: headline area's headline metric, trailing history ----
+    let charts = [];
+    if (headline) {
+      const { data: history } = await supabase
+        .from('market_map_snapshots')
+        .select('capture_date, ' + headline.metric.key)
+        .eq('period_type', 'month-end')
+        .eq('area_slug', headline.area.area_slug)
+        .order('capture_date', { ascending: true })
+        .limit(6);
+      if (history && history.length >= 2) {
+        charts = [{
+          title: `${headline.area.area_name} -- ${headline.metric.shortLabel}, last ${history.length} months`,
+          color: '#e8b84b',
+          labels: history.map((h) => new Date(`${h.capture_date}T00:00:00Z`).toLocaleDateString('en-US', { month: 'short', timeZone: 'UTC' })),
+          values: history.map((h) => Math.round(Number(h[headline.metric.key]) || 0)),
+        }];
+      }
+    }
+
+    // ---- FAQs (templated) ----
+    const faqs = [
+      {
+        question: `How many homes sold in London Ontario in ${esc(monthLabel)}?`,
+        answer: `${totalSold} homes sold in London Ontario in ${esc(monthLabel)}, with ${totalNewListings} new listings coming onto the market.`,
+      },
+      ...(headline ? [{
+        question: `What was the biggest market move in ${esc(monthLabel)}?`,
+        answer: `${esc(headline.area.area_name)}'s ${headline.metric.label} was the biggest single move among our 7 served areas -- ${magnitudeWord(headline.change.mom_pct_change)} ${fmtPct(headline.change.mom_pct_change)} month-over-month, now at ${headline.metric.fmt(headline.change.current_value)}.`,
+      }] : []),
+    ];
+
+    // ---- Card/hero image ----
+    const imagePath = `public/images/${slug}.webp`;
+    const imageWebp = await renderStatCardWebp({
+      monthLabel,
+      headlineValue: headline ? headline.metric.fmt(headline.change.current_value) : String(totalSold),
+      headlineLabel: headline ? `${headline.area.area_name} ${headline.metric.label}` : 'Homes Sold',
+      subline: `${totalSold} homes sold citywide`,
+    });
+
+    // ---- Assemble the BlogPost entry as a source string ----
+    const title = `${monthLabel} London Ontario Real Estate Market Update`;
+    const description = `${totalSold} homes sold across London Ontario in ${monthLabel}. See the full breakdown by neighbourhood and what it means for buyers and sellers.`;
+    const dateDisplay = dateObj.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+
+    const postEntry = `  {
+    slug: '${slug}',
+    title: \`${escJs(title)}\`,
+    description: \`${escJs(description)}\`,
+    date: '${captureDate}',
+    dateDisplay: '${dateDisplay}',
+    category: 'Market Updates',
+    author: 'Justin Skrypnyk',
+    readTime: '4 min read',
+    image: '/images/${slug}.webp',
+    imageAlt: '${escJs(title)}',
+    content: \`${bodyHtml.replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/\$\{/g, '\\${')}\`,
+    ${charts.length > 0 ? `charts: ${JSON.stringify(charts)},` : ''}
+    faqs: ${JSON.stringify(faqs)},
+  },
+`;
+
+    const marker = 'export const BLOG_POSTS: BlogPost[] = [';
+    const insertAt = blogTsContent.indexOf(marker);
+    if (insertAt === -1) throw new Error('Could not find BLOG_POSTS marker in blog.ts -- file format may have changed');
+    const updatedBlogTs =
+      blogTsContent.slice(0, insertAt + marker.length) + '\n' + postEntry +
+      blogTsContent.slice(insertAt + marker.length);
+
+    // ---- Publish: two commits, to whichever branch this run targeted.
+    // Real scheduled runs always target main and trigger the normal deploy;
+    // a test run lands on the throwaway branch and deploys nowhere.
+    await githubPut(
+      imagePath,
+      imageWebp,
+      undefined,
+      `Auto-publish: add card image for ${monthLabel} market update`,
+      branch
+    );
+    await githubPut(
+      BLOG_DATA_PATH,
+      updatedBlogTs,
+      blogTsSha,
+      `Auto-publish: ${title}\n\nGenerated by monthly-blog-post-background.mjs -- template + precomputed data only, no LLM involved in writing or interpreting this post.`,
+      branch
+    );
+
+    const postUrl = `${SITE_URL}/blog/${slug}/`;
+    await sendNotifyEmail(
+      `${isTest ? '[TEST] ' : '✅ '}Published: ${title}`,
+      `<p>${isTest ? `Test run -- committed to branch <code>${esc(branch)}</code>, nothing deployed.` : 'Auto-published this month\'s market update.'}</p><p><a href="${postUrl}">${postUrl}</a></p>`
+    );
+
+    const summary = `monthly-blog-post: published ${slug} (${totalSold} sold, ${servedRows.length} served areas)`;
+    console.log(summary);
+    return new Response(summary);
+  } catch (err) {
+    console.error('monthly-blog-post: FAILED:', err);
+    await sendNotifyEmail(
+      '⚠️ Monthly blog post FAILED to publish',
+      `<p>${esc(err.message)}</p><pre style="white-space:pre-wrap;font-size:11px;">${esc(err.stack || '')}</pre>`
+    );
+    return new Response(`Failed: ${err.message}`, { status: 500 });
+  }
+};
+
+export const config = {
+  schedule: '0 14 1 * *', // 1st of month, 2pm UTC -- after heat-map-snapshot's 9am capture and monthly-digest's 1pm email
+};
