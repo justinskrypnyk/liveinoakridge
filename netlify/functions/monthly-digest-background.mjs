@@ -565,7 +565,7 @@ async function sendDigestEmail(subject, html, attachments) {
     headers: { Authorization: `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
       from: 'Live In Oakridge Reports <onboarding@resend.dev>',
-      to: DIGEST_TO_EMAIL,
+      to: [DIGEST_TO_EMAIL, 'smile@homeswithjustin.ca'],
       subject,
       html,
       attachments,
