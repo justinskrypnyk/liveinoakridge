@@ -2136,6 +2136,8 @@ export const BLOG_POSTS: BlogPost[] = [
     author: 'Justin Skrypnyk',
     readTime: '5 min read',
     href: '/best-high-schools-london-ontario/',
+    image: '/images/oakridge-secondary-school-1959.webp',
+    imageAlt: 'Oakridge Secondary School entrance, London, Ontario',
   },
 ];
 

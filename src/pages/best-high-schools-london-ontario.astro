@@ -60,23 +60,40 @@ const faqs = [
         <span>/</span>
         <span class="text-white/70">Best High Schools in London Ontario</span>
       </nav>
-      <div class="max-w-3xl">
-        <div class="inline-flex items-center gap-2 bg-gold/15 text-gold text-sm font-semibold px-4 py-2 rounded-full mb-6 border border-gold/30">
-          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3L1 9l11 6 9-4.91V17h2V9L12 3z"/>
-          </svg>
-          {FRASER_REPORT_YEAR} Fraser Institute Report Card
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <div>
+          <div class="inline-flex items-center gap-2 bg-gold/15 text-gold text-sm font-semibold px-4 py-2 rounded-full mb-6 border border-gold/30">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3L1 9l11 6 9-4.91V17h2V9L12 3z"/>
+            </svg>
+            {FRASER_REPORT_YEAR} Fraser Institute Report Card
+          </div>
+          <h1 class="font-serif text-5xl font-bold mb-4 leading-tight">
+            Best High Schools in London, Ontario, Ranked
+          </h1>
+          <div class="gold-divider mb-6"></div>
+          <p class="text-xl text-white/70 leading-relaxed mb-4">
+            All 19 secondary schools in London, Ontario, ranked by Fraser Institute rating out of 10 — with the school board, address, and which West London neighbourhood each one serves.
+          </p>
+          <p class="text-white/50 text-sm">
+            Sourced from the Fraser Institute's <a href="https://www.compareschoolrankings.org/" target="_blank" rel="noopener noreferrer" class="text-gold hover:text-gold-light underline">Compare School Rankings</a> ({FRASER_REPORT_YEAR} Report Card on Ontario's Secondary Schools, based on 2023-24 EQAO results). For a deeper look at the 11 schools serving Oakridge specifically — including elementary — see the <a href="/community/" class="text-gold hover:text-gold-light underline">Oakridge Community Guide</a>.
+          </p>
         </div>
-        <h1 class="font-serif text-5xl font-bold mb-4 leading-tight">
-          Best High Schools in London, Ontario, Ranked
-        </h1>
-        <div class="gold-divider mb-6"></div>
-        <p class="text-xl text-white/70 leading-relaxed mb-4">
-          All 19 secondary schools in London, Ontario, ranked by Fraser Institute rating out of 10 — with the school board, address, and which West London neighbourhood each one serves.
-        </p>
-        <p class="text-white/50 text-sm">
-          Sourced from the Fraser Institute's <a href="https://www.compareschoolrankings.org/" target="_blank" rel="noopener noreferrer" class="text-gold hover:text-gold-light underline">Compare School Rankings</a> ({FRASER_REPORT_YEAR} Report Card on Ontario's Secondary Schools, based on 2023-24 EQAO results). For a deeper look at the 11 schools serving Oakridge specifically — including elementary — see the <a href="/community/" class="text-gold hover:text-gold-light underline">Oakridge Community Guide</a>.
-        </p>
+        <div>
+          <div class="aspect-[4/3] rounded-2xl bg-navy-light overflow-hidden max-w-lg mx-auto shadow-xl">
+            <img
+              src="/images/oakridge-secondary-school-1959.webp"
+              alt="Oakridge Secondary School entrance, London, Ontario"
+              class="w-full h-full object-cover"
+              width="400"
+              height="300"
+              loading="eager"
+            />
+          </div>
+          <p class="text-white/40 text-xs text-center mt-3 max-w-lg mx-auto">
+            Oakridge Secondary School — the top-rated school serving Oakridge directly. Photo: Cniesel, <a href="https://creativecommons.org/licenses/by/3.0/deed.en" target="_blank" rel="noopener noreferrer" class="underline hover:text-gold">CC BY 3.0</a>, via Wikimedia Commons.
+          </p>
+        </div>
       </div>
     </div>
   </section>
