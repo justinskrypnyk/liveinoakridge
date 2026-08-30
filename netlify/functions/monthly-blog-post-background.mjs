@@ -173,7 +173,7 @@ async function renderStatCardWebp({ monthLabel, headlineValue, headlineLabel, su
 async function sendNotifyEmail(subject, html) {
   if (!RESEND_API_KEY) return; // don't let a missing key take down the alert path itself
   try {
-    await fetch('https://api.resend.com/emails', {
+    const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: { Authorization: `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -183,6 +183,14 @@ async function sendNotifyEmail(subject, html) {
         html,
       }),
     });
+    // fetch() only rejects on a network-level failure -- a rejected/erroring
+    // Resend call (bad key, unverified sender, etc.) resolves normally with
+    // a non-2xx status, so this has to be checked explicitly or a failed
+    // send disappears with no trace anywhere. Same check every other
+    // function's sendNotifyEmail already has; this one was missing it.
+    if (!res.ok) {
+      console.error('monthly-blog-post: notify email itself failed:', res.status, await res.text().catch(() => ''));
+    }
   } catch (err) {
     console.error('monthly-blog-post: notify email itself failed:', err.message);
   }
