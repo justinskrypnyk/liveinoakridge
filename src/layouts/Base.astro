@@ -98,12 +98,19 @@ const isProd = import.meta.env.PROD;
 
     {isProd && (
       <>
-        <!-- Google Analytics (GA4) — type="text/partytown" runs this off the
-             main thread (see astro.config.mjs's `forward` list, which is what
-             lets window.gtag(...) calls elsewhere on the site still reach
-             this). -->
-        <script type="text/partytown" src="https://www.googletagmanager.com/gtag/js?id=G-Z2M94KRVTT"></script>
-        <script type="text/partytown">
+        <!-- Google Analytics (GA4) — reverted OFF Partytown 2026-08-30. It was
+             moved to type="text/partytown" on 2026-08-16 (d72c4e9) to shave
+             ~238ms of Total Blocking Time, the same day production GA4
+             sessions dropped to near-zero while Search Console kept logging
+             normal impressions/clicks for two straight weeks. Live check
+             confirmed window.gtag existed but no /g/collect beacon ever left
+             the browser — the hit dies inside Partytown's worker sandbox
+             silently (no console error, no failed request). Same class of
+             bug as the Meta Pixel CORS failure below, just quieter. Back on
+             the main thread until there's a way to verify hits actually land
+             under Partytown before re-enabling it. -->
+        <script is:inline src="https://www.googletagmanager.com/gtag/js?id=G-Z2M94KRVTT"></script>
+        <script is:inline>
           window.dataLayer = window.dataLayer || [];
           function gtag(){dataLayer.push(arguments);}
           gtag('js', new Date());

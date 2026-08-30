@@ -3,7 +3,6 @@ import sitemap from '@astrojs/sitemap';
 import mdx from '@astrojs/mdx';
 import tailwindcss from '@tailwindcss/vite';
 import netlify from '@astrojs/netlify';
-import partytown from '@astrojs/partytown';
 
 export default defineConfig({
   site: 'https://www.liveinoakridge.ca',
@@ -21,25 +20,11 @@ export default defineConfig({
       customPages: [],
     }),
     mdx(),
-    // Moves GA4 (gtag.js) off the main thread into a web worker -- a
-    // third-party marketing script with no site-authored JS anywhere near
-    // its size, and (alongside the Meta Pixel) the measured source of
-    // ~238ms Total Blocking Time on the homepage (2026-08-16 GTmetrix
-    // audit). `forward` lists every global function main-thread code calls
-    // on it, so Partytown proxies those calls into the worker instead of
-    // dropping them: `gtag`/`dataLayer.push` are called directly from
-    // Base.astro's tel: click listener and ContactForm/MarketTicker/
-    // newsletter success handlers (see `window.gtag?.('event',
-    // 'generate_lead', ...)` in those files).
-    //
-    // The Meta Pixel is deliberately NOT routed through Partytown -- see the
-    // comment above its script tag in Base.astro for why (a real CORS
-    // failure on its tracking beacon, confirmed 2026-08-16).
-    partytown({
-      config: {
-        forward: ['dataLayer.push', 'gtag'],
-      },
-    }),
+    // Partytown (GA4 off the main thread, ~238ms TBT win) was removed
+    // 2026-08-30 -- it silently ate every GA4 hit for two weeks (see the
+    // comment on the GA4 script tags in Base.astro). Meta Pixel was already
+    // main-thread only for the same class of bug. Revisit only with a way
+    // to confirm hits actually reach google-analytics.com under Partytown.
   ],
   vite: {
     plugins: [tailwindcss()],
