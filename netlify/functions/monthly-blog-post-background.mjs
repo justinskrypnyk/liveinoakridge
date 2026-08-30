@@ -25,6 +25,7 @@
 // directory (see that file's own header comment for the fuller reasoning).
 import { createClient } from '@supabase/supabase-js';
 import sharp from 'sharp';
+import { Document, Packer, Paragraph, TextRun, HeadingLevel, Table, TableRow, TableCell, WidthType } from 'docx';
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -77,6 +78,117 @@ function escJs(s) {
   // For splicing into a JS/TS template literal in blog.ts -- backticks and
   // ${ are the two things that would actually break the generated file.
   return String(s ?? '').replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/\$\{/g, '\\${');
+}
+
+// ---- HTML -> Word doc (backup copy, attached to the success email so --
+// Justin has the full post text saved off-site even if the site itself is
+// down) -----------------------------------------------------------------
+// Not a general HTML parser: this only ever runs against bodyHtml this same
+// file just generated a few lines up, so it only needs to understand the
+// fixed handful of tags that template actually emits (h2/p/table/ul/li,
+// plus inline <strong>/<a>).
+function decodeEntities(s) {
+  return String(s ?? '')
+    .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&middot;/g, '·')
+    .replace(/&reg;/g, '®');
+}
+function linkifyForDocx(html) {
+  // Turn <a href="/x">text</a> into "text (https://www.liveinoakridge.ca/x)"
+  // -- a Word doc has no live links worth preserving as hrefs here, but the
+  // URL itself is real information that shouldn't just vanish.
+  return html.replace(/<a\s+href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/g, (_, href, text) => {
+    const full = href.startsWith('/') ? `${SITE_URL}${href}` : href;
+    return `${text} (${full})`;
+  });
+}
+function inlineRunsFromHtml(html) {
+  const linked = linkifyForDocx(html);
+  const parts = linked.split(/(<strong>[\s\S]*?<\/strong>)/g).filter(Boolean);
+  const runs = [];
+  for (const part of parts) {
+    const strongMatch = part.match(/^<strong>([\s\S]*?)<\/strong>$/);
+    const raw = strongMatch ? strongMatch[1] : part;
+    const text = decodeEntities(raw.replace(/<[^>]+>/g, ''));
+    if (text) runs.push(new TextRun({ text, bold: !!strongMatch }));
+  }
+  return runs.length ? runs : [new TextRun('')];
+}
+function stripTags(html) {
+  return decodeEntities(String(html ?? '').replace(/<[^>]+>/g, '')).replace(/\s+/g, ' ').trim();
+}
+function htmlBlocksToDocx(bodyHtml) {
+  const nodes = [];
+  const blockRe = /<(h2|p|table|ul)(\s[^>]*)?>([\s\S]*?)<\/\1>/g;
+  let m;
+  while ((m = blockRe.exec(bodyHtml))) {
+    const [, tag, attrs, inner] = m;
+    if (tag === 'h2') {
+      const text = stripTags(inner);
+      if (text) nodes.push(new Paragraph({ text, heading: HeadingLevel.HEADING_2, spacing: { before: 240, after: 120 } }));
+    } else if (tag === 'p') {
+      const runs = inlineRunsFromHtml(inner.trim());
+      const isFootnote = /font-size:\s*12px/.test(attrs || '');
+      nodes.push(new Paragraph({
+        children: isFootnote ? runs.map((r) => new TextRun({ text: r.text, italics: true, size: 16, color: '888888' })) : runs,
+        spacing: { after: 160 },
+      }));
+    } else if (tag === 'ul') {
+      const liRe = /<li>([\s\S]*?)<\/li>/g;
+      let lm;
+      while ((lm = liRe.exec(inner))) {
+        nodes.push(new Paragraph({ children: inlineRunsFromHtml(lm[1].trim()), bullet: { level: 0 }, spacing: { after: 80 } }));
+      }
+    } else if (tag === 'table') {
+      const headMatch = inner.match(/<thead>([\s\S]*?)<\/thead>/);
+      const bodyMatch = inner.match(/<tbody>([\s\S]*?)<\/tbody>/);
+      const rows = [];
+      if (headMatch) {
+        const ths = [...headMatch[1].matchAll(/<th>([\s\S]*?)<\/th>/g)].map((x) => stripTags(x[1]));
+        if (ths.length) {
+          rows.push(new TableRow({
+            children: ths.map((t) => new TableCell({
+              children: [new Paragraph({ children: [new TextRun({ text: t, bold: true })] })],
+              shading: { fill: 'EEEEEE' },
+            })),
+          }));
+        }
+      }
+      if (bodyMatch) {
+        const trRe = /<tr>([\s\S]*?)<\/tr>/g;
+        let tm;
+        while ((tm = trRe.exec(bodyMatch[1]))) {
+          const tds = [...tm[1].matchAll(/<td>([\s\S]*?)<\/td>/g)].map((x) => stripTags(x[1]));
+          if (tds.length) rows.push(new TableRow({ children: tds.map((t) => new TableCell({ children: [new Paragraph(t)] })) }));
+        }
+      }
+      if (rows.length) {
+        nodes.push(new Table({ rows, width: { size: 100, type: WidthType.PERCENTAGE } }));
+        nodes.push(new Paragraph({ text: '', spacing: { after: 160 } }));
+      }
+    }
+  }
+  return nodes;
+}
+async function renderPostDocx({ title, dateDisplay, description, bodyHtml, faqs, postUrl }) {
+  const children = [
+    new Paragraph({ text: title, heading: HeadingLevel.HEADING_1, spacing: { after: 120 } }),
+    new Paragraph({ children: [new TextRun({ text: `${dateDisplay} · Justin Skrypnyk · Market Updates`, italics: true, color: '666666' })], spacing: { after: 200 } }),
+    new Paragraph({ children: [new TextRun({ text: description, bold: true })], spacing: { after: 240 } }),
+    ...htmlBlocksToDocx(bodyHtml),
+  ];
+  if (faqs?.length) {
+    children.push(new Paragraph({ text: 'FAQs', heading: HeadingLevel.HEADING_2, spacing: { before: 240, after: 120 } }));
+    for (const f of faqs) {
+      children.push(new Paragraph({ children: [new TextRun({ text: f.question, bold: true })], spacing: { after: 40 } }));
+      children.push(new Paragraph({ text: f.answer, spacing: { after: 160 } }));
+    }
+  }
+  children.push(new Paragraph({
+    children: [new TextRun({ text: `Live at: ${postUrl}`, italics: true, size: 18, color: '888888' })],
+    spacing: { before: 240 },
+  }));
+  return Packer.toBuffer(new Document({ sections: [{ children }] }));
 }
 
 // ---- Deterministic phrase banks -------------------------------------
@@ -170,7 +282,7 @@ async function renderStatCardWebp({ monthLabel, headlineValue, headlineLabel, su
   return sharp(Buffer.from(svg)).webp({ quality: 88 }).toBuffer();
 }
 
-async function sendNotifyEmail(subject, html) {
+async function sendNotifyEmail(subject, html, attachments) {
   if (!RESEND_API_KEY) return; // don't let a missing key take down the alert path itself
   try {
     const res = await fetch('https://api.resend.com/emails', {
@@ -181,6 +293,7 @@ async function sendNotifyEmail(subject, html) {
         to: [DIGEST_TO_EMAIL, 'smile@homeswithjustin.ca'],
         subject,
         html,
+        ...(attachments?.length ? { attachments } : {}),
       }),
     });
     // fetch() only rejects on a network-level failure -- a rejected/erroring
@@ -448,9 +561,24 @@ export default async (req) => {
     );
 
     const postUrl = `${SITE_URL}/blog/${slug}/`;
+
+    // Word-doc backup of the full post text, attached below -- so Justin
+    // has an off-site copy saved every month even if the live site goes
+    // down. Failure here must never take down the publish-confirmation
+    // email itself (the post already published successfully by this
+    // point), so it's isolated in its own try/catch.
+    let docxAttachments = [];
+    try {
+      const docxBuffer = await renderPostDocx({ title, dateDisplay, description, bodyHtml, faqs, postUrl });
+      docxAttachments = [{ filename: `${slug}.docx`, content: docxBuffer.toString('base64') }];
+    } catch (docxErr) {
+      console.error('monthly-blog-post: docx backup generation failed (email will still send without it):', docxErr.message);
+    }
+
     await sendNotifyEmail(
       `${isTest ? '[TEST] ' : '✅ '}Published: ${title}`,
-      `<p>${isTest ? `Test run -- committed to branch <code>${esc(branch)}</code>, nothing deployed.` : 'Auto-published this month\'s market update.'}</p><p><a href="${postUrl}">${postUrl}</a></p>`
+      `<p>${isTest ? `Test run -- committed to branch <code>${esc(branch)}</code>, nothing deployed.` : 'Auto-published this month\'s market update. A Word-doc backup of the full text is attached.'}</p><p><a href="${postUrl}">${postUrl}</a></p>`,
+      docxAttachments
     );
 
     const summary = `monthly-blog-post: published ${slug} (${totalSold} sold, ${servedRows.length} served areas)`;
