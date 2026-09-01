@@ -29,6 +29,78 @@ export interface BlogPost {
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    slug: 'september-2026-london-ontario-market-update-auto',
+    title: `September 2026 London Ontario Real Estate Market Update`,
+    description: `2531 homes sold across London Ontario in September 2026. See the full breakdown by neighbourhood and what it means for buyers and sellers.`,
+    date: '2026-09-01',
+    dateDisplay: 'September 1, 2026',
+    category: 'Market Updates',
+    author: 'Justin Skrypnyk',
+    readTime: '4 min read',
+    image: '/images/september-2026-london-ontario-market-update-auto.webp',
+    imageAlt: 'September 2026 London Ontario Real Estate Market Update',
+    content: `
+      <p>2531 homes sold across London Ontario in September 2026, with West London's homes sold the biggest mover of the month -- jumped +36.7% from the month before.</p>
+
+      <h2>How Did London Ontario's Housing Market Perform in September 2026?</h2>
+      <p>2531 homes sold citywide, with 379 new listings coming onto the market across all 39 mapped neighbourhoods.</p>
+
+      <h2>How Are West London's Neighbourhoods Comparing This Month?</h2>
+      <table>
+        <thead><tr><th>Neighbourhood</th><th>Homes Sold</th><th>Median Price</th><th>Month-over-Month</th></tr></thead>
+        <tbody><tr>
+        <td><a href="/areas/oakridge/">Oakridge</a></td>
+        <td>119</td>
+        <td>$720,000</td>
+        <td>-1.6%</td>
+      </tr><tr>
+        <td><a href="/areas/byron/">Byron</a></td>
+        <td>99</td>
+        <td>$630,000</td>
+        <td>-5.8%</td>
+      </tr><tr>
+        <td><a href="/areas/westmount/">Westmount</a></td>
+        <td>85</td>
+        <td>$670,000</td>
+        <td>-6.9%</td>
+      </tr><tr>
+        <td><a href="/areas/riverbend/">Riverbend</a></td>
+        <td>66</td>
+        <td>$692,500</td>
+        <td>-7.4%</td>
+      </tr><tr>
+        <td><a href="/areas/lambeth/">Lambeth</a></td>
+        <td>72</td>
+        <td>$682,950</td>
+        <td>-3.8%</td>
+      </tr><tr>
+        <td><a href="/areas/whitehills/">Whitehills</a></td>
+        <td>72</td>
+        <td>$462,500</td>
+        <td>-7.5%</td>
+      </tr><tr>
+        <td><a href="/areas/west-london/">West London</a></td>
+        <td>82</td>
+        <td>$461,000</td>
+        <td>-15.0%</td>
+      </tr></tbody>
+      </table>
+      <ul><li><strong>Oakridge</strong>: 119 homes sold, median price stayed close to flat to $720,000 (-1.6% month-over-month).</li><li><strong>Byron</strong>: 99 homes sold, median price pulled back to $630,000 (-5.8% month-over-month).</li><li><strong>Westmount</strong>: 85 homes sold, median price pulled back to $670,000 (-6.9% month-over-month).</li><li><strong>Riverbend</strong>: 66 homes sold, median price softened to $692,500 (-7.4% month-over-month).</li><li><strong>Lambeth</strong>: 72 homes sold, median price eased to $682,950 (-3.8% month-over-month).</li><li><strong>Whitehills</strong>: 72 homes sold, median price softened to $462,500 (-7.5% month-over-month).</li><li><strong>West London</strong>: 82 homes sold, median price pulled back to $461,000 (-15.0% month-over-month).</li></ul>
+
+      <h2>Notable Moves This Month</h2>
+      <ul><li>▲ <strong>West London</strong> -- Homes Sold: +36.7% month-over-month (now 82).</li><li>▲ <strong>Byron</strong> -- Days on Market: +26.8% month-over-month (now 52).</li><li>▼ <strong>Riverbend</strong> -- Days on Market: -24.2% month-over-month (now 47).</li><li>▲ <strong>Lambeth</strong> -- Days on Market: +21.3% month-over-month (now 97).</li><li>▲ <strong>Whitehills</strong> -- Days on Market: +18.4% month-over-month (now 45).</li></ul>
+
+      
+      <p>Not sure where your own home stands this month? A <a href="/services/home-evaluation/">complimentary home evaluation</a> gets you a real, current number. Buyers can explore <a href="/areas/">all the areas we serve</a> or dig into the numbers themselves on the <a href="/market-map/">interactive Neighbourhood Heat Map</a>.</p>
+    
+
+      <p style="font-size:12px;color:#888;">Source: MLS® resale data, compiled 2026-09-01. This post is generated automatically from live market data -- every number above is a direct lookup or plain arithmetic against already-computed aggregates; no AI system interprets or writes commentary on the underlying sold-price data.</p>
+    `,
+    charts: [{"title":"West London -- Homes Sold, last 2 months","color":"#e8b84b","labels":["Aug","Sep"],"values":[60,82]}],
+    faqs: [{"question":"How many homes sold in London Ontario in September 2026?","answer":"2531 homes sold in London Ontario in September 2026, with 379 new listings coming onto the market."},{"question":"What was the biggest market move in September 2026?","answer":"West London's homes sold was the biggest single move among our 7 served areas -- jumped +36.7% month-over-month, now at 82."}],
+  },
+
+  {
     slug: 'moving-from-toronto-to-london-ontario',
     title: 'Moving from Toronto to London Ontario: What You Actually Need to Know',
     description: "Thinking about leaving the GTA for London Ontario? Here's a plain-English look at the price gap, the commute, and which neighbourhood to land in.",
