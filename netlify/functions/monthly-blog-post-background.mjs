@@ -214,6 +214,35 @@ const UP_VERBS = ['climbed', 'rose', 'moved up', 'gained ground'];
 const DOWN_VERBS = ['eased', 'pulled back', 'softened', 'came down'];
 const FLAT_PHRASES = ['held essentially steady', 'stayed close to flat', 'barely moved'];
 
+// ---- Buy/sell guidance: fixed sentences keyed on a citywide number this
+// script computed itself (average sale-to-list ratio across the 7 served
+// areas) -- same "template picks a variant, never writes one" rule as the
+// phrase banks above, just applied to a section instead of a single word.
+// This is what closes the gap with Justin's manually-written posts (which
+// always included buy/sell guidance and a why-behind-the-numbers read) --
+// see [[project-monthly-blog-post-automation]] for the fuller context on
+// why this stays selection-only rather than an LLM writing real analysis.
+function average(numbers) {
+  const valid = numbers.filter((n) => n != null && Number.isFinite(n));
+  return valid.length ? valid.reduce((sum, n) => sum + n, 0) / valid.length : null;
+}
+function sellerMarketTier(ratio) {
+  if (ratio == null) return null;
+  if (ratio >= 1.0) return 'hot';
+  if (ratio >= 0.97) return 'balanced';
+  return 'soft';
+}
+const SELL_GUIDANCE = {
+  hot: 'Yes, decisively. Homes are averaging at or above asking price citywide, and accurately priced listings are drawing competitive offers rather than sitting.',
+  balanced: 'For accurately priced homes, yes. The citywide average sale-to-list ratio is holding close to full asking price -- well-priced homes are still finding motivated buyers; overpriced ones are the ones sitting.',
+  soft: "Only if you price to today's market, not last season's. The citywide average sale-to-list ratio has softened, giving buyers more room to negotiate on anything priced ahead of the market.",
+};
+const BUY_GUIDANCE = {
+  hot: "Be ready to move decisively. With homes averaging at or above asking citywide, competitive offers are common on well-priced listings -- know your budget before you view, not after.",
+  balanced: 'Yes, with realistic expectations. Well-priced homes are still moving at close to full asking, so steep discounts are rare -- but overpriced listings are lingering long enough to negotiate on.',
+  soft: 'Yes -- this is a buyer-friendlier month than most. A softer citywide sale-to-list ratio means more room to negotiate, especially on listings that have been sitting.',
+};
+
 function directionPhrase(seed, pctChange) {
   if (pctChange == null) return null;
   if (Math.abs(pctChange) < 0.02) return pick(seed, FLAT_PHRASES);
@@ -509,11 +538,21 @@ export default async (req) => {
       console.log('monthly-blog-post: no month-end snapshot yet, skipping');
       return new Response('No month-end snapshot yet');
     }
-    const captureDate = latestMonthEnd.capture_date; // 'YYYY-MM-DD'
-    const dateObj = new Date(`${captureDate}T00:00:00Z`);
-    const monthLabel = dateObj.toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' });
-    const monthShort = dateObj.toLocaleDateString('en-US', { month: 'long', timeZone: 'UTC' }).toLowerCase();
-    const year = dateObj.getUTCFullYear();
+    const captureDate = latestMonthEnd.capture_date; // 'YYYY-MM-DD' -- the RUN date, always the 1st
+    const publishDateObj = new Date(`${captureDate}T00:00:00Z`);
+    // heat-map-snapshot-background.mjs stamps a 'month-end' row's capture_date
+    // as the day it ran (the 1st), but the DATA in that row is the PREVIOUS
+    // month's completed close (see that file's own header comment) -- so the
+    // month this post reports on is one calendar month before the publish
+    // date, not the publish month. Matches the manual precedent this
+    // pipeline replaced: the post published Aug 1 2026 was titled "July
+    // 2026", not "August 2026". Got this backwards on the first real run
+    // (2026-09-01 published as "September 2026" while narrating August's
+    // data) -- confirmed via Justin catching the mismatch same day.
+    const reportedMonthObj = new Date(Date.UTC(publishDateObj.getUTCFullYear(), publishDateObj.getUTCMonth() - 1, 1));
+    const monthLabel = reportedMonthObj.toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+    const monthShort = reportedMonthObj.toLocaleDateString('en-US', { month: 'long', timeZone: 'UTC' }).toLowerCase();
+    const year = reportedMonthObj.getUTCFullYear();
     const slug = `${monthShort}-${year}-london-ontario-market-update-auto${isTest ? '-test' : ''}`;
 
     // ---- Idempotency guard: check blog.ts BEFORE doing any real work ----
@@ -607,6 +646,55 @@ export default async (req) => {
         }).join('')}</ul>`
       : '<p>No single-metric move of 10%+ this month among our 7 served areas -- a comparatively steady month.</p>';
 
+    // ---- Oakridge spotlight: always featured, same standing section the
+    // manual posts this pipeline replaced always included (Oakridge is
+    // Justin's flagship area, not a data-driven pick like `headline` above).
+    const oakridgeRow = servedRows.find((r) => r.area_slug === 'oakridge') || null;
+    const oakridgePriceChange = oakridgeRow?.changes.median_sold_price;
+    const oakridgeHtml = oakridgeRow ? `
+      <h2>How Did Oakridge Perform in ${esc(monthLabel)}?</h2>
+      <p>${oakridgeRow.units_sold ?? 'n/a'} homes sold in Oakridge in ${esc(monthLabel)} at a median price of ${fmtPrice(oakridgeRow.median_sold_price)}${oakridgePriceChange?.mom_pct_change != null ? ` (${fmtPct(oakridgePriceChange.mom_pct_change)} month-over-month)` : ''}.${oakridgeRow.avg_sale_to_list_ratio != null ? ` The average sale-to-list ratio came in at ${(oakridgeRow.avg_sale_to_list_ratio * 100).toFixed(1)}%.` : ''} For a closer look at the neighbourhood itself, see our <a href="/areas/oakridge/">Oakridge neighbourhood guide</a>.</p>
+    ` : '';
+
+    // ---- One area outside our usual seven, if its data earns a mention --
+    // same mechanical rule the "Notable Moves" list above already uses
+    // (largest |MoM%| among is_notable rows), just run against the other
+    // 32 mapped neighbourhoods instead of the 7 served ones. Mirrors the
+    // manual posts' standing "one neighbourhood worth flagging" callout
+    // (e.g. Medway in the July 2026 post) -- the sentence is fixed, only
+    // which area/numbers fill it in is picked mechanically.
+    // Gate on a minimum sales volume (matches the real "sixteen closings"
+    // scale of the July post's own Medway callout) -- without it, the
+    // largest |MoM%| among the other 32 areas is reliably some 0-2-sale
+    // area where a metric swung 200%+ on a sample too small to mean
+    // anything (confirmed empirically against real August 2026 data:
+    // the unfiltered top hit was an area with 0 sold homes that month).
+    const nonServedNotable = (changeRows || [])
+      .filter((c) => c.is_notable && !SERVED_AREA_ORDER.includes(c.area_slug))
+      .filter((c) => (rows.find((r) => r.area_slug === c.area_slug)?.units_sold ?? 0) >= 10)
+      .sort((a, b) => Math.abs(b.mom_pct_change) - Math.abs(a.mom_pct_change))[0] || null;
+    const nonServedRow = nonServedNotable ? rows.find((r) => r.area_slug === nonServedNotable.area_slug) : null;
+    const nonServedHtml = (nonServedNotable && nonServedRow) ? `
+      <p>One neighbourhood worth flagging outside our usual seven: <strong>${esc(nonServedRow.area_name)}</strong> had a genuinely notable ${esc(monthLabel)} -- ${esc(METRIC_BY_KEY[nonServedNotable.metric]?.shortLabel || nonServedNotable.metric)} ${nonServedNotable.mom_pct_change > 0 ? 'up' : 'down'} ${fmtPct(nonServedNotable.mom_pct_change)} month-over-month, with ${nonServedRow.units_sold ?? 'n/a'} homes sold at a median price of ${fmtPrice(nonServedRow.median_sold_price)}. It's not an area we get asked about as often as Oakridge or Byron, but the activity there this month says it deserves a closer look.</p>
+    ` : '';
+
+    // ---- Buy/sell guidance: keyed on the citywide average sale-to-list
+    // ratio across the 7 served areas -- see SELL_GUIDANCE/BUY_GUIDANCE
+    // above for why this is still selection, not generation.
+    const citywideSaleToList = average(servedRows.map((r) => r.avg_sale_to_list_ratio));
+    const marketTier = sellerMarketTier(citywideSaleToList);
+    const sellBuyHtml = citywideSaleToList != null ? `
+      <h2>Is Now a Good Time to Sell in London Ontario?</h2>
+      <p>${SELL_GUIDANCE[marketTier]} The citywide average sale-to-list ratio sat at ${(citywideSaleToList * 100).toFixed(1)}% in ${esc(monthLabel)}. Not sure where your own home stands? A <a href="/services/home-evaluation/">complimentary home evaluation</a> gets you a real, current number.</p>
+
+      <h2>Is Now a Good Time to Buy in London Ontario?</h2>
+      <p>${BUY_GUIDANCE[marketTier]} Buyers weighing where their budget goes furthest can explore <a href="/areas/">all the areas we serve</a> or dig into the numbers themselves on the <a href="/market-map/">interactive Neighbourhood Heat Map</a>.</p>
+    ` : '';
+
+    // Fallback CTA for the rare month citywideSaleToList is unavailable and
+    // sellBuyHtml renders empty -- otherwise the post would end with no
+    // call-to-action at all. When sellBuyHtml IS present it already covers
+    // both the seller and buyer CTA, so this only ever renders once.
     const closingHtml = `
       <p>Not sure where your own home stands this month? A <a href="/services/home-evaluation/">complimentary home evaluation</a> gets you a real, current number. Buyers can explore <a href="/areas/">all the areas we serve</a> or dig into the numbers themselves on the <a href="/market-map/">interactive Neighbourhood Heat Map</a>.</p>
     `;
@@ -617,17 +705,20 @@ export default async (req) => {
       <h2>How Did London Ontario's Housing Market Perform in ${esc(monthLabel)}?</h2>
       <p>${totalSold} homes sold citywide, with ${totalNewListings} new listings coming onto the market across all 39 mapped neighbourhoods.</p>
 
+      ${oakridgeHtml}
+
       <h2>How Are West London's Neighbourhoods Comparing This Month?</h2>
       <table>
         <thead><tr><th>Neighbourhood</th><th>Homes Sold</th><th>Median Price</th><th>Month-over-Month</th></tr></thead>
         <tbody>${servedTableRows}</tbody>
       </table>
       <ul>${areaNarratives}</ul>
+      ${nonServedHtml}
 
       <h2>Notable Moves This Month</h2>
       ${notableHtml}
 
-      ${closingHtml}
+      ${sellBuyHtml || closingHtml}
 
       <p style="font-size:12px;color:#888;">Source: MLS® resale data, compiled ${esc(captureDate)}. This post is generated automatically from live market data -- every number above is a direct lookup or plain arithmetic against already-computed aggregates; no AI system interprets or writes commentary on the underlying sold-price data.</p>
     `;
@@ -646,13 +737,26 @@ export default async (req) => {
         charts = [{
           title: `${headline.area.area_name} -- ${headline.metric.shortLabel}, last ${history.length} months`,
           color: '#e8b84b',
-          labels: history.map((h) => new Date(`${h.capture_date}T00:00:00Z`).toLocaleDateString('en-US', { month: 'short', timeZone: 'UTC' })),
+          // Same run-date-vs-reported-month offset as monthLabel above --
+          // each row's own capture_date is the day the snapshot ran, one
+          // month after the data it holds, so the label needs the same
+          // one-month-back shift or a "6 months" chart reads one month
+          // ahead of every point in it (caught alongside the main bug:
+          // this rendered "Aug/Sep" for what was really July/August data).
+          labels: history.map((h) => {
+            const rowDate = new Date(`${h.capture_date}T00:00:00Z`);
+            const reportedDate = new Date(Date.UTC(rowDate.getUTCFullYear(), rowDate.getUTCMonth() - 1, 1));
+            return reportedDate.toLocaleDateString('en-US', { month: 'short', timeZone: 'UTC' });
+          }),
           values: history.map((h) => Math.round(Number(h[headline.metric.key]) || 0)),
         }];
       }
     }
 
-    // ---- FAQs (templated) ----
+    // ---- FAQs (templated) -- expanded to match the depth of the manual
+    // posts this pipeline replaced (5 questions, not 2), same
+    // selection-only rule: every answer slots real numbers into a fixed
+    // sentence, nothing is generated per-question.
     const faqs = [
       {
         question: `How many homes sold in London Ontario in ${esc(monthLabel)}?`,
@@ -661,6 +765,18 @@ export default async (req) => {
       ...(headline ? [{
         question: `What was the biggest market move in ${esc(monthLabel)}?`,
         answer: `${esc(headline.area.area_name)}'s ${headline.metric.label} was the biggest single move among our 7 served areas -- ${magnitudeWord(headline.change.mom_pct_change)} ${fmtPct(headline.change.mom_pct_change)} month-over-month, now at ${headline.metric.fmt(headline.change.current_value)}.`,
+      }] : []),
+      ...(citywideSaleToList != null ? [{
+        question: `Is London Ontario a buyer's or seller's market right now?`,
+        answer: `${marketTier === 'hot' ? "Conditions favour sellers." : marketTier === 'soft' ? 'Conditions favour buyers.' : 'Conditions are close to balanced.'} The citywide average sale-to-list ratio was ${(citywideSaleToList * 100).toFixed(1)}% in ${esc(monthLabel)} -- ${marketTier === 'soft' ? 'accurately priced homes are still selling, but buyers have room to negotiate.' : 'accurately priced homes are finding motivated buyers close to (or above) asking.'}`,
+      }] : []),
+      ...(oakridgeRow ? [{
+        question: `How is the Oakridge, London Ontario real estate market doing?`,
+        answer: `${oakridgeRow.units_sold ?? 'n/a'} homes sold in Oakridge in ${esc(monthLabel)} at a median price of ${fmtPrice(oakridgeRow.median_sold_price)}${oakridgePriceChange?.mom_pct_change != null ? ` (${fmtPct(oakridgePriceChange.mom_pct_change)} month-over-month)` : ''}.`,
+      }] : []),
+      ...(citywideSaleToList != null ? [{
+        question: `Is now a good time to sell a home in London Ontario?`,
+        answer: SELL_GUIDANCE[marketTier],
       }] : []),
     ];
 
@@ -675,7 +791,7 @@ export default async (req) => {
     // ---- Assemble the BlogPost entry as a source string ----
     const title = `${monthLabel} London Ontario Real Estate Market Update`;
     const description = `${totalSold} homes sold across London Ontario in ${monthLabel}. See the full breakdown by neighbourhood and what it means for buyers and sellers.`;
-    const dateDisplay = dateObj.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+    const dateDisplay = publishDateObj.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
 
     const postEntry = `  {
     slug: '${slug}',
@@ -685,7 +801,7 @@ export default async (req) => {
     dateDisplay: '${dateDisplay}',
     category: 'Market Updates',
     author: 'Justin Skrypnyk',
-    readTime: '4 min read',
+    readTime: '6 min read',
     image: '/images/${slug}.webp',
     imageAlt: '${escJs(title)}',
     content: \`${bodyHtml.replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/\$\{/g, '\\${')}\`,

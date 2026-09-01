@@ -53,3 +53,10 @@ https://liveinoakridge.ca/*   https://www.liveinoakridge.ca/:splat   301!
 
 /areas/hyde-park          /areas/   301!
 /areas/hyde-park/*        /areas/   301!
+
+# monthly-blog-post-background.mjs's first real run (2026-09-01) mislabeled
+# the auto-published post "September 2026" when the data it reports on is
+# actually August's completed month (the code bug is fixed, but this one
+# post was already live for a few hours under the wrong slug before the
+# rename -- redirect rather than 404 it).
+/blog/september-2026-london-ontario-market-update-auto/   /blog/august-2026-london-ontario-market-update-auto/   301!
