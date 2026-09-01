@@ -26,6 +26,10 @@
 import { createClient } from '@supabase/supabase-js';
 import sharp from 'sharp';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, Table, TableRow, TableCell, WidthType } from 'docx';
+import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import os from 'node:os';
+import path from 'node:path';
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -170,7 +174,7 @@ function htmlBlocksToDocx(bodyHtml) {
   }
   return nodes;
 }
-async function renderPostDocx({ title, dateDisplay, description, bodyHtml, faqs, postUrl }) {
+export async function renderPostDocx({ title, dateDisplay, description, bodyHtml, faqs, postUrl }) {
   const children = [
     new Paragraph({ text: title, heading: HeadingLevel.HEADING_1, spacing: { after: 120 } }),
     new Paragraph({ children: [new TextRun({ text: `${dateDisplay} · Justin Skrypnyk · Market Updates`, italics: true, color: '666666' })], spacing: { after: 200 } }),
@@ -259,9 +263,54 @@ async function githubPut(path, contentUtf8, sha, message, branch) {
   return res.json();
 }
 
+// ---- Bundled fonts for the card image ---------------------------------
+// Netlify's function runtime has no fonts installed at all -- confirmed
+// empirically after the Sept 1 2026 auto-post's card rendered every
+// <text> glyph as an empty tofu box (sharp's SVG->raster step goes
+// through librsvg/Pango/fontconfig, which has nothing to substitute when
+// no font matching "Georgia"/"Arial" -- or ANY font -- exists on disk).
+// Fix: bundle real font files and point fontconfig at them directly via
+// FONTCONFIG_PATH, written to /tmp (the one writable dir in the function
+// sandbox) once per cold start. PT Sans/PT Serif, not Arial/Georgia --
+// Apple's copies of the latter aren't ours to redistribute in a public
+// repo; these are pulled from Google Fonts under the OFL (see
+// assets/fonts/OFL-LICENSE.txt), same pairing used by
+// monthly-digest-background.mjs's chart image for the same reason.
+let cardFontsReady = false;
+function ensureCardFonts() {
+  if (cardFontsReady) return;
+  const fontDir = path.join(os.tmpdir(), 'card-fonts');
+  const cacheDir = path.join(os.tmpdir(), 'card-fontconfig-cache');
+  mkdirSync(fontDir, { recursive: true });
+  mkdirSync(cacheDir, { recursive: true });
+  // Literal `new URL('./exact/path', import.meta.url)` per file (not a
+  // loop over a template string) -- Netlify's bundler only discovers
+  // local file dependencies it can resolve statically.
+  const bundled = [
+    ['PTSans-Regular.ttf', fileURLToPath(new URL('./assets/fonts/PTSans-Regular.ttf', import.meta.url))],
+    ['PTSans-Bold.ttf', fileURLToPath(new URL('./assets/fonts/PTSans-Bold.ttf', import.meta.url))],
+    ['PTSerif-Regular.ttf', fileURLToPath(new URL('./assets/fonts/PTSerif-Regular.ttf', import.meta.url))],
+    ['PTSerif-Bold.ttf', fileURLToPath(new URL('./assets/fonts/PTSerif-Bold.ttf', import.meta.url))],
+  ];
+  for (const [name, src] of bundled) {
+    const dest = path.join(fontDir, name);
+    if (!existsSync(dest)) writeFileSync(dest, readFileSync(src));
+  }
+  const confPath = path.join(fontDir, 'fonts.conf');
+  if (!existsSync(confPath)) {
+    writeFileSync(confPath, `<?xml version="1.0"?>\n<!DOCTYPE fontconfig SYSTEM "fonts.dtd">\n<fontconfig>\n  <dir>${fontDir}</dir>\n  <cachedir>${cacheDir}</cachedir>\n</fontconfig>\n`);
+  }
+  process.env.FONTCONFIG_PATH = fontDir;
+  cardFontsReady = true;
+}
+
 // ---- Card image (branded stat card, not a photo/AI image) ------------
-async function renderStatCardWebp({ monthLabel, headlineValue, headlineLabel, subline }) {
+export async function renderStatCardWebp({ monthLabel, headlineValue, headlineLabel, subline }) {
+  ensureCardFonts();
   const W = 1200, H = 630; // standard blog og-image aspect, matches other post images
+  const PHOTO_R = 110;
+  const PHOTO_CX = W - 170;
+  const PHOTO_CY = 160;
   const svg = `
     <svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
       <defs>
@@ -271,15 +320,41 @@ async function renderStatCardWebp({ monthLabel, headlineValue, headlineLabel, su
         </linearGradient>
       </defs>
       <rect width="${W}" height="${H}" fill="url(#bg)" />
-      <text x="70" y="120" font-family="Georgia, serif" font-size="34" font-weight="bold" fill="#e8b84b" letter-spacing="1">${esc(monthLabel)}</text>
-      <text x="70" y="230" font-family="Georgia, serif" font-size="30" fill="#ffffff" opacity="0.85">London Ontario Real Estate</text>
-      <text x="70" y="360" font-family="Arial, sans-serif" font-size="96" font-weight="bold" fill="#ffffff">${esc(headlineValue)}</text>
-      <text x="70" y="410" font-family="Arial, sans-serif" font-size="26" fill="#e8b84b" letter-spacing="0.5">${esc(headlineLabel).toUpperCase()}</text>
+      <text x="70" y="120" font-family="PT Serif" font-size="34" font-weight="bold" fill="#e8b84b" letter-spacing="1">${esc(monthLabel)}</text>
+      <text x="70" y="230" font-family="PT Serif" font-size="30" fill="#ffffff" opacity="0.85">London Ontario Real Estate</text>
+      <text x="70" y="360" font-family="PT Sans" font-size="96" font-weight="bold" fill="#ffffff">${esc(headlineValue)}</text>
+      <text x="70" y="410" font-family="PT Sans" font-size="26" fill="#e8b84b" letter-spacing="0.5">${esc(headlineLabel).toUpperCase()}</text>
       <line x1="70" y1="460" x2="330" y2="460" stroke="#e8b84b" stroke-width="2" />
-      <text x="70" y="510" font-family="Arial, sans-serif" font-size="22" fill="#ffffff" opacity="0.75">${esc(subline)}</text>
+      <text x="70" y="510" font-family="PT Sans" font-size="22" fill="#ffffff" opacity="0.75">${esc(subline)}</text>
+      <circle cx="${PHOTO_CX}" cy="${PHOTO_CY}" r="${PHOTO_R + 5}" fill="none" stroke="#e8b84b" stroke-width="3" />
+      <text x="${PHOTO_CX}" y="${PHOTO_CY + PHOTO_R + 38}" font-family="PT Sans" font-size="19" font-weight="bold" fill="#ffffff" text-anchor="middle">JUSTIN SKRYPNYK</text>
+      <text x="${PHOTO_CX}" y="${PHOTO_CY + PHOTO_R + 61}" font-family="PT Sans" font-size="14" fill="#e8b84b" text-anchor="middle" letter-spacing="1.5">REALTOR&#174;</text>
     </svg>
   `;
-  return sharp(Buffer.from(svg)).webp({ quality: 88 }).toBuffer();
+
+  // Justin's headshot, circle-cropped -- matches the branded navy/gold
+  // look of the manually-designed monthly covers (see e.g.
+  // public/images/june-2026-london-ontario-market-update.png) so an
+  // auto-published post still visibly carries "this came from Justin",
+  // not just a stats card. Failure here (missing file, decode error)
+  // shouldn't take down the whole card -- falls back to the text-only
+  // layout above with an empty gold ring rather than throwing.
+  const composites = [];
+  try {
+    const headshotPath = fileURLToPath(new URL('../../public/images/justin-skrypnyk-headshot-avatar.webp', import.meta.url));
+    const size = PHOTO_R * 2;
+    const circleMask = Buffer.from(`<svg width="${size}" height="${size}"><circle cx="${size / 2}" cy="${size / 2}" r="${size / 2}" fill="#fff"/></svg>`);
+    const circularPhoto = await sharp(headshotPath)
+      .resize(size, size, { fit: 'cover' })
+      .composite([{ input: circleMask, blend: 'dest-in' }])
+      .png()
+      .toBuffer();
+    composites.push({ input: circularPhoto, left: PHOTO_CX - PHOTO_R, top: PHOTO_CY - PHOTO_R });
+  } catch (err) {
+    console.error('monthly-blog-post: headshot composite failed (card will render without it):', err.message);
+  }
+
+  return sharp(Buffer.from(svg)).composite(composites).webp({ quality: 88 }).toBuffer();
 }
 
 async function sendNotifyEmail(subject, html, attachments) {

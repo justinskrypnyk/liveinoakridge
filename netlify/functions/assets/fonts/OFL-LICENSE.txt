@@ -1,0 +1,10 @@
+PT Sans and PT Serif, by ParaType, distributed via Google Fonts under the
+SIL Open Font License, Version 1.1.
+
+Fetched from https://fonts.googleapis.com/css2?family=PT+Sans:wght@400;700&family=PT+Serif:wght@400;700
+on 2026-09-01. Full license text: https://openfontlicense.org
+
+Bundled here (rather than relying on a system font) because the Netlify
+function runtime these render in has no fonts installed at all -- see the
+comment above ensureCardFonts() in monthly-blog-post-background.mjs and
+monthly-digest-background.mjs for why.

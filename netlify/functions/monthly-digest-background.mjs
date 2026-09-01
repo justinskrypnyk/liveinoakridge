@@ -35,8 +35,10 @@
 // not an AI interpreting the underlying sold data.
 import { createClient } from '@supabase/supabase-js';
 import sharp from 'sharp';
-import { readFileSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import os from 'node:os';
+import path from 'node:path';
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -376,7 +378,42 @@ async function medianSoldPriceForCity(exactCityName, searchTerm) {
   }
 }
 
+// ---- Bundled fonts for the map image -----------------------------------
+// Netlify's function runtime has no fonts installed at all, so sharp's
+// SVG->raster step (librsvg/Pango/fontconfig) has nothing to substitute
+// for "Georgia"/"Arial" and renders every <text> glyph as a tofu box --
+// same bug, same fix, as monthly-blog-post-background.mjs's card image
+// (see that file's ensureCardFonts() for the fuller explanation). Bundled
+// here separately rather than imported, per this directory's
+// self-contained-function convention. PT Sans/PT Serif, OFL-licensed via
+// Google Fonts -- see assets/fonts/OFL-LICENSE.txt.
+let mapFontsReady = false;
+function ensureMapFonts() {
+  if (mapFontsReady) return;
+  const fontDir = path.join(os.tmpdir(), 'map-fonts');
+  const cacheDir = path.join(os.tmpdir(), 'map-fontconfig-cache');
+  mkdirSync(fontDir, { recursive: true });
+  mkdirSync(cacheDir, { recursive: true });
+  const bundled = [
+    ['PTSans-Regular.ttf', fileURLToPath(new URL('./assets/fonts/PTSans-Regular.ttf', import.meta.url))],
+    ['PTSans-Bold.ttf', fileURLToPath(new URL('./assets/fonts/PTSans-Bold.ttf', import.meta.url))],
+    ['PTSerif-Regular.ttf', fileURLToPath(new URL('./assets/fonts/PTSerif-Regular.ttf', import.meta.url))],
+    ['PTSerif-Bold.ttf', fileURLToPath(new URL('./assets/fonts/PTSerif-Bold.ttf', import.meta.url))],
+  ];
+  for (const [name, src] of bundled) {
+    const dest = path.join(fontDir, name);
+    if (!existsSync(dest)) writeFileSync(dest, readFileSync(src));
+  }
+  const confPath = path.join(fontDir, 'fonts.conf');
+  if (!existsSync(confPath)) {
+    writeFileSync(confPath, `<?xml version="1.0"?>\n<!DOCTYPE fontconfig SYSTEM "fonts.dtd">\n<fontconfig>\n  <dir>${fontDir}</dir>\n  <cachedir>${cacheDir}</cachedir>\n</fontconfig>\n`);
+  }
+  process.env.FONTCONFIG_PATH = fontDir;
+  mapFontsReady = true;
+}
+
 export async function renderNeighbourhoodMapPng(snapshotRows, captureDate) {
+  ensureMapFonts();
   // Square format is the true lowest-common-denominator between Instagram's
   // documented 1080x1080 "Post" spec and Facebook's feed rendering -- both
   // show it natively with no cropping, unlike a portrait 4:5.
@@ -469,10 +506,10 @@ export async function renderNeighbourhoodMapPng(snapshotRows, captureDate) {
   const swatchW = legendW / PRICE_BANDS.length;
   const legendSwatches = PRICE_BANDS.map((b, i) => `
     <rect x="${legendX + i * swatchW}" y="${LEGEND_Y}" width="${swatchW + 0.5}" height="${LEGEND_H}" fill="${b.color}" />
-    <text x="${legendX + i * swatchW + swatchW / 2}" y="${LEGEND_Y + LEGEND_H / 2 + 1}" font-family="Arial, sans-serif" font-size="15" font-weight="bold" fill="#ffffff" text-anchor="middle" dominant-baseline="middle">${legendLabels[i]}</text>
+    <text x="${legendX + i * swatchW + swatchW / 2}" y="${LEGEND_Y + LEGEND_H / 2 + 1}" font-family="PT Sans" font-size="15" font-weight="bold" fill="#ffffff" text-anchor="middle" dominant-baseline="middle">${legendLabels[i]}</text>
   `).join('\n');
   const legendSvg = `
-    <text x="${CANVAS_W / 2}" y="${LEGEND_CAPTION_Y}" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#5b5346" text-anchor="middle" letter-spacing="2">MEDIAN SOLD PRICE</text>
+    <text x="${CANVAS_W / 2}" y="${LEGEND_CAPTION_Y}" font-family="PT Sans" font-size="13" font-weight="bold" fill="#5b5346" text-anchor="middle" letter-spacing="2">MEDIAN SOLD PRICE</text>
     <g clip-path="url(#legendClip)">
       ${legendSwatches}
     </g>
@@ -530,8 +567,8 @@ export async function renderNeighbourhoodMapPng(snapshotRows, captureDate) {
       <rect x="0" y="0" width="${CANVAS_W}" height="${MAP_BOTTOM}" fill="url(#vignette)" />
 
       <rect x="0" y="0" width="${CANVAS_W}" height="${TITLE_SCRIM_H}" fill="url(#titleScrim)" />
-      <text x="${CANVAS_W / 2}" y="${TITLE_Y}" font-family="Georgia, serif" font-size="33" font-weight="bold" fill="#ffffff" text-anchor="middle" letter-spacing="0.5">London Ontario — Median Sold Price</text>
-      <text x="${CANVAS_W / 2}" y="${SUBTITLE_Y}" font-family="Arial, sans-serif" font-size="16" fill="#e7ecf2" text-anchor="middle" letter-spacing="1">BY NEIGHBOURHOOD  •  ${esc(captureDate)}</text>
+      <text x="${CANVAS_W / 2}" y="${TITLE_Y}" font-family="PT Serif" font-size="33" font-weight="bold" fill="#ffffff" text-anchor="middle" letter-spacing="0.5">London Ontario — Median Sold Price</text>
+      <text x="${CANVAS_W / 2}" y="${SUBTITLE_Y}" font-family="PT Sans" font-size="16" fill="#e7ecf2" text-anchor="middle" letter-spacing="1">BY NEIGHBOURHOOD  •  ${esc(captureDate)}</text>
       <line x1="${CANVAS_W / 2 - 45}" y1="${DIVIDER_Y}" x2="${CANVAS_W / 2 + 45}" y2="${DIVIDER_Y}" stroke="#b99c6b" stroke-width="2" />
 
       <line x1="60" y1="${MAP_BOTTOM}" x2="${CANVAS_W - 60}" y2="${MAP_BOTTOM}" stroke="#1c2b3a" stroke-width="1" stroke-opacity="0.15" />
