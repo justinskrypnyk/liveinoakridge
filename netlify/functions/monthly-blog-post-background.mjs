@@ -229,6 +229,52 @@ function magnitudeWord(pctChange) {
   return 'held steady';
 }
 
+function capitalize(s) {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+// ---- Card copy: mirrors the "topic + bold stat / HERE'S THE STORY. /
+// green+red pill pair" structure of Justin's manually-designed monthly
+// covers (see renderStatCardWebp) -- built from the same headline pick
+// the post body already narrates, so the card never says something
+// different from the post underneath it.
+function buildCardCopy({ headline, totalSold, monthLabel }) {
+  const monthWord = monthLabel.split(' ')[0];
+  if (!headline) {
+    return {
+      topicLine: 'London Ontario Homes Sold',
+      boldLine: `${totalSold} This Month`,
+      pillGreenText: `${totalSold} SOLD CITYWIDE`,
+      pillRedText: `${SERVED_AREA_ORDER.length} AREAS TRACKED`,
+      captionLine: `The Full ${monthWord} Market Breakdown`,
+    };
+  }
+  const pct = headline.change.mom_pct_change;
+  const pillGreenText = `${headline.metric.shortLabel.toUpperCase()} ${pct >= 0 ? 'UP' : 'DOWN'} ${Math.abs(pct * 100).toFixed(1)}%`;
+
+  // Contrast stat: a different metric for the same headline area, so the
+  // two pills tell two different halves of the story (e.g. sales up,
+  // price down) -- the exact "Sales Up 6.1% / Prices Down 7.2%" pairing
+  // Justin's own template uses. Falls back to a citywide total on the
+  // rare month the headline area has no second metric with MoM data yet.
+  let pillRedText = `${totalSold} SOLD CITYWIDE`;
+  for (const m of REPORT_METRICS) {
+    if (m.key === headline.metric.key) continue;
+    const c = headline.area.changes[m.key];
+    if (c?.mom_pct_change == null) continue;
+    pillRedText = `${m.shortLabel.toUpperCase()} ${c.mom_pct_change >= 0 ? 'UP' : 'DOWN'} ${Math.abs(c.mom_pct_change * 100).toFixed(1)}%`;
+    break;
+  }
+
+  return {
+    topicLine: `${headline.area.area_name} ${headline.metric.shortLabel}`,
+    boldLine: `${capitalize(magnitudeWord(pct))} ${fmtPct(pct)}`,
+    pillGreenText,
+    pillRedText,
+    captionLine: `The Full ${monthWord} Market Breakdown`,
+  };
+}
+
 // ---- GitHub Contents API ---------------------------------------------
 async function githubGet(path, branch) {
   const res = await fetch(`https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${path}?ref=${branch}`, {
@@ -304,54 +350,88 @@ function ensureCardFonts() {
   cardFontsReady = true;
 }
 
-// ---- Card image (branded stat card, not a photo/AI image) ------------
-export async function renderStatCardWebp({ monthLabel, headlineValue, headlineLabel, subline }) {
+// Rough width estimate for a pill badge -- sharp/librsvg gives no text-metrics
+// API, so this is a per-character average for PT Sans Bold at the given
+// size rather than an exact measurement. Good enough for a stat pill (not
+// print), and errs slightly wide rather than clipping.
+function estimateTextWidth(text, fontSize) {
+  return text.length * fontSize * 0.6;
+}
+
+// ---- Card image (branded stat card, matching Justin's manually-designed
+// monthly covers -- see public/images/june-2026-london-ontario-market-
+// update.png, the Aug 1 2026 post's template he asked this to match) ----
+// Colors below are sampled directly from that PNG (same "don't guess,
+// sample the real template" rule market-map's legend colors already
+// follow), not eyeballed.
+export async function renderStatCardWebp({ monthLabel, locationLabel, topicLine, boldLine, pillGreenText, pillRedText, captionLine }) {
   ensureCardFonts();
   const W = 1200, H = 630; // standard blog og-image aspect, matches other post images
-  const PHOTO_R = 110;
-  const PHOTO_CX = W - 170;
-  const PHOTO_CY = 160;
+  const PHOTO_W = 460; // left photo panel width, fades out over its right ~180px into the background
+  const TEXT_X = 545;
+
+  const GOLD = '#ffc159';
+  const GOLD_LINE = '#efad10';
+  const GREEN = '#128040';
+  const RED = '#c31f1f';
+
+  const pillFontSize = 20;
+  const pillPadX = 22;
+  const pillH = 46;
+  const pillGap = 18;
+  const greenW = estimateTextWidth(pillGreenText, pillFontSize) + pillPadX * 2;
+  const redW = estimateTextWidth(pillRedText, pillFontSize) + pillPadX * 2;
+  const pillY = 400;
+
   const svg = `
     <svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stop-color="#0c2340" />
-          <stop offset="100%" stop-color="#16345c" />
+          <stop offset="0%" stop-color="#0d0c34" />
+          <stop offset="100%" stop-color="#201f81" />
         </linearGradient>
       </defs>
       <rect width="${W}" height="${H}" fill="url(#bg)" />
-      <text x="70" y="120" font-family="PT Serif" font-size="34" font-weight="bold" fill="#e8b84b" letter-spacing="1">${esc(monthLabel)}</text>
-      <text x="70" y="230" font-family="PT Serif" font-size="30" fill="#ffffff" opacity="0.85">London Ontario Real Estate</text>
-      <text x="70" y="360" font-family="PT Sans" font-size="96" font-weight="bold" fill="#ffffff">${esc(headlineValue)}</text>
-      <text x="70" y="410" font-family="PT Sans" font-size="26" fill="#e8b84b" letter-spacing="0.5">${esc(headlineLabel).toUpperCase()}</text>
-      <line x1="70" y1="460" x2="330" y2="460" stroke="#e8b84b" stroke-width="2" />
-      <text x="70" y="510" font-family="PT Sans" font-size="22" fill="#ffffff" opacity="0.75">${esc(subline)}</text>
-      <circle cx="${PHOTO_CX}" cy="${PHOTO_CY}" r="${PHOTO_R + 5}" fill="none" stroke="#e8b84b" stroke-width="3" />
-      <text x="${PHOTO_CX}" y="${PHOTO_CY + PHOTO_R + 38}" font-family="PT Sans" font-size="19" font-weight="bold" fill="#ffffff" text-anchor="middle">JUSTIN SKRYPNYK</text>
-      <text x="${PHOTO_CX}" y="${PHOTO_CY + PHOTO_R + 61}" font-family="PT Sans" font-size="14" fill="#e8b84b" text-anchor="middle" letter-spacing="1.5">REALTOR&#174;</text>
+
+      <line x1="${PHOTO_W + 40}" y1="45" x2="${PHOTO_W + 40}" y2="${H - 45}" stroke="${GOLD_LINE}" stroke-width="3" />
+
+      <text x="${TEXT_X}" y="70" font-family="PT Sans" font-size="20" font-weight="bold" fill="${GOLD}" letter-spacing="1.5">${esc(locationLabel)}  &#8226;  ${esc(monthLabel).toUpperCase()}</text>
+
+      <text x="${TEXT_X}" y="150" font-family="PT Sans" font-size="38" fill="#ffffff">${esc(topicLine)}</text>
+      <text x="${TEXT_X}" y="205" font-family="PT Sans" font-size="46" font-weight="bold" fill="#ffffff">${esc(boldLine)}</text>
+
+      <text x="${TEXT_X}" y="270" font-family="PT Sans" font-size="30" font-weight="bold" fill="${GOLD}" letter-spacing="0.5">HERE&#8217;S THE STORY.</text>
+      <line x1="${TEXT_X}" y1="290" x2="${W - 70}" y2="290" stroke="${GOLD_LINE}" stroke-width="2" />
+
+      <rect x="${TEXT_X}" y="${pillY}" width="${greenW}" height="${pillH}" rx="${pillH / 2}" fill="${GREEN}" />
+      <text x="${TEXT_X + greenW / 2}" y="${pillY + pillH / 2 + 7}" font-family="PT Sans" font-size="${pillFontSize}" font-weight="bold" fill="#ffffff" text-anchor="middle">${esc(pillGreenText)}</text>
+
+      <rect x="${TEXT_X + greenW + pillGap}" y="${pillY}" width="${redW}" height="${pillH}" rx="${pillH / 2}" fill="${RED}" />
+      <text x="${TEXT_X + greenW + pillGap + redW / 2}" y="${pillY + pillH / 2 + 7}" font-family="PT Sans" font-size="${pillFontSize}" font-weight="bold" fill="#ffffff" text-anchor="middle">${esc(pillRedText)}</text>
+
+      <text x="${TEXT_X}" y="${H - 55}" font-family="PT Sans" font-size="19" fill="#ffffff" opacity="0.85" letter-spacing="0.5">${esc(captionLine).toUpperCase()}  &#8594;</text>
     </svg>
   `;
 
-  // Justin's headshot, circle-cropped -- matches the branded navy/gold
-  // look of the manually-designed monthly covers (see e.g.
-  // public/images/june-2026-london-ontario-market-update.png) so an
-  // auto-published post still visibly carries "this came from Justin",
-  // not just a stats card. Failure here (missing file, decode error)
-  // shouldn't take down the whole card -- falls back to the text-only
-  // layout above with an empty gold ring rather than throwing.
+  // Justin's own photo (the exact shot his manually-made covers use),
+  // filling the left panel and fading into the background gradient
+  // rather than a hard rectangular seam -- avoids needing a true
+  // background-cutout (this photo's studio-gray backdrop is too close in
+  // brightness to itself in places to key out reliably without visible
+  // fringing). Failure here (missing file, decode error) shouldn't take
+  // down the whole card -- falls back to the text-only layout with no
+  // photo rather than throwing.
   const composites = [];
   try {
-    const headshotPath = fileURLToPath(new URL('../../public/images/justin-skrypnyk-headshot-avatar.webp', import.meta.url));
-    const size = PHOTO_R * 2;
-    const circleMask = Buffer.from(`<svg width="${size}" height="${size}"><circle cx="${size / 2}" cy="${size / 2}" r="${size / 2}" fill="#fff"/></svg>`);
-    const circularPhoto = await sharp(headshotPath)
-      .resize(size, size, { fit: 'cover' })
-      .composite([{ input: circleMask, blend: 'dest-in' }])
+    const photoPath = fileURLToPath(new URL('../../public/images/justin-skrypnyk-realtor-billboard.webp', import.meta.url));
+    const photo = await sharp(photoPath)
+      .resize(PHOTO_W, H, { fit: 'cover', position: 'top' })
+      .composite([{ input: Buffer.from(`<svg width="${PHOTO_W}" height="${H}"><rect width="${PHOTO_W}" height="${H}" fill="url(#g)"/><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#fff" stop-opacity="1"/><stop offset="60%" stop-color="#fff" stop-opacity="1"/><stop offset="100%" stop-color="#fff" stop-opacity="0"/></linearGradient></defs></svg>`), blend: 'dest-in' }])
       .png()
       .toBuffer();
-    composites.push({ input: circularPhoto, left: PHOTO_CX - PHOTO_R, top: PHOTO_CY - PHOTO_R });
+    composites.push({ input: photo, left: 0, top: 0 });
   } catch (err) {
-    console.error('monthly-blog-post: headshot composite failed (card will render without it):', err.message);
+    console.error('monthly-blog-post: photo composite failed (card will render without it):', err.message);
   }
 
   return sharp(Buffer.from(svg)).composite(composites).webp({ quality: 88 }).toBuffer();
@@ -485,6 +565,11 @@ export default async (req) => {
       }
     }
 
+    // ---- Card copy: mirrors Justin's manually-designed monthly covers
+    // (topic + bold stat, "HERE'S THE STORY.", a green/red pill pair) --
+    // built from the same headline computed above, not a separate pick.
+    const cardCopy = buildCardCopy({ headline, totalSold, monthLabel });
+
     // ---- Prose: template + phrase bank, zero generation ----
     const introSentence = headline
       ? `${totalSold} homes sold across London Ontario in ${monthLabel}, with ${esc(headline.area.area_name)}'s ${headline.metric.label} the biggest mover of the month -- ${magnitudeWord(headline.change.mom_pct_change)} ${fmtPct(headline.change.mom_pct_change)} from the month before.`
@@ -583,9 +668,8 @@ export default async (req) => {
     const imagePath = `public/images/${slug}.webp`;
     const imageWebp = await renderStatCardWebp({
       monthLabel,
-      headlineValue: headline ? headline.metric.fmt(headline.change.current_value) : String(totalSold),
-      headlineLabel: headline ? `${headline.area.area_name} ${headline.metric.label}` : 'Homes Sold',
-      subline: `${totalSold} homes sold citywide`,
+      locationLabel: 'LONDON, ON',
+      ...cardCopy,
     });
 
     // ---- Assemble the BlogPost entry as a source string ----
