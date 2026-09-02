@@ -723,8 +723,11 @@ export default async () => {
   // "Notable" is already computed by heat-map-snapshot-background.mjs
   // (fixed 10%+ MoM swing, plain code -- no AI judgment involved). Split so
   // Justin's 7 served areas surface first, per his ask, with everything
-  // else after.
-  const notable = (changeRows || []).filter((c) => c.is_notable).sort((a, b) => Math.abs(b.mom_pct_change) - Math.abs(a.mom_pct_change));
+  // else after. median_bedrooms excluded per Justin's ask (2026-09-02) --
+  // it's a low-cardinality metric that swings 10%+ on small sample noise
+  // alone, not a stat worth a "notable move" callout. Still shown in the
+  // full per-neighbourhood table below, just never in this section.
+  const notable = (changeRows || []).filter((c) => c.is_notable && c.metric !== 'median_bedrooms').sort((a, b) => Math.abs(b.mom_pct_change) - Math.abs(a.mom_pct_change));
   const notableServed = notable.filter((c) => SERVED_AREA_ORDER.includes(c.area_slug));
   const notableOther = notable.filter((c) => !SERVED_AREA_ORDER.includes(c.area_slug));
 
