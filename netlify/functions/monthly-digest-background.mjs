@@ -601,15 +601,15 @@ async function sendDigestEmail(subject, html, attachments) {
     method: 'POST',
     headers: { Authorization: `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      from: 'Live In Oakridge Reports <onboarding@resend.dev>',
       // Resend's sandbox sender (onboarding@resend.dev) 403s on ANY
       // recipient besides the account's own verified address -- confirmed
       // 2026-09-02 (a real production send, the first time this ever
-      // actually ran against Resend since the smile@ CC was added). Fixing
-      // this for real needs a verified domain in Resend so `from` can be a
-      // real address; until then, Justin forwards to Smile manually like he
-      // already does (see the Aug 24 2026 weekly digest precedent).
-      to: [DIGEST_TO_EMAIL],
+      // actually ran against Resend since the smile@ CC was added). Fixed
+      // for real 2026-09-02 by verifying mail.liveinoakridge.ca in Resend
+      // (Justin already had the GoDaddy DNS records in place) -- a verified
+      // domain's `from` address has no such restriction.
+      from: 'Live In Oakridge Reports <reports@mail.liveinoakridge.ca>',
+      to: [DIGEST_TO_EMAIL, 'smile@homeswithjustin.ca'],
       subject,
       html,
       attachments,
@@ -632,8 +632,8 @@ async function sendFailureAlert(message) {
       method: 'POST',
       headers: { Authorization: `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        from: 'Live In Oakridge Reports <onboarding@resend.dev>',
-        to: [DIGEST_TO_EMAIL],
+        from: 'Live In Oakridge Reports <reports@mail.liveinoakridge.ca>',
+        to: [DIGEST_TO_EMAIL], // internal ops alert -- Justin only, not Smile
         subject: '⚠️ Monthly digest FAILED to send',
         html: `<p>${esc(message)}</p><p>Check Netlify function logs for monthly-digest-background.</p>`,
       }),

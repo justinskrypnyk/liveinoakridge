@@ -138,14 +138,13 @@ async function sendDigestEmail(subject, html) {
     method: 'POST',
     headers: { Authorization: `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      from: 'Live In Oakridge Reports <onboarding@resend.dev>',
       // Resend's sandbox sender (onboarding@resend.dev) 403s on ANY
       // recipient besides the account's own verified address -- confirmed
       // 2026-09-02 via monthly-digest-background's first real send since
-      // the smile@ CC was added. Same fix here: needs a verified domain in
-      // Resend before `to` can include a second address again; until then,
-      // Justin forwards to Smile manually.
-      to: [DIGEST_TO_EMAIL],
+      // the smile@ CC was added. Fixed for real 2026-09-02 by verifying
+      // mail.liveinoakridge.ca in Resend.
+      from: 'Live In Oakridge Reports <reports@mail.liveinoakridge.ca>',
+      to: [DIGEST_TO_EMAIL, 'smile@homeswithjustin.ca'],
       subject,
       html,
     }),

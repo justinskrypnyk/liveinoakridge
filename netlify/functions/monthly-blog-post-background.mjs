@@ -466,21 +466,21 @@ export async function renderStatCardWebp({ monthLabel, locationLabel, topicLine,
   return sharp(Buffer.from(svg)).composite(composites).webp({ quality: 88 }).toBuffer();
 }
 
-async function sendNotifyEmail(subject, html, attachments) {
+async function sendNotifyEmail(subject, html, attachments, toSmile = true) {
   if (!RESEND_API_KEY) return; // don't let a missing key take down the alert path itself
   try {
     const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: { Authorization: `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        from: 'Live In Oakridge Reports <onboarding@resend.dev>',
         // Resend's sandbox sender (onboarding@resend.dev) 403s on ANY
         // recipient besides the account's own verified address -- confirmed
         // 2026-09-02 via monthly-digest-background's first real send since
-        // the smile@ CC was added. Same fix here: needs a verified domain in
-        // Resend before `to` can include a second address again; until then,
-        // Justin forwards to Smile manually.
-        to: [DIGEST_TO_EMAIL],
+        // the smile@ CC was added. Fixed for real 2026-09-02 by verifying
+        // mail.liveinoakridge.ca in Resend. toSmile=false for the ops-only
+        // failure alert below -- publish notifications go to both.
+        from: 'Live In Oakridge Reports <reports@mail.liveinoakridge.ca>',
+        to: toSmile ? [DIGEST_TO_EMAIL, 'smile@homeswithjustin.ca'] : [DIGEST_TO_EMAIL],
         subject,
         html,
         ...(attachments?.length ? { attachments } : {}),
@@ -522,7 +522,7 @@ export default async (req) => {
       SUPABASE_URL: !!SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY: !!SUPABASE_SERVICE_ROLE_KEY,
       RESEND_API_KEY: !!RESEND_API_KEY, GITHUB_TOKEN: !!GITHUB_TOKEN,
     });
-    await sendNotifyEmail('⚠️ Monthly blog post FAILED to publish', `<p>${esc(msg)}</p><p>Check Netlify env vars, especially GITHUB_TOKEN.</p>`);
+    await sendNotifyEmail('⚠️ Monthly blog post FAILED to publish', `<p>${esc(msg)}</p><p>Check Netlify env vars, especially GITHUB_TOKEN.</p>`, undefined, false);
     return new Response(msg, { status: 500 });
   }
 
