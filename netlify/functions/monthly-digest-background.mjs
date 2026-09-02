@@ -412,7 +412,7 @@ function ensureMapFonts() {
   mapFontsReady = true;
 }
 
-export async function renderNeighbourhoodMapPng(snapshotRows, captureDate) {
+export async function renderNeighbourhoodMapPng(snapshotRows, dateLabel) {
   ensureMapFonts();
   // Square format is the true lowest-common-denominator between Instagram's
   // documented 1080x1080 "Post" spec and Facebook's feed rendering -- both
@@ -568,7 +568,7 @@ export async function renderNeighbourhoodMapPng(snapshotRows, captureDate) {
 
       <rect x="0" y="0" width="${CANVAS_W}" height="${TITLE_SCRIM_H}" fill="url(#titleScrim)" />
       <text x="${CANVAS_W / 2}" y="${TITLE_Y}" font-family="PT Serif" font-size="33" font-weight="bold" fill="#ffffff" text-anchor="middle" letter-spacing="0.5">London Ontario — Median Sold Price</text>
-      <text x="${CANVAS_W / 2}" y="${SUBTITLE_Y}" font-family="PT Sans" font-size="16" fill="#e7ecf2" text-anchor="middle" letter-spacing="1">BY NEIGHBOURHOOD  •  ${esc(captureDate)}</text>
+      <text x="${CANVAS_W / 2}" y="${SUBTITLE_Y}" font-family="PT Sans" font-size="16" fill="#e7ecf2" text-anchor="middle" letter-spacing="1">BY NEIGHBOURHOOD  •  ${esc(dateLabel)}</text>
       <line x1="${CANVAS_W / 2 - 45}" y1="${DIVIDER_Y}" x2="${CANVAS_W / 2 + 45}" y2="${DIVIDER_Y}" stroke="#b99c6b" stroke-width="2" />
 
       <line x1="60" y1="${MAP_BOTTOM}" x2="${CANVAS_W - 60}" y2="${MAP_BOTTOM}" stroke="#1c2b3a" stroke-width="1" stroke-opacity="0.15" />
@@ -611,6 +611,31 @@ async function sendDigestEmail(subject, html, attachments) {
   if (!res.ok) throw new Error(`Resend send failed -> HTTP ${res.status}: ${await res.text().catch(() => '')}`);
 }
 
+// Best-effort failure alert, matching monthly-blog-post-background.mjs's
+// sendNotifyEmail pattern -- this is the ONLY thing that would have told
+// Justin the 2026-09-01 run failed silently (dead RESEND_API_KEY at 9am ET,
+// fixed later that same afternoon). If RESEND_API_KEY itself is the failure,
+// this alert will also fail to send -- a known gap, same one the blog post's
+// notify path already accepts -- but it still catches every OTHER failure
+// mode (Supabase query, map render, AMPRE lookup, etc.).
+async function sendFailureAlert(message) {
+  if (!RESEND_API_KEY) return;
+  try {
+    await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        from: 'Live In Oakridge Reports <onboarding@resend.dev>',
+        to: [DIGEST_TO_EMAIL],
+        subject: '⚠️ Monthly digest FAILED to send',
+        html: `<p>${esc(message)}</p><p>Check Netlify function logs for monthly-digest-background.</p>`,
+      }),
+    });
+  } catch (err) {
+    console.error('monthly-digest: failure alert itself failed to send:', err.message);
+  }
+}
+
 export default async () => {
   if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY || !RESEND_API_KEY || !VOW_ACCESS_TOKEN || !DDF_API_BASE_URL) {
     console.error('monthly-digest: missing required env vars', {
@@ -634,6 +659,19 @@ export default async () => {
     console.log('monthly-digest: no month-end snapshot found yet, skipping');
     return new Response('No month-end snapshot found yet');
   }
+
+  // Same run-date-vs-reported-month offset as monthly-blog-post-background.mjs
+  // -- heat-map-snapshot-background.mjs stamps a 'month-end' row's capture_date
+  // as the day it ran (the 1st), but the DATA in that row is the PREVIOUS
+  // month's completed close. Queries below still key off the raw capture_date
+  // (that's the correct DB value) -- only human-facing text uses monthLabel.
+  const captureDateObj = new Date(`${latestMonthEnd.capture_date}T00:00:00Z`);
+  const reportedMonthObj = new Date(Date.UTC(captureDateObj.getUTCFullYear(), captureDateObj.getUTCMonth() - 1, 1));
+  const monthLabel = reportedMonthObj.toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+  const monthShort = reportedMonthObj.toLocaleDateString('en-US', { month: 'long', timeZone: 'UTC' }).toLowerCase();
+  const reportedYear = reportedMonthObj.getUTCFullYear();
+
+  try {
 
   const [{ data: snapshotRows, error: snapError }, { data: changeRows, error: changeError }] = await Promise.all([
     supabase
@@ -709,7 +747,7 @@ export default async () => {
     .join('');
 
   const html = `
-    <h2>Full Month Review — ${latestMonthEnd.capture_date}</h2>
+    <h2>Full Month Review — ${esc(monthLabel)}</h2>
     <p>Total Sales: ${totalActive} · New Listings: ${totalNewListings} · ${snapshotRows.length} neighbourhoods</p>
     <p style="font-size:12px;color:#888;">MoM/YoY % change needs history this pipeline hasn't built up yet (brand new as of July 2026) -- these will read "n/a" for a while, then populate automatically once enough monthly captures exist. No rebuild needed when that happens.</p>
 
@@ -734,20 +772,26 @@ export default async () => {
   `;
 
   const csv = toCsv(sortedRows);
-  const mapPng = await renderNeighbourhoodMapPng(snapshotRows, latestMonthEnd.capture_date);
+  const mapPng = await renderNeighbourhoodMapPng(snapshotRows, monthLabel);
 
+  const fileTag = `${monthShort}-${reportedYear}`;
   await sendDigestEmail(
-    `Full Month Review — ${latestMonthEnd.capture_date}`,
+    `Full Month Review — ${monthLabel}`,
     html,
     [
-      { filename: `full-month-review-${latestMonthEnd.capture_date}.csv`, content: Buffer.from(csv).toString('base64') },
-      { filename: `neighbourhood-map-${latestMonthEnd.capture_date}.png`, content: mapPng.toString('base64') },
+      { filename: `full-month-review-${fileTag}.csv`, content: Buffer.from(csv).toString('base64') },
+      { filename: `neighbourhood-map-${fileTag}.png`, content: mapPng.toString('base64') },
     ]
   );
 
   const summary = `monthly-digest sent: ${sortedRows.length} areas, ${totalActive} sold, ${totalNewListings} new listings, map rendered`;
   console.log(summary);
   return new Response(summary);
+  } catch (err) {
+    console.error('monthly-digest: failed:', err.message);
+    await sendFailureAlert(`Monthly digest for ${monthLabel} failed: ${esc(err.message)}`);
+    return new Response(`Failed: ${err.message}`, { status: 500 });
+  }
 };
 
 export const config = {
