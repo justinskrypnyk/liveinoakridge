@@ -1,0 +1,15 @@
+# Netlify's default function bundler auto-detects and copies static assets
+# referenced via `new URL('./relative/path', import.meta.url)` (confirmed:
+# src/data/*.json and public/images/*.png work this way with zero config,
+# see monthly-digest-background.mjs and monthly-blog-post-background.mjs).
+# .ttf font files are NOT in its default recognized-asset list, though --
+# they were silently dropped from both functions' deployed zips despite the
+# identical reference pattern (confirmed 2026-09-02 by inspecting the actual
+# built zip via `netlify functions:build`, after a real production run threw
+# ENOENT for exactly this path). `included_files` force-includes them
+# regardless of extension.
+[functions."monthly-blog-post-background"]
+  included_files = ["netlify/functions/assets/fonts/**"]
+
+[functions."monthly-digest-background"]
+  included_files = ["netlify/functions/assets/fonts/**"]
