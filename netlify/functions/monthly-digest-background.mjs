@@ -602,7 +602,14 @@ async function sendDigestEmail(subject, html, attachments) {
     headers: { Authorization: `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
       from: 'Live In Oakridge Reports <onboarding@resend.dev>',
-      to: [DIGEST_TO_EMAIL, 'smile@homeswithjustin.ca'],
+      // Resend's sandbox sender (onboarding@resend.dev) 403s on ANY
+      // recipient besides the account's own verified address -- confirmed
+      // 2026-09-02 (a real production send, the first time this ever
+      // actually ran against Resend since the smile@ CC was added). Fixing
+      // this for real needs a verified domain in Resend so `from` can be a
+      // real address; until then, Justin forwards to Smile manually like he
+      // already does (see the Aug 24 2026 weekly digest precedent).
+      to: [DIGEST_TO_EMAIL],
       subject,
       html,
       attachments,
