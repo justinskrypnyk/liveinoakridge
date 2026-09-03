@@ -67,6 +67,11 @@ function sortAreasServedFirst(areas) {
 // here always means the full completed month being reported on.
 const REPORT_METRICS = [
   { key: 'units_sold_month', label: 'Total Sales', fmt: (n) => (n == null ? 'n/a' : String(n)) },
+  // Firm-sale count (first observed 'Active Under Contract'), NOT closing
+  // date -- a much closer match to LSTAR's own "Sales Activity" than Total
+  // Sales above. No history before 2026-09-03 (see migrations/004), so
+  // this reads 0 for August 2026 and earlier -- expected, not a bug.
+  { key: 'units_firmed_month', label: 'Homes Firmed Up', fmt: (n) => (n == null ? 'n/a' : String(n)) },
   { key: 'new_listings_count', label: 'New Listings', fmt: (n) => (n == null ? 'n/a' : String(n)) },
   { key: 'active_count', label: 'Active Listings', fmt: (n) => (n == null ? 'n/a' : String(n)) },
   { key: 'median_list_price', label: 'Med. List Price', fmt: fmtPrice },

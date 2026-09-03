@@ -46,6 +46,12 @@ create table if not exists market_map_snapshots (
   units_sold_month integer,
   avg_sale_to_list_ratio_month numeric,
 
+  -- Count of listings that went firm (first observed 'Active Under
+  -- Contract') this same period, from vow_firm_tracker -- a much closer
+  -- match to LSTAR's own firm-date "Sales Activity" than units_sold_month
+  -- (closing-date based). No history before 2026-09-03; see migrations/004.
+  units_firmed_month integer,
+
   -- Feed-derived, no board/VOW access needed -- BedroomsTotal and
   -- BathroomsTotalInteger are 100% filled on this feed; PropertySubType is
   -- fully categorized. Lot size was considered too (LotSizeArea) but its
@@ -176,6 +182,27 @@ create index if not exists vow_sold_listings_is_lease_idx on vow_sold_listings (
 
 create index if not exists vow_sold_listings_area_idx on vow_sold_listings (area_slug);
 create index if not exists vow_sold_listings_close_date_idx on vow_sold_listings (close_date desc);
+
+-- Tracks the day each listing FIRST shows up as 'Active Under Contract' --
+-- our own self-observed proxy for "the day a deal went firm", since
+-- AMPRE's own PurchaseContractDate field stays null until a deal actually
+-- closes. See migrations/004 and firm-sale-tracker-background.mjs for the
+-- fuller reasoning (this is what closes the gap between our closing-date
+-- sold count and LSTAR's own firm-date "Sales Activity" figure).
+create table if not exists vow_firm_tracker (
+  listing_key text primary key,
+  area_slug text,
+  address text not null,
+  city text,
+  list_price numeric,
+  property_type text,
+  property_sub_type text,
+  went_firm_date date not null,
+  created_at timestamptz not null default now()
+);
+create index if not exists vow_firm_tracker_area_idx on vow_firm_tracker (area_slug);
+create index if not exists vow_firm_tracker_went_firm_date_idx on vow_firm_tracker (went_firm_date);
+alter table vow_firm_tracker enable row level security;
 
 alter table vow_sold_listings enable row level security;
 

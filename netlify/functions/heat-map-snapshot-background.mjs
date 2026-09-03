@@ -136,6 +136,7 @@ const METRICS = [
   'median_sold_price_month',
   'units_sold_month',
   'avg_sale_to_list_ratio_month',
+  'units_firmed_month',
   'median_bedrooms',
   'median_bathrooms',
   'pct_detached',
@@ -296,6 +297,34 @@ export default async (req) => {
     }
   }
 
+  // Firm-sale counts for the same month range, from vow_firm_tracker
+  // (populated daily by firm-sale-tracker-background.mjs) -- a much closer
+  // match to LSTAR's own firm-date "Sales Activity" than the closing-date
+  // monthSoldsByArea count above. No history before 2026-09-03 (migrations/004),
+  // so this reads 0 for any month range entirely before that date.
+  const monthFirmedByArea = new Map();
+  {
+    const monthFirmed = [];
+    for (let from = 0; ; from += SOLDS_PAGE_SIZE) {
+      const { data: page, error: monthFirmedError } = await supabase
+        .from('vow_firm_tracker')
+        .select('area_slug')
+        .gte('went_firm_date', monthRangeStart.toISOString().slice(0, 10))
+        .lte('went_firm_date', monthRangeEnd.toISOString().slice(0, 10))
+        .not('area_slug', 'is', null)
+        .range(from, from + SOLDS_PAGE_SIZE - 1);
+      if (monthFirmedError) {
+        console.error('heat-map-snapshot: monthFirmed query failed:', monthFirmedError.message);
+        break;
+      }
+      monthFirmed.push(...(page || []));
+      if (!page || page.length < SOLDS_PAGE_SIZE) break;
+    }
+    for (const row of monthFirmed) {
+      monthFirmedByArea.set(row.area_slug, (monthFirmedByArea.get(row.area_slug) || 0) + 1);
+    }
+  }
+
   const captureDate = now.toISOString().slice(0, 10);
   const capturedAt = now.toISOString();
   const snapshotRows = [];
@@ -359,6 +388,10 @@ export default async (req) => {
       units_sold_month: monthSolds.length,
       median_sold_price_month: monthSoldPrices.length > 0 ? median(monthSoldPrices) : null,
       avg_sale_to_list_ratio_month: monthSaleToListRatios.length > 0 ? averageRatio(monthSaleToListRatios) : null,
+      // Firm-sale count for the same month range -- see monthFirmedByArea
+      // comment above. 0 (not null) when nothing's been tracked yet, same
+      // as units_sold_month reading 0 rather than null for a quiet month.
+      units_firmed_month: monthFirmedByArea.get(slug) || 0,
       price_per_sqft: sqftPrices.length > 0 ? median(sqftPrices) : null,
       price_per_sqft_sample_size: sqftPrices.length,
       median_bedrooms: median(beds),
@@ -383,7 +416,7 @@ export default async (req) => {
   // this cadence.
   const { data: history } = await supabase
     .from('market_map_snapshots')
-    .select('area_slug, capture_date, median_list_price, active_count, new_listings_count, avg_days_on_market, price_per_sqft, median_sold_price, units_sold, avg_sale_to_list_ratio, median_sold_price_month, units_sold_month, avg_sale_to_list_ratio_month, median_bedrooms, median_bathrooms, pct_detached, delisted_count')
+    .select('area_slug, capture_date, median_list_price, active_count, new_listings_count, avg_days_on_market, price_per_sqft, median_sold_price, units_sold, avg_sale_to_list_ratio, median_sold_price_month, units_sold_month, avg_sale_to_list_ratio_month, units_firmed_month, median_bedrooms, median_bathrooms, pct_detached, delisted_count')
     .eq('period_type', kind)
     .lt('capture_date', captureDate)
     .order('capture_date', { ascending: false });
