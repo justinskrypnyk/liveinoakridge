@@ -58,11 +58,17 @@ function sortAreasServedFirst(areas) {
 // Subset of monthly-digest's REPORT_METRICS this post actually narrates --
 // same column names/formatters, trimmed to what's readable as prose rather
 // than a full 12-column table dump.
+// units_sold/median_sold_price/avg_sale_to_list_ratio use the "_month"
+// columns (true calendar-month figures), NOT the plain ones -- those stay
+// a 90-day rolling window for the heat map's own medians (see
+// heat-map-snapshot-background.mjs). This post always runs off a
+// 'month-end' capture (see the guard below), so "_month" here always means
+// the full completed month being reported on, never month-to-date.
 const REPORT_METRICS = [
-  { key: 'units_sold', label: 'homes sold', shortLabel: 'Homes Sold', fmt: (n) => (n == null ? 'n/a' : String(n)) },
-  { key: 'median_sold_price', label: 'median sale price', shortLabel: 'Median Sale Price', fmt: fmtPrice },
+  { key: 'units_sold_month', label: 'homes sold', shortLabel: 'Homes Sold', fmt: (n) => (n == null ? 'n/a' : String(n)) },
+  { key: 'median_sold_price_month', label: 'median sale price', shortLabel: 'Median Sale Price', fmt: fmtPrice },
   { key: 'avg_days_on_market', label: 'days on market', shortLabel: 'Days on Market', fmt: (n) => (n == null ? 'n/a' : String(Math.round(n))) },
-  { key: 'avg_sale_to_list_ratio', label: 'sale-to-list ratio', shortLabel: 'Sale-to-List', fmt: (n) => (n == null ? 'n/a' : `${(n * 100).toFixed(1)}%`) },
+  { key: 'avg_sale_to_list_ratio_month', label: 'sale-to-list ratio', shortLabel: 'Sale-to-List', fmt: (n) => (n == null ? 'n/a' : `${(n * 100).toFixed(1)}%`) },
   { key: 'new_listings_count', label: 'new listings', shortLabel: 'New Listings', fmt: (n) => (n == null ? 'n/a' : String(n)) },
 ];
 const METRIC_BY_KEY = Object.fromEntries(REPORT_METRICS.map((m) => [m.key, m]));
@@ -594,7 +600,7 @@ export default async (req) => {
     const rows = sortAreasServedFirst(snapshotRows).map((s) => ({ ...s, changes: changesByAreaMetric.get(s.area_slug) || {} }));
     const servedRows = rows.filter((r) => SERVED_AREA_ORDER.includes(r.area_slug));
 
-    const totalSold = snapshotRows.reduce((sum, r) => sum + (r.units_sold || 0), 0);
+    const totalSold = snapshotRows.reduce((sum, r) => sum + (r.units_sold_month || 0), 0);
     const totalNewListings = snapshotRows.reduce((sum, r) => sum + (r.new_listings_count || 0), 0);
 
     // ---- Headline metric: deterministic rule, not a judgment call ----
@@ -621,23 +627,23 @@ export default async (req) => {
       : `${totalSold} homes sold across London Ontario in ${monthLabel}. Here's the full neighbourhood-by-neighbourhood breakdown.`;
 
     const servedTableRows = servedRows.map((r) => {
-      const soldChange = r.changes.units_sold;
-      const priceChange = r.changes.median_sold_price;
+      const soldChange = r.changes.units_sold_month;
+      const priceChange = r.changes.median_sold_price_month;
       return `<tr>
         <td><a href="/areas/${esc(r.area_slug)}/">${esc(r.area_name)}</a></td>
-        <td>${r.units_sold ?? 'n/a'}</td>
-        <td>${fmtPrice(r.median_sold_price)}</td>
+        <td>${r.units_sold_month ?? 'n/a'}</td>
+        <td>${fmtPrice(r.median_sold_price_month)}</td>
         <td>${fmtPct(priceChange?.mom_pct_change)}</td>
       </tr>`;
     }).join('');
 
     const areaNarratives = servedRows.map((r) => {
-      const priceChange = r.changes.median_sold_price;
+      const priceChange = r.changes.median_sold_price_month;
       const dirWord = directionPhrase(r.area_slug + 'median_sold_price', priceChange?.mom_pct_change);
-      if (!dirWord || r.median_sold_price == null) {
-        return `<li><strong>${esc(r.area_name)}</strong>: ${r.units_sold ?? 'n/a'} homes sold, median price ${fmtPrice(r.median_sold_price)}.</li>`;
+      if (!dirWord || r.median_sold_price_month == null) {
+        return `<li><strong>${esc(r.area_name)}</strong>: ${r.units_sold_month ?? 'n/a'} homes sold, median price ${fmtPrice(r.median_sold_price_month)}.</li>`;
       }
-      return `<li><strong>${esc(r.area_name)}</strong>: ${r.units_sold ?? 'n/a'} homes sold, median price ${dirWord} to ${fmtPrice(r.median_sold_price)} (${fmtPct(priceChange.mom_pct_change)} month-over-month).</li>`;
+      return `<li><strong>${esc(r.area_name)}</strong>: ${r.units_sold_month ?? 'n/a'} homes sold, median price ${dirWord} to ${fmtPrice(r.median_sold_price_month)} (${fmtPct(priceChange.mom_pct_change)} month-over-month).</li>`;
     }).join('');
 
     const notable = (changeRows || [])
@@ -656,10 +662,10 @@ export default async (req) => {
     // manual posts this pipeline replaced always included (Oakridge is
     // Justin's flagship area, not a data-driven pick like `headline` above).
     const oakridgeRow = servedRows.find((r) => r.area_slug === 'oakridge') || null;
-    const oakridgePriceChange = oakridgeRow?.changes.median_sold_price;
+    const oakridgePriceChange = oakridgeRow?.changes.median_sold_price_month;
     const oakridgeHtml = oakridgeRow ? `
       <h2>How Did Oakridge Perform in ${esc(monthLabel)}?</h2>
-      <p>${oakridgeRow.units_sold ?? 'n/a'} homes sold in Oakridge in ${esc(monthLabel)} at a median price of ${fmtPrice(oakridgeRow.median_sold_price)}${oakridgePriceChange?.mom_pct_change != null ? ` (${fmtPct(oakridgePriceChange.mom_pct_change)} month-over-month)` : ''}.${oakridgeRow.avg_sale_to_list_ratio != null ? ` The average sale-to-list ratio came in at ${(oakridgeRow.avg_sale_to_list_ratio * 100).toFixed(1)}%.` : ''} For a closer look at the neighbourhood itself, see our <a href="/areas/oakridge/">Oakridge neighbourhood guide</a>.</p>
+      <p>${oakridgeRow.units_sold_month ?? 'n/a'} homes sold in Oakridge in ${esc(monthLabel)} at a median price of ${fmtPrice(oakridgeRow.median_sold_price_month)}${oakridgePriceChange?.mom_pct_change != null ? ` (${fmtPct(oakridgePriceChange.mom_pct_change)} month-over-month)` : ''}.${oakridgeRow.avg_sale_to_list_ratio_month != null ? ` The average sale-to-list ratio came in at ${(oakridgeRow.avg_sale_to_list_ratio_month * 100).toFixed(1)}%.` : ''} For a closer look at the neighbourhood itself, see our <a href="/areas/oakridge/">Oakridge neighbourhood guide</a>.</p>
     ` : '';
 
     // ---- One area outside our usual seven, if its data earns a mention --
@@ -677,17 +683,17 @@ export default async (req) => {
     // the unfiltered top hit was an area with 0 sold homes that month).
     const nonServedNotable = (changeRows || [])
       .filter((c) => c.is_notable && !SERVED_AREA_ORDER.includes(c.area_slug))
-      .filter((c) => (rows.find((r) => r.area_slug === c.area_slug)?.units_sold ?? 0) >= 10)
+      .filter((c) => (rows.find((r) => r.area_slug === c.area_slug)?.units_sold_month ?? 0) >= 10)
       .sort((a, b) => Math.abs(b.mom_pct_change) - Math.abs(a.mom_pct_change))[0] || null;
     const nonServedRow = nonServedNotable ? rows.find((r) => r.area_slug === nonServedNotable.area_slug) : null;
     const nonServedHtml = (nonServedNotable && nonServedRow) ? `
-      <p>One neighbourhood worth flagging outside our usual seven: <strong>${esc(nonServedRow.area_name)}</strong> had a genuinely notable ${esc(monthLabel)} -- ${esc(METRIC_BY_KEY[nonServedNotable.metric]?.shortLabel || nonServedNotable.metric)} ${nonServedNotable.mom_pct_change > 0 ? 'up' : 'down'} ${fmtPct(nonServedNotable.mom_pct_change)} month-over-month, with ${nonServedRow.units_sold ?? 'n/a'} homes sold at a median price of ${fmtPrice(nonServedRow.median_sold_price)}. It's not an area we get asked about as often as Oakridge or Byron, but the activity there this month says it deserves a closer look.</p>
+      <p>One neighbourhood worth flagging outside our usual seven: <strong>${esc(nonServedRow.area_name)}</strong> had a genuinely notable ${esc(monthLabel)} -- ${esc(METRIC_BY_KEY[nonServedNotable.metric]?.shortLabel || nonServedNotable.metric)} ${nonServedNotable.mom_pct_change > 0 ? 'up' : 'down'} ${fmtPct(nonServedNotable.mom_pct_change)} month-over-month, with ${nonServedRow.units_sold_month ?? 'n/a'} homes sold at a median price of ${fmtPrice(nonServedRow.median_sold_price_month)}. It's not an area we get asked about as often as Oakridge or Byron, but the activity there this month says it deserves a closer look.</p>
     ` : '';
 
     // ---- Buy/sell guidance: keyed on the citywide average sale-to-list
     // ratio across the 7 served areas -- see SELL_GUIDANCE/BUY_GUIDANCE
     // above for why this is still selection, not generation.
-    const citywideSaleToList = average(servedRows.map((r) => r.avg_sale_to_list_ratio));
+    const citywideSaleToList = average(servedRows.map((r) => r.avg_sale_to_list_ratio_month));
     const marketTier = sellerMarketTier(citywideSaleToList);
     const sellBuyHtml = citywideSaleToList != null ? `
       <h2>Is Now a Good Time to Sell in London Ontario?</h2>
@@ -778,7 +784,7 @@ export default async (req) => {
       }] : []),
       ...(oakridgeRow ? [{
         question: `How is the Oakridge, London Ontario real estate market doing?`,
-        answer: `${oakridgeRow.units_sold ?? 'n/a'} homes sold in Oakridge in ${esc(monthLabel)} at a median price of ${fmtPrice(oakridgeRow.median_sold_price)}${oakridgePriceChange?.mom_pct_change != null ? ` (${fmtPct(oakridgePriceChange.mom_pct_change)} month-over-month)` : ''}.`,
+        answer: `${oakridgeRow.units_sold_month ?? 'n/a'} homes sold in Oakridge in ${esc(monthLabel)} at a median price of ${fmtPrice(oakridgeRow.median_sold_price_month)}${oakridgePriceChange?.mom_pct_change != null ? ` (${fmtPct(oakridgePriceChange.mom_pct_change)} month-over-month)` : ''}.`,
       }] : []),
       ...(citywideSaleToList != null ? [{
         question: `Is now a good time to sell a home in London Ontario?`,

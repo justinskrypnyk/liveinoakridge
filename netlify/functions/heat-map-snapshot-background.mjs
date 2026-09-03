@@ -133,6 +133,9 @@ const METRICS = [
   'median_sold_price',
   'units_sold',
   'avg_sale_to_list_ratio',
+  'median_sold_price_month',
+  'units_sold_month',
+  'avg_sale_to_list_ratio_month',
   'median_bedrooms',
   'median_bathrooms',
   'pct_detached',
@@ -245,6 +248,54 @@ export default async (req) => {
     soldsByArea.get(row.area_slug).push(row);
   }
 
+  // True single-calendar-month sold figures, alongside the 90-day rolling
+  // ones above -- the 90-day window stays the right choice for the heat
+  // map's own medians (see comment above: a ~15-day capture gap is too
+  // thin a sample on its own), but every consumer that narrates "this
+  // month" / "in August" needs an actual calendar-month figure instead of
+  // that rolling one relabeled. Added 2026-09-03 after Justin caught the
+  // monthly blog post/digest reporting the 90-day `units_sold` figure as a
+  // single month's sales ("2,531 homes sold in August 2026" vs LSTAR's
+  // official board-wide 526).
+  //
+  // The reporting month depends on which capture this is (Justin's own
+  // framing, confirmed 2026-09-03): a month-end capture (runs the 1st)
+  // reports the FULL calendar month that just closed; a mid-month capture
+  // (runs the 15th) reports the CURRENT calendar month MONTH-TO-DATE --
+  // partial, since that month isn't over yet, but real dates within it
+  // rather than a rolling window that reaches back into the prior month.
+  const monthRangeEnd = kind === 'month-end'
+    ? new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 0)) // last day of the month that just closed
+    : now; // mid-month: month-to-date, through today
+  const monthRangeStart = kind === 'month-end'
+    ? new Date(Date.UTC(monthRangeEnd.getUTCFullYear(), monthRangeEnd.getUTCMonth(), 1))
+    : new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)); // mid-month: 1st of the current month
+
+  const monthSoldsByArea = new Map();
+  {
+    const monthSolds = [];
+    for (let from = 0; ; from += SOLDS_PAGE_SIZE) {
+      const { data: page, error: monthSoldsError } = await supabase
+        .from('vow_sold_listings')
+        .select('area_slug, close_price, list_price')
+        .gte('close_date', monthRangeStart.toISOString().slice(0, 10))
+        .lte('close_date', monthRangeEnd.toISOString().slice(0, 10))
+        .eq('is_lease', false)
+        .not('area_slug', 'is', null)
+        .range(from, from + SOLDS_PAGE_SIZE - 1);
+      if (monthSoldsError) {
+        console.error('heat-map-snapshot: monthSolds query failed:', monthSoldsError.message);
+        break;
+      }
+      monthSolds.push(...(page || []));
+      if (!page || page.length < SOLDS_PAGE_SIZE) break;
+    }
+    for (const row of monthSolds) {
+      if (!monthSoldsByArea.has(row.area_slug)) monthSoldsByArea.set(row.area_slug, []);
+      monthSoldsByArea.get(row.area_slug).push(row);
+    }
+  }
+
   const captureDate = now.toISOString().slice(0, 10);
   const capturedAt = now.toISOString();
   const snapshotRows = [];
@@ -282,6 +333,14 @@ export default async (req) => {
       .map((s) => (Number(s.list_price) > 0 ? Number(s.close_price) / Number(s.list_price) : null))
       .filter((n) => n !== null);
 
+    // True calendar-month versions of the three fields above -- null on
+    // mid-month captures (no completed month to report yet).
+    const monthSolds = monthSoldsByArea.get(slug) || [];
+    const monthSoldPrices = monthSolds.map((s) => Number(s.close_price)).filter((n) => n > 0);
+    const monthSaleToListRatios = monthSolds
+      .map((s) => (Number(s.list_price) > 0 ? Number(s.close_price) / Number(s.list_price) : null))
+      .filter((n) => n !== null);
+
     snapshotRows.push({
       area_slug: slug,
       area_name: name,
@@ -295,6 +354,11 @@ export default async (req) => {
       median_sold_price: soldPrices.length > 0 ? median(soldPrices) : null,
       units_sold: solds.length,
       avg_sale_to_list_ratio: averageRatio(saleToListRatios),
+      // True calendar-month figures -- full month on a month-end capture,
+      // month-to-date on a mid-month capture. See monthRangeStart/End above.
+      units_sold_month: monthSolds.length,
+      median_sold_price_month: monthSoldPrices.length > 0 ? median(monthSoldPrices) : null,
+      avg_sale_to_list_ratio_month: monthSaleToListRatios.length > 0 ? averageRatio(monthSaleToListRatios) : null,
       price_per_sqft: sqftPrices.length > 0 ? median(sqftPrices) : null,
       price_per_sqft_sample_size: sqftPrices.length,
       median_bedrooms: median(beds),
@@ -319,7 +383,7 @@ export default async (req) => {
   // this cadence.
   const { data: history } = await supabase
     .from('market_map_snapshots')
-    .select('area_slug, capture_date, median_list_price, active_count, new_listings_count, avg_days_on_market, price_per_sqft, median_sold_price, units_sold, avg_sale_to_list_ratio, median_bedrooms, median_bathrooms, pct_detached, delisted_count')
+    .select('area_slug, capture_date, median_list_price, active_count, new_listings_count, avg_days_on_market, price_per_sqft, median_sold_price, units_sold, avg_sale_to_list_ratio, median_sold_price_month, units_sold_month, avg_sale_to_list_ratio_month, median_bedrooms, median_bathrooms, pct_detached, delisted_count')
     .eq('period_type', kind)
     .lt('capture_date', captureDate)
     .order('capture_date', { ascending: false });

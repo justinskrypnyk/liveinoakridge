@@ -44,8 +44,6 @@ const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const DIGEST_TO_EMAIL = process.env.DIGEST_TO_EMAIL || 'info@homeswithjustin.ca';
-const VOW_ACCESS_TOKEN = process.env.VOW_ACCESS_TOKEN;
-const DDF_API_BASE_URL = process.env.DDF_API_BASE_URL;
 
 const SERVED_AREA_ORDER = ['oakridge', 'byron', 'westmount', 'riverbend', 'lambeth', 'whitehills', 'west-london'];
 
@@ -61,15 +59,20 @@ function sortAreasServedFirst(areas) {
 }
 
 // The 6 metrics from Justin's graphic, mapped to this project's column
-// names and a formatter for each.
+// names and a formatter for each. units_sold/median_sold_price/
+// avg_sale_to_list_ratio use the "_month" columns (true calendar-month
+// figures) -- the plain ones stay a 90-day rolling window for the heat
+// map's own medians (see heat-map-snapshot-background.mjs). This digest
+// always runs off a 'month-end' capture (see the guard below), so "_month"
+// here always means the full completed month being reported on.
 const REPORT_METRICS = [
-  { key: 'units_sold', label: 'Total Sales', fmt: (n) => (n == null ? 'n/a' : String(n)) },
+  { key: 'units_sold_month', label: 'Total Sales', fmt: (n) => (n == null ? 'n/a' : String(n)) },
   { key: 'new_listings_count', label: 'New Listings', fmt: (n) => (n == null ? 'n/a' : String(n)) },
   { key: 'active_count', label: 'Active Listings', fmt: (n) => (n == null ? 'n/a' : String(n)) },
   { key: 'median_list_price', label: 'Med. List Price', fmt: fmtPrice },
-  { key: 'median_sold_price', label: 'Med. Sale Price', fmt: fmtPrice },
+  { key: 'median_sold_price_month', label: 'Med. Sale Price', fmt: fmtPrice },
   { key: 'avg_days_on_market', label: 'Med. Days on Market', fmt: (n) => (n == null ? 'n/a' : String(Math.round(n))) },
-  { key: 'avg_sale_to_list_ratio', label: 'List-to-Sale %', fmt: (n) => (n == null ? 'n/a' : `${(n * 100).toFixed(1)}%`) },
+  { key: 'avg_sale_to_list_ratio_month', label: 'List-to-Sale %', fmt: (n) => (n == null ? 'n/a' : `${(n * 100).toFixed(1)}%`) },
   { key: 'price_per_sqft', label: 'Price/Sqft', fmt: (n) => (n == null ? 'n/a' : `$${Math.round(n)}`) },
   { key: 'median_bedrooms', label: 'Med. Bedrooms', fmt: (n) => (n == null ? 'n/a' : String(n)) },
   { key: 'median_bathrooms', label: 'Med. Bathrooms', fmt: (n) => (n == null ? 'n/a' : String(n)) },
@@ -329,21 +332,6 @@ function polygonToPathD(rings, project) {
   return rings.map((ring) => `M${ring.map((pt) => project(pt).join(',')).join('L')}Z`).join(' ');
 }
 
-// vow-sold-sync-background hit a real production hang from an unbounded
-// fetch() to this same AMPRE endpoint -- this function makes the same kind
-// of live call (8x, one per outlying town) with no timeout of its own, so
-// carrying the same guard here rather than risk the identical failure mode.
-async function odataGet(resource, params) {
-  const url = new URL(`${DDF_API_BASE_URL}${resource}`);
-  for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
-  const res = await fetch(url, {
-    headers: { Authorization: `Bearer ${VOW_ACCESS_TOKEN}`, Accept: 'application/json' },
-    signal: AbortSignal.timeout(15000),
-  });
-  if (!res.ok) throw new Error(`${resource} -> HTTP ${res.status}: ${await res.text().catch(() => '')}`);
-  return res.json();
-}
-
 function median(numbers) {
   if (numbers.length === 0) return null;
   const sorted = [...numbers].sort((a, b) => a - b);
@@ -351,27 +339,38 @@ function median(numbers) {
   return sorted.length % 2 === 0 ? Math.round((sorted[mid - 1] + sorted[mid]) / 2) : sorted[mid];
 }
 
-// Live lookup for the outlying towns -- this AMPRE deployment rejects every
-// filter operator except contains() (see project notes), AND -- confirmed
-// empirically -- silently returns an empty result for any MULTI-WORD
-// contains() value (a space in the string), even though the identical query
-// against a single-word/hyphenated value works fine. So this fetches with a
-// safe single-word `searchTerm` (broader, may pull in an unrelated town that
-// happens to share the word -- e.g. 'Middlesex' also matches 'North
-// Middlesex') and then narrows to the precise city with an exact
-// client-side equality check against `exactCityName`.
-async function medianSoldPriceForCity(exactCityName, searchTerm) {
+// Same slugify outlying-sold-sync-background.mjs uses to turn an mls_city
+// name into the synthetic area_slug it tags synced rows with (e.g.
+// "Middlesex Centre" -> "outlying-middlesex-centre"). Duplicated per this
+// directory's self-contained-function convention, not imported.
+function outlyingAreaSlug(mlsCity) {
+  return `outlying-${mlsCity.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')}`;
+}
+
+// Reads the calendar-month sold prices outlying-sold-sync-background.mjs
+// keeps synced into vow_sold_listings, instead of this function's old
+// approach: a single live, undated $top=2000 fetch straight to AMPRE at
+// email-send time. That was wrong two ways -- no CloseDate filter at all
+// (so "this month" next to the number was never actually true), and this
+// AMPRE deployment's feed empirically returns oldest-first with no
+// $orderby available, so a bounded fetch for a town with years of history
+// on this feed mostly never reached recent closings anyway. Fixed
+// 2026-09-03, same pass as the units_sold/median_sold_price month
+// mislabeling -- see outlying-sold-sync-background.mjs's header for the
+// fuller story.
+async function medianSoldPriceForCity(supabase, exactCityName, monthStart, monthEnd) {
   if (!exactCityName) return null;
   try {
-    const data = await odataGet('Property', {
-      $filter: `contains(City,'${searchTerm || exactCityName}')`,
-      $select: 'City,StandardStatus,ClosePrice',
-      $top: '2000',
-    });
-    const closed = (data.value || []).filter(
-      (l) => l.City === exactCityName && l.StandardStatus === 'Closed' && Number(l.ClosePrice) > 0
-    );
-    return median(closed.map((l) => Number(l.ClosePrice)));
+    const { data, error } = await supabase
+      .from('vow_sold_listings')
+      .select('close_price')
+      .eq('area_slug', outlyingAreaSlug(exactCityName))
+      .eq('is_lease', false)
+      .gte('close_date', monthStart)
+      .lte('close_date', monthEnd);
+    if (error) throw error;
+    const prices = (data || []).map((l) => Number(l.close_price)).filter((n) => n > 0);
+    return median(prices);
   } catch (err) {
     console.error(`medianSoldPriceForCity(${exactCityName}) failed:`, err.message);
     return null;
@@ -443,7 +442,7 @@ export async function renderNeighbourhoodMapPng(snapshotRows, dateLabel) {
   const LEGEND_Y = LEGEND_CAPTION_Y + 12;
   const LEGEND_H = 34;
 
-  const priceByArea = new Map(snapshotRows.map((r) => [r.area_slug, r.median_sold_price]));
+  const priceByArea = new Map(snapshotRows.map((r) => [r.area_slug, r.median_sold_price_month]));
   // Whitehills stays fully wired for listings/geocoding elsewhere -- Justin
   // just doesn't want it drawn on this map (its traced shape overlaps
   // Medway's, and he'd rather not show that overlap here).
@@ -586,13 +585,12 @@ export async function renderNeighbourhoodMapPng(snapshotRows, dateLabel) {
 // map: safe single-word search term per exact city name, since this AMPRE
 // deployment's contains() filter silently empties out on multi-word values
 // ('Middlesex Centre', 'St. Thomas') but not hyphenated ones.
-async function getOutlyingAreaPrices() {
+async function getOutlyingAreaPrices(supabase, monthStart, monthEnd) {
   const outlyingAreas = loadOutlyingAreas();
-  const MLS_CITY_SEARCH_TERMS = { 'Middlesex Centre': 'Middlesex', 'St. Thomas': 'Thomas' };
   const results = await Promise.all(
-    outlyingAreas.map(async (a) => ({ name: a.name, price: await medianSoldPriceForCity(a.mlsCity, MLS_CITY_SEARCH_TERMS[a.mlsCity]) }))
+    outlyingAreas.map(async (a) => ({ name: a.name, price: await medianSoldPriceForCity(supabase, a.mlsCity, monthStart, monthEnd) }))
   );
-  results.push({ name: 'St. Thomas', price: await medianSoldPriceForCity('St. Thomas', 'Thomas') });
+  results.push({ name: 'St. Thomas', price: await medianSoldPriceForCity(supabase, 'St. Thomas', monthStart, monthEnd) });
   return results;
 }
 
@@ -644,10 +642,9 @@ async function sendFailureAlert(message) {
 }
 
 export default async () => {
-  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY || !RESEND_API_KEY || !VOW_ACCESS_TOKEN || !DDF_API_BASE_URL) {
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY || !RESEND_API_KEY) {
     console.error('monthly-digest: missing required env vars', {
       SUPABASE_URL: !!SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY: !!SUPABASE_SERVICE_ROLE_KEY, RESEND_API_KEY: !!RESEND_API_KEY,
-      VOW_ACCESS_TOKEN: !!VOW_ACCESS_TOKEN, DDF_API_BASE_URL: !!DDF_API_BASE_URL,
     });
     return new Response('Missing required env vars', { status: 500 });
   }
@@ -677,6 +674,11 @@ export default async () => {
   const monthLabel = reportedMonthObj.toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' });
   const monthShort = reportedMonthObj.toLocaleDateString('en-US', { month: 'long', timeZone: 'UTC' }).toLowerCase();
   const reportedYear = reportedMonthObj.getUTCFullYear();
+  // Calendar-month bounds for the outlying-towns lookup below -- same
+  // reportedMonthObj the rest of this file already uses for monthLabel.
+  const reportedMonthStart = reportedMonthObj.toISOString().slice(0, 10);
+  const reportedMonthEnd = new Date(Date.UTC(reportedMonthObj.getUTCFullYear(), reportedMonthObj.getUTCMonth() + 1, 0))
+    .toISOString().slice(0, 10);
 
   try {
 
@@ -717,7 +719,7 @@ export default async () => {
 
   const sortedRows = sortAreasServedFirst(rows);
 
-  const totalActive = snapshotRows.reduce((sum, r) => sum + (r.units_sold || 0), 0);
+  const totalSold = snapshotRows.reduce((sum, r) => sum + (r.units_sold_month || 0), 0);
   const totalNewListings = snapshotRows.reduce((sum, r) => sum + (r.new_listings_count || 0), 0);
 
   // "Notable" is already computed by heat-map-snapshot-background.mjs
@@ -751,14 +753,14 @@ export default async () => {
 
   const headerCells = REPORT_METRICS.map((m) => `<td style="padding:4px 8px;">${esc(m.label)}</td>`).join('');
 
-  const outlyingPrices = await getOutlyingAreaPrices();
+  const outlyingPrices = await getOutlyingAreaPrices(supabase, reportedMonthStart, reportedMonthEnd);
   const outlyingListHtml = outlyingPrices
     .map((a) => `<li><strong>${esc(a.name)}</strong>: ${fmtPrice(a.price)}</li>`)
     .join('');
 
   const html = `
     <h2>Full Month Review — ${esc(monthLabel)}</h2>
-    <p>Total Sales: ${totalActive} · New Listings: ${totalNewListings} · ${snapshotRows.length} neighbourhoods</p>
+    <p>Total Sales: ${totalSold} · New Listings: ${totalNewListings} · ${snapshotRows.length} neighbourhoods</p>
     <p style="font-size:12px;color:#888;">MoM/YoY % change needs history this pipeline hasn't built up yet (brand new as of July 2026) -- these will read "n/a" for a while, then populate automatically once enough monthly captures exist. No rebuild needed when that happens.</p>
 
     <h3>🔔 Notable Moves — Your 7 Areas (10%+ month-over-month)</h3>
@@ -794,7 +796,7 @@ export default async () => {
     ]
   );
 
-  const summary = `monthly-digest sent: ${sortedRows.length} areas, ${totalActive} sold, ${totalNewListings} new listings, map rendered`;
+  const summary = `monthly-digest sent: ${sortedRows.length} areas, ${totalSold} sold, ${totalNewListings} new listings, map rendered`;
   console.log(summary);
   return new Response(summary);
   } catch (err) {

@@ -35,6 +35,17 @@ create table if not exists market_map_snapshots (
   price_per_sqft numeric,
   price_per_sqft_sample_size integer,
 
+  -- True calendar-month versions of the three sold columns above (that
+  -- trio stays a 90-day rolling window, which is what the heat map's own
+  -- medians need -- see heat-map-snapshot-background.mjs's header comment).
+  -- These three are what the monthly blog post/digest/mailout narrate as
+  -- "homes sold in August" instead. On a 'month-end' row: the full
+  -- calendar month that just closed. On a 'mid-month' row: the current
+  -- calendar month month-to-date (partial). See migrations/003.
+  median_sold_price_month numeric,
+  units_sold_month integer,
+  avg_sale_to_list_ratio_month numeric,
+
   -- Feed-derived, no board/VOW access needed -- BedroomsTotal and
   -- BathroomsTotalInteger are 100% filled on this feed; PropertySubType is
   -- fully categorized. Lot size was considered too (LotSizeArea) but its

@@ -115,7 +115,7 @@ export default async () => {
 
   const [{ data: snapshots }, { data: changes }, areaRings] = await Promise.all([
     supabase.from('market_map_snapshots').select('*').eq('capture_date', latestSnap.capture_date),
-    supabase.from('market_map_changes').select('*').eq('capture_date', latestSnap.capture_date).eq('metric', 'median_sold_price'),
+    supabase.from('market_map_changes').select('*').eq('capture_date', latestSnap.capture_date).eq('metric', 'median_sold_price_month'),
     loadAreaRings(),
   ]);
 
@@ -129,9 +129,9 @@ export default async () => {
     const change = changeByArea.get(areaSlug);
     const momText = fmtPct(change?.mom_pct_change);
     return [
-      `This month in ${areaName}: median sold price ${fmtPrice(snap.median_sold_price)}`,
+      `This month in ${areaName}: median sold price ${fmtPrice(snap.median_sold_price_month)}`,
       momText ? `(${momText} vs. last month)` : '',
-      `· ${snap.units_sold ?? 0} homes sold · ${snap.new_listings_count ?? 0} new listings.`,
+      `· ${snap.units_sold_month ?? 0} homes sold · ${snap.new_listings_count ?? 0} new listings.`,
     ].filter(Boolean).join(' ');
   }
 
