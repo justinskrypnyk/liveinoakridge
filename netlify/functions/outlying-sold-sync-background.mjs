@@ -47,7 +47,7 @@ const PAGE_SIZE = 100;
 const TIME_BUDGET_MS = 10 * 60 * 1000;
 const FETCH_TIMEOUT_MS = 15000;
 const SELECT_FIELDS =
-  'ListingKey,UnparsedAddress,City,StandardStatus,PropertyType,PropertySubType,TransactionType,ClosePrice,CloseDate,ListPrice,BedroomsTotal,BathroomsTotalInteger,BuildingAreaTotal,ParkingTotal,ListingContractDate';
+  'ListingKey,UnparsedAddress,City,StandardStatus,MlsStatus,PropertyType,PropertySubType,TransactionType,ClosePrice,CloseDate,ListPrice,BedroomsTotal,BathroomsTotalInteger,BuildingAreaTotal,ParkingTotal,ListingContractDate';
 
 // Same source file monthly-digest-background.mjs's loadOutlyingAreas()
 // reads -- self-contained copy per this directory's isolation convention
@@ -121,7 +121,9 @@ async function syncCity(city, supabase, cursorStore, deadline) {
     // vow-sold-sync-background.mjs -- leases stay in the table (tagged
     // is_lease) rather than excluded outright, matching that file's
     // reasoning, even though this pipeline's only consumer (median sold
-    // price) already filters is_lease=false back out.
+    // price) already filters is_lease=false back out. is_lease also checks
+    // MlsStatus alongside TransactionType -- see that file's own comment
+    // for why (2026-09-08).
     //
     // l.City === city.mlsCity is NOT redundant with the contains() filter
     // above: `searchTerm` is deliberately a loose single-word substring
@@ -154,7 +156,7 @@ async function syncCity(city, supabase, cursorStore, deadline) {
         property_type: listing.PropertyType ?? null,
         property_sub_type: listing.PropertySubType ?? null,
         photo_url: null,
-        is_lease: listing.TransactionType === 'For Lease',
+        is_lease: listing.TransactionType === 'For Lease' || listing.MlsStatus === 'Leased',
         updated_at: new Date().toISOString(),
       }));
 

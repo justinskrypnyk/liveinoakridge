@@ -20,6 +20,14 @@ const SITE_URL = 'https://www.liveinoakridge.ca';
 
 const FREQUENCY_MIN_HOURS = { daily: 20, weekly: 24 * 6.5, monthly: 24 * 27 };
 
+// Safety net alongside is_lease -- see weekly-digest-background.mjs's own
+// copy of this constant for the full story (confirmed 2026-09-08: AMPRE's
+// TransactionType/MlsStatus aren't always settled at first-sync time, so
+// some leases get is_lease wrongly false and never get revisited). Matters
+// here too -- a mislabeled $2,500/mo lease could otherwise surface as a
+// subscriber's "nearby comparable sale."
+const MIN_PLAUSIBLE_SALE_PRICE = 30000;
+
 function haversineKm(aLat, aLng, bLat, bLng) {
   const R = 6371;
   const dLat = ((bLat - aLat) * Math.PI) / 180;
@@ -117,6 +125,7 @@ export default async () => {
       .select('listing_key, address, close_price, close_date, lat, lng')
       .gte('close_date', since)
       .eq('is_lease', false)
+      .gte('close_price', MIN_PLAUSIBLE_SALE_PRICE)
       .not('lat', 'is', null)
       .not('lng', 'is', null)
       .range(from, from + SOLD_PAGE_SIZE - 1);

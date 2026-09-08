@@ -49,6 +49,12 @@ const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 // per metric.
 const NOTABLE_PCT_THRESHOLD = 0.10;
 
+// Safety net alongside is_lease -- see weekly-digest-background.mjs's own
+// copy of this constant for the full story (confirmed 2026-09-08: AMPRE's
+// TransactionType/MlsStatus aren't always settled at first-sync time, so
+// some leases get is_lease wrongly false and never get revisited).
+const MIN_PLAUSIBLE_SALE_PRICE = 30000;
+
 function loadAllAreaBoundaries() {
   const dataPath = fileURLToPath(new URL('../../src/data/area-boundaries.json', import.meta.url));
   const raw = JSON.parse(readFileSync(dataPath, 'utf-8'));
@@ -234,6 +240,7 @@ export default async (req) => {
       .select('area_slug, close_price, list_price')
       .gte('close_date', ninetyDaysAgo.toISOString().slice(0, 10))
       .eq('is_lease', false)
+      .gte('close_price', MIN_PLAUSIBLE_SALE_PRICE)
       .not('area_slug', 'is', null)
       .range(from, from + SOLDS_PAGE_SIZE - 1);
     if (soldsError) {
@@ -282,6 +289,7 @@ export default async (req) => {
         .gte('close_date', monthRangeStart.toISOString().slice(0, 10))
         .lte('close_date', monthRangeEnd.toISOString().slice(0, 10))
         .eq('is_lease', false)
+        .gte('close_price', MIN_PLAUSIBLE_SALE_PRICE)
         .not('area_slug', 'is', null)
         .range(from, from + SOLDS_PAGE_SIZE - 1);
       if (monthSoldsError) {

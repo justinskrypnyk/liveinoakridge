@@ -21,6 +21,17 @@ const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const DIGEST_TO_EMAIL = process.env.DIGEST_TO_EMAIL || 'info@homeswithjustin.ca';
 
+// Safety net alongside is_lease -- confirmed 2026-09-08 that AMPRE's
+// TransactionType/MlsStatus fields aren't always settled yet at the exact
+// moment vow-sold-sync-background.mjs first captures a listing as
+// "Closed", so some leases (rent in the $1k-$4k range) get synced with
+// is_lease wrongly false and never get revisited (the self-healing cursor
+// cycle can take weeks to loop back to any given row). No real London-area
+// home sale is remotely close to this figure, so it's a cheap backstop
+// against exactly that failure mode -- see project memory for the 179-row
+// backfill this same day.
+const MIN_PLAUSIBLE_SALE_PRICE = 30000;
+
 // The 7 areas this site's own content pages serve -- same set as
 // market-map.astro's SERVED_AREA_SLUGS. Everything else (of the 39 total
 // boundaries) still counts toward citywide totals but isn't broken out by
@@ -225,7 +236,8 @@ export default async () => {
     .select('address, area_slug, close_price, list_price, close_date, listing_contract_date, property_sub_type')
     .gte('close_date', weekStartStr)
     .lte('close_date', soldDateTo)
-    .eq('is_lease', false);
+    .eq('is_lease', false)
+    .gte('close_price', MIN_PLAUSIBLE_SALE_PRICE);
   const sold = soldRows || [];
 
   const soldPrices = sold.map((r) => Number(r.close_price)).filter((n) => n > 0);

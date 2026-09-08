@@ -45,6 +45,12 @@ const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const DIGEST_TO_EMAIL = process.env.DIGEST_TO_EMAIL || 'info@homeswithjustin.ca';
 
+// Safety net alongside is_lease -- see weekly-digest-background.mjs's own
+// copy of this constant for the full story (confirmed 2026-09-08: AMPRE's
+// TransactionType/MlsStatus aren't always settled at first-sync time, so
+// some leases get is_lease wrongly false and never get revisited).
+const MIN_PLAUSIBLE_SALE_PRICE = 30000;
+
 const SERVED_AREA_ORDER = ['oakridge', 'byron', 'westmount', 'riverbend', 'lambeth', 'whitehills', 'west-london'];
 
 function sortAreasServedFirst(areas) {
@@ -371,6 +377,7 @@ async function medianSoldPriceForCity(supabase, exactCityName, monthStart, month
       .select('close_price')
       .eq('area_slug', outlyingAreaSlug(exactCityName))
       .eq('is_lease', false)
+      .gte('close_price', MIN_PLAUSIBLE_SALE_PRICE)
       .gte('close_date', monthStart)
       .lte('close_date', monthEnd);
     if (error) throw error;

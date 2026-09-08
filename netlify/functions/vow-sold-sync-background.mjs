@@ -47,7 +47,7 @@ const PAGE_SIZE = 100;
 // entire invocation indefinitely instead of failing fast and moving on.
 const FETCH_TIMEOUT_MS = 15000;
 const SELECT_FIELDS =
-  'ListingKey,UnparsedAddress,City,StandardStatus,PropertyType,PropertySubType,TransactionType,ClosePrice,CloseDate,ListPrice,BedroomsTotal,BathroomsTotalInteger,BuildingAreaTotal,ParkingTotal,ListingContractDate';
+  'ListingKey,UnparsedAddress,City,StandardStatus,MlsStatus,PropertyType,PropertySubType,TransactionType,ClosePrice,CloseDate,ListPrice,BedroomsTotal,BathroomsTotalInteger,BuildingAreaTotal,ParkingTotal,ListingContractDate';
 
 function loadAllAreaBoundaries() {
   const dataPath = fileURLToPath(new URL('../../src/data/area-boundaries.json', import.meta.url));
@@ -195,6 +195,15 @@ export default async () => {
     // this file previously had no TransactionType check at all, so a
     // $3,200/mo lease closing read identically to a real low-price sale and
     // silently corrupted median-price stats sitewide.
+    //
+    // is_lease checks BOTH TransactionType and MlsStatus (below), not just
+    // the former alone -- confirmed 2026-09-08 that AMPRE's TransactionType
+    // field isn't always settled yet at the exact moment a listing first
+    // shows up "Closed" here, so a single-field check let ~180 real leases
+    // sync with is_lease wrongly false over just a few weeks (found via a
+    // Riverbend digest median that came out to $2,800). Reporting queries
+    // also now floor close_price at $30k as a second backstop -- see
+    // MIN_PLAUSIBLE_SALE_PRICE in weekly-digest-background.mjs etc.
     const closed = rows.filter(
       (l) => l.StandardStatus === 'Closed' && l.PropertyType !== 'Commercial' && Number(l.ClosePrice) > 0
     );
@@ -253,7 +262,7 @@ export default async () => {
         property_type: listing.PropertyType ?? null,
         property_sub_type: listing.PropertySubType ?? null,
         photo_url: photoUrl,
-        is_lease: listing.TransactionType === 'For Lease',
+        is_lease: listing.TransactionType === 'For Lease' || listing.MlsStatus === 'Leased',
         updated_at: new Date().toISOString(),
       });
     }
