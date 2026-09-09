@@ -13,6 +13,28 @@
 // If his account produced a different key, this simply fails to populate
 // the merge field silently (try/catch) -- the note still has everything, so
 // nothing is lost either way.
+//
+// BUG FOUND + FIXED 2026-09-09: this was ALSO silently failing for TWO
+// unrelated reasons the whole time:
+//   1. Every customFields entry used `field_value` (snake_case), but GHL's
+//      actual API property is `fieldValue` (camelCase, confirmed against
+//      HighLevel's own docs).
+//   2. The `key` itself was wrong too -- `contact.<slug>` is how GHL's
+//      dashboard *displays* a field's key dressed up as the merge tag
+//      you'd paste into an email ({{contact.<slug>}}), not the actual key
+//      the upsert API wants. It wants the bare slug with no "contact."
+//      prefix. Confirmed via a live round-trip test (push with the bare
+//      key, GET the contact back, value was there; the "contact."-prefixed
+//      form came back with an empty customFields array every time).
+// Either bug alone would silently drop every field, so this has been
+// completely broken since Gen 2 shipped 2026-07-23 -- meaning none of
+// nosy-neighbour-alert/search-area-alert/market-update's merge fields have
+// ever actually populated in a live GHL workflow email, however long those
+// workflows have existed. Found while verifying the AskWidget chatbot's new
+// custom-field push end-to-end against real GHL (see ghl-lead.ts) -- same
+// bug, copy-pasted into every one of this pipeline's customFields builders.
+// Fixed here and in ghl-lead.ts, home-watch-alerts-background.mjs,
+// saved-search-alerts-background.mjs, and market-update-mailout-background.mjs.
 const GHL_API_TOKEN = import.meta.env.GHL_API_TOKEN;
 const GHL_LOCATION_ID = import.meta.env.GHL_LOCATION_ID;
 
@@ -65,8 +87,8 @@ export async function pushRecommendationToGhl(input: PushRecommendationInput): P
   const lines = (input.listings ?? []).slice(0, 3).map(formatListingLine);
 
   const customFields = input.tag === 'market-update'
-    ? (input.summary ? [{ key: 'contact.market_update_summary', field_value: input.summary }] : [])
-    : lines.map((value, i) => ({ key: `contact.recommended_listing_${i + 1}`, field_value: value }));
+    ? (input.summary ? [{ key: 'market_update_summary', fieldValue: input.summary }] : [])
+    : lines.map((value, i) => ({ key: `recommended_listing_${i + 1}`, fieldValue: value }));
 
   let contactId: string | null = null;
   try {

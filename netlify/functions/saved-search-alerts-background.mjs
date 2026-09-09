@@ -81,7 +81,7 @@ async function pushToGhl({ email, firstName, lastName, phone, intro, lines }) {
     Authorization: `Bearer ${GHL_API_TOKEN}`,
     Version: '2021-07-28',
   };
-  const customFields = lines.map((value, i) => ({ key: `contact.recommended_listing_${i + 1}`, field_value: value }));
+  const customFields = lines.map((value, i) => ({ key: `recommended_listing_${i + 1}`, fieldValue: value }));
 
   const res = await fetch('https://services.leadconnectorhq.com/contacts/upsert', {
     method: 'POST',

@@ -330,6 +330,17 @@ if (persona && PERSONA_ENTRIES[persona]) {
   const persona = widgetEl?.dataset.persona || '';
   const transcript: string[] = [];
 
+  // Structured answers, parallel to `transcript` (the human-readable version
+  // that lands in the GHL note). These land as GHL *custom fields* instead
+  // -- Justin wants the individual clicks filterable/reportable in GHL
+  // itself, not just readable inside a note. Keys here become `chat-<key>`
+  // hidden form fields (see revealContactForm), matched to a GHL custom
+  // field key in ghl-lead.ts. Requires Justin to have created matching
+  // custom fields in GHL first -- see that file's comment for exact names.
+  const answers: Record<string, string> = {};
+  if (neighbourhood) answers.neighbourhood = neighbourhood;
+  if (persona) answers.persona = persona;
+
   function track(event: string, extra: Record<string, unknown> = {}) {
     window.gtag?.('event', event, { page_path: location.pathname, ...extra });
   }
@@ -360,6 +371,7 @@ if (persona && PERSONA_ENTRIES[persona]) {
             const id = (btn as HTMLElement).dataset.id!;
             const label = { ready: 'Ready now', soon: 'Next 3–6 months', research: 'Just starting to research' }[id];
             transcript.push(`Timeline: ${label}`);
+            answers.stage = label!;
             track('chat_journey_step', { step: 'buyer_timeline', answer: id });
             afterBuyerTimeline();
           });
@@ -381,6 +393,7 @@ if (persona && PERSONA_ENTRIES[persona]) {
             const id = (btn as HTMLElement).dataset.id!;
             const label = { yes: 'Pre-approved', no: 'Not yet pre-approved', unsure: 'Not sure if pre-approved' }[id];
             transcript.push(`Mortgage: ${label}`);
+            answers.preapproval = label!;
             track('chat_journey_step', { step: 'buyer_preapproval', answer: id });
             const intro = id === 'yes'
               ? `Great — that puts you in a strong position. Where should I send matching listings and next steps?`
@@ -413,6 +426,7 @@ if (persona && PERSONA_ENTRIES[persona]) {
             const id = (btn as HTMLElement).dataset.id!;
             const label = { using: 'Using first-time buyer program(s)', none: 'Not using any programs', unsure: 'Not sure what programs are available' }[id];
             transcript.push(`First-time buyer programs: ${label}`);
+            answers.qualifier = label!;
             track('chat_journey_step', { step: 'ftb_programs', answer: id });
             renderBuyerPreapproval();
           });
@@ -435,6 +449,7 @@ if (persona && PERSONA_ENTRIES[persona]) {
             const id = (btn as HTMLElement).dataset.id!;
             const label = { cashflow: 'Cash-flow rental', flip: 'Fix & flip', appreciation: 'Long-term appreciation', unsure: 'Not sure yet' }[id];
             transcript.push(`Investment focus: ${label}`);
+            answers.qualifier = label!;
             track('chat_journey_step', { step: 'investor_focus', answer: id });
             renderBuyerPreapproval();
           });
@@ -457,6 +472,7 @@ if (persona && PERSONA_ENTRIES[persona]) {
             const id = (btn as HTMLElement).dataset.id!;
             const label = { bungalow: 'Bungalow', condo: 'Condo or apartment', retirement: 'Retirement community', unsure: 'Not sure yet' }[id];
             transcript.push(`Next home: ${label}`);
+            answers.qualifier = label!;
             track('chat_journey_step', { step: 'downsizer_next_home', answer: id });
             finishSeller();
           });
@@ -496,6 +512,7 @@ if (persona && PERSONA_ENTRIES[persona]) {
             const id = (btn as HTMLElement).dataset.id!;
             const label = { curious: 'Just curious about value', planning: 'Planning to sell soon', unsure: 'Not sure yet' }[id];
             transcript.push(`Stage: ${label}`);
+            answers.stage = label!;
             track('chat_journey_step', { step: 'seller_stage', answer: id });
             afterSellerStage();
           });
@@ -521,17 +538,44 @@ if (persona && PERSONA_ENTRIES[persona]) {
     setTimeout(renderStarters, 1200);
   }
 
+  // Writes/updates a hidden <input> on the form so it rides along in the
+  // same fetch() POST as every other field -- ContactForm's own submit
+  // handler just does `new FormData(form)`, so anything present as a real
+  // form control at submit time reaches Netlify/GHL, same trick already
+  // used for the UTM/gclid attribution fields (see attribution-client.ts).
+  // find-or-create rather than blind-append: the back button lets someone
+  // reach revealContactForm() more than once in one session.
+  function setHiddenField(form: HTMLFormElement, name: string, value: string) {
+    let input = form.querySelector(`input[name="${name}"]`) as HTMLInputElement | null;
+    if (!input) {
+      input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = name;
+      form.appendChild(input);
+    }
+    input.value = value;
+  }
+
   function revealContactForm(introHtml: string, formType: string, subject: string) {
     const contactStep = document.getElementById('ask-contact-step');
     const intro = document.getElementById('ask-contact-intro');
     if (!results || !contactStep || !intro) return;
     intro.innerHTML = introHtml;
     const wrapper = contactStep.querySelector('[data-contact-form]') as HTMLElement | null;
+    const form = contactStep.querySelector('form') as HTMLFormElement | null;
     const subjectInput = contactStep.querySelector('input[name="subject"]') as HTMLInputElement | null;
     const messageField = contactStep.querySelector('textarea[name="message"]') as HTMLTextAreaElement | null;
     if (wrapper) wrapper.dataset.formType = formType;
     if (subjectInput) subjectInput.value = subject;
     if (messageField && !messageField.value) messageField.value = transcript.join('\n');
+    // Each collected answer becomes a `chat-<key>` hidden field -- matched
+    // to a GHL custom field key in ghl-lead.ts (CHAT_ANSWER_FIELDS). Requires
+    // Justin to have created those custom fields in GHL first.
+    if (form) {
+      for (const [key, value] of Object.entries(answers)) {
+        if (value) setHiddenField(form, `chat-${key}`, value);
+      }
+    }
     results.classList.add('hidden');
     contactStep.classList.remove('hidden');
     track('chat_journey_complete', { form_type: formType });
@@ -554,18 +598,24 @@ if (persona && PERSONA_ENTRIES[persona]) {
       if (branch === 'browsing') {
         renderBrowsing();
       } else if (branch === 'buyer') {
+        answers.intent = 'Buyer';
         if (quick === 'ready') {
           transcript.push('Timeline: Ready now');
+          answers.stage = 'Ready now';
           afterBuyerTimeline();
         } else if (quick === 'research') {
           transcript.push('Timeline: Just starting to research');
+          answers.stage = 'Just starting to research';
           afterBuyerTimeline();
         } else {
           renderBuyerTimeline();
         }
       } else if (branch === 'seller') {
+        answers.intent = 'Seller';
         if (quick === 'value' || quick === 'listing') {
-          transcript.push(`Stage: ${quick === 'value' ? 'Wants a value range' : 'Ready to list'}`);
+          const stageLabel = quick === 'value' ? 'Wants a value range' : 'Ready to list';
+          transcript.push(`Stage: ${stageLabel}`);
+          answers.stage = stageLabel;
           afterSellerStage();
         } else {
           renderSellerStage();

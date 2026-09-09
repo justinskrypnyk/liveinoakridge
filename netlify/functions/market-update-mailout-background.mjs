@@ -72,7 +72,7 @@ async function pushMarketUpdate({ email, firstName, lastName, phone, summary }) 
       phone: phone || undefined,
       locationId: GHL_LOCATION_ID,
       tags: ['market-update'],
-      customFields: [{ key: 'contact.market_update_summary', field_value: summary }],
+      customFields: [{ key: 'market_update_summary', fieldValue: summary }],
       source: 'Website — Automated Recommendation',
     }),
   });

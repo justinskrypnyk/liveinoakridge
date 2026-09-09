@@ -120,6 +120,46 @@ export const POST: APIRoute = async ({ request }) => {
   ];
   const subjectTag = SUBJECT_TAG_PREFIXES.find(([prefix]) => data.subject?.startsWith(prefix))?.[1];
 
+  // AskWidget's scripted buyer/seller journey (see that file's client
+  // script) writes each collected answer as a `chat-<key>` hidden field
+  // right before submit -- same "extra field not in the static template
+  // still reaches Netlify Forms" trick already used for UTM attribution.
+  // Map them to GHL custom fields (same `{ key: 'contact.<slug>', fieldValue }`
+  // shape as ghl-recommend.ts) so Justin can filter/report on individual
+  // chat answers inside GHL, not just read them in the note.
+  //
+  // REQUIRES Justin to have created these custom fields in GHL first
+  // (Settings -> Custom Fields -> Contact) with these exact names, since
+  // GHL auto-generates the key from the field name:
+  //   "Chat Intent"        -> chat_intent
+  //   "Chat Neighbourhood" -> chat_neighbourhood
+  //   "Chat Persona"       -> chat_persona
+  //   "Chat Stage"         -> chat_stage
+  //   "Chat Preapproval"   -> chat_preapproval
+  //   "Chat Qualifier"     -> chat_qualifier
+  // NOTE: the key here is the BARE field key, no "contact." prefix -- GHL's
+  // dashboard displays keys dressed up as the `{{contact.<key>}}` merge tag
+  // you'd paste into an email, but the upsert API's own `key` property wants
+  // just the bare key underneath that. Confirmed via a live round-trip test
+  // (push a value with the bare key, GET the contact back, value was there)
+  // after an earlier attempt using the "contact."-prefixed form came back
+  // with an empty customFields array every time -- not a naming mismatch
+  // with what Justin/Smile built, just the wrong shape being sent.
+  // If a name still produces a different key, that one field just silently
+  // fails to populate (same fire-and-forget note as ghl-recommend.ts) -- the
+  // transcript is still in the note either way, so nothing is lost.
+  const CHAT_ANSWER_FIELDS: Record<string, string> = {
+    'chat-intent': 'chat_intent',
+    'chat-neighbourhood': 'chat_neighbourhood',
+    'chat-persona': 'chat_persona',
+    'chat-stage': 'chat_stage',
+    'chat-preapproval': 'chat_preapproval',
+    'chat-qualifier': 'chat_qualifier',
+  };
+  const chatCustomFields = Object.entries(CHAT_ANSWER_FIELDS)
+    .filter(([formKey]) => data[formKey])
+    .map(([formKey, key]) => ({ key, fieldValue: data[formKey] }));
+
   const authHeaders = {
     'Content-Type': 'application/json',
     Accept: 'application/json',
@@ -142,8 +182,20 @@ export const POST: APIRoute = async ({ request }) => {
       // adds the "I'm interested in..." selection from the contact form;
       // FORM_TAG_LABELS/subjectTag add a friendlier, distinctly-filterable
       // tag for forms/subjects that want one (e.g. "Saved Listing Lead",
-      // "showing-request").
-      tags: ['website-lead', submission.form_name, FORM_TAG_LABELS[submission.form_name], subjectTag, data.service].filter(Boolean),
+      // "showing-request"); chatbot-lead/chatbot-buyer/chatbot-seller do the
+      // same for AskWidget's scripted journey, keyed off the same
+      // `chat-intent` field the custom fields above use.
+      tags: [
+        'website-lead',
+        submission.form_name,
+        FORM_TAG_LABELS[submission.form_name],
+        subjectTag,
+        data.service,
+        data['chat-intent'] && 'chatbot-lead',
+        data['chat-intent'] === 'Buyer' && 'chatbot-buyer',
+        data['chat-intent'] === 'Seller' && 'chatbot-seller',
+      ].filter(Boolean),
+      customFields: chatCustomFields,
       source: `Website — ${data.subject || submission.form_name || 'Contact Form'}`,
     }),
   });
