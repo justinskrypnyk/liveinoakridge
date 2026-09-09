@@ -1,9 +1,32 @@
 ---
+// The site's one bottom-right chat entry point. Two jobs, one bubble:
+//   1. A scripted, page-aware buyer/seller journey (this file) that opens
+//      first — greeting text and quick-reply buttons are chosen from
+//      `intent`/`neighbourhood`/`persona` (see src/lib/chat-context.ts),
+//      which Base.astro infers from the URL unless a page overrides it with
+//      real data (e.g. a listing page's server-resolved neighbourhood).
+//      `persona` (first-time-buyer, downsizer, upsizer, relocation,
+//      investor, home-search) swaps in a more targeted entry greeting for
+//      a handful of pages with a distinct enough audience to be worth it,
+//      sometimes with one extra qualifying question spliced in further
+//      down the same tree — see PERSONA_ENTRIES below and the client
+//      script's afterBuyerTimeline/afterSellerStage. No AI, no API cost —
+//      it's a plain decision tree that ends in the same ContactForm/GHL
+//      pipeline every other lead form on the site already uses.
+//   2. The original free-text FAQ search (unchanged) as an escape hatch —
+//      typing a question always searches /faq-index.json instead.
+import ContactForm from './ContactForm.astro';
+
+import type { ChatPersona } from '@/lib/chat-context';
+
 interface Props {
   bottomOffsetClass?: string;
+  intent?: 'buyer' | 'seller';
+  neighbourhood?: string;
+  persona?: ChatPersona;
 }
 
-const { bottomOffsetClass = 'bottom-5' } = Astro.props;
+const { bottomOffsetClass = 'bottom-5', intent, neighbourhood, persona } = Astro.props;
 
 const starterQuestions = [
   'What are closing costs in Ontario?',
@@ -11,9 +34,110 @@ const starterQuestions = [
   'How much is my home worth?',
   'What is the cheapest area to buy in?',
 ];
+
+// The very first thing a visitor sees when they open the widget -- picked
+// server-side so there's no flash of generic content before JS kicks in.
+// Every button carries data-branch (buyer/seller/browsing, what the rest of
+// the script needs) and optionally data-quick (a specific answer the click
+// itself already supplies, letting the script skip asking it again).
+interface EntryOption { label: string; branch: 'buyer' | 'seller' | 'browsing'; quick?: string; }
+let greeting: string;
+let options: EntryOption[];
+
+// Persona-specific entries take priority over the generic buyer/seller
+// copy below -- each one is still just an entry point into the SAME
+// downstream buyer/seller trees (see the client script's afterBuyerTimeline/
+// afterSellerStage), sometimes with one extra persona-specific qualifying
+// question spliced in before the shared pre-approval/contact-form ending.
+const PERSONA_ENTRIES: Record<ChatPersona, { greeting: string; options: EntryOption[] }> = {
+  'first-time-buyer': {
+    greeting: `Buying your first home in West London? I'll help you get oriented — starting with what actually matters.`,
+    options: [
+      { label: 'I’m ready to start looking', branch: 'buyer', quick: 'ready' },
+      { label: 'Still learning the process', branch: 'buyer', quick: 'research' },
+      { label: 'Actually, I’m selling', branch: 'seller' },
+    ],
+  },
+  downsizer: {
+    greeting: `Thinking about downsizing? Let's start with what your current home is worth.`,
+    options: [
+      { label: 'Get a value range for my home', branch: 'seller', quick: 'value' },
+      { label: 'Ready to start the process', branch: 'seller', quick: 'listing' },
+      { label: 'Just browsing smaller homes', branch: 'buyer' },
+    ],
+  },
+  upsizer: {
+    greeting: `Ready for more space? The right sequence makes all the difference.`,
+    options: [
+      { label: 'I need to sell my current home first', branch: 'seller', quick: 'listing' },
+      { label: 'I could buy before selling', branch: 'buyer', quick: 'ready' },
+      { label: 'Not sure — help me figure it out', branch: 'seller', quick: 'value' },
+    ],
+  },
+  relocation: {
+    greeting: `Relocating to London Ontario? Let's help you land in the right neighbourhood.`,
+    options: [
+      { label: 'My move is happening soon', branch: 'buyer', quick: 'ready' },
+      { label: 'Still researching areas', branch: 'buyer', quick: 'research' },
+      { label: 'Actually, I need to sell first', branch: 'seller' },
+    ],
+  },
+  investor: {
+    greeting: `Investing in London Ontario real estate? Let's talk strategy.`,
+    options: [
+      { label: 'I’m ready to look at properties', branch: 'buyer', quick: 'ready' },
+      { label: 'Still researching the market', branch: 'buyer', quick: 'research' },
+      { label: 'Actually, I’m selling an investment property', branch: 'seller' },
+    ],
+  },
+  'home-search': {
+    greeting: `Browsing homes for sale? I can help narrow things down.`,
+    options: [
+      { label: 'I found a home I’m interested in', branch: 'buyer', quick: 'ready' },
+      { label: 'Still comparing options', branch: 'buyer', quick: 'research' },
+      { label: 'Actually, I’m selling', branch: 'seller' },
+    ],
+  },
+};
+
+if (persona && PERSONA_ENTRIES[persona]) {
+  ({ greeting, options } = PERSONA_ENTRIES[persona]);
+} else if (intent === 'buyer') {
+  greeting = neighbourhood
+    ? `Looking at homes in ${neighbourhood}? I can help you move faster.`
+    : `Looking to buy in West London? Let's figure out where to start.`;
+  options = [
+    { label: 'I’m ready to see more homes', branch: 'buyer', quick: 'ready' },
+    { label: 'Just researching for now', branch: 'buyer', quick: 'research' },
+    { label: 'Actually, I’m selling', branch: 'seller' },
+  ];
+} else if (intent === 'seller') {
+  greeting = neighbourhood
+    ? `Thinking about selling in ${neighbourhood}? I can give you a realistic starting point.`
+    : `Thinking about selling? I can give you a realistic starting point.`;
+  options = [
+    { label: 'Get a home value range', branch: 'seller', quick: 'value' },
+    { label: 'I’m ready to list', branch: 'seller', quick: 'listing' },
+    { label: 'Actually, I’m buying', branch: 'buyer' },
+  ];
+} else if (neighbourhood) {
+  greeting = `Curious about ${neighbourhood}? Are you looking to buy or sell here?`;
+  options = [
+    { label: `Buying in ${neighbourhood}`, branch: 'buyer' },
+    { label: `Selling in ${neighbourhood}`, branch: 'seller' },
+    { label: 'Just exploring', branch: 'browsing' },
+  ];
+} else {
+  greeting = `Are you buying or selling in West London?`;
+  options = [
+    { label: 'Buying', branch: 'buyer' },
+    { label: 'Selling', branch: 'seller' },
+    { label: 'Just browsing', branch: 'browsing' },
+  ];
+}
 ---
 
-<div id="ask-widget" class:list={['fixed right-5 z-50', bottomOffsetClass]}>
+<div id="ask-widget" class:list={['fixed right-5 z-50', bottomOffsetClass]} data-neighbourhood={neighbourhood} data-persona={persona}>
   <button
     id="ask-widget-toggle"
     type="button"
@@ -38,7 +162,7 @@ const starterQuestions = [
   >
     <div class="bg-navy text-white px-5 py-4">
       <h3 id="ask-widget-title" class="font-serif text-lg">Ask About West London Real Estate</h3>
-      <p class="text-xs text-white/60 mt-1">Search answers from Justin's neighbourhood guides, FAQs, and blog.</p>
+      <p class="text-xs text-white/60 mt-1">Chat with Justin's assistant, or search the guides directly.</p>
     </div>
 
     <div class="p-4 border-b border-gray-100">
@@ -52,13 +176,37 @@ const starterQuestions = [
       />
     </div>
 
-    <div id="ask-results" class="flex-1 overflow-y-auto p-4 space-y-3" aria-live="polite">
-      <p class="text-xs font-semibold text-navy/70 uppercase tracking-wider mb-2">Try asking</p>
-      {starterQuestions.map((q) => (
-        <button type="button" class="ask-starter flex items-center w-full min-h-[44px] text-left text-sm text-navy/80 bg-cream hover:bg-gold/10 rounded-lg px-3 py-2.5 transition-colors">
-          {q}
+    <div class="flex-1 overflow-y-auto p-4">
+      <div id="ask-results" aria-live="polite" class="space-y-3">
+        <div id="ask-journey-entry" class="space-y-3">
+          <p class="text-sm text-navy leading-snug">{greeting}</p>
+          <div class="space-y-2">
+            {options.map((opt) => (
+              <button
+                type="button"
+                class="ask-journey-btn flex items-center w-full min-h-[44px] text-left text-sm text-navy/80 bg-cream hover:bg-gold/10 rounded-lg px-3 py-2.5 transition-colors"
+                data-branch={opt.branch}
+                data-quick={opt.quick}
+                data-label={opt.label}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div id="ask-contact-step" class="hidden">
+        <button
+          type="button"
+          id="ask-contact-back"
+          class="text-xs text-slate hover:text-navy mb-3 inline-flex items-center gap-1"
+        >
+          &lsaquo; Back
         </button>
-      ))}
+        <p id="ask-contact-intro" class="text-sm text-navy/80 leading-relaxed mb-4"></p>
+        <ContactForm formType="chatbot-lead" subject="Chat Inquiry" ctaLabel="Send" />
+      </div>
     </div>
 
     <div class="p-3 border-t border-gray-100 text-center">
@@ -68,6 +216,10 @@ const starterQuestions = [
 </div>
 
 <script>
+  declare global {
+    interface Window { gtag?: (...args: unknown[]) => void; }
+  }
+
   let faqData: { question: string; answer: string; sourceLabel: string; url: string }[] | null = null;
   let faqLoadPromise: Promise<void> | null = null;
 
@@ -98,7 +250,9 @@ const starterQuestions = [
 
   function renderStarters() {
     const results = document.getElementById('ask-results')!;
-    const starters = Array.from(document.querySelectorAll('.ask-starter')).map((el) => el.outerHTML).join('');
+    const starters = ['What are closing costs in Ontario?', 'Which neighbourhood has the best schools?', 'How much is my home worth?', 'What is the cheapest area to buy in?']
+      .map((q) => `<button type="button" class="ask-starter flex items-center w-full min-h-[44px] text-left text-sm text-navy/80 bg-cream hover:bg-gold/10 rounded-lg px-3 py-2.5 transition-colors">${q}</button>`)
+      .join('');
     results.innerHTML = `<p class="text-xs font-semibold text-navy/40 uppercase tracking-wider mb-2">Try asking</p>${starters}`;
     attachStarterListeners();
   }
@@ -116,6 +270,8 @@ const starterQuestions = [
   function runSearch(query: string) {
     const results = document.getElementById('ask-results')!;
     if (!query.trim()) {
+      // Cleared the box mid-search -- back to plain FAQ starters, not the
+      // journey (that already had its turn when the panel first opened).
       renderStarters();
       return;
     }
@@ -148,6 +304,263 @@ const starterQuestions = [
       .join('');
   }
 
+  // ---- Scripted buyer/seller journey ----------------------------------
+  // Pure decision tree, no AI involved -- see the file header. Each render*
+  // function replaces #ask-results' contents with the next question (or
+  // ends the tree by revealing the contact form). `transcript` collects a
+  // plain-language line per answer so the lead's message to Justin arrives
+  // pre-filled with the whole conversation, not just a bare form.
+  const results = document.getElementById('ask-results');
+  const widgetEl = document.getElementById('ask-widget');
+  const neighbourhood = widgetEl?.dataset.neighbourhood || '';
+  const persona = widgetEl?.dataset.persona || '';
+  const transcript: string[] = [];
+
+  function track(event: string, extra: Record<string, unknown> = {}) {
+    window.gtag?.('event', event, { page_path: location.pathname, ...extra });
+  }
+
+  function renderJourneyStep(bodyHtml: string, bind: () => void) {
+    if (!results) return;
+    results.innerHTML = bodyHtml;
+    bind();
+  }
+
+  function optionButtonsHtml(buttons: { label: string; id: string }[]) {
+    return `<div class="space-y-2">${buttons
+      .map((b) => `<button type="button" class="ask-step-btn flex items-center w-full min-h-[44px] text-left text-sm text-navy/80 bg-cream hover:bg-gold/10 rounded-lg px-3 py-2.5 transition-colors" data-id="${b.id}">${b.label}</button>`)
+      .join('')}</div>`;
+  }
+
+  function renderBuyerTimeline() {
+    const q = neighbourhood ? `What's your timeline for ${neighbourhood}?` : `What's your timeline?`;
+    renderJourneyStep(
+      `<p class="text-sm text-navy leading-snug mb-3">${q}</p>${optionButtonsHtml([
+        { id: 'ready', label: 'Ready now — want to see homes' },
+        { id: 'soon', label: 'Next 3–6 months' },
+        { id: 'research', label: 'Just starting to research' },
+      ])}`,
+      () => {
+        document.querySelectorAll('#ask-results .ask-step-btn').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            const id = (btn as HTMLElement).dataset.id!;
+            const label = { ready: 'Ready now', soon: 'Next 3–6 months', research: 'Just starting to research' }[id];
+            transcript.push(`Timeline: ${label}`);
+            track('chat_journey_step', { step: 'buyer_timeline', answer: id });
+            afterBuyerTimeline();
+          });
+        });
+      }
+    );
+  }
+
+  function renderBuyerPreapproval() {
+    renderJourneyStep(
+      `<p class="text-sm text-navy leading-snug mb-3">Have you been pre-approved for a mortgage yet?</p>${optionButtonsHtml([
+        { id: 'yes', label: 'Yes, I’m pre-approved' },
+        { id: 'no', label: 'Not yet' },
+        { id: 'unsure', label: 'Not sure' },
+      ])}`,
+      () => {
+        document.querySelectorAll('#ask-results .ask-step-btn').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            const id = (btn as HTMLElement).dataset.id!;
+            const label = { yes: 'Pre-approved', no: 'Not yet pre-approved', unsure: 'Not sure if pre-approved' }[id];
+            transcript.push(`Mortgage: ${label}`);
+            track('chat_journey_step', { step: 'buyer_preapproval', answer: id });
+            const intro = id === 'yes'
+              ? `Great — that puts you in a strong position. Where should I send matching listings and next steps?`
+              : `No problem — here's a free <a href="/mortgages/pre-approval/" class="text-gold-deep underline">Pre-Approval Guide</a> to look at while we talk. Where should I send matching listings and next steps?`;
+            revealContactForm(intro, 'chatbot-buyer', `Chat: Buyer${neighbourhood ? ' — ' + neighbourhood : ''}`);
+          });
+        });
+      }
+    );
+  }
+
+  // ---- Persona-specific extra qualifying step ---------------------------
+  // Spliced in after the shared timeline/stage question for the two
+  // personas where one more targeted question genuinely sharpens the lead
+  // (first-time buyer program eligibility, downsizer's next-home type) --
+  // see afterBuyerTimeline/afterSellerStage below for where these hook in.
+  // Upsizer/relocation/investor/home-search intentionally reuse the plain
+  // buyer/seller flow past their entry step; each answer still lands in
+  // `transcript`, so it reaches Justin either way.
+  function renderFtbPrograms() {
+    renderJourneyStep(
+      `<p class="text-sm text-navy leading-snug mb-3">Are you planning to use any first-time buyer programs — FHSA, RRSP Home Buyers' Plan, or the Land Transfer Tax rebate?</p>${optionButtonsHtml([
+        { id: 'using', label: 'Yes, at least one of those' },
+        { id: 'none', label: 'No' },
+        { id: 'unsure', label: 'Not sure what’s available' },
+      ])}`,
+      () => {
+        document.querySelectorAll('#ask-results .ask-step-btn').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            const id = (btn as HTMLElement).dataset.id!;
+            const label = { using: 'Using first-time buyer program(s)', none: 'Not using any programs', unsure: 'Not sure what programs are available' }[id];
+            transcript.push(`First-time buyer programs: ${label}`);
+            track('chat_journey_step', { step: 'ftb_programs', answer: id });
+            renderBuyerPreapproval();
+          });
+        });
+      }
+    );
+  }
+
+  function renderInvestorFocus() {
+    renderJourneyStep(
+      `<p class="text-sm text-navy leading-snug mb-3">What's your investment focus?</p>${optionButtonsHtml([
+        { id: 'cashflow', label: 'Cash-flow rental' },
+        { id: 'flip', label: 'Fix & flip' },
+        { id: 'appreciation', label: 'Long-term appreciation' },
+        { id: 'unsure', label: 'Not sure yet' },
+      ])}`,
+      () => {
+        document.querySelectorAll('#ask-results .ask-step-btn').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            const id = (btn as HTMLElement).dataset.id!;
+            const label = { cashflow: 'Cash-flow rental', flip: 'Fix & flip', appreciation: 'Long-term appreciation', unsure: 'Not sure yet' }[id];
+            transcript.push(`Investment focus: ${label}`);
+            track('chat_journey_step', { step: 'investor_focus', answer: id });
+            renderBuyerPreapproval();
+          });
+        });
+      }
+    );
+  }
+
+  function renderDownsizerNextHome() {
+    renderJourneyStep(
+      `<p class="text-sm text-navy leading-snug mb-3">Do you have an idea of your next home yet?</p>${optionButtonsHtml([
+        { id: 'bungalow', label: 'Bungalow' },
+        { id: 'condo', label: 'Condo or apartment' },
+        { id: 'retirement', label: 'Retirement community' },
+        { id: 'unsure', label: 'Not sure yet' },
+      ])}`,
+      () => {
+        document.querySelectorAll('#ask-results .ask-step-btn').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            const id = (btn as HTMLElement).dataset.id!;
+            const label = { bungalow: 'Bungalow', condo: 'Condo or apartment', retirement: 'Retirement community', unsure: 'Not sure yet' }[id];
+            transcript.push(`Next home: ${label}`);
+            track('chat_journey_step', { step: 'downsizer_next_home', answer: id });
+            finishSeller();
+          });
+        });
+      }
+    );
+  }
+
+  // Single hand-off point after the timeline/stage question -- keeps the
+  // persona-routing logic in one place instead of duplicated at every call
+  // site (entry quick-answers AND the timeline/stage questions themselves
+  // both need to reach the same next step).
+  function afterBuyerTimeline() {
+    if (persona === 'first-time-buyer') renderFtbPrograms();
+    else if (persona === 'investor') renderInvestorFocus();
+    else renderBuyerPreapproval();
+  }
+
+  function afterSellerStage() {
+    if (persona === 'downsizer') renderDownsizerNextHome();
+    else finishSeller();
+  }
+
+  function renderSellerStage() {
+    const q = neighbourhood
+      ? `Are you just curious what your home is worth, or actively planning to sell in ${neighbourhood}?`
+      : `Are you just curious what your home is worth, or actively planning to sell?`;
+    renderJourneyStep(
+      `<p class="text-sm text-navy leading-snug mb-3">${q}</p>${optionButtonsHtml([
+        { id: 'curious', label: 'Just curious about value' },
+        { id: 'planning', label: 'Planning to sell soon' },
+        { id: 'unsure', label: 'Not sure yet' },
+      ])}`,
+      () => {
+        document.querySelectorAll('#ask-results .ask-step-btn').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            const id = (btn as HTMLElement).dataset.id!;
+            const label = { curious: 'Just curious about value', planning: 'Planning to sell soon', unsure: 'Not sure yet' }[id];
+            transcript.push(`Stage: ${label}`);
+            track('chat_journey_step', { step: 'seller_stage', answer: id });
+            afterSellerStage();
+          });
+        });
+      }
+    );
+  }
+
+  function finishSeller() {
+    // Same disclaimer discipline as the standalone estimate tool: lead with
+    // it, point to a range, never a number, regardless of which answer got
+    // them here.
+    const intro = `Home values vary a lot by condition, lot, and recent comps, so I won't guess a number here — but I can point you to a realistic range and follow up personally. Where should I send it? (Or see the <a href="/home-value-estimate/" class="text-gold-deep underline">Home Value Estimate tool</a> now.)`;
+    revealContactForm(intro, 'chatbot-seller', `Chat: Seller${neighbourhood ? ' — ' + neighbourhood : ''}`);
+  }
+
+  function renderBrowsing() {
+    renderJourneyStep(
+      `<p class="text-sm text-navy leading-snug mb-3">No worries — take your time. Search a question below anytime, or reach out if something comes up.</p>`,
+      () => {}
+    );
+    track('chat_journey_step', { step: 'browsing' });
+    setTimeout(renderStarters, 1200);
+  }
+
+  function revealContactForm(introHtml: string, formType: string, subject: string) {
+    const contactStep = document.getElementById('ask-contact-step');
+    const intro = document.getElementById('ask-contact-intro');
+    if (!results || !contactStep || !intro) return;
+    intro.innerHTML = introHtml;
+    const wrapper = contactStep.querySelector('[data-contact-form]') as HTMLElement | null;
+    const subjectInput = contactStep.querySelector('input[name="subject"]') as HTMLInputElement | null;
+    const messageField = contactStep.querySelector('textarea[name="message"]') as HTMLTextAreaElement | null;
+    if (wrapper) wrapper.dataset.formType = formType;
+    if (subjectInput) subjectInput.value = subject;
+    if (messageField && !messageField.value) messageField.value = transcript.join('\n');
+    results.classList.add('hidden');
+    contactStep.classList.remove('hidden');
+    track('chat_journey_complete', { form_type: formType });
+  }
+
+  document.getElementById('ask-contact-back')?.addEventListener('click', () => {
+    document.getElementById('ask-contact-step')?.classList.add('hidden');
+    results?.classList.remove('hidden');
+  });
+
+  document.querySelectorAll('.ask-journey-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const el = btn as HTMLElement;
+      const branch = el.dataset.branch as 'buyer' | 'seller' | 'browsing';
+      const quick = el.dataset.quick;
+      const label = el.dataset.label || '';
+      transcript.push(`Started: ${label}`);
+      track('chat_journey_step', { step: 'entry', branch, quick });
+
+      if (branch === 'browsing') {
+        renderBrowsing();
+      } else if (branch === 'buyer') {
+        if (quick === 'ready') {
+          transcript.push('Timeline: Ready now');
+          afterBuyerTimeline();
+        } else if (quick === 'research') {
+          transcript.push('Timeline: Just starting to research');
+          afterBuyerTimeline();
+        } else {
+          renderBuyerTimeline();
+        }
+      } else if (branch === 'seller') {
+        if (quick === 'value' || quick === 'listing') {
+          transcript.push(`Stage: ${quick === 'value' ? 'Wants a value range' : 'Ready to list'}`);
+          afterSellerStage();
+        } else {
+          renderSellerStage();
+        }
+      }
+    });
+  });
+
+  // ---- Panel chrome (toggle, search box, escape key) -------------------
   const toggleBtn = document.getElementById('ask-widget-toggle')!;
   const panel = document.getElementById('ask-widget-panel')!;
   const iconOpen = document.getElementById('ask-icon-open')!;
@@ -177,8 +590,6 @@ const starterQuestions = [
       toggleBtn.focus();
     }
   });
-
-  attachStarterListeners();
 
   let debounceTimer: ReturnType<typeof setTimeout>;
   input?.addEventListener('input', () => {

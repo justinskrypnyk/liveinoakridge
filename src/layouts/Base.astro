@@ -6,6 +6,7 @@ import SEO from '@/components/SEO.astro';
 import AskWidget from '@/components/AskWidget.astro';
 import StickyMobileCTA from '@/components/StickyMobileCTA.astro';
 import { SITE } from '@/data/site';
+import { inferChatContext, type ChatIntent, type ChatPersona } from '@/lib/chat-context';
 
 interface Props {
   title: string;
@@ -15,6 +16,13 @@ interface Props {
   canonical?: string;
   noindex?: boolean;
   heroOverlap?: boolean;
+  // Override AskWidget's page-inferred buyer/seller intent + neighbourhood
+  // (see src/lib/chat-context.ts) when a page already knows better than a
+  // URL guess can — e.g. a listing page passes the neighbourhood it
+  // resolved server-side from the listing's real lat/lng.
+  chatIntent?: ChatIntent;
+  chatNeighbourhood?: string;
+  chatPersona?: ChatPersona;
 }
 
 const {
@@ -25,9 +33,18 @@ const {
   canonical,
   noindex,
   heroOverlap = false,
+  chatIntent,
+  chatNeighbourhood,
+  chatPersona,
 } = Astro.props;
 
 const hideStickyCTA = Astro.url.pathname.startsWith('/contact');
+const inferredChat = inferChatContext(Astro.url.pathname);
+const chatContext = {
+  intent: chatIntent ?? inferredChat.intent,
+  neighbourhood: chatNeighbourhood ?? inferredChat.neighbourhood,
+  persona: chatPersona ?? inferredChat.persona,
+};
 
 // Keep local/dev builds from sending real events into the live GA4 property
 // and Meta Pixel -- import.meta.env.PROD is false for `astro dev` and true
@@ -153,7 +170,12 @@ const isProd = import.meta.env.PROD;
     </main>
 
     <Footer />
-    <AskWidget bottomOffsetClass={hideStickyCTA ? '' : 'bottom-20 sm:bottom-5'} />
+    <AskWidget
+      bottomOffsetClass={hideStickyCTA ? '' : 'bottom-20 sm:bottom-5'}
+      intent={chatContext.intent}
+      neighbourhood={chatContext.neighbourhood}
+      persona={chatContext.persona}
+    />
     {!hideStickyCTA && <StickyMobileCTA />}
 
     <!-- Netlify's build-time bot only detects forms present in statically
