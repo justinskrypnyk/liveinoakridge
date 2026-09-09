@@ -46,6 +46,33 @@ const fieldId = (name: string) => `${name}-${uid}`;
     <label>Don't fill this out: <input name="bot-field" /></label>
   </p>
 
+  <!-- Empty by default, filled by JS before submit (AskWidget's scripted
+       chat journey for chat-*, attribution-client.ts for utm_*/gclid — see
+       this file's submit script and AskWidget's setHiddenField). These MUST
+       be real static inputs, not appended dynamically at runtime: "contact"
+       is reused on 15+ pages, and a same-named twin `<form>` added elsewhere
+       (Base.astro, the trick used for save-listing/market-map-notify) did
+       NOT get its extra fields merged into Netlify's registered schema for
+       "contact" specifically — confirmed via a live post-deploy round-trip
+       2026-09-09 (netlify api listSiteForms kept showing only the original
+       8 fields even after the twin was live). Declaring them here, in the
+       one real template every "contact" instance renders from, is what
+       actually worked. Netlify's build-time bot only registers field names
+       it finds in static HTML; anything submitted that it never saw gets
+       silently stripped before the outgoing webhook ever sees it. -->
+  <input type="hidden" name="chat-intent" />
+  <input type="hidden" name="chat-neighbourhood" />
+  <input type="hidden" name="chat-persona" />
+  <input type="hidden" name="chat-stage" />
+  <input type="hidden" name="chat-preapproval" />
+  <input type="hidden" name="chat-qualifier" />
+  <input type="hidden" name="utm_source" />
+  <input type="hidden" name="utm_medium" />
+  <input type="hidden" name="utm_campaign" />
+  <input type="hidden" name="utm_term" />
+  <input type="hidden" name="utm_content" />
+  <input type="hidden" name="gclid" />
+
   <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
     <div>
       <label for={fieldId('first-name')} class={`block text-sm font-medium mb-1.5 ${labelClass}`}>First Name *</label>
@@ -188,10 +215,19 @@ const fieldId = (name: string) => `${name}-${uid}`;
       errorEl?.classList.add('hidden');
 
       try {
+        // Write into the static utm_*/gclid inputs already in the form
+        // (see the template above) rather than appending separate
+        // key/value pairs to `body` -- those inputs exist purely so
+        // Netlify's build-time bot registers the field names; appending a
+        // second, separate entry per key would send each one twice in the
+        // POST body.
+        Object.entries(getStoredAttribution()).forEach(([key, value]) => {
+          const el = form.querySelector(`[name="${key}"]`) as HTMLInputElement | null;
+          if (el) el.value = value;
+        });
         const data = new FormData(form);
         const body = new URLSearchParams();
         data.forEach((value, key) => body.append(key, String(value)));
-        Object.entries(getStoredAttribution()).forEach(([key, value]) => body.append(key, value));
         const res = await fetch('/', {
           method: 'POST',
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },

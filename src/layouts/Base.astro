@@ -220,49 +220,25 @@ const isProd = import.meta.env.PROD;
       <input name="gclid" />
     </form>
 
-    <!-- "contact" and "home-value-lead" ARE rendered statically (ContactForm/
-         home-value-estimate.astro default to prerender=true), so Netlify's
-         bot does see them directly and does NOT need a form-name twin for
-         those two. But it only registers the exact field names present in
-         that static markup -- and neither template statically declares
-         AskWidget's `chat-<key>` fields or attribution-client's utm_*/gclid
-         fields, since both are added purely at runtime (real DOM nodes for
-         chat-*, via ContactForm's own body.append() for utm_*/gclid). Any
-         field name Netlify hasn't seen in a build gets silently stripped
-         from every submission, even though the browser's actual POST body
-         includes it -- confirmed 2026-09-09 via a live round-trip: real chat
-         answers sat in the fetch() request body but never reached the stored
-         Netlify submission, so ghl-lead.ts's `data['chat-intent']` etc. was
-         always undefined and the GHL customFields/tags never fired. Fields
-         already covered by the real static markup (subject/first-name/...)
-         don't need to be re-listed here, but included below anyway to keep
-         each form-name's full schema visible in one place. These two twins
-         are hidden and never submitted -- same as save-listing/
-         market-map-notify above, purely to register field names. -->
-    <form name="contact" data-netlify="true" netlify-honeypot="bot-field" hidden>
-      <input type="hidden" name="form-name" value="contact" />
-      <input name="bot-field" />
-      <input name="subject" />
-      <input name="first-name" />
-      <input name="last-name" />
-      <input name="email" />
-      <input name="phone" />
-      <input name="service" />
-      <input name="message" />
-      <input name="chat-intent" />
-      <input name="chat-neighbourhood" />
-      <input name="chat-persona" />
-      <input name="chat-stage" />
-      <input name="chat-preapproval" />
-      <input name="chat-qualifier" />
-      <input name="utm_source" />
-      <input name="utm_medium" />
-      <input name="utm_campaign" />
-      <input name="utm_term" />
-      <input name="utm_content" />
-      <input name="gclid" />
-    </form>
+    <!-- "home-value-lead" IS rendered statically (home-value-estimate.astro
+         defaults to prerender=true), so Netlify's bot does see it directly
+         and doesn't need a twin to be *found* at all -- but it only
+         registers the exact field names present in that static markup, and
+         that template never declares attribution-client.ts's utm_*/gclid
+         fields (only added at runtime via a separate body.append() call in
+         its submit script). This twin exists purely to teach Netlify those
+         6 extra field names; it's hidden and never submitted, matching the
+         save-listing/market-map-notify trick above. Confirmed working via a
+         live post-deploy check (netlify api listSiteForms) 2026-09-09.
 
+         NOTE: the equivalent trick did NOT work for "contact" -- it's reused
+         on 15+ static pages, and a same-named twin here never got its extra
+         fields merged into Netlify's registered schema for that form name
+         (confirmed live, same date: chat-intent/chat-neighbourhood/etc.
+         stayed absent from the stored submission even with this twin live).
+         chat-*/utm_*/gclid registration for "contact" is instead handled by
+         declaring those fields as real static hidden inputs directly inside
+         ContactForm.astro's own template -- see that file. -->
     <form name="home-value-lead" data-netlify="true" netlify-honeypot="bot-field" hidden>
       <input type="hidden" name="form-name" value="home-value-lead" />
       <input name="bot-field" />

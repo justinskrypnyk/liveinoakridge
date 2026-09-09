@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en-CA">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Keyword Research: liveinoakridge.ca</title>
+<style>
+:root{
+  --surface:#1a1a19;
+  --card:#232322;
+  --ink:#ffffff;
+  --ink-2:#c3c2b7;
+  --ink-3:#83827a;
+  --rule:#33332f;
+  --accent:#3987e5;
+  --warn:#e0a03c;
+  --bad:#e66767;
+  --good:#199e70;
+  --stack:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Helvetica,Arial,sans-serif;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--surface);
+  color:var(--ink);
+  font-family:var(--stack);
+  font-size:16px;
+  line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+  font-variant-numeric:tabular-nums;
+}
+.wrap{max-width:1180px;margin:0 auto;padding:56px 32px 96px;}
+
+.label{
+  font-size:13px;
+  text-transform:uppercase;
+  letter-spacing:0.1em;
+  color:var(--ink-3);
+  font-weight:600;
+}
+
+header.report-head{border-bottom:1px solid var(--rule);padding-bottom:36px;margin-bottom:44px;}
+h1{font-size:40px;font-weight:700;line-height:1.15;margin:14px 0 22px;letter-spacing:-0.01em;}
+.meta-row{display:flex;flex-wrap:wrap;gap:40px;}
+.meta-item .label{display:block;margin-bottom:5px;}
+.meta-item .value{font-size:17px;color:var(--ink-2);}
+
+.tiles{display:flex;flex-wrap:wrap;gap:16px;margin-bottom:56px;}
+.tile{
+  flex:1 1 190px;
+  background:var(--card);
+  border:1px solid var(--rule);
+  border-radius:10px;
+  padding:26px 24px 22px;
+}
+.tile .num{font-size:44px;font-weight:700;line-height:1;letter-spacing:-0.02em;display:block;margin-bottom:12px;}
+.tile .label{display:block;line-height:1.4;}
+.tile .sub{font-size:14px;color:var(--ink-3);margin-top:8px;}
+.n-accent{color:var(--accent);}
+.n-bad{color:var(--bad);}
+.n-warn{color:var(--warn);}
+.n-good{color:var(--good);}
+
+section{margin-bottom:60px;}
+h2{font-size:26px;font-weight:700;margin:0 0 8px;letter-spacing:-0.01em;}
+h3{font-size:19px;font-weight:700;margin:34px 0 8px;}
+.lede{color:var(--ink-2);font-size:16px;margin:0 0 24px;max-width:82ch;}
+p{margin:0 0 16px;max-width:82ch;}
+.note{color:var(--ink-2);font-size:15px;}
+
+table{width:100%;border-collapse:collapse;margin:20px 0 12px;font-size:15px;}
+caption{text-align:left;font-size:13px;text-transform:uppercase;letter-spacing:0.1em;color:var(--ink-3);font-weight:600;padding-bottom:12px;}
+th{
+  text-align:left;
+  font-size:13px;
+  text-transform:uppercase;
+  letter-spacing:0.1em;
+  color:var(--ink-3);
+  font-weight:600;
+  padding:10px 14px;
+  border-bottom:1px solid var(--rule);
+  vertical-align:bottom;
+}
+td{padding:13px 14px;border-bottom:1px solid var(--rule);background:var(--card);vertical-align:top;color:var(--ink-2);}
+td.primary{color:var(--ink);}
+th.num,td.num{text-align:right;font-variant-numeric:tabular-nums;}
+tr td:first-child{border-radius:8px 0 0 8px;}
+tr td:last-child{border-radius:0 8px 8px 0;}
+.slug{font-size:14px;color:var(--ink-2);word-break:break-all;}
+.na{color:var(--ink-3);}
+
+.pill{
+  display:inline-block;
+  font-size:13px;
+  font-weight:600;
+  letter-spacing:0.04em;
+  padding:3px 9px;
+  border-radius:5px;
+  white-space:nowrap;
+}
+.p-bad{background:rgba(230,103,103,0.16);color:var(--bad);border:1px solid rgba(230,103,103,0.4);}
+.p-warn{background:rgba(224,160,60,0.16);color:var(--warn);border:1px solid rgba(224,160,60,0.4);}
+.p-good{background:rgba(25,158,112,0.18);color:var(--good);border:1px solid rgba(25,158,112,0.45);}
+.p-accent{background:rgba(57,135,229,0.16);color:var(--accent);border:1px solid rgba(57,135,229,0.42);}
+.p-mute{background:rgba(131,130,122,0.14);color:var(--ink-2);border:1px solid var(--rule);}
+
+.chart{margin:24px 0 8px;}
+.bar-row{display:flex;align-items:center;gap:16px;margin-bottom:13px;}
+.bar-name{flex:0 0 320px;font-size:15px;color:var(--ink-2);}
+.bar-track{flex:1 1 auto;height:24px;background:rgba(255,255,255,0.045);border-radius:4px;overflow:hidden;}
+.bar-fill{height:100%;background:var(--accent);border-radius:4px;}
+.bar-val{flex:0 0 90px;font-size:15px;font-weight:600;font-variant-numeric:tabular-nums;}
+.axis{font-size:13px;color:var(--ink-3);text-transform:uppercase;letter-spacing:0.1em;font-weight:600;margin-top:16px;}
+
+.callout{
+  background:var(--card);
+  border:1px solid var(--rule);
+  border-left:4px solid var(--warn);
+  border-radius:10px;
+  padding:22px 26px;
+  margin:24px 0;
+}
+.callout.win{border-left-color:var(--accent);}
+.callout h3{margin:0 0 8px;font-size:18px;}
+.callout p{margin:0 0 10px;color:var(--ink-2);}
+.callout p:last-child{margin-bottom:0;}
+
+ol.build{counter-reset:step;list-style:none;padding:0;margin:24px 0 0;}
+ol.build li{
+  counter-increment:step;
+  background:var(--card);
+  border:1px solid var(--rule);
+  border-radius:10px;
+  padding:22px 26px 22px 74px;
+  position:relative;
+  margin-bottom:14px;
+}
+ol.build li::before{
+  content:counter(step);
+  position:absolute;
+  left:26px;
+  top:20px;
+  font-size:26px;
+  font-weight:700;
+  color:var(--accent);
+  font-variant-numeric:tabular-nums;
+}
+ol.build h3{margin:0 0 6px;font-size:18px;}
+ol.build p{margin:0 0 8px;color:var(--ink-2);font-size:15px;}
+ol.build .target{font-size:14px;color:var(--ink-3);}
+
+ol.actions{counter-reset:act;list-style:none;padding:0;margin:24px 0 0;}
+ol.actions li{
+  counter-increment:act;
+  background:var(--card);
+  border:1px solid var(--rule);
+  border-left:4px solid var(--accent);
+  border-radius:10px;
+  padding:24px 28px 24px 74px;
+  position:relative;
+  margin-bottom:16px;
+}
+ol.actions li::before{
+  content:counter(act);
+  position:absolute;
+  left:26px;
+  top:22px;
+  font-size:28px;
+  font-weight:700;
+  color:var(--accent);
+}
+ol.actions h3{margin:0 0 8px;font-size:19px;}
+ol.actions p{margin:0 0 10px;color:var(--ink-2);}
+ol.actions .target{font-size:14px;color:var(--ink-3);word-break:break-all;}
+
+footer{border-top:1px solid var(--rule);padding-top:40px;margin-top:20px;}
+footer h2{margin-bottom:20px;}
+footer table td{font-size:14px;}
+ul.plain{margin:16px 0 0;padding-left:20px;color:var(--ink-2);max-width:86ch;}
+ul.plain li{margin-bottom:10px;}
+
+@media (max-width:760px){
+  .wrap{padding:36px 20px 64px;}
+  h1{font-size:31px;}
+  .bar-name{flex:0 0 100%;}
+  .bar-row{flex-wrap:wrap;}
+  table{font-size:14px;}
+  td,th{padding:10px;}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="report-head">
+  <span class="label">Keyword Research Report</span>
+  <h1>liveinoakridge.ca</h1>
+  <div class="meta-row">
+    <div class="meta-item"><span class="label">Seed</span><span class="value">oakridge london ontario real estate</span></div>
+    <div class="meta-item"><span class="label">Business</span><span class="value">Residential real estate brokerage, Oakridge and West London</span></div>
+    <div class="meta-item"><span class="label">Market</span><span class="value">London, Ontario, Canada. English</span></div>
+    <div class="meta-item"><span class="label">Data pulled</span><span class="value">2 August 2026</span></div>
+  </div>
+</header>
+
+<div class="tiles">
+  <div class="tile">
+    <span class="num n-accent">55</span>
+    <span class="label">Keywords kept</span>
+    <div class="sub">Across 15 page clusters</div>
+  </div>
+  <div class="tile">
+    <span class="num n-bad">30</span>
+    <span class="label">Keywords cut</span>
+    <div class="sub">Plus 40 out-of-market rows</div>
+  </div>
+  <div class="tile">
+    <span class="num">10,540</span>
+    <span class="label">In-scope monthly searches</span>
+    <div class="sub">De-duplicated, excludes citywide term</div>
+  </div>
+  <div class="tile">
+    <span class="num n-warn">5</span>
+    <span class="label">SERPs checked live</span>
+    <div class="sub">1 confirmed weak, 1 moderate, 3 strong</div>
+  </div>
+  <div class="tile">
+    <span class="num n-good">2,400</span>
+    <span class="label">Largest in-scope keyword</span>
+    <div class="sub">london ontario realtor, difficulty 16</div>
+  </div>
+</div>
+
+<section>
+  <h2>Read this before the tables</h2>
+  <p class="lede">DataForSEO groups near-identical phrasings under a shared core keyword and reports the same volume against every variant. Adding those variants together would inflate the numbers badly. The eight ways of writing "houses for sale oakridge london ontario" all return 390 with identical month-by-month histories, so the cluster is worth 390, not 3,120. Every total in this report counts each core once, and the variant counts are stated so you can see what was collapsed.</p>
+  <p class="lede">The endpoint also returns a search intent label for most keywords. That label is shown as supplied. Where it contradicts what the live SERP actually returns, the row is flagged as reclassified and the reason is given. The endpoint labels most neighbourhood inventory queries "navigational", which does not match a SERP full of MLS inventory pages, so those sit in the transactional group here.</p>
+
+  <div class="callout">
+    <h3>Correction, 2 August 2026: 12 of the 15 recommended pages already exist</h3>
+    <p>The original version of this report treated every cluster in Section 5 as a page to build from scratch — same reasoning as the companion Site Explorer report from the same day: nothing ranks for these terms, so the pages must not exist. Checked directly against the codebase this time before writing anything: <strong>12 of the 15 clusters already have a live, indexed page.</strong></p>
+    <ul class="plain">
+      <li><strong>T1–T4 and N1–N4</strong> collapse into the same pages, not separate ones. Every area page (<code>/areas/oakridge/</code>, <code>/areas/byron/</code>, <code>/areas/westmount/</code>, <code>/areas/west-london/</code>, <code>/areas/whitehills/</code>) already runs off one shared template with a live MLS listing count, price range, and full neighbourhood guide — schools, parks, sub-areas, demographics. The "inventory page" and the "guide page" this report proposed as separate builds for each neighbourhood are one page that already does both.</li>
+      <li><strong>C1 realtor page</strong> exists as <code>/blog/london-ontario-realtor/</code>, published 20 July 2026.</li>
+      <li><strong>C2 first-time buyer guide</strong> exists as <code>/blog/first-time-home-buyer-london-ontario-guide/</code>.</li>
+      <li><strong>I1 neighbourhood hub</strong> exists as <code>/blog/london-ontario-neighbourhood-guide-2026/</code>, published April 2026.</li>
+      <li><strong>I4 home value</strong> exists as the <code>/home-value-estimate/</code> tool.</li>
+    </ul>
+    <p>What's real: <strong>T5</strong> (citywide inventory) genuinely has no dedicated page — this report already correctly defers it. <strong>I2</strong> (market data) exists but as several dated monthly posts rather than one evergreen URL — a real consolidation project, not a missing page. <strong>I3</strong> (relocation) is partially covered by a Toronto-specific moving guide; a broader version may still be worth writing at its volume (30–170/mo). Sections 5, 6 and 8 below are corrected in place; the build order and "3 things I'd do first" are rewritten to match what's actually needed.</p>
+  </div>
+</section>
+
+<section>
+  <h2>1. Transactional: people looking at inventory</h2>
+  <p class="lede">Queries where the searcher wants to see listings. These need pages with live property counts and prices, not written content.</p>
+  <table>
+    <caption>Transactional keywords, Canada, English</caption>
+    <thead>
+      <tr>
+        <th>Keyword</th>
+        <th class="num">Volume / mo</th>
+        <th class="num">Difficulty</th>
+        <th>API intent label</th>
+        <th>Cluster</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td class="primary">houses for sale london ontario</td><td class="num">27,100</td><td class="num">7</td><td>Commercial</td><td>T5 Citywide</td></tr>
+      <tr><td class="primary">london ontario real estate <span class="na">(+8 variants)</span></td><td class="num">2,400</td><td class="num">8</td><td>Commercial</td><td>T5 Citywide</td></tr>
+      <tr><td class="primary">homes for sale byron london ontario <span class="na">(+1 variant)</span></td><td class="num">880</td><td class="num na">not available</td><td>Navigational <span class="pill p-warn">Reclassified</span></td><td>T2 Byron</td></tr>
+      <tr><td class="primary">homes for sale westmount london ontario</td><td class="num">720</td><td class="num na">not available</td><td>Navigational <span class="pill p-warn">Reclassified</span></td><td>T3 Westmount</td></tr>
+      <tr><td class="primary">houses for sale byron london ontario <span class="na">(+3 variants)</span></td><td class="num">590</td><td class="num na">not available</td><td>Navigational <span class="pill p-warn">Reclassified</span></td><td>T2 Byron</td></tr>
+      <tr><td class="primary">houses for sale oakridge london ontario <span class="na">(+7 variants)</span></td><td class="num">390</td><td class="num na">not available</td><td>Navigational <span class="pill p-warn">Reclassified</span></td><td>T1 Oakridge</td></tr>
+      <tr><td class="primary">condos for sale in byron london ontario</td><td class="num">170</td><td class="num na">not available</td><td>Commercial</td><td>T2 Byron</td></tr>
+      <tr><td class="primary">houses for sale in oakridge acres london ontario</td><td class="num">30</td><td class="num">12</td><td>Transactional</td><td>T1 Oakridge</td></tr>
+      <tr><td class="primary">oakridge london ontario real estate <span class="na">(+1 variant)</span></td><td class="num">20</td><td class="num">38</td><td>Navigational</td><td>T1 Oakridge</td></tr>
+      <tr><td class="primary">houses for sale whitehills london ontario</td><td class="num">10</td><td class="num na">not available</td><td>Navigational <span class="pill p-warn">Reclassified</span></td><td>T4 West London</td></tr>
+      <tr><td class="primary">west london ontario homes for sale</td><td class="num na">not available</td><td class="num na">not available</td><td>Transactional</td><td>T4 West London</td></tr>
+    </tbody>
+  </table>
+  <p class="note">11 rows shown, representing 32 keywords once variants are counted. The seed itself, "oakridge london ontario real estate", sits at 20 searches per month with a yearly trend of minus 80 percent. It is a weak seed. The volume in this topic lives in the "houses for sale" phrasings, not the "real estate" ones.</p>
+</section>
+
+<section>
+  <h2>2. Commercial investigation: people choosing an agent</h2>
+  <p class="lede">Queries where the searcher has decided to transact and is now picking who to work with. The highest commercial value in the set.</p>
+  <table>
+    <caption>Commercial investigation keywords</caption>
+    <thead>
+      <tr>
+        <th>Keyword</th>
+        <th class="num">Volume / mo</th>
+        <th class="num">Difficulty</th>
+        <th class="num">CPC</th>
+        <th>Cluster</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td class="primary">london ontario realtor</td><td class="num">2,400</td><td class="num">16</td><td class="num">$1.33</td><td>C1 Realtor page</td></tr>
+      <tr><td class="primary">real estate agents london ontario <span class="na">(+3 variants)</span></td><td class="num">260</td><td class="num">14</td><td class="num">$8.71</td><td>C1 Realtor page</td></tr>
+      <tr><td class="primary">london ontario real estate brokers</td><td class="num">260</td><td class="num">37</td><td class="num">$8.71</td><td>C1 Realtor page</td></tr>
+      <tr><td class="primary">first time home buyer london ontario</td><td class="num">30</td><td class="num na">not available</td><td class="num">$5.14</td><td>C2 First-time buyer</td></tr>
+    </tbody>
+  </table>
+  <div class="callout win">
+    <h3>The agent terms carry the money</h3>
+    <p>"real estate agents london ontario" costs $8.71 per click in paid search against a citywide inventory term at $0.73. Advertisers pay twelve times more for the person choosing an agent than for the person browsing listings, and difficulty is 14. The volume is small at 260, and the same 260 is shared across the broker variant, so treat this as one cluster worth 260 rather than 520.</p>
+    <p>"london ontario realtor" at 2,400 with difficulty 16 is the single largest realistic target in this set. Its yearly volume trend is plus 50 percent.</p>
+  </div>
+</section>
+
+<section>
+  <h2>3. Informational: people researching before they act</h2>
+  <table>
+    <caption>Informational keywords</caption>
+    <thead>
+      <tr>
+        <th>Keyword</th>
+        <th class="num">Volume / mo</th>
+        <th class="num">Difficulty</th>
+        <th>API intent label</th>
+        <th>Cluster</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td class="primary">london ontario housing market</td><td class="num">320</td><td class="num na">not available</td><td>Informational</td><td>I2 Market data</td></tr>
+      <tr><td class="primary">average house price london ontario</td><td class="num">210</td><td class="num na">not available</td><td>Informational</td><td>I2 Market data</td></tr>
+      <tr><td class="primary">is london ontario a good place to live</td><td class="num">170</td><td class="num na">not available</td><td>Informational</td><td>I3 Relocation</td></tr>
+      <tr><td class="primary">london ontario neighbourhoods</td><td class="num">140</td><td class="num na">not available</td><td>Informational</td><td>I1 Neighbourhood hub</td></tr>
+      <tr><td class="primary">cost of living london ontario</td><td class="num">140</td><td class="num na">not available</td><td>Informational</td><td>I3 Relocation</td></tr>
+      <tr><td class="primary">best neighbourhoods in london ontario</td><td class="num">90</td><td class="num na">not available</td><td>Commercial <span class="pill p-warn">Reclassified</span></td><td>I1 Neighbourhood hub</td></tr>
+      <tr><td class="primary">living in london ontario</td><td class="num">90</td><td class="num">3</td><td>Informational</td><td>I3 Relocation</td></tr>
+      <tr><td class="primary">moving to london ontario</td><td class="num">30</td><td class="num">29</td><td>Informational</td><td>I3 Relocation</td></tr>
+      <tr><td class="primary">how much is my house worth london ontario</td><td class="num na">not available</td><td class="num na">not available</td><td>Informational</td><td>I4 Home value</td></tr>
+    </tbody>
+  </table>
+  <p class="note">"best neighbourhoods in london ontario" is labelled commercial by the API. The live SERP returns editorial listicles, a Reddit thread, and a dentist's blog, with no agent directories, so it is grouped as informational here and clustered with the neighbourhood hub page.</p>
+</section>
+
+<section>
+  <h2>4. Navigational: people looking up a specific place</h2>
+  <p class="lede">Neighbourhood name queries. Low commercial intent per search, but they are how a local broker becomes the recognised name for an area, and they feed the inventory pages internally.</p>
+  <table>
+    <caption>Navigational keywords</caption>
+    <thead>
+      <tr>
+        <th>Keyword</th>
+        <th class="num">Volume / mo</th>
+        <th class="num">Difficulty</th>
+        <th class="num">Yearly trend</th>
+        <th>Cluster</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td class="primary">byron london ontario</td><td class="num">590</td><td class="num na">not available</td><td class="num">+22%</td><td>N2 Byron guide</td></tr>
+      <tr><td class="primary">westmount london ontario</td><td class="num">320</td><td class="num na">not available</td><td class="num">+50%</td><td>N3 Westmount guide</td></tr>
+      <tr><td class="primary">oakridge london ontario</td><td class="num">170</td><td class="num na">not available</td><td class="num">+53%</td><td>N1 Oakridge guide</td></tr>
+      <tr><td class="primary">hunt club london ontario</td><td class="num">50</td><td class="num">35</td><td class="num">-43%</td><td>N1 Oakridge guide</td></tr>
+      <tr><td class="primary">whitehills london ontario</td><td class="num">40</td><td class="num na">not available</td><td class="num">-20%</td><td>N4 Whitehills guide</td></tr>
+      <tr><td class="primary">oakridge acres london ontario</td><td class="num">20</td><td class="num">39</td><td class="num">+600%</td><td>N1 Oakridge guide</td></tr>
+    </tbody>
+  </table>
+  <p class="note">Hunt Club Green appears inside Google's own knowledge panel for Oakridge as one of its subdivisions, alongside Oakridge Acres, Oakridge Park, Oakridge Meadows, Thornwood Estates, Hazelden and Hazelden Park. That is why Hunt Club is clustered onto the Oakridge guide rather than given a page.</p>
+</section>
+
+<section>
+  <h2>5. The clusters, as pages</h2>
+  <table>
+    <caption>15 clusters — corrected 2 August 2026 against the live site</caption>
+    <thead>
+      <tr>
+        <th>Cluster</th>
+        <th>Working page title</th>
+        <th>Actual URL</th>
+        <th class="num">Volume</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td class="primary">T1 + N1 Oakridge inventory & guide</td><td>Homes for Sale in Oakridge, London Ontario</td><td class="slug">/areas/oakridge/</td><td class="num">680</td><td><span class="pill p-good">Exists — H1/title fixed 08-02</span></td></tr>
+      <tr><td class="primary">T2 + N2 Byron inventory & guide</td><td>Homes for Sale in Byron, London Ontario</td><td class="slug">/areas/byron/</td><td class="num">2,230</td><td><span class="pill p-good">Exists — H1/title fixed 08-02</span></td></tr>
+      <tr><td class="primary">T3 + N3 Westmount inventory & guide</td><td>Homes for Sale in Westmount, London Ontario</td><td class="slug">/areas/westmount/</td><td class="num">1,040</td><td><span class="pill p-good">Exists — H1/title fixed 08-02</span></td></tr>
+      <tr><td class="primary">T4 + N4 West London / Whitehills inventory & guide</td><td>Homes for Sale in West London / Whitehills, London Ontario</td><td class="slug">/areas/west-london/, /areas/whitehills/</td><td class="num">50</td><td><span class="pill p-good">Exists — H1 fixed 08-02 (shared template)</span></td></tr>
+      <tr><td class="primary">T5 Citywide inventory</td><td>Houses for Sale in London, Ontario</td><td class="slug">no dedicated page — /search/ is the live tool</td><td class="num">29,500</td><td><span class="pill p-warn">Real gap, correctly deferred</span></td></tr>
+      <tr><td class="primary">C1 Realtor service page</td><td>Looking for a London Ontario Realtor?</td><td class="slug">/blog/london-ontario-realtor/</td><td class="num">2,920</td><td><span class="pill p-good">Exists since 07-20 — was unlinked, fixed 08-02</span></td></tr>
+      <tr><td class="primary">C2 First-time buyer</td><td>London Ontario First-Time Home Buyer Guide</td><td class="slug">/blog/first-time-home-buyer-london-ontario-guide/</td><td class="num">30</td><td><span class="pill p-good">Exists</span></td></tr>
+      <tr><td class="primary">I1 Neighbourhood hub</td><td>London Ontario Neighbourhood Guide 2026</td><td class="slug">/blog/london-ontario-neighbourhood-guide-2026/</td><td class="num">230</td><td><span class="pill p-warn">Exists since April, 0 impressions/90d — needs promotion, not a rebuild</span></td></tr>
+      <tr><td class="primary">I2 Market data</td><td>Several dated monthly posts</td><td class="slug">/blog/july-2026-london-ontario-market-update/ + 4 others</td><td class="num">530</td><td><span class="pill p-warn">Content exists, needs consolidating into one evergreen URL</span></td></tr>
+      <tr><td class="primary">I3 Relocation</td><td>Moving from Toronto to London Ontario</td><td class="slug">/blog/moving-from-toronto-to-london-ontario/</td><td class="num">430</td><td><span class="pill p-warn">Partial — Toronto-specific, broader version still a real gap</span></td></tr>
+      <tr><td class="primary">I4 Home value</td><td>Instant Home Value Estimate</td><td class="slug">/home-value-estimate/</td><td class="num na">not available</td><td><span class="pill p-bad">Exists, linked, in sitemap — Google has never crawled it</span></td></tr>
+    </tbody>
+  </table>
+  <p class="note" style="font-size:15px;">T1–T4 and N1–N4 are shown merged above because on this site they are the same page, not eight separate ones — every area page already combines live inventory with the full neighbourhood guide.</p>
+
+  <h3>Cluster size, in-scope clusters only</h3>
+  <div class="chart">
+    <div class="bar-row"><span class="bar-name">C1 Realtor service page</span><span class="bar-track"><span class="bar-fill" style="width:100%"></span></span><span class="bar-val">2,920</span></div>
+    <div class="bar-row"><span class="bar-name">T2 Byron inventory</span><span class="bar-track"><span class="bar-fill" style="width:56.2%"></span></span><span class="bar-val">1,640</span></div>
+    <div class="bar-row"><span class="bar-name">T3 Westmount inventory</span><span class="bar-track"><span class="bar-fill" style="width:24.7%"></span></span><span class="bar-val">720</span></div>
+    <div class="bar-row"><span class="bar-name">N2 Byron guide</span><span class="bar-track"><span class="bar-fill" style="width:20.2%"></span></span><span class="bar-val">590</span></div>
+    <div class="bar-row"><span class="bar-name">I2 Market data</span><span class="bar-track"><span class="bar-fill" style="width:18.2%"></span></span><span class="bar-val">530</span></div>
+    <div class="bar-row"><span class="bar-name">T1 Oakridge inventory</span><span class="bar-track"><span class="bar-fill" style="width:15.1%"></span></span><span class="bar-val">440</span></div>
+    <div class="bar-row"><span class="bar-name">I3 Relocation</span><span class="bar-track"><span class="bar-fill" style="width:14.7%"></span></span><span class="bar-val">430</span></div>
+    <div class="bar-row"><span class="bar-name">N3 Westmount guide</span><span class="bar-track"><span class="bar-fill" style="width:11.0%"></span></span><span class="bar-val">320</span></div>
+    <div class="bar-row"><span class="bar-name">N1 Oakridge guide</span><span class="bar-track"><span class="bar-fill" style="width:8.2%"></span></span><span class="bar-val">240</span></div>
+    <div class="bar-row"><span class="bar-name">I1 Neighbourhood hub</span><span class="bar-track"><span class="bar-fill" style="width:7.9%"></span></span><span class="bar-val">230</span></div>
+    <div class="axis">Monthly search volume, de-duplicated. T5 citywide excluded at 29,500, see build order.</div>
+  </div>
+</section>
+
+<section>
+  <h2>6. Where the top 10 looks weak</h2>
+  <p class="lede">Five SERPs were pulled live at London, Ontario on 2 August 2026 before any claim below was made. Clusters not checked are marked "not checked" and carry no weakness claim.</p>
+
+  <div class="callout win">
+    <h3>I1 London Ontario neighbourhoods: weak — and the site already has an unused answer</h3>
+    <p>Position 7 is a dental practice writing about neighbourhoods. Position 5 is a Reddit thread asking whether a good neighbourhood map exists. Position 2 is a community non-profit directory and position 3 is a City of London census page. No brokerage holds a strong editorial position on page one. The AI overview on this query cites seven separate realtor sites, none of which rank organically in the top four, which means Google is pulling neighbourhood expertise from agents but has no single authoritative agent page to rank.</p>
+    <p><span class="pill p-warn">Corrected, with a caveat</span> This is the clearest gap in the set — but the site has held a page built exactly for it since April 2026: <code>/blog/london-ontario-neighbourhood-guide-2026/</code>, 1,072 words, indexed, and already linked from the footer plus at least seven other blog posts with anchor text like "complete London Ontario neighbourhood guide." Unlike the realtor page in the companion report, this one is <em>not</em> starved of internal links — and it still shows zero Search Console impressions for this term in 90 days. That rules out the easy fix. What's left is either a genuine authority gap on a weak-but-not-empty SERP, or a title/content mismatch worth a closer look (the page targets "neighbourhood guide," singular-ish phrasing; the query is "neighbourhoods," plural) — not something to guess at further without checking rankings directly in a few weeks.</p>
+  </div>
+
+  <div class="callout">
+    <h3>I2 London Ontario housing market: moderate</h3>
+    <p>The top three are national data aggregators, wowa.ca, nesto.ca and mortgagesandbox.com, plus a CREA statistics page. A Reddit post sits at position 5. One local agent blog, a RE/MAX Centre City page, already ranks at position 4, which shows a working broker can hold this SERP. The aggregators update monthly, so the page has to be maintained rather than published once.</p>
+    <p><span class="pill p-warn">Needs attention</span> The site already publishes dated monthly market posts, which split the signal across many URLs.</p>
+  </div>
+
+  <div class="callout">
+    <h3>N1 Oakridge neighbourhood: moderate</h3>
+    <p>Three of the top ten are not commercial pages: Wikipedia at 2, a Reddit thread at 3 and a City of London arena page at 5. A competitor guide from viewhomes.ca holds position 6. The site's own blog post sits at 28 and its homepage at 50, competing with each other. <span class="pill p-good">Addressed 08-02</span> — see the companion Site Explorer report: <code>/areas/oakridge/</code>'s H1 and title were rewritten to stop duplicating the homepage's, and the blog post now points readers at the area guide directly.</p>
+  </div>
+
+  <div class="callout">
+    <h3>T1 Oakridge and T2 Byron inventory: strong, not weak</h3>
+    <p>Both SERPs are wall-to-wall MLS inventory: realtor.ca, zolo.ca, royallepage.ca, zillow.com, rew.ca, redfin.ca and londonontariorealestate.com, which holds three of the top nine on Oakridge and two of the top eight on Byron. Every snippet carries a live property count and a price range.</p>
+    <p><span class="pill p-bad">Hard</span> These are not weak SERPs and this report will not pretend otherwise. What makes them winnable is link authority rather than format: the average result on "houses for sale oakridge london ontario" carries 0.7 backlinks from 0.4 referring domains. The incumbents win on having inventory, not on having links.</p>
+  </div>
+</section>
+
+<section>
+  <h2>7. What was cut, and why</h2>
+  <table>
+    <caption>Cut keywords, top 15 by volume. 30 named keywords cut in total.</caption>
+    <thead>
+      <tr><th>Keyword</th><th class="num">Volume / mo</th><th>Reason for cutting</th></tr>
+    </thead>
+    <tbody>
+      <tr><td class="primary">oakridge ford london ontario</td><td class="num">5,400</td><td>Car dealership sharing the neighbourhood name</td></tr>
+      <tr><td class="primary">sifton bog</td><td class="num">3,600</td><td>Nature reserve and trail query. Worth a mention on the Oakridge guide, not a page</td></tr>
+      <tr><td class="primary">byron optometry london ontario</td><td class="num">1,600</td><td>Optometry practice</td></tr>
+      <tr><td class="primary">metro byron london ontario</td><td class="num">1,000</td><td>Grocery store location</td></tr>
+      <tr><td class="primary">real estate lawyer london ontario <span class="na">(+5 variants)</span></td><td class="num">590</td><td>A different profession. Referral content at best</td></tr>
+      <tr><td class="primary">commercial real estate for sale london ontario <span class="na">(+3 variants)</span></td><td class="num">480</td><td>The site presents a residential practice. Reinstate if commercial listings are handled</td></tr>
+      <tr><td class="primary">hyde park london ontario</td><td class="num">480</td><td>Outside the stated Oakridge and West London service area</td></tr>
+      <tr><td class="primary">sutton group real estate london ontario</td><td class="num">390</td><td>Competitor brokerage brand</td></tr>
+      <tr><td class="primary">royal lepage real estate london ontario</td><td class="num">320</td><td>Competitor brokerage brand</td></tr>
+      <tr><td class="primary">byron restaurants london ontario <span class="na">(+1 variant)</span></td><td class="num">260</td><td>Restaurant listings</td></tr>
+      <tr><td class="primary">oakridge arena london ontario</td><td class="num">170</td><td>City recreation facility. Mention on the guide, not a page</td></tr>
+      <tr><td class="primary">oakridge animal clinic london ontario</td><td class="num">70</td><td>Veterinary practice</td></tr>
+      <tr><td class="primary">oakridge mall london ontario</td><td class="num">50</td><td>Shopping centre</td></tr>
+      <tr><td class="primary">oakridge pharmacy london ontario</td><td class="num">50</td><td>Pharmacy</td></tr>
+      <tr><td class="primary">oakridge presbyterian church london ontario</td><td class="num">40</td><td>Church</td></tr>
+    </tbody>
+  </table>
+  <p class="note">Also cut: walmart oakridge mall london ontario (30), oakridge walk in clinic london ontario and its hyphenated variant (30 each), oakridge park london ontario (30), byron united church london ontario (40), and oakridge secondary school (volume not available). Separately, 40 rows returned by the keyword ideas endpoint were discarded as out-of-market, covering Calgary, Winnipeg, Edmonton, Saskatoon, Halifax, Vancouver and similar. The endpoint interpreted the seeds broadly and returned national inventory terms rather than London ones.</p>
+  <p class="note">One judgement call worth naming: "sifton bog" at 3,600 searches is the highest-volume genuinely local term in the whole set, and the homepage already has a Sifton Bog section. It was cut because the intent is trail and nature information rather than property, and its yearly volume trend is minus 18 percent. That cut was made on intent and volume data, not on a SERP check.</p>
+</section>
+
+<section>
+  <h2>8. Build order — rewritten 2 August 2026</h2>
+  <p class="lede">The original build order was seven steps of "build this page," priced at the cost of a new URL each. With 12 of 15 clusters already live, the real order is shorter and mostly about fixing why existing pages are invisible, not writing new ones.</p>
+  <ol class="build">
+    <li>
+      <h3 style="color:var(--good);">✓ Done — Oakridge, Byron, Westmount area pages: stop looking like duplicates</h3>
+      <p>All three already had live inventory, price ranges and full guides. Their H1s and title tags didn't match real searcher phrasing and, for Oakridge specifically, duplicated the homepage's own H1 almost word for word. Reworded all three (and the shared West London/Whitehills template) to "Homes for Sale in [Area], London Ontario," and re-pointed the homepage's Oakridge CTA at the area page instead of the generic search tool.</p>
+      <p class="target">Covers 3,950 searches/mo (Oakridge + Byron + Westmount inventory and name terms combined).</p>
+    </li>
+    <li>
+      <h3 style="color:var(--good);">✓ Done — Cross-link the three neighbourhood comparison posts to their area guides</h3>
+      <p>The Oakridge-vs-Byron, Riverbend-vs-Byron, and Westmount-vs-West-London posts already linked to their area pages repeatedly, but their titles ran 93–103 characters with the site suffix and were truncating in the SERP. Shortened all three titles and added an explicit "already know which one you want? Read the full guide" line near the top of each.</p>
+      <p class="target">No single keyword — cleans up SERP presentation on ~4,900 searches/mo of comparison-intent queries.</p>
+    </li>
+    <li>
+      <h3 style="color:var(--good);">✓ Done — Link /blog/london-ontario-realtor/ from somewhere</h3>
+      <p>Existed since 20 July, zero internal links anywhere on the site. Added links from the homepage and footer. See the companion Site Explorer report for the full writeup.</p>
+      <p class="target">2,920 searches/mo.</p>
+    </li>
+    <li>
+      <h3>Figure out why /blog/london-ontario-neighbourhood-guide-2026/ is invisible despite being well-linked</h3>
+      <p>This is the one page on the site that does NOT fit the "just add internal links" pattern — it already has links from the footer and at least seven other posts, and still shows zero impressions for "london ontario neighbourhoods" in 90 days. Before writing a new page here, check its actual ranking position directly (not yet done) and consider whether the title's exact phrasing ("neighbourhood guide" vs. "neighbourhoods") or a genuine authority gap is the blocker.</p>
+      <p class="target">230 searches/mo. Needs a rankings check, not a rebuild — yet.</p>
+    </li>
+    <li>
+      <h3>Consolidate the monthly market posts into one evergreen /london-ontario-housing-market/ URL</h3>
+      <p>The content already exists — May, June and July 2026 updates plus a months-of-supply post and a weekly digest — but it's split across five URLs instead of concentrated on one that gets updated. A single RE/MAX agent blog already holds position 4 on this SERP, so a working broker can rank here. This is a real, sized content project: decide whether to fold the dated posts into one page or keep them as an archive linking to a current evergreen hub.</p>
+      <p class="target">530 searches/mo. SERP checked: moderate.</p>
+    </li>
+    <li>
+      <h3>Check why /home-value-estimate/ has never been crawled by Google</h3>
+      <p>Confirmed via Search Console: "URL is unknown to Google," despite being linked from the homepage and every area page and sitting in the sitemap. Cheapest possible fix on this entire list — request indexing for it directly in the Search Console UI (not available via API) and see if it gets picked up within a couple of weeks.</p>
+      <p class="target">Not a keyword volume play — a basic technical gap on a tool that should already be indexed.</p>
+    </li>
+    <li>
+      <h3>Then: a broader "moving to London Ontario" guide, citywide inventory</h3>
+      <p>The existing Toronto-specific moving guide doesn't fully cover the general "moving to/cost of living in London Ontario" intent (30–170/mo combined) — genuinely worth a page if there's time, but low urgency. The citywide inventory cluster at 29,500 stays deliberately last: with 13 referring domains, competing with realtor.ca and zolo.ca on "houses for sale london ontario" is not a twelve-month proposition, and the same effort spent fixing existing West London pages produces actual clients sooner.</p>
+      <p class="target">Combined ~600 searches/mo, plus 29,500 deferred.</p>
+    </li>
+  </ol>
+</section>
+
+<section>
+  <h2>The 3 things I'd do first — rewritten 2 August 2026</h2>
+  <ol class="actions">
+    <li>
+      <h3 style="color:var(--good);">✓ Shipped — Stop area pages looking like duplicates of anything else</h3>
+      <p>Oakridge, Byron, Westmount, West London and Whitehills area pages already had live inventory and full guides. What they lacked was an H1/title that matched real searcher phrasing and, for Oakridge, didn't collide with the homepage's own H1. Fixed across all of them in one template edit plus two per-area metaTitle updates.</p>
+      <p class="target">Covers T1–T4 and N1–N4, all already live. No new URLs.</p>
+    </li>
+    <li>
+      <h3 style="color:var(--good);">✓ Shipped — Give the realtor page and the comparison posts working internal links and title tags</h3>
+      <p>/blog/london-ontario-realtor/ had zero internal links; fixed. Three neighbourhood-comparison posts had SERP-truncating titles; shortened all three and added explicit pointers to the area guides they were already linking into piecemeal.</p>
+      <p class="target">Cluster C1, plus the T/N comparison posts. No new URLs.</p>
+    </li>
+    <li>
+      <h3>Not shipped yet — Consolidate the market-data posts, and find out why the neighbourhood hub and the home-value tool are invisible</h3>
+      <p>Three real, separate problems bundled as one next step because they share a theme: content or tooling that already exists but isn't earning visibility for reasons that need investigating rather than assuming. (1) Five dated market posts split a signal that one evergreen /london-ontario-housing-market/ page could hold — a competitor RE/MAX blog already ranks 4th here. (2) /blog/london-ontario-neighbourhood-guide-2026/ has real internal links and zero impressions — check its actual position before deciding what's wrong. (3) /home-value-estimate/ has never been crawled by Google at all despite being linked site-wide — request indexing for it directly in Search Console, the cheapest fix on this list.</p>
+      <p class="target">Clusters I1, I2, I4 combined — 530+ searches/mo, plus a free technical fix.</p>
+    </li>
+  </ol>
+</section>
+
+<footer>
+  <h2>Data sources &amp; method</h2>
+  <table>
+    <caption>DataForSEO endpoints called, 2 August 2026</caption>
+    <thead>
+      <tr><th>Endpoint</th><th>Parameters</th><th class="num">Rows returned</th></tr>
+    </thead>
+    <tbody>
+      <tr><td class="primary">dataforseo_labs_google_keyword_suggestions</td><td>seed "oakridge london ontario real estate", Canada, volume above 10</td><td class="num">2</td></tr>
+      <tr><td class="primary">dataforseo_labs_google_keyword_suggestions</td><td>seed "london ontario real estate", Canada, volume above 30</td><td class="num">30</td></tr>
+      <tr><td class="primary">dataforseo_labs_google_keyword_suggestions</td><td>seed "byron london ontario", Canada, volume above 20</td><td class="num">15</td></tr>
+      <tr><td class="primary">dataforseo_labs_google_keyword_ideas</td><td>4 seeds, Canada, volume above 20</td><td class="num">80</td></tr>
+      <tr><td class="primary">dataforseo_labs_google_keyword_overview</td><td>20 candidate keywords, Canada, en</td><td class="num">17 of 20</td></tr>
+      <tr><td class="primary">serp_organic_live_advanced</td><td>"homes for sale byron london ontario", London Ontario, depth 10</td><td class="num">10 organic</td></tr>
+      <tr><td class="primary">serp_organic_live_advanced</td><td>"london ontario neighbourhoods", London Ontario, depth 10</td><td class="num">7 organic</td></tr>
+      <tr><td class="primary">serp_organic_live_advanced</td><td>"london ontario housing market", London Ontario, depth 10</td><td class="num">9 organic</td></tr>
+    </tbody>
+  </table>
+  <p class="note">Two further SERPs, "houses for sale oakridge london ontario" and "oakridge london ontario", were pulled at London, Ontario on the same date during the preceding site analysis and are reused here rather than re-queried. That is five live SERP checks in total.</p>
+  <p class="note"><strong>Added 2 August 2026, after the original pull:</strong> a full codebase search (grep/find across <code>src/</code> and <code>dist/</code>) for every slug proposed in Section 5, plus a Google Search Console <code>batch_url_inspection</code> and 90-day <code>search_analytics</code> pull, to check the "build this page" recommendations against what's actually live. That check is what the corrections throughout this report are based on — see the callout after Section 1.</p>
+
+  <h3>What was unavailable, and why</h3>
+  <ul class="plain">
+    <li><strong>Keyword Difficulty on most local terms.</strong> The API returns difficulty only where it holds a value. It was absent for 24 of the 55 kept keywords, including every neighbourhood inventory term. Those cells read "not available" rather than carrying an estimate. Competition level and average referring domains for the SERP were used instead where difficulty was missing.</li>
+    <li><strong>Three requested keywords returned no data at all.</strong> "sell my house london ontario", "home evaluation london ontario" and "sifton bog london ontario" were submitted to the keyword overview endpoint and omitted from the response, meaning the database holds no record of them. "sifton bog" without the city qualifier does return data, at 3,600.</li>
+    <li><strong>Three more returned no volume.</strong> "how much is my house worth london ontario", "west london ontario homes for sale" and "oakridge secondary school" came back with an intent label but no keyword_info block, so volume and difficulty are printed as not available.</li>
+    <li><strong>City-level volume is not available.</strong> The Labs keyword endpoints accept country-level locations only, so every volume figure here is Canada-wide. For terms containing "london ontario" the practical difference is small, but the citywide figures should be read as national totals for those phrases. The live SERP calls were run at London, Ontario.</li>
+    <li><strong>Ten clusters have no SERP check.</strong> Only five SERPs were pulled. No weakness claim is made for the other ten, and they are marked "not checked" in the cluster table rather than guessed at.</li>
+  </ul>
+
+  <h3>Confidence notes</h3>
+  <ul class="plain">
+    <li>Build step 6, the realtor service page, is labelled <strong>low confidence on timing</strong>. The keyword is achievable at difficulty 16, but the domain currently holds 13 referring domains and two ranking keywords. What would raise confidence: the first five pages indexed and holding positions, plus a handful of local links.</li>
+    <li>The de-duplicated volume figures depend on the judgement that identical month-by-month histories across phrasing variants indicate one shared underlying volume. DataForSEO does not state this explicitly. If that reading is wrong, the totals here are conservative rather than inflated.</li>
+    <li>The seed you chose, "oakridge london ontario real estate", is itself a weak term at 20 searches per month with a yearly trend of minus 80 percent. The expansion above deliberately moves off it toward the phrasings that carry volume.</li>
+  </ul>
+</footer>
+
+</div>
+</body>
+</html>
