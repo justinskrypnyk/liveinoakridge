@@ -1437,7 +1437,7 @@ export const BLOG_POSTS: BlogPost[] = [
     category: 'Buyer Guides',
     author: 'Justin Skrypnyk',
     readTime: '6 min read',
-    image: '/images/justin-skrypnyk-realtor-london-ontario.webp',
+    image: '/images/justin-skrypnyk-realtor-banner.webp',
     imageAlt: 'Justin Skrypnyk, London Ontario realtor, standing in a West London neighbourhood',
     content: `
       <p>"Find a good realtor" is easy advice and hard to act on. Every listing has an agent's name on it, every agent's website says they know the market, and from the outside it's genuinely difficult to tell who's actually going to fight for your price versus who's going to list your home and hope. Here's what actually separates the two, and what to ask before you hire anyone in London Ontario.</p>
