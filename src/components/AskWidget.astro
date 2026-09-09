@@ -287,6 +287,14 @@ if (persona && PERSONA_ENTRIES[persona]) {
       .sort((a, b) => b.score - a.score)
       .slice(0, 5);
 
+    // Fires once per debounced search (the input listener below already
+    // waits 200ms after typing stops) -- query text is short/low-PII by
+    // nature here (real estate questions, not personal info) and is the
+    // one signal that actually tells Justin what content gap a zero-result
+    // search revealed, same spirit as the content-gap audits already done
+    // on /search's own query data.
+    track('chat_faq_search', { query: query.slice(0, 80), result_count: ranked.length });
+
     if (ranked.length === 0) {
       results.innerHTML = `<p class="text-sm text-slate leading-relaxed py-4">Couldn't find a good match for that. <a href="/contact/" class="text-gold-deep underline">Ask Justin directly</a> — he'll get back to you personally.</p>`;
       return;
@@ -302,6 +310,12 @@ if (persona && PERSONA_ENTRIES[persona]) {
         </a>`
       )
       .join('');
+
+    results.querySelectorAll('a').forEach((a, i) => {
+      a.addEventListener('click', () => {
+        track('chat_faq_result_click', { query: query.slice(0, 80), question: ranked[i].entry.question });
+      });
+    });
   }
 
   // ---- Scripted buyer/seller journey ----------------------------------
