@@ -150,6 +150,7 @@ const METRICS = [
   'median_bathrooms',
   'pct_detached',
   'delisted_count',
+  'months_of_inventory',
 ];
 
 export default async (req) => {
@@ -410,6 +411,14 @@ export default async (req) => {
       median_bathrooms: median(baths),
       pct_detached: listings.length > 0 ? detachedCount / listings.length : null,
       delisted_count: delistedCount,
+      // Months of inventory (months of supply): at the current sales pace,
+      // how long to sell everything active. Uses the 90-day rolling
+      // `solds` count above (not the calendar-month figure) so this needs
+      // no separate pace-adjustment for a mid-month vs. month-end capture
+      // -- both read off the same rolling window. Null when there have
+      // been zero sales in the last 90 days (undefined pace), same
+      // convention as avg_sale_to_list_ratio.
+      months_of_inventory: solds.length > 0 ? Math.round((listings.length / (solds.length / 3)) * 10) / 10 : null,
     });
   }
 
@@ -428,7 +437,7 @@ export default async (req) => {
   // this cadence.
   const { data: history } = await supabase
     .from('market_map_snapshots')
-    .select('area_slug, capture_date, median_list_price, active_count, new_listings_count, avg_days_on_market, price_per_sqft, median_sold_price, units_sold, avg_sale_to_list_ratio, median_sold_price_month, units_sold_month, avg_sale_to_list_ratio_month, units_firmed_month, median_bedrooms, median_bathrooms, pct_detached, delisted_count')
+    .select('area_slug, capture_date, median_list_price, active_count, new_listings_count, avg_days_on_market, price_per_sqft, median_sold_price, units_sold, avg_sale_to_list_ratio, median_sold_price_month, units_sold_month, avg_sale_to_list_ratio_month, units_firmed_month, median_bedrooms, median_bathrooms, pct_detached, delisted_count, months_of_inventory')
     .eq('period_type', kind)
     .lt('capture_date', captureDate)
     .order('capture_date', { ascending: false });

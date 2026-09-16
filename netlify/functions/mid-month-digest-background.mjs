@@ -84,12 +84,27 @@ const LIGHT_METRICS = [
   { key: 'active_count', label: 'Active Listings', fmt: (n) => (n == null ? 'n/a' : String(n)) },
   { key: 'median_sold_price_month', label: 'Med. Sale Price', fmt: fmtPrice },
   { key: 'avg_days_on_market', label: 'Days on Market', fmt: (n) => (n == null ? 'n/a' : String(Math.round(n))) },
+  // Months of inventory is 90-day-rolling based (see heat-map-snapshot-
+  // background.mjs), NOT subject to the "half a month is too thin a
+  // sample" caveat the other medians above carry -- genuinely stable even
+  // mid-month.
+  { key: 'months_of_inventory', label: 'Months of Inventory', fmt: (n) => (n == null ? 'n/a' : `${n.toFixed(1)} mo`) },
 ];
 const METRIC_LABELS = Object.fromEntries(LIGHT_METRICS.map((m) => [m.key, m.label]));
 
 function fmtPct(n) {
   if (n == null) return 'n/a';
   return `${n > 0 ? '+' : ''}${(n * 100).toFixed(1)}%`;
+}
+
+// Standard real-estate read of months-of-inventory -- under 3 months is
+// generally a seller's market, 3-6 balanced, 6+ a buyer's market. Same
+// thresholds as src/lib/market-map-summary.ts's per-neighbourhood version
+// on the public /market-map/ page.
+function moiTierLabel(moi) {
+  if (moi < 3) return "seller's market";
+  if (moi <= 6) return 'balanced market';
+  return "buyer's market";
 }
 
 function fmtPrice(n) {
@@ -179,17 +194,31 @@ async function getCitywideStats(supabase, monthStart, monthEnd, periodType, capt
     if (!page || page.length < PAGE_SIZE) break;
   }
 
+  // Citywide months of inventory: active_count / (90-day rolling sold
+  // count / 3) -- same basis as the per-neighbourhood months_of_inventory
+  // column, genuinely stable even on a mid-month (partial-month) capture
+  // since it never touches the current month's own sold count.
+  const ninetyDaysAgoStr = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  const { count: rolling90dSoldCount, error: rollingError } = await supabase
+    .from('vow_sold_listings')
+    .select('*', { count: 'exact', head: true })
+    .eq('is_lease', false)
+    .gte('close_price', MIN_PLAUSIBLE_SALE_PRICE)
+    .gte('close_date', ninetyDaysAgoStr);
+  if (rollingError) console.error('mid-month-digest: citywide 90-day rolling count failed:', rollingError.message);
+
   const current = {
     activeCount: active.length,
     medianListPrice: median(listPrices),
     avgDaysOnMarket: average(dom),
     medianSoldPrice: soldPrices.length > 0 ? median(soldPrices) : null,
     unitsSold: soldPrices.length,
+    monthsOfInventory: rolling90dSoldCount ? Math.round((active.length / (rolling90dSoldCount / 3)) * 10) / 10 : null,
   };
 
   const { data: prevRows, error: prevError } = await supabase
     .from('citywide_snapshots')
-    .select('median_list_price, avg_days_on_market, median_sold_price')
+    .select('median_list_price, avg_days_on_market, median_sold_price, months_of_inventory')
     .eq('period_type', periodType)
     .lt('capture_date', captureDate)
     .order('capture_date', { ascending: false })
@@ -207,6 +236,7 @@ async function getCitywideStats(supabase, monthStart, monthEnd, periodType, capt
       median_sold_price: current.medianSoldPrice,
       units_sold: current.unitsSold,
       active_count: current.activeCount,
+      months_of_inventory: current.monthsOfInventory,
     }, { onConflict: 'period_type,capture_date' });
   if (upsertError) console.error('mid-month-digest: citywide_snapshots upsert failed:', upsertError.message);
 
@@ -215,6 +245,7 @@ async function getCitywideStats(supabase, monthStart, monthEnd, periodType, capt
     momMedianSoldPrice: prev ? pctChange(prev.median_sold_price, current.medianSoldPrice) : null,
     momMedianListPrice: prev ? pctChange(prev.median_list_price, current.medianListPrice) : null,
     momAvgDaysOnMarket: prev ? pctChange(prev.avg_days_on_market, current.avgDaysOnMarket) : null,
+    momMonthsOfInventory: prev ? pctChange(prev.months_of_inventory, current.monthsOfInventory) : null,
   };
 }
 
@@ -345,6 +376,7 @@ export default async () => {
         <td style="padding:4px 10px;">${r.units_sold_month ?? 'n/a'}</td>
         <td style="padding:4px 10px;">${fmtPrice(r.median_sold_price_month)}</td>
         <td style="padding:4px 10px;">${r.avg_days_on_market != null ? Math.round(r.avg_days_on_market) : 'n/a'}</td>
+        <td style="padding:4px 10px;">${r.months_of_inventory != null ? `${r.months_of_inventory.toFixed(1)} mo` : 'n/a'}</td>
       </tr>`;
     }).join('');
 
@@ -355,6 +387,7 @@ export default async () => {
 
       <h3>🏙️ London — Citywide</h3>
       <p>Med. Sale Price: ${fmtPrice(citywide.medianSoldPrice)} (${fmtPct(citywide.momMedianSoldPrice)} vs. last month's mid-point, ${citywide.unitsSold} sold) · Med. List Price: ${fmtPrice(citywide.medianListPrice)} (${fmtPct(citywide.momMedianListPrice)}) · Med. Days on Market: ${citywide.avgDaysOnMarket ?? 'n/a'} (${fmtPct(citywide.momAvgDaysOnMarket)})</p>
+      <p>Months of Inventory: ${citywide.monthsOfInventory != null ? `${citywide.monthsOfInventory.toFixed(1)} mo` : 'n/a'} (${fmtPct(citywide.momMonthsOfInventory)})${citywide.monthsOfInventory != null ? ` -- ${moiTierLabel(citywide.monthsOfInventory)}` : ''}</p>
 
       <h3>🔔 Notable Moves — Your 7 Areas (10%+ vs. last month's mid-point)</h3>
       ${notableServed.length > 0 ? `<ul>${notableServed.map(notableLineHtml).join('')}</ul>` : '<p style="color:#888;">None this period (or not enough history yet to compute a % change).</p>'}
@@ -363,7 +396,7 @@ export default async () => {
       ${notableOther.length > 0 ? `<ul>${notableOther.slice(0, 15).map(notableLineHtml).join('')}</ul>` : '<p style="color:#888;">None this period.</p>'}
 
       <table style="border-collapse:collapse;font-size:13px;">
-        <tr style="font-weight:bold;border-bottom:1px solid #ccc;"><td style="padding:4px 10px;">Neighbourhood</td><td style="padding:4px 10px;">Active</td><td style="padding:4px 10px;">New</td><td style="padding:4px 10px;">Sold So Far</td><td style="padding:4px 10px;">Med. Sale Price</td><td style="padding:4px 10px;">Days on Market</td></tr>
+        <tr style="font-weight:bold;border-bottom:1px solid #ccc;"><td style="padding:4px 10px;">Neighbourhood</td><td style="padding:4px 10px;">Active</td><td style="padding:4px 10px;">New</td><td style="padding:4px 10px;">Sold So Far</td><td style="padding:4px 10px;">Med. Sale Price</td><td style="padding:4px 10px;">Days on Market</td><td style="padding:4px 10px;">Months of Inventory</td></tr>
         ${tableRows}
       </table>
       <p>Bold = your 7 served areas. Med. Sale Price/Days on Market are month-to-date per neighbourhood -- a small sample for a lower-volume area, treat as directional rather than exact until the full month-end numbers land on the 1st.</p>

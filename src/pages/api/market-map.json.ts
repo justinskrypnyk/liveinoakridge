@@ -67,6 +67,7 @@ export const GET: APIRoute = async ({ request }) => {
       median_bathrooms: row.median_bathrooms,
       pct_detached: row.pct_detached,
       delisted_count: row.delisted_count,
+      months_of_inventory: row.months_of_inventory,
     };
   }
 

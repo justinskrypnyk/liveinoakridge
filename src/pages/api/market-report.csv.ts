@@ -23,6 +23,7 @@ const COLUMNS = [
   'median_list_price', 'active_count', 'new_listings_count', 'avg_days_on_market',
   'median_sold_price', 'units_sold', 'avg_sale_to_list_ratio',
   'price_per_sqft', 'median_bedrooms', 'median_bathrooms', 'pct_detached', 'delisted_count',
+  'months_of_inventory',
 ] as const;
 
 function toCsv(rows: Record<string, unknown>[]): string {

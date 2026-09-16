@@ -26,6 +26,7 @@ export interface MarketMapSnapshotRow {
   median_bathrooms: number | null;
   pct_detached: number | null;
   delisted_count: number | null;
+  months_of_inventory: number | null;
 }
 
 export interface MarketMapChangeRow {

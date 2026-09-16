@@ -67,6 +67,7 @@ const snapshotsBySlug = Object.fromEntries(snapshots.map((s) => [s.area_slug, s]
     { key: 'median_sold_price', label: 'Median Sold Price', format: 'currency', available: true },
     { key: 'units_sold', label: 'Units Sold', format: 'count', available: true },
     { key: 'avg_sale_to_list_ratio', label: 'Sale-to-List Ratio', format: 'percent', available: true },
+    { key: 'months_of_inventory', label: 'Months of Inventory', format: 'months', available: true },
   ];
 
   // Brand-hue (site's --color-gold token) sequential ramp, light->dark,
@@ -87,6 +88,7 @@ const snapshotsBySlug = Object.fromEntries(snapshots.map((s) => [s.area_slug, s]
       return new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD', maximumFractionDigits: 0 }).format(value);
     }
     if (metric.format === 'days') return `${Math.round(value)} days`;
+    if (metric.format === 'months') return `${value.toFixed(1)} mo`;
     if (metric.format === 'percent') return `${(value * 100).toFixed(1)}%`;
     if (metric.format === 'beds') return `${Math.round(value)} bd`;
     if (metric.format === 'baths') return `${Math.round(value)} ba`;

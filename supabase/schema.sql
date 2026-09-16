@@ -63,6 +63,13 @@ create table if not exists market_map_snapshots (
   pct_detached numeric,
   delisted_count integer,
 
+  -- Months of inventory (months of supply / absorption rate): active_count
+  -- / (units_sold / 3) -- units_sold is the 90-day rolling sold count
+  -- above, not units_sold_month, for the same "twice-monthly capture is
+  -- too thin a window on its own" reason that column already exists. Null
+  -- when units_sold is 0. See migrations/006.
+  months_of_inventory numeric,
+
   created_at timestamptz not null default now(),
 
   unique (area_slug, capture_date, period_type)
@@ -106,6 +113,38 @@ create index if not exists market_map_changes_notable_idx
   where is_notable = true;
 
 alter table market_map_changes enable row level security;
+
+-- Citywide (all of London, no per-neighbourhood split) stats history --
+-- powers month-over-month % change on the citywide median sale price /
+-- median list price / days-on-market / months-of-inventory numbers shown
+-- in monthly-digest, mid-month-digest, and the monthly blog post. See
+-- migrations/005 and mid-month-digest-background.mjs's getCitywideStats
+-- comment for why this is its own table rather than a market_map_snapshots
+-- row (every other consumer of that table treats each row as a real
+-- neighbourhood polygon; a synthetic citywide row would leak into all of
+-- them as a phantom 40th neighbourhood).
+create table if not exists citywide_snapshots (
+  id bigint generated always as identity primary key,
+  period_type text not null check (period_type in ('mid-month', 'month-end')),
+  capture_date date not null,
+  captured_at timestamptz not null default now(),
+
+  median_list_price numeric,
+  avg_days_on_market numeric,
+  median_sold_price numeric,
+  units_sold integer,
+  active_count integer,
+  months_of_inventory numeric,
+
+  created_at timestamptz not null default now(),
+
+  unique (period_type, capture_date)
+);
+
+create index if not exists citywide_snapshots_capture_date_idx
+  on citywide_snapshots (capture_date desc);
+
+alter table citywide_snapshots enable row level security;
 
 -- Example "top 3 movers this month" query for the blog/GBP/social workflow:
 --

@@ -55,5 +55,16 @@ export function summarizeArea(s: MarketMapSnapshotRow): string {
     sentences.push(`${s.new_listings_count} new listing${s.new_listings_count === 1 ? '' : 's'} came on the market here this period.`);
   }
 
+  if (s.months_of_inventory != null) {
+    const moi = s.months_of_inventory.toFixed(1);
+    if (s.months_of_inventory < 3) {
+      sentences.push(`At the current sales pace, it would take about ${moi} months to sell through everything currently listed here -- a seller's market.`);
+    } else if (s.months_of_inventory <= 6) {
+      sentences.push(`At the current sales pace, it would take about ${moi} months to sell through everything currently listed here -- a fairly balanced market.`);
+    } else {
+      sentences.push(`At the current sales pace, it would take about ${moi} months to sell through everything currently listed here -- a buyer's market.`);
+    }
+  }
+
   return sentences.join(' ');
 }

@@ -91,6 +91,12 @@ const REPORT_METRICS = [
   { key: 'median_bathrooms', label: 'Med. Bathrooms', fmt: (n) => (n == null ? 'n/a' : String(n)) },
   { key: 'pct_detached', label: '% Detached', fmt: (n) => (n == null ? 'n/a' : `${(n * 100).toFixed(0)}%`) },
   { key: 'delisted_count', label: 'Left Market', fmt: (n) => (n == null ? 'n/a' : String(n)) },
+  // Months of inventory (months of supply): active_count / (units_sold/3),
+  // the 90-day rolling count -- same buyer's/seller's-market signal shown
+  // on /market-map/ and in the citywide section below. See
+  // heat-map-snapshot-background.mjs's own comment for why it's 90-day
+  // rolling rather than this month's units_sold_month.
+  { key: 'months_of_inventory', label: 'Months of Inventory', fmt: (n) => (n == null ? 'n/a' : `${n.toFixed(1)} mo`) },
 ];
 
 const METRIC_LABELS = Object.fromEntries(REPORT_METRICS.map((m) => [m.key, m.label]));
@@ -103,6 +109,16 @@ function fmtPrice(n) {
 function fmtPct(n) {
   if (n == null) return 'n/a';
   return `${n > 0 ? '+' : ''}${(n * 100).toFixed(1)}%`;
+}
+
+// Standard real-estate read of months-of-inventory -- under 3 months is
+// generally a seller's market (demand outpacing supply), 3-6 balanced,
+// 6+ a buyer's market. Same thresholds as src/lib/market-map-summary.ts's
+// per-neighbourhood version on the public /market-map/ page.
+function moiTierLabel(moi) {
+  if (moi < 3) return "seller's market";
+  if (moi <= 6) return 'balanced market';
+  return "buyer's market";
 }
 
 function esc(s) {
@@ -466,17 +482,33 @@ async function getCitywideStats(supabase, monthStart, monthEnd, periodType, capt
     if (!page || page.length < PAGE_SIZE) break;
   }
 
+  // Citywide months of inventory: active_count / (90-day rolling sold
+  // count / 3) -- same basis as the per-neighbourhood months_of_inventory
+  // column (see heat-map-snapshot-background.mjs), so this needs no
+  // separate pace-adjustment for the reported month's date range above.
+  // count:'exact', head:true returns a row count via Postgres COUNT()
+  // without the default 1,000-row return cap applying at all.
+  const ninetyDaysAgoStr = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  const { count: rolling90dSoldCount, error: rollingError } = await supabase
+    .from('vow_sold_listings')
+    .select('*', { count: 'exact', head: true })
+    .eq('is_lease', false)
+    .gte('close_price', MIN_PLAUSIBLE_SALE_PRICE)
+    .gte('close_date', ninetyDaysAgoStr);
+  if (rollingError) console.error('monthly-digest: citywide 90-day rolling count failed:', rollingError.message);
+
   const current = {
     activeCount: active.length,
     medianListPrice: median(listPrices),
     avgDaysOnMarket: average(dom),
     medianSoldPrice: soldPrices.length > 0 ? median(soldPrices) : null,
     unitsSold: soldPrices.length,
+    monthsOfInventory: rolling90dSoldCount ? Math.round((active.length / (rolling90dSoldCount / 3)) * 10) / 10 : null,
   };
 
   const { data: prevRows, error: prevError } = await supabase
     .from('citywide_snapshots')
-    .select('median_list_price, avg_days_on_market, median_sold_price')
+    .select('median_list_price, avg_days_on_market, median_sold_price, months_of_inventory')
     .eq('period_type', periodType)
     .lt('capture_date', captureDate)
     .order('capture_date', { ascending: false })
@@ -494,6 +526,7 @@ async function getCitywideStats(supabase, monthStart, monthEnd, periodType, capt
       median_sold_price: current.medianSoldPrice,
       units_sold: current.unitsSold,
       active_count: current.activeCount,
+      months_of_inventory: current.monthsOfInventory,
     }, { onConflict: 'period_type,capture_date' });
   if (upsertError) console.error('monthly-digest: citywide_snapshots upsert failed:', upsertError.message);
 
@@ -502,6 +535,7 @@ async function getCitywideStats(supabase, monthStart, monthEnd, periodType, capt
     momMedianSoldPrice: prev ? pctChange(prev.median_sold_price, current.medianSoldPrice) : null,
     momMedianListPrice: prev ? pctChange(prev.median_list_price, current.medianListPrice) : null,
     momAvgDaysOnMarket: prev ? pctChange(prev.avg_days_on_market, current.avgDaysOnMarket) : null,
+    momMonthsOfInventory: prev ? pctChange(prev.months_of_inventory, current.monthsOfInventory) : null,
   };
 }
 
@@ -896,6 +930,7 @@ export default async () => {
 
     <h3>🏙️ London — Citywide</h3>
     <p>Med. Sale Price: ${fmtPrice(citywide.medianSoldPrice)} (${fmtPct(citywide.momMedianSoldPrice)} MoM, ${citywide.unitsSold} sold) · Med. List Price: ${fmtPrice(citywide.medianListPrice)} (${fmtPct(citywide.momMedianListPrice)} MoM) · Med. Days on Market: ${citywide.avgDaysOnMarket ?? 'n/a'} (${fmtPct(citywide.momAvgDaysOnMarket)} MoM)</p>
+    <p>Months of Inventory: ${citywide.monthsOfInventory != null ? `${citywide.monthsOfInventory.toFixed(1)} mo` : 'n/a'} (${fmtPct(citywide.momMonthsOfInventory)} MoM)${citywide.monthsOfInventory != null ? ` -- ${moiTierLabel(citywide.monthsOfInventory)}` : ''}</p>
 
     <h3>🔔 Notable Moves — Your 7 Areas (10%+ month-over-month)</h3>
     ${notableServed.length > 0 ? `<ul>${notableServed.map(notableLineHtml).join('')}</ul>` : '<p style="color:#888;">None this period (or not enough history yet to compute a % change).</p>'}

@@ -77,6 +77,7 @@ const REPORT_METRICS = [
   { key: 'avg_days_on_market', label: 'days on market', shortLabel: 'Days on Market', fmt: (n) => (n == null ? 'n/a' : String(Math.round(n))) },
   { key: 'avg_sale_to_list_ratio_month', label: 'sale-to-list ratio', shortLabel: 'Sale-to-List', fmt: (n) => (n == null ? 'n/a' : `${(n * 100).toFixed(1)}%`) },
   { key: 'new_listings_count', label: 'new listings', shortLabel: 'New Listings', fmt: (n) => (n == null ? 'n/a' : String(n)) },
+  { key: 'months_of_inventory', label: 'months of inventory', shortLabel: 'Months of Inventory', fmt: (n) => (n == null ? 'n/a' : `${n.toFixed(1)} mo`) },
 ];
 const METRIC_BY_KEY = Object.fromEntries(REPORT_METRICS.map((m) => [m.key, m]));
 
@@ -87,6 +88,16 @@ function fmtPrice(n) {
 function fmtPct(n) {
   if (n == null) return 'n/a';
   return `${n > 0 ? '+' : ''}${(n * 100).toFixed(1)}%`;
+}
+
+// Standard real-estate read of months-of-inventory -- under 3 months is
+// generally a seller's market, 3-6 balanced, 6+ a buyer's market. Same
+// thresholds as src/lib/market-map-summary.ts's per-neighbourhood version
+// on the public /market-map/ page.
+function moiTierLabel(moi) {
+  if (moi < 3) return "seller's market";
+  if (moi <= 6) return 'balanced market';
+  return "buyer's market";
 }
 function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -596,17 +607,30 @@ async function getCitywideStats(supabase, monthStart, monthEnd, periodType, capt
     if (!page || page.length < PAGE_SIZE) break;
   }
 
+  // Citywide months of inventory: active_count / (90-day rolling sold
+  // count / 3) -- same basis as the per-neighbourhood months_of_inventory
+  // column (see heat-map-snapshot-background.mjs).
+  const ninetyDaysAgoStr = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  const { count: rolling90dSoldCount, error: rollingError } = await supabase
+    .from('vow_sold_listings')
+    .select('*', { count: 'exact', head: true })
+    .eq('is_lease', false)
+    .gte('close_price', MIN_PLAUSIBLE_SALE_PRICE)
+    .gte('close_date', ninetyDaysAgoStr);
+  if (rollingError) console.error('monthly-blog-post: citywide 90-day rolling count failed:', rollingError.message);
+
   const current = {
     activeCount: active.length,
     medianListPrice: median(listPrices),
     avgDaysOnMarket: roundedAverage(dom),
     medianSoldPrice: soldPrices.length > 0 ? median(soldPrices) : null,
     unitsSold: soldPrices.length,
+    monthsOfInventory: rolling90dSoldCount ? Math.round((active.length / (rolling90dSoldCount / 3)) * 10) / 10 : null,
   };
 
   const { data: prevRows, error: prevError } = await supabase
     .from('citywide_snapshots')
-    .select('median_list_price, avg_days_on_market, median_sold_price')
+    .select('median_list_price, avg_days_on_market, median_sold_price, months_of_inventory')
     .eq('period_type', periodType)
     .lt('capture_date', captureDate)
     .order('capture_date', { ascending: false })
@@ -624,6 +648,7 @@ async function getCitywideStats(supabase, monthStart, monthEnd, periodType, capt
       median_sold_price: current.medianSoldPrice,
       units_sold: current.unitsSold,
       active_count: current.activeCount,
+      months_of_inventory: current.monthsOfInventory,
     }, { onConflict: 'period_type,capture_date' });
   if (upsertError) console.error('monthly-blog-post: citywide_snapshots upsert failed:', upsertError.message);
 
@@ -632,6 +657,7 @@ async function getCitywideStats(supabase, monthStart, monthEnd, periodType, capt
     momMedianSoldPrice: prev ? pctChange(prev.median_sold_price, current.medianSoldPrice) : null,
     momMedianListPrice: prev ? pctChange(prev.median_list_price, current.medianListPrice) : null,
     momAvgDaysOnMarket: prev ? pctChange(prev.avg_days_on_market, current.avgDaysOnMarket) : null,
+    momMonthsOfInventory: prev ? pctChange(prev.months_of_inventory, current.monthsOfInventory) : null,
   };
 }
 
@@ -771,6 +797,7 @@ export default async (req) => {
         <td>${r.units_sold_month ?? 'n/a'}</td>
         <td>${fmtPrice(r.median_sold_price_month)}</td>
         <td>${fmtPct(priceChange?.mom_pct_change)}</td>
+        <td>${r.months_of_inventory != null ? `${r.months_of_inventory.toFixed(1)} mo` : 'n/a'}</td>
       </tr>`;
     }).join('');
 
@@ -802,7 +829,7 @@ export default async (req) => {
     const oakridgePriceChange = oakridgeRow?.changes.median_sold_price_month;
     const oakridgeHtml = oakridgeRow ? `
       <h2>How Did Oakridge Perform in ${esc(monthLabel)}?</h2>
-      <p>${oakridgeRow.units_sold_month ?? 'n/a'} homes sold in Oakridge in ${esc(monthLabel)} at a median price of ${fmtPrice(oakridgeRow.median_sold_price_month)}${oakridgePriceChange?.mom_pct_change != null ? ` (${fmtPct(oakridgePriceChange.mom_pct_change)} month-over-month)` : ''}.${oakridgeRow.avg_sale_to_list_ratio_month != null ? ` The average sale-to-list ratio came in at ${(oakridgeRow.avg_sale_to_list_ratio_month * 100).toFixed(1)}%.` : ''} For a closer look at the neighbourhood itself, see our <a href="/areas/oakridge/">Oakridge neighbourhood guide</a>.</p>
+      <p>${oakridgeRow.units_sold_month ?? 'n/a'} homes sold in Oakridge in ${esc(monthLabel)} at a median price of ${fmtPrice(oakridgeRow.median_sold_price_month)}${oakridgePriceChange?.mom_pct_change != null ? ` (${fmtPct(oakridgePriceChange.mom_pct_change)} month-over-month)` : ''}.${oakridgeRow.avg_sale_to_list_ratio_month != null ? ` The average sale-to-list ratio came in at ${(oakridgeRow.avg_sale_to_list_ratio_month * 100).toFixed(1)}%.` : ''}${oakridgeRow.months_of_inventory != null ? ` At the current sales pace, Oakridge is carrying about ${oakridgeRow.months_of_inventory.toFixed(1)} months of inventory -- a ${moiTierLabel(oakridgeRow.months_of_inventory)}.` : ''} For a closer look at the neighbourhood itself, see our <a href="/areas/oakridge/">Oakridge neighbourhood guide</a>.</p>
     ` : '';
 
     // ---- One area outside our usual seven, if its data earns a mention --
@@ -852,13 +879,13 @@ export default async (req) => {
       <p>${introSentence}</p>
 
       <h2>How Did London Ontario's Housing Market Perform in ${esc(monthLabel)}?</h2>
-      <p>${totalSold} homes sold citywide, with ${totalNewListings} new listings coming onto the market across all 39 mapped neighbourhoods. Citywide, the median sale price was ${fmtPrice(citywide.medianSoldPrice)}${citywide.momMedianSoldPrice != null ? ` (${fmtPct(citywide.momMedianSoldPrice)} month-over-month)` : ''}, the median list price sat at ${fmtPrice(citywide.medianListPrice)}${citywide.momMedianListPrice != null ? ` (${fmtPct(citywide.momMedianListPrice)} month-over-month)` : ''}, and homes averaged ${citywide.avgDaysOnMarket ?? 'n/a'} days on market${citywide.momAvgDaysOnMarket != null ? ` (${fmtPct(citywide.momAvgDaysOnMarket)} month-over-month)` : ''}.</p>
+      <p>${totalSold} homes sold citywide, with ${totalNewListings} new listings coming onto the market across all 39 mapped neighbourhoods. Citywide, the median sale price was ${fmtPrice(citywide.medianSoldPrice)}${citywide.momMedianSoldPrice != null ? ` (${fmtPct(citywide.momMedianSoldPrice)} month-over-month)` : ''}, the median list price sat at ${fmtPrice(citywide.medianListPrice)}${citywide.momMedianListPrice != null ? ` (${fmtPct(citywide.momMedianListPrice)} month-over-month)` : ''}, and homes averaged ${citywide.avgDaysOnMarket ?? 'n/a'} days on market${citywide.momAvgDaysOnMarket != null ? ` (${fmtPct(citywide.momAvgDaysOnMarket)} month-over-month)` : ''}.${citywide.monthsOfInventory != null ? ` At the current sales pace, London is carrying about ${citywide.monthsOfInventory.toFixed(1)} months of inventory${citywide.momMonthsOfInventory != null ? ` (${fmtPct(citywide.momMonthsOfInventory)} month-over-month)` : ''} -- a ${moiTierLabel(citywide.monthsOfInventory)}.` : ''}</p>
 
       ${oakridgeHtml}
 
       <h2>How Are West London's Neighbourhoods Comparing This Month?</h2>
       <table>
-        <thead><tr><th>Neighbourhood</th><th>Homes Sold</th><th>Median Price</th><th>Month-over-Month</th></tr></thead>
+        <thead><tr><th>Neighbourhood</th><th>Homes Sold</th><th>Median Price</th><th>Month-over-Month</th><th>Months of Inventory</th></tr></thead>
         <tbody>${servedTableRows}</tbody>
       </table>
       <ul>${areaNarratives}</ul>
