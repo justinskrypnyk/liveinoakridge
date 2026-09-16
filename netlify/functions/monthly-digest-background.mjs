@@ -40,6 +40,8 @@ import { fileURLToPath } from 'node:url';
 import os from 'node:os';
 import path from 'node:path';
 
+const DDF_ACCESS_TOKEN = process.env.DDF_ACCESS_TOKEN;
+const DDF_API_BASE_URL = process.env.DDF_API_BASE_URL;
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
@@ -389,6 +391,79 @@ async function medianSoldPriceForCity(supabase, exactCityName, monthStart, month
   }
 }
 
+function average(numbers) {
+  if (numbers.length === 0) return null;
+  return Math.round(numbers.reduce((sum, n) => sum + n, 0) / numbers.length);
+}
+
+function daysSince(timestamp) {
+  const listed = new Date(timestamp).getTime();
+  if (Number.isNaN(listed)) return null;
+  return Math.max(0, Math.floor((Date.now() - listed) / (1000 * 60 * 60 * 24)));
+}
+
+async function odataGet(resource, params) {
+  const url = new URL(`${DDF_API_BASE_URL}${resource}`);
+  for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
+  const res = await fetch(url, { headers: { Authorization: `Bearer ${DDF_ACCESS_TOKEN}`, Accept: 'application/json' } });
+  if (!res.ok) throw new Error(`${resource} -> HTTP ${res.status}: ${await res.text().catch(() => '')}`);
+  return res.json();
+}
+
+// Citywide (all of London, no per-neighbourhood split, so no geocoding
+// needed at all) median list price + days on market from a live DDF pull,
+// plus median sold price for the reported month from vow_sold_listings.
+// Per Justin's ask 2026-09-16: the same 3 headline numbers REPORT_METRICS
+// shows per neighbourhood, but for the city as a whole. Computed live
+// rather than sourced from market_map_snapshots -- that table is
+// per-neighbourhood only, and every one of its other consumers (the public
+// /market-map/ page, the Forest City Homes JSON bridge, the CSV export,
+// market-update-mailout) treats every row in it as a real neighbourhood
+// polygon, so a synthetic "citywide" row there would leak into all of
+// those as a phantom 40th neighbourhood. Kept out of it entirely instead.
+async function getCitywideStats(supabase, monthStart, monthEnd) {
+  const data = await odataGet('Property', {
+    $filter: `contains(UnparsedAddress,'London')`,
+    $select: 'ListPrice,StandardStatus,PropertyType,TransactionType,OriginalEntryTimestamp',
+    $top: '5000',
+  });
+  const active = (data.value || []).filter(
+    (l) => l.StandardStatus === 'Active' && l.PropertyType !== 'Commercial' && l.TransactionType !== 'For Lease'
+  );
+  const listPrices = active.map((l) => Number(l.ListPrice)).filter((n) => n > 0);
+  const dom = active.map((l) => daysSince(l.OriginalEntryTimestamp)).filter((n) => n !== null);
+
+  // Paginated explicitly -- Supabase's default .select() caps at 1,000 rows
+  // with no error (see heat-map-snapshot-background.mjs's own comment on
+  // this exact bug, caught 2026-08).
+  const soldPrices = [];
+  const PAGE_SIZE = 1000;
+  for (let from = 0; ; from += PAGE_SIZE) {
+    const { data: page, error } = await supabase
+      .from('vow_sold_listings')
+      .select('close_price')
+      .eq('is_lease', false)
+      .gte('close_price', MIN_PLAUSIBLE_SALE_PRICE)
+      .gte('close_date', monthStart)
+      .lte('close_date', monthEnd)
+      .range(from, from + PAGE_SIZE - 1);
+    if (error) {
+      console.error('monthly-digest: citywide sold query failed:', error.message);
+      break;
+    }
+    soldPrices.push(...(page || []).map((r) => Number(r.close_price)).filter((n) => n > 0));
+    if (!page || page.length < PAGE_SIZE) break;
+  }
+
+  return {
+    activeCount: active.length,
+    medianListPrice: median(listPrices),
+    avgDaysOnMarket: average(dom),
+    medianSoldPrice: soldPrices.length > 0 ? median(soldPrices) : null,
+    unitsSold: soldPrices.length,
+  };
+}
+
 // ---- Bundled fonts for the map image -----------------------------------
 // Netlify's function runtime has no fonts installed at all, so sharp's
 // SVG->raster step (librsvg/Pango/fontconfig) has nothing to substitute
@@ -654,9 +729,10 @@ async function sendFailureAlert(message) {
 }
 
 export default async () => {
-  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY || !RESEND_API_KEY) {
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY || !RESEND_API_KEY || !DDF_ACCESS_TOKEN || !DDF_API_BASE_URL) {
     console.error('monthly-digest: missing required env vars', {
       SUPABASE_URL: !!SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY: !!SUPABASE_SERVICE_ROLE_KEY, RESEND_API_KEY: !!RESEND_API_KEY,
+      DDF_ACCESS_TOKEN: !!DDF_ACCESS_TOKEN, DDF_API_BASE_URL: !!DDF_API_BASE_URL,
     });
     return new Response('Missing required env vars', { status: 500 });
   }
@@ -770,10 +846,15 @@ export default async () => {
     .map((a) => `<li><strong>${esc(a.name)}</strong>: ${fmtPrice(a.price)}</li>`)
     .join('');
 
+  const citywide = await getCitywideStats(supabase, reportedMonthStart, reportedMonthEnd);
+
   const html = `
     <h2>Full Month Review — ${esc(monthLabel)}</h2>
     <p>Total Sales: ${totalSold} · New Listings: ${totalNewListings} · ${snapshotRows.length} neighbourhoods</p>
     <p style="font-size:12px;color:#888;">MoM/YoY % change needs history this pipeline hasn't built up yet (brand new as of July 2026) -- these will read "n/a" for a while, then populate automatically once enough monthly captures exist. No rebuild needed when that happens.</p>
+
+    <h3>🏙️ London — Citywide</h3>
+    <p>Med. Sale Price: ${fmtPrice(citywide.medianSoldPrice)} (${citywide.unitsSold} sold) · Med. List Price: ${fmtPrice(citywide.medianListPrice)} · Med. Days on Market: ${citywide.avgDaysOnMarket ?? 'n/a'}</p>
 
     <h3>🔔 Notable Moves — Your 7 Areas (10%+ month-over-month)</h3>
     ${notableServed.length > 0 ? `<ul>${notableServed.map(notableLineHtml).join('')}</ul>` : '<p style="color:#888;">None this period (or not enough history yet to compute a % change).</p>'}
@@ -808,7 +889,7 @@ export default async () => {
     ]
   );
 
-  const summary = `monthly-digest sent: ${sortedRows.length} areas, ${totalSold} sold, ${totalNewListings} new listings, map rendered`;
+  const summary = `monthly-digest sent: ${sortedRows.length} areas, ${totalSold} sold, ${totalNewListings} new listings, map rendered, citywide med. sold ${citywide.medianSoldPrice ?? 'n/a'}`;
   console.log(summary);
   return new Response(summary);
   } catch (err) {

@@ -12,7 +12,10 @@
 // pattern as market-stats-snapshot-background.mjs, which already runs daily
 // and no-ops except on the 15th/last-day — see that file's header comment
 // for why Netlify cron can't express "last day of month" directly):
-//   - the 15th  -> period_type = 'mid-month'
+//   - the 16th  -> period_type = 'mid-month' (captures the FULL previous
+//     day, the 15th -- moved from running ON the 15th itself, which missed
+//     that day's own activity; run the morning after, same reasoning as
+//     month-end below. Per Justin's ask 2026-09-16.)
 //   - the 1st   -> period_type = 'month-end' (captures the PREVIOUS month's
 //     close, run the morning after rather than the prior evening so
 //     overnight MLS status changes have fully settled)
@@ -120,7 +123,7 @@ function daysSince(timestamp) {
 }
 
 function captureKind(date) {
-  if (date.getDate() === 15) return 'mid-month';
+  if (date.getDate() === 16) return 'mid-month';
   if (date.getDate() === 1) return 'month-end';
   return null;
 }
@@ -269,9 +272,10 @@ export default async (req) => {
   // The reporting month depends on which capture this is (Justin's own
   // framing, confirmed 2026-09-03): a month-end capture (runs the 1st)
   // reports the FULL calendar month that just closed; a mid-month capture
-  // (runs the 15th) reports the CURRENT calendar month MONTH-TO-DATE --
-  // partial, since that month isn't over yet, but real dates within it
-  // rather than a rolling window that reaches back into the prior month.
+  // (runs the 16th, capturing the full 15th -- moved 2026-09-16) reports
+  // the CURRENT calendar month MONTH-TO-DATE -- partial, since that month
+  // isn't over yet, but real dates within it rather than a rolling window
+  // that reaches back into the prior month.
   const monthRangeEnd = kind === 'month-end'
     ? new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 0)) // last day of the month that just closed
     : now; // mid-month: month-to-date, through today
@@ -482,5 +486,5 @@ export default async (req) => {
 };
 
 export const config = {
-  schedule: '0 9 * * *', // daily, 9am UTC — internal captureKind() guard makes this an effective 15th/1st-of-month cadence
+  schedule: '0 9 * * *', // daily, 9am UTC — internal captureKind() guard makes this an effective 16th/1st-of-month cadence
 };
