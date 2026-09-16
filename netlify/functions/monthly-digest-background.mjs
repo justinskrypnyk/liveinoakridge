@@ -488,13 +488,27 @@ async function getCitywideStats(supabase, monthStart, monthEnd, periodType, capt
   // separate pace-adjustment for the reported month's date range above.
   // count:'exact', head:true returns a row count via Postgres COUNT()
   // without the default 1,000-row return cap applying at all.
+  //
+  // Upper-bounded to today AND outlying towns excluded -- confirmed
+  // 2026-09-16 (Justin caught the resulting MOI reading suspiciously low):
+  // vow_sold_listings carries pre-construction rows with a close_date over
+  // a year in the future (as far out as 2027-10-07, signed but not
+  // actually closed yet), and also carries outlying-town sales (tagged
+  // area_slug LIKE 'outlying-%') that the numerator (active.length, a
+  // London-only DDF pull) never counts -- both inflated the denominator
+  // and understated the ratio (2.2mo measured vs. the real ~4.1mo). Same
+  // root cause just fixed in heat-map-snapshot-background.mjs's own
+  // recentSolds query.
   const ninetyDaysAgoStr = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  const todayStr = new Date().toISOString().slice(0, 10);
   const { count: rolling90dSoldCount, error: rollingError } = await supabase
     .from('vow_sold_listings')
     .select('*', { count: 'exact', head: true })
     .eq('is_lease', false)
     .gte('close_price', MIN_PLAUSIBLE_SALE_PRICE)
-    .gte('close_date', ninetyDaysAgoStr);
+    .gte('close_date', ninetyDaysAgoStr)
+    .lte('close_date', todayStr)
+    .not('area_slug', 'like', 'outlying-%');
   if (rollingError) console.error('monthly-digest: citywide 90-day rolling count failed:', rollingError.message);
 
   const current = {

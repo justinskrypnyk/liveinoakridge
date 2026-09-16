@@ -228,8 +228,19 @@ export default async (req) => {
   // capture period is too thin a window on its own for a stable median.
   const ninetyDaysAgo = new Date(now);
   ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+  const todayStr = now.toISOString().slice(0, 10);
   // is_lease excluded -- leases stay in vow_sold_listings for the website
   // (sold-map etc.) but must never factor into reported price stats.
+  //
+  // Upper-bounded to today -- confirmed 2026-09-16 (while adding
+  // months_of_inventory) that vow_sold_listings carries pre-construction
+  // rows with a close_date over a YEAR in the future (signed contract, not
+  // yet actually closed) -- as far out as 2027-10-07. Without this bound,
+  // this query's own "90-day rolling window" silently counted homes that
+  // haven't sold yet, inflating units_sold/deflating months_of_inventory
+  // sitewide since this pill was first built in July -- same root cause as
+  // the "resale only, excludes pre-construction/future-dated closings"
+  // bound weekly-digest-background.mjs's own sold query already had.
   //
   // Paginated explicitly -- a plain .select() silently caps at Supabase's
   // default 1,000-row limit with no error, and this window already exceeds
@@ -243,6 +254,7 @@ export default async (req) => {
       .from('vow_sold_listings')
       .select('area_slug, close_price, list_price')
       .gte('close_date', ninetyDaysAgo.toISOString().slice(0, 10))
+      .lte('close_date', todayStr)
       .eq('is_lease', false)
       .gte('close_price', MIN_PLAUSIBLE_SALE_PRICE)
       .not('area_slug', 'is', null)
