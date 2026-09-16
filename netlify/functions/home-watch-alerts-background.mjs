@@ -112,6 +112,13 @@ export default async () => {
   // per-subscription query -- cheap in-memory distance filtering scales
   // fine at this data size and avoids N round-trips to Supabase.
   const since = new Date(Date.now() - 40 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  // Upper-bounded to today -- confirmed 2026-09-16 (while fixing the same
+  // gap in heat-map-snapshot-background.mjs's recentSolds query):
+  // vow_sold_listings carries pre-construction rows with a close_date over
+  // a year in the future (signed contract, not actually closed yet -- as
+  // far out as 2027-10-07). Without this bound, a subscriber could get a
+  // "sold near you" alert for a home that hasn't actually closed.
+  const todayStr = new Date().toISOString().slice(0, 10);
   // Paginated explicitly -- a plain .select() silently caps at Supabase's
   // default 1,000-row limit with no error, and this 40-day window already
   // exceeds that (1,500+ rows sitewide as of Aug 2026). An unpaginated
@@ -124,6 +131,7 @@ export default async () => {
       .from('vow_sold_listings')
       .select('listing_key, address, close_price, close_date, lat, lng')
       .gte('close_date', since)
+      .lte('close_date', todayStr)
       .eq('is_lease', false)
       .gte('close_price', MIN_PLAUSIBLE_SALE_PRICE)
       .not('lat', 'is', null)

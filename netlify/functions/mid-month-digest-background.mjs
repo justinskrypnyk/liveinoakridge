@@ -208,6 +208,14 @@ async function getCitywideStats(supabase, monthStart, monthEnd, periodType, capt
   // London-only DDF pull) never counts -- both inflated the denominator
   // and understated the ratio. Same root cause just fixed in heat-map-
   // snapshot-background.mjs's own recentSolds query.
+  //
+  // Uses .or() rather than .not('area_slug','like',...) alone -- a plain
+  // .not(...) silently drops NULL area_slug rows too (SQL's NULL LIKE x is
+  // NULL, not true, so NOT NULL is also NULL -- excluded by WHERE either
+  // way), undercounting real London sales that just failed area-matching
+  // (22 such rows confirmed in the current 90-day window). This keeps
+  // those rows (not explicitly tagged outlying) while still excluding ones
+  // that ARE.
   const ninetyDaysAgoStr = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
   const todayStr = new Date().toISOString().slice(0, 10);
   const { count: rolling90dSoldCount, error: rollingError } = await supabase
@@ -217,7 +225,7 @@ async function getCitywideStats(supabase, monthStart, monthEnd, periodType, capt
     .gte('close_price', MIN_PLAUSIBLE_SALE_PRICE)
     .gte('close_date', ninetyDaysAgoStr)
     .lte('close_date', todayStr)
-    .not('area_slug', 'like', 'outlying-%');
+    .or('area_slug.is.null,area_slug.not.like.outlying-%');
   if (rollingError) console.error('mid-month-digest: citywide 90-day rolling count failed:', rollingError.message);
 
   const current = {
