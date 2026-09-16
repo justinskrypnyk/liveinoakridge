@@ -43,7 +43,12 @@ const { service } = Astro.props;
           <h1 class="font-serif text-4xl md:text-5xl font-bold mb-4">{service.headline}</h1>
           <div class="gold-divider mb-6"></div>
           <p class="text-xl text-white/70 leading-relaxed mb-8" set:html={service.longDescription} />
-          <a href="/contact/" class="btn-primary">{service.ctaText}</a>
+          <div class="flex flex-wrap gap-4">
+            <a href="/contact/" class="btn-primary">{service.ctaText}</a>
+            {service.resourceLink && (
+              <a href={service.resourceLink.url} class="btn-secondary !border-white/30 !text-white hover:!bg-gold hover:!text-navy">{service.resourceLink.label}</a>
+            )}
+          </div>
         </div>
 
         <div class="bg-white/5 border border-white/10 rounded-2xl p-8">

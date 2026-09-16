@@ -19,6 +19,8 @@ export interface Service {
   metaDescription: string;
   ctaText: string;
   faqs: ServiceFaq[];
+  /** Optional secondary CTA linking to an external resource (e.g. Smile's buyer's-guide landing page) -- only set on buyer-facing services. */
+  resourceLink?: { url: string; label: string };
 }
 
 export const SERVICES: Service[] = [
@@ -53,6 +55,7 @@ export const SERVICES: Service[] = [
     metaDescription:
       'Ready to buy a home in London Ontario? Justin Skrypnyk helps buyers find the right home in Oakridge, Byron, Westmount, Lambeth, and beyond. Start your search today.',
     ctaText: 'Start Your Home Search',
+    resourceLink: { url: 'https://realestate.liveinoakridge.ca/buyer-guide', label: 'Download the Free Buyer\'s Guide' },
     faqs: [
       {
         q: 'Do I need a real estate agent to buy a house in London Ontario?',
@@ -199,6 +202,7 @@ export const SERVICES: Service[] = [
     metaDescription:
       'First-time buying a home in London Ontario? Justin Skrypnyk makes it simple. Education, neighbourhood guidance, and expert advocacy from search to keys.',
     ctaText: 'Start Your First-Home Journey',
+    resourceLink: { url: 'https://realestate.liveinoakridge.ca/buyer-guide', label: 'Download the Free Buyer\'s Guide' },
     faqs: [
       {
         q: 'What programs are available for first-time home buyers in London Ontario?',
@@ -247,6 +251,7 @@ export const SERVICES: Service[] = [
     metaDescription:
       'Ready to downsize in London Ontario? Justin Skrypnyk helps you sell your family home for top dollar and find the perfect smaller space. Call 519.639.5176 for a free consultation.',
     ctaText: 'Book a Downsizing Consultation',
+    resourceLink: { url: 'https://realestate.liveinoakridge.ca/buyer-guide', label: 'Download the Free Buyer\'s Guide' },
     faqs: [
       {
         q: 'When is the right time to downsize your home in London Ontario?',
@@ -295,6 +300,7 @@ export const SERVICES: Service[] = [
     metaDescription:
       'Upsizing in London Ontario? Justin Skrypnyk coordinates your sale and next home purchase seamlessly. Find the space your family needs in West London.',
     ctaText: 'Plan Your Move-Up',
+    resourceLink: { url: 'https://realestate.liveinoakridge.ca/buyer-guide', label: 'Download the Free Buyer\'s Guide' },
     faqs: [
       {
         q: 'How do I upsize my home in London Ontario without missing a beat?',
