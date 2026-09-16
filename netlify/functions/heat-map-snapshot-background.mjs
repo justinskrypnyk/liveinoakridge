@@ -197,9 +197,25 @@ export default async (req) => {
   // period" means new since the last pull of any kind (pulls happen ~every
   // 15 days regardless of which label they carry), not new since the last
   // pull of this exact period_type specifically.
+  //
+  // Excludes anything less than an hour old -- confirmed 2026-09-16 that
+  // Netlify's background-function runtime can invoke this function TWICE
+  // for a single trigger (real production behaviour, not just a manual
+  // "Trigger and verify" quirk -- same double-fire also hit mid-month-
+  // digest-background.mjs that same day). Without this guard, a second
+  // invocation minutes after the first would self-referentially compare
+  // against the FIRST invocation's own just-written row, read ~0 new
+  // listings for every single area, and silently overwrite the correct
+  // value on upsert -- confirmed: this exact thing happened, corrupting
+  // new_listings_count sitewide for the 2026-09-16 capture. Real captures
+  // are always ~15 days apart, so a 1-hour floor never affects normal
+  // operation but makes this immune to any accidental rapid re-invocation,
+  // however many times it fires.
+  const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000).toISOString();
   const { data: lastAnyCapture } = await supabase
     .from('market_map_snapshots')
     .select('captured_at')
+    .lt('captured_at', oneHourAgo)
     .order('captured_at', { ascending: false })
     .limit(1)
     .maybeSingle();
