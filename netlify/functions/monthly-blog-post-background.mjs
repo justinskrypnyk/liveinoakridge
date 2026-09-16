@@ -31,11 +31,18 @@ import { fileURLToPath } from 'node:url';
 import os from 'node:os';
 import path from 'node:path';
 
+const DDF_ACCESS_TOKEN = process.env.DDF_ACCESS_TOKEN;
+const DDF_API_BASE_URL = process.env.DDF_API_BASE_URL;
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const DIGEST_TO_EMAIL = process.env.DIGEST_TO_EMAIL || 'info@homeswithjustin.ca';
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+
+// Same backstop as every other function that touches vow_sold_listings --
+// see weekly-digest-background.mjs's own copy of this constant for the
+// full story (AMPRE leases occasionally sync with is_lease wrongly false).
+const MIN_PLAUSIBLE_SALE_PRICE = 30000;
 
 const GITHUB_OWNER = 'justinskrypnyk';
 const GITHUB_REPO = 'liveinoakridge';
@@ -505,6 +512,87 @@ async function sendNotifyEmail(subject, html, attachments, toSmile = true) {
   }
 }
 
+function median(numbers) {
+  if (numbers.length === 0) return null;
+  const sorted = [...numbers].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 === 0 ? Math.round((sorted[mid - 1] + sorted[mid]) / 2) : sorted[mid];
+}
+
+function roundedAverage(numbers) {
+  if (numbers.length === 0) return null;
+  return Math.round(numbers.reduce((sum, n) => sum + n, 0) / numbers.length);
+}
+
+function daysSince(timestamp) {
+  const listed = new Date(timestamp).getTime();
+  if (Number.isNaN(listed)) return null;
+  return Math.max(0, Math.floor((Date.now() - listed) / (1000 * 60 * 60 * 24)));
+}
+
+async function odataGet(resource, params) {
+  const url = new URL(`${DDF_API_BASE_URL}${resource}`);
+  for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
+  const res = await fetch(url, { headers: { Authorization: `Bearer ${DDF_ACCESS_TOKEN}`, Accept: 'application/json' } });
+  if (!res.ok) throw new Error(`${resource} -> HTTP ${res.status}: ${await res.text().catch(() => '')}`);
+  return res.json();
+}
+
+// Citywide (all of London, no per-neighbourhood split, so no geocoding
+// needed at all) median list price + days on market from a live DDF pull,
+// plus median sold price for the reported month from vow_sold_listings.
+// Added 2026-09-16 per Justin's ask -- the post's "How Did London
+// Ontario's Housing Market Perform" section previously only narrated
+// citywide SUMS (total sold, new listings), never a citywide median --
+// same 3 headline numbers monthly-digest-background.mjs's own citywide
+// section shows, computed the identical way (duplicated here rather than
+// imported, per this directory's self-contained-function convention).
+// Deliberately NOT sourced from market_map_snapshots -- see that file's
+// getCitywideStats comment for why a synthetic citywide row doesn't belong
+// in that shared, per-neighbourhood-only table.
+async function getCitywideStats(supabase, monthStart, monthEnd) {
+  const data = await odataGet('Property', {
+    $filter: `contains(UnparsedAddress,'London')`,
+    $select: 'ListPrice,StandardStatus,PropertyType,TransactionType,OriginalEntryTimestamp',
+    $top: '5000',
+  });
+  const active = (data.value || []).filter(
+    (l) => l.StandardStatus === 'Active' && l.PropertyType !== 'Commercial' && l.TransactionType !== 'For Lease'
+  );
+  const listPrices = active.map((l) => Number(l.ListPrice)).filter((n) => n > 0);
+  const dom = active.map((l) => daysSince(l.OriginalEntryTimestamp)).filter((n) => n !== null);
+
+  // Paginated explicitly -- Supabase's default .select() caps at 1,000 rows
+  // with no error (see heat-map-snapshot-background.mjs's own comment on
+  // this exact bug, caught 2026-08).
+  const soldPrices = [];
+  const PAGE_SIZE = 1000;
+  for (let from = 0; ; from += PAGE_SIZE) {
+    const { data: page, error } = await supabase
+      .from('vow_sold_listings')
+      .select('close_price')
+      .eq('is_lease', false)
+      .gte('close_price', MIN_PLAUSIBLE_SALE_PRICE)
+      .gte('close_date', monthStart)
+      .lte('close_date', monthEnd)
+      .range(from, from + PAGE_SIZE - 1);
+    if (error) {
+      console.error('monthly-blog-post: citywide sold query failed:', error.message);
+      break;
+    }
+    soldPrices.push(...(page || []).map((r) => Number(r.close_price)).filter((n) => n > 0));
+    if (!page || page.length < PAGE_SIZE) break;
+  }
+
+  return {
+    activeCount: active.length,
+    medianListPrice: median(listPrices),
+    avgDaysOnMarket: roundedAverage(dom),
+    medianSoldPrice: soldPrices.length > 0 ? median(soldPrices) : null,
+    unitsSold: soldPrices.length,
+  };
+}
+
 export default async (req) => {
   // Real scheduled invocations (Netlify's own cron trigger) carry no usable
   // JSON body -- branch defaults to 'main'. A manual test POST can override
@@ -522,11 +610,12 @@ export default async (req) => {
   }
   const isTest = branch !== 'main';
 
-  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY || !RESEND_API_KEY || !GITHUB_TOKEN) {
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY || !RESEND_API_KEY || !GITHUB_TOKEN || !DDF_ACCESS_TOKEN || !DDF_API_BASE_URL) {
     const msg = 'monthly-blog-post: missing required env vars';
     console.error(msg, {
       SUPABASE_URL: !!SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY: !!SUPABASE_SERVICE_ROLE_KEY,
       RESEND_API_KEY: !!RESEND_API_KEY, GITHUB_TOKEN: !!GITHUB_TOKEN,
+      DDF_ACCESS_TOKEN: !!DDF_ACCESS_TOKEN, DDF_API_BASE_URL: !!DDF_API_BASE_URL,
     });
     await sendNotifyEmail('⚠️ Monthly blog post FAILED to publish', `<p>${esc(msg)}</p><p>Check Netlify env vars, especially GITHUB_TOKEN.</p>`, undefined, false);
     return new Response(msg, { status: 500 });
@@ -566,6 +655,11 @@ export default async (req) => {
     const monthShort = reportedMonthObj.toLocaleDateString('en-US', { month: 'long', timeZone: 'UTC' }).toLowerCase();
     const year = reportedMonthObj.getUTCFullYear();
     const slug = `${monthShort}-${year}-london-ontario-market-update-auto${isTest ? '-test' : ''}`;
+    // Calendar-month bounds for the citywide stats lookup below -- same
+    // reportedMonthObj this file already uses for monthLabel.
+    const reportedMonthStart = reportedMonthObj.toISOString().slice(0, 10);
+    const reportedMonthEnd = new Date(Date.UTC(reportedMonthObj.getUTCFullYear(), reportedMonthObj.getUTCMonth() + 1, 0))
+      .toISOString().slice(0, 10);
 
     // ---- Idempotency guard: check blog.ts BEFORE doing any real work ----
     const { content: blogTsContent, sha: blogTsSha } = await githubGet(BLOG_DATA_PATH, branch);
@@ -602,6 +696,7 @@ export default async (req) => {
 
     const totalSold = snapshotRows.reduce((sum, r) => sum + (r.units_sold_month || 0), 0);
     const totalNewListings = snapshotRows.reduce((sum, r) => sum + (r.new_listings_count || 0), 0);
+    const citywide = await getCitywideStats(supabase, reportedMonthStart, reportedMonthEnd);
 
     // ---- Headline metric: deterministic rule, not a judgment call ----
     // Largest |MoM%| among the 7 served areas, across the narrated metrics.
@@ -715,7 +810,7 @@ export default async (req) => {
       <p>${introSentence}</p>
 
       <h2>How Did London Ontario's Housing Market Perform in ${esc(monthLabel)}?</h2>
-      <p>${totalSold} homes sold citywide, with ${totalNewListings} new listings coming onto the market across all 39 mapped neighbourhoods.</p>
+      <p>${totalSold} homes sold citywide, with ${totalNewListings} new listings coming onto the market across all 39 mapped neighbourhoods. Citywide, the median sale price was ${fmtPrice(citywide.medianSoldPrice)}, the median list price sat at ${fmtPrice(citywide.medianListPrice)}, and homes averaged ${citywide.avgDaysOnMarket ?? 'n/a'} days on market.</p>
 
       ${oakridgeHtml}
 
