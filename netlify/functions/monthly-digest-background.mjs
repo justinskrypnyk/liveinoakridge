@@ -410,6 +410,11 @@ async function odataGet(resource, params) {
   return res.json();
 }
 
+function pctChange(previous, current) {
+  if (previous == null || current == null || previous === 0) return null;
+  return (current - previous) / previous;
+}
+
 // Citywide (all of London, no per-neighbourhood split, so no geocoding
 // needed at all) median list price + days on market from a live DDF pull,
 // plus median sold price for the reported month from vow_sold_listings.
@@ -421,7 +426,13 @@ async function odataGet(resource, params) {
 // market-update-mailout) treats every row in it as a real neighbourhood
 // polygon, so a synthetic "citywide" row there would leak into all of
 // those as a phantom 40th neighbourhood. Kept out of it entirely instead.
-async function getCitywideStats(supabase, monthStart, monthEnd) {
+//
+// Also computes month-over-month % change and persists this capture into
+// the citywide_snapshots table (supabase/migrations/005) so NEXT month's
+// run has a prior 'month-end' row to compare against -- same "compare
+// only against the most recent prior row of the SAME period_type" rule
+// heat-map-snapshot-background.mjs already uses for market_map_changes.
+async function getCitywideStats(supabase, monthStart, monthEnd, periodType, captureDate) {
   const data = await odataGet('Property', {
     $filter: `contains(UnparsedAddress,'London')`,
     $select: 'ListPrice,StandardStatus,PropertyType,TransactionType,OriginalEntryTimestamp',
@@ -455,12 +466,42 @@ async function getCitywideStats(supabase, monthStart, monthEnd) {
     if (!page || page.length < PAGE_SIZE) break;
   }
 
-  return {
+  const current = {
     activeCount: active.length,
     medianListPrice: median(listPrices),
     avgDaysOnMarket: average(dom),
     medianSoldPrice: soldPrices.length > 0 ? median(soldPrices) : null,
     unitsSold: soldPrices.length,
+  };
+
+  const { data: prevRows, error: prevError } = await supabase
+    .from('citywide_snapshots')
+    .select('median_list_price, avg_days_on_market, median_sold_price')
+    .eq('period_type', periodType)
+    .lt('capture_date', captureDate)
+    .order('capture_date', { ascending: false })
+    .limit(1);
+  if (prevError) console.error('monthly-digest: citywide_snapshots history query failed:', prevError.message);
+  const prev = prevRows?.[0] || null;
+
+  const { error: upsertError } = await supabase
+    .from('citywide_snapshots')
+    .upsert({
+      period_type: periodType,
+      capture_date: captureDate,
+      median_list_price: current.medianListPrice,
+      avg_days_on_market: current.avgDaysOnMarket,
+      median_sold_price: current.medianSoldPrice,
+      units_sold: current.unitsSold,
+      active_count: current.activeCount,
+    }, { onConflict: 'period_type,capture_date' });
+  if (upsertError) console.error('monthly-digest: citywide_snapshots upsert failed:', upsertError.message);
+
+  return {
+    ...current,
+    momMedianSoldPrice: prev ? pctChange(prev.median_sold_price, current.medianSoldPrice) : null,
+    momMedianListPrice: prev ? pctChange(prev.median_list_price, current.medianListPrice) : null,
+    momAvgDaysOnMarket: prev ? pctChange(prev.avg_days_on_market, current.avgDaysOnMarket) : null,
   };
 }
 
@@ -846,7 +887,7 @@ export default async () => {
     .map((a) => `<li><strong>${esc(a.name)}</strong>: ${fmtPrice(a.price)}</li>`)
     .join('');
 
-  const citywide = await getCitywideStats(supabase, reportedMonthStart, reportedMonthEnd);
+  const citywide = await getCitywideStats(supabase, reportedMonthStart, reportedMonthEnd, 'month-end', latestMonthEnd.capture_date);
 
   const html = `
     <h2>Full Month Review — ${esc(monthLabel)}</h2>
@@ -854,7 +895,7 @@ export default async () => {
     <p style="font-size:12px;color:#888;">MoM/YoY % change needs history this pipeline hasn't built up yet (brand new as of July 2026) -- these will read "n/a" for a while, then populate automatically once enough monthly captures exist. No rebuild needed when that happens.</p>
 
     <h3>🏙️ London — Citywide</h3>
-    <p>Med. Sale Price: ${fmtPrice(citywide.medianSoldPrice)} (${citywide.unitsSold} sold) · Med. List Price: ${fmtPrice(citywide.medianListPrice)} · Med. Days on Market: ${citywide.avgDaysOnMarket ?? 'n/a'}</p>
+    <p>Med. Sale Price: ${fmtPrice(citywide.medianSoldPrice)} (${fmtPct(citywide.momMedianSoldPrice)} MoM, ${citywide.unitsSold} sold) · Med. List Price: ${fmtPrice(citywide.medianListPrice)} (${fmtPct(citywide.momMedianListPrice)} MoM) · Med. Days on Market: ${citywide.avgDaysOnMarket ?? 'n/a'} (${fmtPct(citywide.momAvgDaysOnMarket)} MoM)</p>
 
     <h3>🔔 Notable Moves — Your 7 Areas (10%+ month-over-month)</h3>
     ${notableServed.length > 0 ? `<ul>${notableServed.map(notableLineHtml).join('')}</ul>` : '<p style="color:#888;">None this period (or not enough history yet to compute a % change).</p>'}

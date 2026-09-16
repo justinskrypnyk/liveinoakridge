@@ -538,6 +538,11 @@ async function odataGet(resource, params) {
   return res.json();
 }
 
+function pctChange(previous, current) {
+  if (previous == null || current == null || previous === 0) return null;
+  return (current - previous) / previous;
+}
+
 // Citywide (all of London, no per-neighbourhood split, so no geocoding
 // needed at all) median list price + days on market from a live DDF pull,
 // plus median sold price for the reported month from vow_sold_listings.
@@ -550,7 +555,14 @@ async function odataGet(resource, params) {
 // Deliberately NOT sourced from market_map_snapshots -- see that file's
 // getCitywideStats comment for why a synthetic citywide row doesn't belong
 // in that shared, per-neighbourhood-only table.
-async function getCitywideStats(supabase, monthStart, monthEnd) {
+//
+// Also computes month-over-month % change and upserts this capture into
+// citywide_snapshots (supabase/migrations/005) -- same table/row
+// monthly-digest-background.mjs's own getCitywideStats writes for the same
+// period_type='month-end'/capture_date (the 1st); harmless to write twice,
+// the values are identical since both run the same query for the same
+// reported month.
+async function getCitywideStats(supabase, monthStart, monthEnd, periodType, captureDate) {
   const data = await odataGet('Property', {
     $filter: `contains(UnparsedAddress,'London')`,
     $select: 'ListPrice,StandardStatus,PropertyType,TransactionType,OriginalEntryTimestamp',
@@ -584,12 +596,42 @@ async function getCitywideStats(supabase, monthStart, monthEnd) {
     if (!page || page.length < PAGE_SIZE) break;
   }
 
-  return {
+  const current = {
     activeCount: active.length,
     medianListPrice: median(listPrices),
     avgDaysOnMarket: roundedAverage(dom),
     medianSoldPrice: soldPrices.length > 0 ? median(soldPrices) : null,
     unitsSold: soldPrices.length,
+  };
+
+  const { data: prevRows, error: prevError } = await supabase
+    .from('citywide_snapshots')
+    .select('median_list_price, avg_days_on_market, median_sold_price')
+    .eq('period_type', periodType)
+    .lt('capture_date', captureDate)
+    .order('capture_date', { ascending: false })
+    .limit(1);
+  if (prevError) console.error('monthly-blog-post: citywide_snapshots history query failed:', prevError.message);
+  const prev = prevRows?.[0] || null;
+
+  const { error: upsertError } = await supabase
+    .from('citywide_snapshots')
+    .upsert({
+      period_type: periodType,
+      capture_date: captureDate,
+      median_list_price: current.medianListPrice,
+      avg_days_on_market: current.avgDaysOnMarket,
+      median_sold_price: current.medianSoldPrice,
+      units_sold: current.unitsSold,
+      active_count: current.activeCount,
+    }, { onConflict: 'period_type,capture_date' });
+  if (upsertError) console.error('monthly-blog-post: citywide_snapshots upsert failed:', upsertError.message);
+
+  return {
+    ...current,
+    momMedianSoldPrice: prev ? pctChange(prev.median_sold_price, current.medianSoldPrice) : null,
+    momMedianListPrice: prev ? pctChange(prev.median_list_price, current.medianListPrice) : null,
+    momAvgDaysOnMarket: prev ? pctChange(prev.avg_days_on_market, current.avgDaysOnMarket) : null,
   };
 }
 
@@ -696,7 +738,7 @@ export default async (req) => {
 
     const totalSold = snapshotRows.reduce((sum, r) => sum + (r.units_sold_month || 0), 0);
     const totalNewListings = snapshotRows.reduce((sum, r) => sum + (r.new_listings_count || 0), 0);
-    const citywide = await getCitywideStats(supabase, reportedMonthStart, reportedMonthEnd);
+    const citywide = await getCitywideStats(supabase, reportedMonthStart, reportedMonthEnd, 'month-end', captureDate);
 
     // ---- Headline metric: deterministic rule, not a judgment call ----
     // Largest |MoM%| among the 7 served areas, across the narrated metrics.
@@ -810,7 +852,7 @@ export default async (req) => {
       <p>${introSentence}</p>
 
       <h2>How Did London Ontario's Housing Market Perform in ${esc(monthLabel)}?</h2>
-      <p>${totalSold} homes sold citywide, with ${totalNewListings} new listings coming onto the market across all 39 mapped neighbourhoods. Citywide, the median sale price was ${fmtPrice(citywide.medianSoldPrice)}, the median list price sat at ${fmtPrice(citywide.medianListPrice)}, and homes averaged ${citywide.avgDaysOnMarket ?? 'n/a'} days on market.</p>
+      <p>${totalSold} homes sold citywide, with ${totalNewListings} new listings coming onto the market across all 39 mapped neighbourhoods. Citywide, the median sale price was ${fmtPrice(citywide.medianSoldPrice)}${citywide.momMedianSoldPrice != null ? ` (${fmtPct(citywide.momMedianSoldPrice)} month-over-month)` : ''}, the median list price sat at ${fmtPrice(citywide.medianListPrice)}${citywide.momMedianListPrice != null ? ` (${fmtPct(citywide.momMedianListPrice)} month-over-month)` : ''}, and homes averaged ${citywide.avgDaysOnMarket ?? 'n/a'} days on market${citywide.momAvgDaysOnMarket != null ? ` (${fmtPct(citywide.momAvgDaysOnMarket)} month-over-month)` : ''}.</p>
 
       ${oakridgeHtml}
 

@@ -14,7 +14,14 @@ browser.
    public policies — only the service_role key can touch them. If your
    tables already existed before 2026-07-18, also run
    `supabase/migrations/001_feed_derived_metrics.sql` once to add the newer
-   bedrooms/bathrooms/% detached/delisted-count columns.
+   bedrooms/bathrooms/% detached/delisted-count columns. If they existed
+   before 2026-09-16, also run `supabase/migrations/005_citywide_snapshots.sql`
+   once -- adds a separate `citywide_snapshots` table (month-over-month %
+   change history for the citywide median sale price/list price/days-on-
+   market numbers shown in monthly-digest, mid-month-digest, and the
+   monthly blog post). Until it's run, those functions still work fine --
+   the citywide numbers just show with no MoM % (reads "n/a") instead of
+   erroring.
 2. **Get your API keys.** Supabase dashboard → Project Settings → API →
    copy the **Project URL** and the **service_role secret key** (not the
    `anon` key — that one's for client-side use, which this feature

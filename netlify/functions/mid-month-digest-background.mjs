@@ -15,13 +15,16 @@
 // dependency.
 //
 // Deliberately a SUBSET of monthly-digest's per-neighbourhood metrics --
-// per Justin's ask (2026-09-16): running counts only (active listings, new
-// listings since the last capture, units sold month-to-date), no
-// medians/ratios PER NEIGHBOURHOOD. Half a month is too thin a sample for
-// any one neighbourhood's median_sold_price/avg_sale_to_list_ratio to mean
-// anything -- those stay exclusive to the full month-end review on the
-// 1st, alongside the neighbourhood map. This is a "how's it trending so
-// far" pulse check, not a second full report.
+// started running-counts-only (active listings, new listings since the
+// last capture, units sold month-to-date) on the theory that half a month
+// is too thin a sample per neighbourhood for a median to mean much. Same
+// day, Justin asked for median sale price + days on market added back in
+// anyway -- included now (LIGHT_METRICS below), with a standing caveat in
+// the email itself that a lower-volume area's mid-month median is
+// directional, not exact. Sale-to-list ratio / median list price per
+// neighbourhood still stay exclusive to the full month-end review on the
+// 1st, alongside the neighbourhood map -- this remains a "how's it
+// trending so far" pulse check, not a second full report.
 //
 // EXCEPTION, added 2026-09-16 per Justin: a citywide (all of London, not
 // broken out by neighbourhood) median sold price / median list price /
@@ -68,12 +71,19 @@ function sortAreasServedFirst(areas) {
   });
 }
 
-// Running counts only -- see header comment for why medians/ratios are
-// deliberately excluded from this one.
+// Per-neighbourhood metrics shown in the breakdown table. Started as
+// running counts only (no medians/ratios), on the theory that half a
+// month is too thin a sample per neighbourhood -- Justin asked for
+// median sale price + days on market added back in anyway (2026-09-16),
+// so they're included with that caveat still worth keeping in mind for a
+// low-volume area. Sale-to-list ratio / median list price stay excluded
+// (noisier still, and month-end already covers them in full).
 const LIGHT_METRICS = [
-  { key: 'units_sold_month', label: 'Sold So Far' },
-  { key: 'new_listings_count', label: 'New Listings' },
-  { key: 'active_count', label: 'Active Listings' },
+  { key: 'units_sold_month', label: 'Sold So Far', fmt: (n) => (n == null ? 'n/a' : String(n)) },
+  { key: 'new_listings_count', label: 'New Listings', fmt: (n) => (n == null ? 'n/a' : String(n)) },
+  { key: 'active_count', label: 'Active Listings', fmt: (n) => (n == null ? 'n/a' : String(n)) },
+  { key: 'median_sold_price_month', label: 'Med. Sale Price', fmt: fmtPrice },
+  { key: 'avg_days_on_market', label: 'Days on Market', fmt: (n) => (n == null ? 'n/a' : String(Math.round(n))) },
 ];
 const METRIC_LABELS = Object.fromEntries(LIGHT_METRICS.map((m) => [m.key, m.label]));
 
@@ -117,12 +127,25 @@ async function odataGet(resource, params) {
   return res.json();
 }
 
+function pctChange(previous, current) {
+  if (previous == null || current == null || previous === 0) return null;
+  return (current - previous) / previous;
+}
+
 // Citywide (all of London, no per-neighbourhood split -- so no geocoding
 // needed at all) median list price + days on market from a live DDF pull,
 // plus median sold price for the given date range from vow_sold_listings.
 // See header comment for why this is computed live rather than sourced
 // from market_map_snapshots.
-async function getCitywideStats(supabase, monthStart, monthEnd) {
+//
+// Also computes month-over-month % change and persists this capture into
+// the citywide_snapshots table (see supabase/migrations/005) so NEXT
+// month's run has a prior row of the same period_type to compare against
+// -- added 2026-09-16 per Justin's ask. Same "compare only against the
+// most recent prior row of the SAME period_type" rule
+// heat-map-snapshot-background.mjs already uses for the per-neighbourhood
+// market_map_changes table (mid-month vs. mid-month, never vs. month-end).
+async function getCitywideStats(supabase, monthStart, monthEnd, periodType, captureDate) {
   const data = await odataGet('Property', {
     $filter: `contains(UnparsedAddress,'London')`,
     $select: 'ListPrice,StandardStatus,PropertyType,TransactionType,OriginalEntryTimestamp',
@@ -156,12 +179,42 @@ async function getCitywideStats(supabase, monthStart, monthEnd) {
     if (!page || page.length < PAGE_SIZE) break;
   }
 
-  return {
+  const current = {
     activeCount: active.length,
     medianListPrice: median(listPrices),
     avgDaysOnMarket: average(dom),
     medianSoldPrice: soldPrices.length > 0 ? median(soldPrices) : null,
     unitsSold: soldPrices.length,
+  };
+
+  const { data: prevRows, error: prevError } = await supabase
+    .from('citywide_snapshots')
+    .select('median_list_price, avg_days_on_market, median_sold_price')
+    .eq('period_type', periodType)
+    .lt('capture_date', captureDate)
+    .order('capture_date', { ascending: false })
+    .limit(1);
+  if (prevError) console.error('mid-month-digest: citywide_snapshots history query failed:', prevError.message);
+  const prev = prevRows?.[0] || null;
+
+  const { error: upsertError } = await supabase
+    .from('citywide_snapshots')
+    .upsert({
+      period_type: periodType,
+      capture_date: captureDate,
+      median_list_price: current.medianListPrice,
+      avg_days_on_market: current.avgDaysOnMarket,
+      median_sold_price: current.medianSoldPrice,
+      units_sold: current.unitsSold,
+      active_count: current.activeCount,
+    }, { onConflict: 'period_type,capture_date' });
+  if (upsertError) console.error('mid-month-digest: citywide_snapshots upsert failed:', upsertError.message);
+
+  return {
+    ...current,
+    momMedianSoldPrice: prev ? pctChange(prev.median_sold_price, current.medianSoldPrice) : null,
+    momMedianListPrice: prev ? pctChange(prev.median_list_price, current.medianListPrice) : null,
+    momAvgDaysOnMarket: prev ? pctChange(prev.avg_days_on_market, current.avgDaysOnMarket) : null,
   };
 }
 
@@ -254,7 +307,7 @@ export default async () => {
         .eq('period_type', 'mid-month')
         .eq('capture_date', latestMidMonth.capture_date)
         .in('metric', LIGHT_METRICS.map((m) => m.key)),
-      getCitywideStats(supabase, cityMonthStart, cityMonthEnd),
+      getCitywideStats(supabase, cityMonthStart, cityMonthEnd, 'mid-month', cityMonthEnd),
     ]);
 
     if (snapError || !snapshotRows) {
@@ -290,6 +343,8 @@ export default async () => {
         <td style="padding:4px 10px;">${r.active_count ?? 'n/a'}</td>
         <td style="padding:4px 10px;">${r.new_listings_count ?? 'n/a'}</td>
         <td style="padding:4px 10px;">${r.units_sold_month ?? 'n/a'}</td>
+        <td style="padding:4px 10px;">${fmtPrice(r.median_sold_price_month)}</td>
+        <td style="padding:4px 10px;">${r.avg_days_on_market != null ? Math.round(r.avg_days_on_market) : 'n/a'}</td>
       </tr>`;
     }).join('');
 
@@ -299,7 +354,7 @@ export default async () => {
       <p style="font-size:12px;color:#888;">Month-to-date through the 15th -- a partial picture, not the final month. Full stats + neighbourhood map land on the 1st, like always.</p>
 
       <h3>🏙️ London — Citywide</h3>
-      <p>Med. Sale Price: ${fmtPrice(citywide.medianSoldPrice)} (${citywide.unitsSold} sold) · Med. List Price: ${fmtPrice(citywide.medianListPrice)} · Med. Days on Market: ${citywide.avgDaysOnMarket ?? 'n/a'}</p>
+      <p>Med. Sale Price: ${fmtPrice(citywide.medianSoldPrice)} (${fmtPct(citywide.momMedianSoldPrice)} vs. last month's mid-point, ${citywide.unitsSold} sold) · Med. List Price: ${fmtPrice(citywide.medianListPrice)} (${fmtPct(citywide.momMedianListPrice)}) · Med. Days on Market: ${citywide.avgDaysOnMarket ?? 'n/a'} (${fmtPct(citywide.momAvgDaysOnMarket)})</p>
 
       <h3>🔔 Notable Moves — Your 7 Areas (10%+ vs. last month's mid-point)</h3>
       ${notableServed.length > 0 ? `<ul>${notableServed.map(notableLineHtml).join('')}</ul>` : '<p style="color:#888;">None this period (or not enough history yet to compute a % change).</p>'}
@@ -308,10 +363,10 @@ export default async () => {
       ${notableOther.length > 0 ? `<ul>${notableOther.slice(0, 15).map(notableLineHtml).join('')}</ul>` : '<p style="color:#888;">None this period.</p>'}
 
       <table style="border-collapse:collapse;font-size:13px;">
-        <tr style="font-weight:bold;border-bottom:1px solid #ccc;"><td style="padding:4px 10px;">Neighbourhood</td><td style="padding:4px 10px;">Active</td><td style="padding:4px 10px;">New</td><td style="padding:4px 10px;">Sold So Far</td></tr>
+        <tr style="font-weight:bold;border-bottom:1px solid #ccc;"><td style="padding:4px 10px;">Neighbourhood</td><td style="padding:4px 10px;">Active</td><td style="padding:4px 10px;">New</td><td style="padding:4px 10px;">Sold So Far</td><td style="padding:4px 10px;">Med. Sale Price</td><td style="padding:4px 10px;">Days on Market</td></tr>
         ${tableRows}
       </table>
-      <p>Bold = your 7 served areas.</p>
+      <p>Bold = your 7 served areas. Med. Sale Price/Days on Market are month-to-date per neighbourhood -- a small sample for a lower-volume area, treat as directional rather than exact until the full month-end numbers land on the 1st.</p>
       <p style="font-size:12px;color:#888;">Auto-generated from live MLS data -- no AI involved in compiling these numbers.</p>
     `;
 
