@@ -212,6 +212,65 @@ const isProd = import.meta.env.PROD;
             setTimeout(loadDeferredTags, 3000);
           })();
         </script>
+
+        <!-- Core Web Vitals (LCP/CLS/INP/FCP/TTFB) as real-user data, sent to
+             GA4 -- added 2026-09-17 because PageSpeed's own "Discover what
+             your real users are experiencing" panel reads "No Data" for this
+             site: not enough real-Chrome-visitor volume yet for Google's own
+             CrUX dataset (what Search Console's Core Web Vitals report and
+             the public CrUX API/dashboard both read from) to report
+             anything. This sidesteps that entirely -- Google's own
+             `web-vitals` library measures the same 5 metrics directly in
+             each visitor's real browser and reports them into GA4 the
+             moment they're measured, no minimum-traffic threshold to clear.
+             Bundled as an npm dependency (not a CDN script) so Vite ships an
+             exact pinned version with the rest of the page's JS.
+
+             gtag() is safe to call here even though the real gtag/js fetch
+             above is deferred -- the dataLayer/gtag() stub defined earlier
+             in this same block is already synchronous, so every call below
+             just queues into dataLayer and flushes once the deferred script
+             arrives (same mechanism the phone-click handler already relies
+             on), including for a visitor who closes the tab before the 3s
+             fallback ever fires -- LCP/FCP/TTFB typically report within a
+             second or two of page load, so most sessions get their events
+             queued well before that.
+
+             CLS's delta is multiplied by 1000 before sending, matching
+             web-vitals' own documented GA4 recipe -- CLS is a small unitless
+             score (e.g. 0.05), and GA4's "value" param reads far more
+             usefully as a whole number than a fraction with 3+ decimal
+             places. The other four metrics are already real millisecond
+             values, so they're sent as-is (just rounded).
+
+             `metric_rating` (good / needs-improvement / poor, using
+             Google's own published thresholds) is included specifically so
+             this can be filtered/segmented in GA4 without needing to
+             remember or hardcode those thresholds a second time. Note:
+             these show up as raw GA4 events immediately, but `metric_id`/
+             `metric_value`/`metric_delta`/`metric_rating` only become
+             usable as report dimensions once registered as GA4 custom
+             definitions (Admin -> Custom definitions) -- a manual step in
+             the GA4 UI, not something reachable from this codebase. -->
+        <script>
+          import { onCLS, onFCP, onINP, onLCP, onTTFB } from 'web-vitals';
+
+          function sendToGA4({ name, delta, value, id, rating }) {
+            gtag('event', name, {
+              value: Math.round(name === 'CLS' ? delta * 1000 : delta),
+              metric_id: id,
+              metric_value: value,
+              metric_delta: delta,
+              metric_rating: rating,
+            });
+          }
+
+          onCLS(sendToGA4);
+          onFCP(sendToGA4);
+          onINP(sendToGA4);
+          onLCP(sendToGA4);
+          onTTFB(sendToGA4);
+        </script>
       </>
     )}
   </head>
