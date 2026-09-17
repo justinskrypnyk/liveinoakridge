@@ -123,10 +123,26 @@ const isProd = import.meta.env.PROD;
              confirmed window.gtag existed but no /g/collect beacon ever left
              the browser — the hit dies inside Partytown's worker sandbox
              silently (no console error, no failed request). Same class of
-             bug as the Meta Pixel CORS failure below, just quieter. Back on
-             the main thread until there's a way to verify hits actually land
-             under Partytown before re-enabling it. -->
-        <script is:inline src="https://www.googletagmanager.com/gtag/js?id=G-Z2M94KRVTT"></script>
+             bug as the Meta Pixel CORS failure below, just quieter.
+
+             PageSpeed (2026-09-17) flagged the gtag/js file itself as a
+             570ms render-blocking request (188 KiB) plus 76 KiB of unused
+             JS -- fixed here WITHOUT touching Partytown again: the tiny
+             queueing stub (dataLayer + gtag()) stays synchronous exactly as
+             before, completely main-thread, zero sandbox involved -- so
+             anything that calls gtag() early (the phone-click handler
+             below, any inline event) still queues correctly. Only the
+             actual network fetch of the 188 KiB gtag/js file is delayed
+             until first user interaction or a 3s fallback timeout,
+             whichever comes first -- the fallback guarantees the pageview
+             still fires (queued instantly via gtag('config', ...) below,
+             flushed the moment the real script arrives) even for a session
+             that closes the tab without ever scrolling/clicking. This is a
+             fundamentally different mechanism than Partytown (no worker,
+             no sandboxed fetch/XHR proxy) -- same main-thread execution
+             GA4 already had, just started a few seconds later. STILL:
+             verify a real /g/collect beacon fires after deploying, same
+             check that caught the Partytown regression. -->
         <script is:inline>
           window.dataLayer = window.dataLayer || [];
           function gtag(){dataLayer.push(arguments);}
@@ -141,13 +157,22 @@ const isProd = import.meta.env.PROD;
              Meta's endpoint doesn't return the headers that requires. Verified
              2026-08-16: running this through Partytown produced a CORS error
              on the actual tracking beacon in production, so it stays on the
-             main thread. -->
+             main thread.
+
+             Same deferred-fetch treatment as GA4 above, same reasoning:
+             fbevents.js was flagged at 107.7 KiB unused JS + a 20-minute
+             cache TTL Meta controls, not us. The fbq() queueing stub
+             (identical to Meta's own official snippet) stays synchronous;
+             only the createElement/insertBefore that actually requests
+             fbevents.js is deferred to interaction-or-3s-timeout. init/
+             track('PageView') still fire synchronously into the queue
+             immediately, so PageView tracking timing is unchanged from
+             today -- still a plain main-thread <script src>, never a
+             worker, so none of the CORS failure mode above applies. -->
         <script is:inline>
-          !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+          !function(f){if(f.fbq)return;var n=f.fbq=function(){n.callMethod?
           n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
-          n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
-          t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}
-          (window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+          n.push=n;n.loaded=!0;n.version='2.0';n.queue=[]}(window);
           fbq('init','3837845766512267');
           fbq('track','PageView');
         </script>
@@ -155,6 +180,38 @@ const isProd = import.meta.env.PROD;
           <img height="1" width="1" style="display:none"
             src="https://www.facebook.com/tr?id=3837845766512267&ev=PageView&noscript=1" alt="" />
         </noscript>
+
+        <!-- Deferred fetch for both tags' real script files -- see the two
+             comments above for the full reasoning. Fires on first genuine
+             interaction (scroll/pointer/touch/key) or after 3s, whichever
+             is first; `once: true` + the loaded-guard mean this only ever
+             runs once regardless of how many listeners fire. -->
+        <script is:inline>
+          (function () {
+            var loaded = false;
+            function loadDeferredTags() {
+              if (loaded) return;
+              loaded = true;
+              var gtagScript = document.createElement('script');
+              gtagScript.src = 'https://www.googletagmanager.com/gtag/js?id=G-Z2M94KRVTT';
+              document.head.appendChild(gtagScript);
+
+              var fbScript = document.createElement('script');
+              fbScript.async = true;
+              fbScript.src = 'https://connect.facebook.net/en_US/fbevents.js';
+              document.head.appendChild(fbScript);
+
+              events.forEach(function (evt) {
+                window.removeEventListener(evt, loadDeferredTags);
+              });
+            }
+            var events = ['scroll', 'pointerdown', 'touchstart', 'keydown'];
+            events.forEach(function (evt) {
+              window.addEventListener(evt, loadDeferredTags, { passive: true, once: true });
+            });
+            setTimeout(loadDeferredTags, 3000);
+          })();
+        </script>
       </>
     )}
   </head>
