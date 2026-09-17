@@ -220,7 +220,7 @@ export const BLOG_POSTS: BlogPost[] = [
     category: 'Real Estate Education',
     author: 'Justin Skrypnyk',
     readTime: '6 min read',
-    image: '/images/closing-costs-real-estate-london-ontario.jpg',
+    image: '/images/closing-costs-real-estate-london-ontario.webp',
     imageAlt: 'A SOLD sign in front of a London Ontario home, representing closing day on a real estate transaction',
     content: `
       <p>Ask most buyers what a home is going to cost them, and they'll tell you the purchase price. Maybe the down payment too. Almost nobody mentions closing costs — the pile of smaller fees and taxes due on closing day that sit on top of everything else. It's not a small oversight either. On a $650,000 home, that pile can easily run $10,000 to $16,000. Sellers have their own version of this surprise: watching commission, legal fees, and a few other deductions come off the top before they see their actual proceeds. Here's what's really involved, in plain English.</p>
@@ -336,7 +336,7 @@ export const BLOG_POSTS: BlogPost[] = [
     category: 'Market Updates',
     author: 'Justin Skrypnyk',
     readTime: '5 min read',
-    image: '/images/june-2026-london-ontario-market-update.png',
+    image: '/images/june-2026-london-ontario-market-update.webp',
     imageAlt: 'June 2026 London Ontario real estate market update — Oakridge summer market conditions',
     content: `
       <p>London's market cooled off in June while Oakridge held firm. Here's the full breakdown, and what it means if you're thinking about buying or selling this summer.</p>
@@ -414,7 +414,7 @@ export const BLOG_POSTS: BlogPost[] = [
     category: 'Market Updates',
     author: 'Justin Skrypnyk',
     readTime: '5 min read',
-    image: '/images/may-2026-london-ontario-market-update.png',
+    image: '/images/may-2026-london-ontario-market-update.webp',
     imageAlt: 'May 2026 London Ontario real estate market update — West London spring market conditions',
     content: `
       <p>Spring is doing what spring does in London, Ontario — bringing more buyers out, more homes to market, and a little more confidence back into the numbers. May 2026 was a solid month for London real estate. Sales climbed, prices firmed up from April, and the overall picture looks like a market that has found a healthier rhythm after a year of adjustment. Here is a full breakdown of what happened — and what it means if you are thinking about buying or selling this summer.</p>
@@ -1224,7 +1224,7 @@ export const BLOG_POSTS: BlogPost[] = [
     category: 'Selling Tips',
     author: 'Justin Skrypnyk',
     readTime: '6 min read',
-    image: '/images/june-2026-london-ontario-market-update.png',
+    image: '/images/june-2026-london-ontario-market-update.webp',
     imageAlt: 'For sale sign being removed from a front lawn, representing a terminated real estate listing in London Ontario',
     content: `
       <p>If you've noticed more "for sale" signs disappearing without a "sold" sticker on them lately, you're not imagining it. Terminations — listings pulled from the market instead of sold — jumped 30.6% citywide and 42.1% in Oakridge in June 2026 alone. If you're planning to sell, understanding why this happens is the difference between a fast sale and joining that statistic.</p>
@@ -1276,7 +1276,7 @@ export const BLOG_POSTS: BlogPost[] = [
     category: 'Selling Tips',
     author: 'Justin Skrypnyk',
     readTime: '5 min read',
-    image: '/images/may-2026-london-ontario-market-update.png',
+    image: '/images/may-2026-london-ontario-market-update.webp',
     imageAlt: 'Spring homes for sale sign in a London Ontario neighbourhood, representing seasonal real estate market timing',
     content: `
       <p>"When should I list?" is one of the most common questions sellers ask, and the honest answer is usually "it depends." But 2026's numbers actually give a clear, specific answer for this year: London's spring market outperformed its early summer market by a wide margin, and the data shows exactly why.</p>
@@ -1337,7 +1337,7 @@ export const BLOG_POSTS: BlogPost[] = [
     category: 'Market Analysis',
     author: 'Justin Skrypnyk',
     readTime: '6 min read',
-    image: '/images/london-ontario-months-of-supply-july-2026.png',
+    image: '/images/london-ontario-months-of-supply-july-2026.webp',
     imageAlt: "Justin Skrypnyk graphic: London Ontario months of inventory nearly tripled, supply up from 2.5 to 7.3, still only 28 days to sell",
     charts: [
       {
@@ -2125,7 +2125,7 @@ export const BLOG_POSTS: BlogPost[] = [
     category: 'Market Updates',
     author: 'Justin Skrypnyk',
     readTime: '6 min read',
-    image: '/images/london-ontario-months-of-supply-july-2026.png',
+    image: '/images/london-ontario-months-of-supply-july-2026.webp',
     imageAlt: 'July 2026 London Ontario real estate market update — resale home prices and sales volume by neighbourhood',
     content: `
       <p>July is usually a quieter month in London real estate, and 2026 held to that pattern — sales volume eased slightly from June, but prices held together better than the headline number suggests. Here's the full breakdown of what actually happened, and what it means heading into fall.</p>
