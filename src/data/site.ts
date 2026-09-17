@@ -19,6 +19,7 @@ export const SITE = {
     region: 'ON',
   },
   social: {
+    facebook: 'https://www.facebook.com/justinskrypnykrealtysolutions',
     youtube: 'https://www.youtube.com/@justinskrypnyk',
     instagram: 'https://www.instagram.com/justinskrypnyk',
     googleReviews: 'https://share.google/swwXpwTpwjv6x4eYg',
