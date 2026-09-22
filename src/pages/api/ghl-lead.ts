@@ -186,7 +186,7 @@ export const POST: APIRoute = async ({ request }) => {
       // same for AskWidget's scripted journey, keyed off the same
       // `chat-intent` field the custom fields above use.
       tags: [
-        'website-lead',
+        'Website Lead',
         submission.form_name,
         FORM_TAG_LABELS[submission.form_name],
         subjectTag,
