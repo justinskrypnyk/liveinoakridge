@@ -101,7 +101,13 @@ export async function pushRecommendationToGhl(input: PushRecommendationInput): P
         email: input.email,
         phone: input.phone || undefined,
         locationId: GHL_LOCATION_ID,
-        tags: [input.tag],
+        // GHL's contacts/upsert REPLACES the tags array rather than merging it,
+        // so a bare [input.tag] here silently wipes out Website Lead (and any
+        // other tag) that an earlier upsert on this same contact already set
+        // (e.g. ghl-lead.ts's initial save-listing capture, moments before this
+        // runs). Always re-assert Website Lead so every contact this pipeline
+        // touches stays tagged/filterable regardless of upsert order.
+        tags: ['Website Lead', input.tag],
         customFields,
         source: 'Website — Automated Recommendation',
       }),
