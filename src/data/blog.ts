@@ -2218,6 +2218,120 @@ export const BLOG_POSTS: BlogPost[] = [
     image: '/images/oakridge-secondary-school-1959.webp',
     imageAlt: 'Oakridge Secondary School entrance, London, Ontario',
   },
+  {
+    slug: 'lambeth-vs-byron-west-london-neighbourhoods',
+    title: 'Lambeth vs. Byron: West London Neighbourhood Guide',
+    description: 'Deciding between Lambeth and Byron in West London Ontario? Compare new construction, prices, schools, and outdoor lifestyle to see which southwest London community fits you best.',
+    date: '2026-09-22',
+    dateDisplay: 'September 22, 2026',
+    category: 'Neighbourhood Guides',
+    author: 'Justin Skrypnyk',
+    readTime: '7 min read',
+    image: '/images/areas/lambeth-neighbourhood-london-ontario.webp',
+    imageAlt: 'New estate homes on a Lambeth street in southwest London, Ontario',
+    content: `
+      <p>Lambeth and Byron sit at opposite ends of southwest London, and they solve different problems for different buyers. Lambeth is the newer, bigger-house-for-your-money option with direct highway access. Byron is the established, tree-canopy, Springbank Park option. Both are excellent — but they are not interchangeable, and buyers who assume "southwest London" is one market often end up disappointed when the home doesn't match the lifestyle they actually wanted. If you already know Byron is the one, jump straight to the <a href="/areas/byron/">full Byron guide</a> for current listings and pricing.</p>
+
+      <h2>Location and Feel</h2>
+      <p><a href="/areas/lambeth/">Lambeth</a> sits in London's southwest corner, immediately north of Highway 401 and 402, anchored by the former village core along Colonel Talbot Road and Main Street Lambeth. It still has a genuine small-town feel at its centre, ringed by newer estate subdivisions that have expanded quickly over the last decade.</p>
+      <p><a href="/areas/byron/">Byron</a> sits further north along the Thames River, built around Springbank Park and a walkable Commissioners Road main street. Where Lambeth feels like a growing edge of the city, Byron feels like a mature, settled community that's been fully built out for decades.</p>
+
+      <h2>Home Prices: Lambeth vs. Byron</h2>
+      <p><a href="/areas/lambeth/">Lambeth</a> homes typically range from $700,000 to $1,100,000, reflecting the newer estate-home product common in communities like Heathwoods and Privé. <a href="/areas/byron/">Byron</a> detached homes run from $700,000 to $950,000. The two neighbourhoods start at the same floor, but Lambeth's ceiling runs meaningfully higher — buyers chasing a larger, newer executive home on a bigger lot tend to find more of that inventory in Lambeth. For a side-by-side on active listings right now, check the <a href="/market-map/">interactive Neighbourhood Heat Map</a>.</p>
+
+      <h2>New Construction vs. Established Character</h2>
+      <p>This is the clearest dividing line between the two. Lambeth's newer estate communities — <a href="/blog/lambeth-london-ontario-real-estate-guide/">Heathwoods and Privé</a> — offer larger, modern floor plans on generous lots, a genuinely different product than what's typically available in more established West London neighbourhoods. Byron, by contrast, has almost no new-build inventory; its housing stock is mature, with the character and landscaping that only decades of growth can produce. Buyers who want move-in-ready modern space should lean Lambeth. Buyers who want established trees, settled streets, and a proven community should lean Byron.</p>
+
+      <h2>Schools</h2>
+      <p>Here's a fact that surprises a lot of buyers: <a href="/areas/lambeth/">Lambeth</a> and <a href="/areas/byron/">Byron</a> both feed into the same secondary school, <a href="https://www.tvdsb.ca" target="_blank" rel="noopener noreferrer">Saunders Secondary School</a> — the largest high school in the TVDSB. At the elementary level, Lambeth is served by Lambeth Public School and St. Nicholas Catholic Elementary, while Byron is served by Byron Northview Public School and St. John French Immersion. Since both communities share the same secondary catchment, schools aren't really a differentiator between these two specifically — the decision comes down to home style, setting, and commute, not academics.</p>
+
+      <h2>Outdoor Lifestyle and Commuting</h2>
+      <p><a href="/areas/byron/">Byron</a> has the clear edge on outdoor space: Springbank Park runs over 200 acres along the Thames River, with Storybook Gardens and the Thames Valley Parkway trail system built in. Lambeth's green space — Springwater Conservation Area — is real but smaller in scale.</p>
+      <p>Lambeth wins decisively on commuting. Direct access to both Highway 401 and Highway 402 makes it one of the best-positioned neighbourhoods in the city for regular highway drivers, whether that's a commute to Windsor, Kitchener-Waterloo, or points beyond. If your daily routine includes a highway on-ramp, that convenience is hard to overstate.</p>
+
+      <h2>Who Should Choose Each Neighbourhood?</h2>
+      <p><strong>Choose <a href="/areas/lambeth/">Lambeth</a> if:</strong> You want a newer, larger home, don't mind trading mature tree canopy for modern square footage, and highway access matters for your commute.</p>
+      <p><strong>Choose <a href="/areas/byron/">Byron</a> if:</strong> Outdoor lifestyle and an established, walkable community are the priority, and you're comfortable with older housing stock in exchange for Springbank Park at your doorstep.</p>
+      <p>Still not sure which fits? <a href="/contact/">Reach out to Justin</a> for a no-pressure conversation about both. You can also browse all <a href="/areas/">areas we serve</a> or read the full <a href="/blog/london-ontario-neighbourhood-guide-2026/">London Ontario neighbourhood guide</a>.</p>
+    `,
+    faqs: [
+      {
+        question: 'Is Lambeth or Byron more expensive in London Ontario?',
+        answer: 'Both neighbourhoods start around $700,000 for detached homes. Byron tops out around $950,000, while Lambeth\'s newer estate homes in communities like Heathwoods and Privé can reach $1,100,000 or more — so Lambeth has the higher ceiling for buyers wanting maximum square footage.',
+      },
+      {
+        question: 'Which has better schools, Lambeth or Byron?',
+        answer: 'Lambeth and Byron both feed into Saunders Secondary School, the largest high school in the Thames Valley District School Board. At the elementary level, Lambeth is served by Lambeth Public School and St. Nicholas Catholic Elementary, while Byron is served by Byron Northview Public School and St. John French Immersion. Since both share the same secondary catchment, schools aren\'t a major differentiator between the two.',
+      },
+      {
+        question: 'Does Lambeth have new construction homes?',
+        answer: 'Yes. Lambeth has the most active new-construction activity of any established southwest London neighbourhood, with estate communities like Heathwoods and Privé bringing larger, modern homes on generous lots. Byron, by contrast, has very little new-build inventory — its housing stock is mature and established.',
+      },
+      {
+        question: 'Which is better for highway commuters, Lambeth or Byron?',
+        answer: 'Lambeth is significantly better for commuters. It has direct access to both Highway 401 and Highway 402, making it one of the best-positioned neighbourhoods in London for regular highway driving. Byron is further from both highways and better suited to buyers whose daily routine stays within the city.',
+      },
+      {
+        question: 'What is the average home price in Lambeth vs Byron in 2026?',
+        answer: 'In 2026, Lambeth detached homes generally range from $700,000 to $1,100,000, reflecting newer estate-home construction. Byron detached homes range from $700,000 to $950,000. Both sit well above the London Ontario city average.',
+      },
+    ],
+  },
+  {
+    slug: 'homes-for-sale-oakridge-london-ontario',
+    title: "Homes for Sale in Oakridge, London Ontario: A Buyer's Guide",
+    description: "Thinking about buying in Oakridge, London Ontario? Here's what to expect on price, home types, schools, and how current listings move — from the neighbourhood's own realtor.",
+    date: '2026-09-22',
+    dateDisplay: 'September 22, 2026',
+    category: 'Neighbourhood Guides',
+    author: 'Justin Skrypnyk',
+    readTime: '6 min read',
+    image: '/images/areas/oakridge-neighbourhood-london-ontario.webp',
+    imageAlt: 'Street view of homes for sale in Oakridge, West London Ontario',
+    content: `
+      <p>If you're actively looking at homes for sale in Oakridge, you've already done the hard part — deciding on the neighbourhood. Oakridge is West London's most central, established community, and it's also this site's namesake, so this guide focuses on what buyers actually need to know before making an offer here: price bands by home type, what the school catchment looks like, and where to find current listings. For the neighbourhood's history and internal pockets, see <a href="/blog/pockets-of-oakridge-london-ontario/">The Pockets of Oakridge</a> and <a href="/blog/hidden-history-of-oakridge-london-ontario/">The Hidden History of Oakridge</a> — this post sticks to the buying side.</p>
+
+      <h2>What "Oakridge" Covers When You're House-Hunting</h2>
+      <p><a href="/areas/oakridge/">Oakridge</a> runs along the Oxford Street corridor between Wonderland Road and Sanatorium Road, made up of four distinct pockets — Hazelden, Oakridge Acres, Hunt Club, and Oakridge Park — plus a newer construction corridor around Deer Ridge and Oakridge Crossing. Listings across these pockets vary in age and style, so it's worth knowing which one you're actually looking at rather than treating "Oakridge" as one uniform product.</p>
+
+      <h2>Home Types and Price Bands</h2>
+      <p>Oakridge homes for sale typically trade between $650,000 and $850,000 for detached properties, with semi-detached, townhomes, and bungalows available at various points within and below that range. Homes in the newer construction corridor tend to price above the established-street average, while original-stock bungalows in Hazelden and Oakridge Acres are often the more accessible entry point into the neighbourhood. For current active listings and how today's prices compare to other West London areas, check the <a href="/market-map/">interactive Neighbourhood Heat Map</a>.</p>
+
+      <h2>What to Expect When You Make an Offer</h2>
+      <p>Oakridge is one of West London's more consistently in-demand neighbourhoods, and well-priced, well-maintained listings here often attract multiple showings in the first week. That doesn't mean every home sells over asking — pricing strategy and condition still matter — but buyers should be ready to move decisively once they find the right fit, rather than treating a first viewing as a formality. Working with an agent who tracks Oakridge listings daily, rather than city-wide, is the practical edge here.</p>
+
+      <h2>Schools and Family Fit</h2>
+      <p>Oakridge has long been one of London's strongest school catchments. <a href="https://www.tvdsb.ca" target="_blank" rel="noopener noreferrer">Oakridge Public School</a>, Mother Teresa Catholic Elementary, and Oakridge Secondary School are all well-regarded, with Oakridge Secondary rated 8.0/10 by the <a href="https://www.fraserinstitute.org/studies/school-performance" target="_blank" rel="noopener noreferrer">Fraser Institute</a> — 86th of 747 Ontario secondary schools. For how it stacks up against every other high school in the city, see the full <a href="/best-high-schools-london-ontario/">London Ontario high school rankings</a>.</p>
+
+      <h2>Everyday Convenience</h2>
+      <p>Oakridge is genuinely walkable to daily amenities. The Oxford &amp; Hyde Park intersection puts Remark Fresh Markets, Oakridge Centre, Shoppers Drug Mart, and Starbucks within easy reach of most homes in the neighbourhood, and Oakridge Optimist Community Park and Sifton Bog Conservation Area cover the outdoor side without needing to leave the area.</p>
+
+      <h2>Where to See Current Listings</h2>
+      <p>The fastest way to see what's actually for sale in Oakridge right now is the <a href="/areas/oakridge/">Oakridge area page</a>, which pulls live MLS® listings from every West London REALTOR®, not just this brokerage. If you'd like a walkthrough of what's currently available or want to be notified the moment something new hits the market, <a href="/contact/">reach out to Justin</a> — Oakridge is the neighbourhood he knows best.</p>
+    `,
+    faqs: [
+      {
+        question: 'How much do homes cost in Oakridge, London Ontario?',
+        answer: 'Oakridge detached homes typically sell between $650,000 and $850,000. Semi-detached homes, townhomes, and bungalows are available at various points within and below that range, with original-stock bungalows in Hazelden and Oakridge Acres often the most accessible entry point, and newer construction near Deer Ridge and Oakridge Crossing pricing above the established-street average.',
+      },
+      {
+        question: 'Is Oakridge a good neighbourhood to buy a home in London Ontario?',
+        answer: 'Yes — Oakridge is one of West London\'s most established and consistently in-demand neighbourhoods, offering strong schools (Oakridge Secondary rates 8.0/10 with the Fraser Institute), walkable amenities at the Oxford & Hyde Park node, and outdoor access via Oakridge Optimist Community Park and the Sifton Bog Conservation Area.',
+      },
+      {
+        question: 'What types of homes are for sale in Oakridge?',
+        answer: 'Oakridge offers a mix of detached homes, semi-detached homes, townhomes, and bungalows across its four internal pockets — Hazelden, Oakridge Acres, Hunt Club, and Oakridge Park — plus newer construction in the Deer Ridge and Oakridge Crossing corridor.',
+      },
+      {
+        question: 'How fast do homes sell in Oakridge?',
+        answer: 'Well-priced, well-maintained listings in Oakridge typically see strong early interest given the neighbourhood\'s consistent demand, though timing varies by pocket, condition, and pricing strategy. Check the interactive Neighbourhood Heat Map for current active-listing data.',
+      },
+      {
+        question: 'Where can I see current homes for sale in Oakridge?',
+        answer: 'The Oakridge area page on this site pulls live MLS® listings from every West London REALTOR®, not just one brokerage, so it reflects everything currently on the market in the neighbourhood.',
+      },
+    ],
+  },
 ];
 
 export function getBlogPost(slug: string): BlogPost | undefined {
