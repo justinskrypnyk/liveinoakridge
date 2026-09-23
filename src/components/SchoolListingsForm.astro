@@ -1,0 +1,159 @@
+---
+// "Send me listings near [school]" lead capture for the high-schools page.
+// Same fetch()/no-reload pattern as MarketMapNotifyForm.astro (Netlify Forms
+// -> outgoing webhook -> /api/ghl-lead), tagged "School Search Lead" with the
+// chosen school added as a GHL note. Unlike market-map-notify this form IS
+// rendered in static HTML, so no Base.astro twin is needed -- but every field
+// the submit script sends (including attribution-client.ts's utm_*/gclid)
+// must be a real input here, or Netlify drops it from the stored submission.
+// Buttons elsewhere on the page with `data-school-pick="<school name>"`
+// preselect the dropdown and scroll here.
+interface Props {
+  schools: string[];
+}
+
+const { schools } = Astro.props;
+---
+
+<div id="school-listings" class="bg-navy rounded-2xl p-8 sm:p-10 max-w-2xl mx-auto scroll-mt-24">
+  <div id="school-listings-body">
+    <h3 class="font-serif text-2xl sm:text-3xl text-white font-bold mb-2 text-center">Get listings near the school you want</h3>
+    <p class="text-white/70 text-sm mb-6 text-center leading-relaxed">
+      Tell me which school matters and I'll send you homes as they list in its area. I'll also double-check each address with the school board before you fall for a house.
+    </p>
+
+    <form id="school-listings-form" name="school-listings" data-netlify="true" netlify-honeypot="bot-field" class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-left">
+      <input type="hidden" name="form-name" value="school-listings" />
+      <p class="hidden"><label>Leave this empty <input name="bot-field" /></label></p>
+      <input type="hidden" name="utm_source" />
+      <input type="hidden" name="utm_medium" />
+      <input type="hidden" name="utm_campaign" />
+      <input type="hidden" name="utm_term" />
+      <input type="hidden" name="utm_content" />
+      <input type="hidden" name="gclid" />
+
+      <div class="sm:col-span-2">
+        <label for="school-listings-school" class="block text-xs font-semibold text-white/70 mb-1">School</label>
+        <select
+          id="school-listings-school"
+          name="school"
+          required
+          class="w-full px-4 py-3 rounded-lg border border-white/20 bg-navy-light text-white text-sm outline-none focus:border-gold focus:ring-2 focus:ring-gold/20"
+        >
+          <option value="" disabled selected>Choose a school</option>
+          {schools.map((s) => <option value={s}>{s}</option>)}
+          <option value="Another school">Another school</option>
+          <option value="Not sure yet">Not sure yet — help me choose</option>
+        </select>
+      </div>
+      <div>
+        <label for="school-listings-name" class="block text-xs font-semibold text-white/70 mb-1">First name</label>
+        <input
+          type="text"
+          id="school-listings-name"
+          name="first-name"
+          required
+          autocomplete="given-name"
+          class="w-full px-4 py-3 rounded-lg border border-white/20 bg-white/10 text-white placeholder-white/40 text-sm outline-none focus:border-gold focus:ring-2 focus:ring-gold/20"
+        />
+      </div>
+      <div>
+        <label for="school-listings-email" class="block text-xs font-semibold text-white/70 mb-1">Email</label>
+        <input
+          type="email"
+          id="school-listings-email"
+          name="email"
+          required
+          autocomplete="email"
+          placeholder="you@example.com"
+          class="w-full px-4 py-3 rounded-lg border border-white/20 bg-white/10 text-white placeholder-white/40 text-sm outline-none focus:border-gold focus:ring-2 focus:ring-gold/20"
+        />
+      </div>
+      <div class="sm:col-span-2">
+        <label for="school-listings-phone" class="block text-xs font-semibold text-white/70 mb-1">Phone <span class="font-normal text-white/40">(optional)</span></label>
+        <input
+          type="tel"
+          id="school-listings-phone"
+          name="phone"
+          autocomplete="tel"
+          class="w-full px-4 py-3 rounded-lg border border-white/20 bg-white/10 text-white placeholder-white/40 text-sm outline-none focus:border-gold focus:ring-2 focus:ring-gold/20"
+        />
+      </div>
+      <button type="submit" id="school-listings-submit" class="btn-primary justify-center sm:col-span-2">
+        Send Me Listings
+      </button>
+    </form>
+    <p id="school-listings-error" class="hidden text-xs text-red-300 mt-3 text-center"></p>
+    <p class="text-xs text-white/50 mt-4 text-center">
+      By submitting, you agree to our <a href="/privacy-policy/" class="underline hover:text-gold transition-colors">Privacy Policy</a>. We never share your information.
+    </p>
+  </div>
+
+  <div id="school-listings-success" class="hidden text-center py-4">
+    <div class="text-4xl mb-3">🏫</div>
+    <p class="font-serif text-lg text-white font-bold mb-1">Got it, you're all set.</p>
+    <p class="text-sm text-white/70">Justin will be in touch with homes near your school.</p>
+  </div>
+</div>
+
+<script>
+  import { getStoredAttribution } from '@/lib/attribution-client';
+
+  declare global {
+    interface Window {
+      fbq?: (...args: unknown[]) => void;
+      gtag?: (...args: unknown[]) => void;
+    }
+  }
+
+  const form = document.getElementById('school-listings-form') as HTMLFormElement | null;
+  const select = document.getElementById('school-listings-school') as HTMLSelectElement | null;
+  const submitBtn = document.getElementById('school-listings-submit') as HTMLButtonElement | null;
+  const errorEl = document.getElementById('school-listings-error');
+  const bodyEl = document.getElementById('school-listings-body');
+  const successEl = document.getElementById('school-listings-success');
+
+  document.querySelectorAll<HTMLElement>('[data-school-pick]').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (select) select.value = btn.dataset.schoolPick || '';
+      document.getElementById('school-listings')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      document.getElementById('school-listings-name')?.focus({ preventScroll: true });
+    });
+  });
+
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!submitBtn) return;
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Sending...';
+    errorEl?.classList.add('hidden');
+
+    try {
+      const data = new FormData(form);
+      Object.entries(getStoredAttribution()).forEach(([key, value]) => data.set(key, value));
+      const body = new URLSearchParams();
+      data.forEach((value, key) => body.append(key, String(value)));
+      const res = await fetch('/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: body.toString(),
+      });
+      if (!res.ok) throw new Error(`${res.status}`);
+
+      bodyEl?.classList.add('hidden');
+      successEl?.classList.remove('hidden');
+      window.fbq?.('track', 'Lead');
+      window.gtag?.('event', 'generate_lead', { form_type: 'school-listings', school: String(data.get('school') || '') });
+      form.reset();
+    } catch {
+      if (errorEl) {
+        errorEl.textContent = 'Something went wrong sending that — please try again.';
+        errorEl.classList.remove('hidden');
+      }
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Send Me Listings';
+    }
+  });
+</script>

@@ -105,6 +105,7 @@ export const POST: APIRoute = async ({ request }) => {
   const FORM_TAG_LABELS: Record<string, string> = {
     'save-listing': 'Saved Listing Lead',
     'market-map-notify': 'Market Map Subscriber',
+    'school-listings': 'School Search Lead',
   };
 
   // "Request a Showing" and "Request More Info" on /search/[listingKey]/ are
@@ -218,6 +219,7 @@ export const POST: APIRoute = async ({ request }) => {
   const noteLines = [
     propertyAddress && `Property: ${propertyAddress}`,
     mlsNumber && `MLS®: ${mlsNumber}`,
+    data['school'] && `School wanted: ${data['school']}`,
     data['rough-estimate-range'] && `Estimated range: ${data['rough-estimate-range']}`,
     data['neighbourhood'] && `Neighbourhood: ${data['neighbourhood']}`,
     data['property-type'] && `Property type: ${data['property-type']}`,
