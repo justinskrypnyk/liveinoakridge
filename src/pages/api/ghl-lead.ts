@@ -19,7 +19,8 @@ import { getMarketListingByKey } from '@/lib/ddf';
 import { findSimilarActiveListings } from '@/lib/similar-listings';
 import { findAreaForPoint } from '@/lib/area-boundaries';
 import { getServiceRoleClient } from '@/lib/supabase';
-import { pushRecommendationToGhl } from '@/lib/ghl-recommend';
+import { pushRecommendationToGhl, addGhlTags } from '@/lib/ghl-recommend';
+import { HIGH_SCHOOLS } from '@/data/high-schools';
 
 export const prerender = false;
 
@@ -168,6 +169,27 @@ export const POST: APIRoute = async ({ request }) => {
     Version: '2021-07-28',
   };
 
+  // form_name tags each lead by which form sent it (e.g. "home-value-lead",
+  // "newsletter", "contact") so they're segmentable in GHL; data.service
+  // adds the "I'm interested in..." selection from the contact form;
+  // FORM_TAG_LABELS/subjectTag add a friendlier, distinctly-filterable
+  // tag for forms/subjects that want one (e.g. "Saved Listing Lead",
+  // "showing-request"); chatbot-lead/chatbot-buyer/chatbot-seller do the
+  // same for AskWidget's scripted journey, keyed off the same
+  // `chat-intent` field the custom fields above use. Added via addGhlTags
+  // after the upsert rather than inside it -- the upsert would REPLACE a
+  // returning lead's existing tags (e.g. an earlier showing-request).
+  const tags = [
+    'Website Lead',
+    submission.form_name,
+    FORM_TAG_LABELS[submission.form_name],
+    subjectTag,
+    data.service,
+    data['chat-intent'] && 'chatbot-lead',
+    data['chat-intent'] === 'Buyer' && 'chatbot-buyer',
+    data['chat-intent'] === 'Seller' && 'chatbot-seller',
+  ].filter(Boolean) as string[];
+
   const res = await fetch('https://services.leadconnectorhq.com/contacts/upsert', {
     method: 'POST',
     headers: authHeaders,
@@ -178,24 +200,6 @@ export const POST: APIRoute = async ({ request }) => {
       email,
       phone: data.phone || undefined,
       locationId: GHL_LOCATION_ID,
-      // form_name tags each lead by which form sent it (e.g. "home-value-lead",
-      // "newsletter", "contact") so they're segmentable in GHL; data.service
-      // adds the "I'm interested in..." selection from the contact form;
-      // FORM_TAG_LABELS/subjectTag add a friendlier, distinctly-filterable
-      // tag for forms/subjects that want one (e.g. "Saved Listing Lead",
-      // "showing-request"); chatbot-lead/chatbot-buyer/chatbot-seller do the
-      // same for AskWidget's scripted journey, keyed off the same
-      // `chat-intent` field the custom fields above use.
-      tags: [
-        'Website Lead',
-        submission.form_name,
-        FORM_TAG_LABELS[submission.form_name],
-        subjectTag,
-        data.service,
-        data['chat-intent'] && 'chatbot-lead',
-        data['chat-intent'] === 'Buyer' && 'chatbot-buyer',
-        data['chat-intent'] === 'Seller' && 'chatbot-seller',
-      ].filter(Boolean),
       customFields: chatCustomFields,
       source: `Website — ${data.subject || submission.form_name || 'Contact Form'}`,
     }),
@@ -206,6 +210,10 @@ export const POST: APIRoute = async ({ request }) => {
     console.error('GHL upsert failed:', res.status, errText);
     return new Response('GHL upsert failed', { status: 502 });
   }
+
+  const upserted = await res.json().catch(() => null);
+  const contactId: string | undefined = upserted?.contact?.id;
+  if (contactId) await addGhlTags(contactId, tags);
 
   // Property/MLS context (save-listing), the home-value-estimate calculator's
   // inputs/result (previously collected by the page but silently dropped
@@ -234,19 +242,15 @@ export const POST: APIRoute = async ({ request }) => {
     data.gclid && `GCLID: ${data.gclid}`,
   ].filter(Boolean);
 
-  if (noteLines.length > 0) {
+  if (noteLines.length > 0 && contactId) {
     try {
-      const upserted = await res.json();
-      const contactId = upserted?.contact?.id;
-      if (contactId) {
-        const noteRes = await fetch(`https://services.leadconnectorhq.com/contacts/${contactId}/notes`, {
-          method: 'POST',
-          headers: authHeaders,
-          body: JSON.stringify({ body: noteLines.join('\n') }),
-        });
-        if (!noteRes.ok) {
-          console.error('GHL note failed:', noteRes.status, await noteRes.text().catch(() => ''));
-        }
+      const noteRes = await fetch(`https://services.leadconnectorhq.com/contacts/${contactId}/notes`, {
+        method: 'POST',
+        headers: authHeaders,
+        body: JSON.stringify({ body: noteLines.join('\n') }),
+      });
+      if (!noteRes.ok) {
+        console.error('GHL note failed:', noteRes.status, await noteRes.text().catch(() => ''));
       }
     } catch (err) {
       console.error('GHL note failed:', err);
@@ -321,6 +325,44 @@ export const POST: APIRoute = async ({ request }) => {
       }
     } catch (err) {
       console.error('Similar-homes recommendation failed:', err);
+    }
+  }
+
+  // School leads -> saved searches. Both the high-schools page form (`school`)
+  // and the chatbot's school-search opening (`chat-qualifier` "School: ...")
+  // promise new listings near that school, so turn the pick into one
+  // saved_searches row per neighbourhood the school serves; the daily
+  // saved-search-alerts job then does the rest. "Not sure yet"/"Another
+  // school" match no school and are skipped. Existing rows for the same
+  // email+area aren't duplicated. Own try/catch: the lead is already saved.
+  const schoolName = data.school || String(data['chat-qualifier'] || '').replace(/^School: /, '');
+  const school = HIGH_SCHOOLS.find((s) => s.name === schoolName && s.servesAreas?.length);
+  if (school) {
+    try {
+      const supabase = getServiceRoleClient();
+      if (supabase) {
+        const areaSlugs = school.servesAreas!.map((a) => a.slug);
+        const { data: existing } = await supabase
+          .from('saved_searches')
+          .select('area_slug')
+          .eq('email', email)
+          .in('area_slug', areaSlugs);
+        const have = new Set((existing || []).map((r) => r.area_slug));
+        const rows = areaSlugs.filter((slug) => !have.has(slug)).map((slug) => ({
+          email,
+          first_name: firstName || null,
+          last_name: lastName || null,
+          phone: data.phone || null,
+          area_slug: slug,
+          frequency: 'weekly',
+        }));
+        if (rows.length > 0) {
+          const { error } = await supabase.from('saved_searches').insert(rows);
+          if (error) console.error('School saved-search insert failed:', error.message);
+        }
+      }
+    } catch (err) {
+      console.error('School saved-search insert failed:', err);
     }
   }
 

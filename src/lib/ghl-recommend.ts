@@ -72,6 +72,40 @@ export interface PushRecommendationInput {
   summary?: string;
 }
 
+// GHL's contacts/upsert REPLACES a contact's whole tags array and overwrites
+// its `source` (both confirmed against the live API 2026-09-23 with a
+// throwaway contact) -- so a repeat upsert silently wiped every tag an
+// earlier form/alert had set, and relabelled the lead's original source.
+// Upsert WITHOUT tags (existing tags are then left alone), then add tags
+// through this endpoint, which merges. Tags are added after the upsert on
+// purpose: tag-triggered workflows must see the custom fields already set.
+export async function addGhlTags(contactId: string, tags: string[]): Promise<void> {
+  if (!contactId || tags.length === 0) return;
+  try {
+    const res = await fetch(`https://services.leadconnectorhq.com/contacts/${contactId}/tags`, {
+      method: 'POST',
+      headers: AUTH_HEADERS,
+      body: JSON.stringify({ tags }),
+    });
+    if (!res.ok) console.error('GHL add-tags failed:', res.status, await res.text().catch(() => ''));
+  } catch (err) {
+    console.error('GHL add-tags failed:', err);
+  }
+}
+
+async function removeGhlTags(contactId: string, tags: string[]): Promise<void> {
+  try {
+    await fetch(`https://services.leadconnectorhq.com/contacts/${contactId}/tags`, {
+      method: 'DELETE',
+      headers: AUTH_HEADERS,
+      body: JSON.stringify({ tags }),
+    });
+  } catch {
+    // Removing a tag the contact doesn't have is a no-op; a failure here only
+    // means the workflow may not re-fire, never a lost lead.
+  }
+}
+
 function formatListingLine(l: RecommendedListingLine): string {
   const price = l.price != null ? `$${Math.round(l.price).toLocaleString('en-CA')}` : 'Price n/a';
   return `${l.address} — ${price} — ${l.url}`;
@@ -88,7 +122,9 @@ export async function pushRecommendationToGhl(input: PushRecommendationInput): P
 
   const customFields = input.tag === 'market-update'
     ? (input.summary ? [{ key: 'market_update_summary', fieldValue: input.summary }] : [])
-    : lines.map((value, i) => ({ key: `recommended_listing_${i + 1}`, fieldValue: value }));
+    // Always all 3 -- an empty value clears the field (confirmed live), so a
+    // 1-listing push doesn't email last time's leftover listings 2 and 3.
+    : [0, 1, 2].map((i) => ({ key: `recommended_listing_${i + 1}`, fieldValue: lines[i] ?? '' }));
 
   let contactId: string | null = null;
   try {
@@ -101,15 +137,10 @@ export async function pushRecommendationToGhl(input: PushRecommendationInput): P
         email: input.email,
         phone: input.phone || undefined,
         locationId: GHL_LOCATION_ID,
-        // GHL's contacts/upsert REPLACES the tags array rather than merging it,
-        // so a bare [input.tag] here silently wipes out Website Lead (and any
-        // other tag) that an earlier upsert on this same contact already set
-        // (e.g. ghl-lead.ts's initial save-listing capture, moments before this
-        // runs). Always re-assert Website Lead so every contact this pipeline
-        // touches stays tagged/filterable regardless of upsert order.
-        tags: ['Website Lead', input.tag],
+        // No tags/source here -- see addGhlTags. Every contact this pipeline
+        // touches already came in through a site form, whose source should
+        // survive.
         customFields,
-        source: 'Website — Automated Recommendation',
       }),
     });
     if (!res.ok) {
@@ -123,17 +154,28 @@ export async function pushRecommendationToGhl(input: PushRecommendationInput): P
     return;
   }
 
-  const noteBody = [input.intro, ...lines, input.summary].filter(Boolean).join('\n');
-  if (!contactId || !noteBody) return;
 
-  try {
-    const noteRes = await fetch(`https://services.leadconnectorhq.com/contacts/${contactId}/notes`, {
-      method: 'POST',
-      headers: AUTH_HEADERS,
-      body: JSON.stringify({ body: noteBody }),
-    });
-    if (!noteRes.ok) console.error('GHL recommendation note failed:', noteRes.status, await noteRes.text().catch(() => ''));
-  } catch (err) {
-    console.error('GHL recommendation note failed:', err);
+  if (!contactId) return;
+
+  const noteBody = [input.intro, ...lines, input.summary].filter(Boolean).join('\n');
+  if (noteBody) {
+    try {
+      const noteRes = await fetch(`https://services.leadconnectorhq.com/contacts/${contactId}/notes`, {
+        method: 'POST',
+        headers: AUTH_HEADERS,
+        body: JSON.stringify({ body: noteBody }),
+      });
+      if (!noteRes.ok) console.error('GHL recommendation note failed:', noteRes.status, await noteRes.text().catch(() => ''));
+    } catch (err) {
+      console.error('GHL recommendation note failed:', err);
+    }
   }
+
+  // Tags last, so the tag-triggered workflow sees the fields/note already set.
+  // The recommendation tag is removed first so re-adding it always fires the
+  // workflow's "tag added" trigger, even if an earlier push left it on.
+  // Website Lead is re-asserted so every contact this pipeline touches stays
+  // filterable; both merge, so nothing else on the contact is lost.
+  await removeGhlTags(contactId, [input.tag]);
+  await addGhlTags(contactId, ['Website Lead', input.tag]);
 }

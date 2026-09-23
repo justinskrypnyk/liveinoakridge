@@ -16,6 +16,10 @@ const GOOGLE_GEOCODING_API_KEY = process.env.GOOGLE_GEOCODING_API_KEY;
 const DDF_NATIONAL_USERNAME = process.env.DDF_NATIONAL_USERNAME;
 const DDF_NATIONAL_PASSWORD = process.env.DDF_NATIONAL_PASSWORD;
 const CONCURRENCY = 15;
+// Google is only the fallback after the national pool. Capped per run because
+// the whole site shares Google's 10k/month free geocoding allowance (~330/day)
+// -- a backlog of misses clears over a few days instead of in one expensive run.
+const MAX_GOOGLE_GEOCODES_PER_RUN = 150;
 
 async function odataGet(resource, params) {
   const url = new URL(`${DDF_API_BASE_URL}${resource}`);
@@ -151,6 +155,7 @@ export default async () => {
   let geocoded = 0;
   let skipped = 0;
   let failed = 0;
+  let googleCalls = 0;
 
   for (let i = 0; i < active.length; i += CONCURRENCY) {
     const batch = active.slice(i, i + CONCURRENCY);
@@ -169,6 +174,11 @@ export default async () => {
           fromNationalPool++;
           return;
         }
+        if (googleCalls >= MAX_GOOGLE_GEOCODES_PER_RUN) {
+          skipped++;
+          return;
+        }
+        googleCalls++;
         const geo = await geocodeGoogle(address);
         if (geo) {
           await store.setJSON(address, geo);

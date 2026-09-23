@@ -34,6 +34,10 @@ const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 const PAGES_PER_RUN = 15;
+// Walking years of sold history can hit thousands of uncached addresses; the
+// whole site shares Google's 10k/month free geocoding allowance (~330/day), so
+// cap Google here and let the rest wait for a later pass of the cursor.
+const MAX_GOOGLE_GEOCODES_PER_RUN = 100;
 // A page can be far more "Closed"-heavy than expected (200+/500 seen in
 // practice) -- with a live geocode + photo lookup per never-before-seen
 // closed listing, a single dense page could take 30+ minutes even with the
@@ -165,6 +169,7 @@ export default async () => {
   let closedSeen = 0;
   let upserted = 0;
   let geocodedNew = 0;
+  let googleCalls = 0;
   let photosNew = 0;
   let reachedEnd = false;
   let stoppedEarly = false;
@@ -228,7 +233,8 @@ export default async () => {
       if (!address) continue;
 
       let geo = await geocodeStore.get(address, { type: 'json' }).catch(() => null);
-      if (!geo) {
+      if (!geo && googleCalls < MAX_GOOGLE_GEOCODES_PER_RUN) {
+        googleCalls++;
         geo = await geocodeGoogle(address);
         if (geo) {
           await geocodeStore.setJSON(address, geo);

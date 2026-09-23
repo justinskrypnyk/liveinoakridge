@@ -54,7 +54,9 @@ async function pushToGhl({ email, firstName, lastName, phone, intro, lines }) {
     Authorization: `Bearer ${GHL_API_TOKEN}`,
     Version: '2021-07-28',
   };
-  const customFields = lines.map((value, i) => ({ key: `recommended_listing_${i + 1}`, fieldValue: value }));
+  // Always all 3 -- an empty value clears the field (confirmed live), so a
+  // 1-listing alert doesn't email last time's leftover listings 2 and 3.
+  const customFields = [0, 1, 2].map((i) => ({ key: `recommended_listing_${i + 1}`, fieldValue: lines[i] ?? '' }));
 
   const res = await fetch('https://services.leadconnectorhq.com/contacts/upsert', {
     method: 'POST',
@@ -65,9 +67,10 @@ async function pushToGhl({ email, firstName, lastName, phone, intro, lines }) {
       email,
       phone: phone || undefined,
       locationId: GHL_LOCATION_ID,
-      tags: ['nosy-neighbour-alert'],
+      // No tags/source here: GHL's upsert REPLACES tags and overwrites the
+      // lead's original source (confirmed live 2026-09-23). The tag is added
+      // below through the merging add-tags endpoint instead.
       customFields,
-      source: 'Website — Automated Recommendation',
     }),
   });
   if (!res.ok) {
@@ -84,6 +87,23 @@ async function pushToGhl({ email, firstName, lastName, phone, intro, lines }) {
         body: JSON.stringify({ body: [intro, ...lines].join('\n') }),
       });
       if (!noteRes.ok) console.error('GHL note failed:', noteRes.status, await noteRes.text().catch(() => ''));
+
+      // Last, so the tag-triggered GHL workflow sees the fields already set.
+      // Remove first, then add: GHL workflows fire on "tag added", which never
+      // happens if the tag is still on the contact from a previous alert (e.g.
+      // one sent before the workflow existed, or a workflow that doesn't strip
+      // it). Removing a tag the contact doesn't have is a harmless no-op.
+      await fetch(`https://services.leadconnectorhq.com/contacts/${contactId}/tags`, {
+        method: 'DELETE',
+        headers: authHeaders,
+        body: JSON.stringify({ tags: ['nosy-neighbour-alert'] }),
+      }).catch(() => {});
+      const tagRes = await fetch(`https://services.leadconnectorhq.com/contacts/${contactId}/tags`, {
+        method: 'POST',
+        headers: authHeaders,
+        body: JSON.stringify({ tags: ['nosy-neighbour-alert'] }),
+      });
+      if (!tagRes.ok) console.error('GHL add-tags failed:', tagRes.status, await tagRes.text().catch(() => ''));
     }
   } catch (err) {
     console.error('GHL note failed:', err);
