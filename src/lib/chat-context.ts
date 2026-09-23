@@ -15,7 +15,7 @@ export type ChatIntent = 'buyer' | 'seller';
 // the downstream timeline/pre-approval/seller-stage steps are already
 // broadly applicable, so there's no need for a persona-specific tree past
 // the first step.
-export type ChatPersona = 'first-time-buyer' | 'downsizer' | 'upsizer' | 'relocation' | 'investor' | 'home-search';
+export type ChatPersona = 'first-time-buyer' | 'downsizer' | 'upsizer' | 'relocation' | 'investor' | 'home-search' | 'school-search';
 
 export interface ChatContext {
   intent?: ChatIntent;
@@ -45,6 +45,7 @@ const PERSONA_PATHS: [string, ChatPersona, 'prefix' | 'exact'][] = [
   ['/services/relocation/', 'relocation', 'prefix'],
   ['/services/investment/', 'investor', 'prefix'],
   ['/search/', 'home-search', 'exact'],
+  ['/best-high-schools-london-ontario/', 'school-search', 'exact'],
 ];
 
 export function inferChatContext(pathname: string): ChatContext {

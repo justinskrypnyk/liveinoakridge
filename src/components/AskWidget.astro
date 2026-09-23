@@ -6,7 +6,7 @@
 //      which Base.astro infers from the URL unless a page overrides it with
 //      real data (e.g. a listing page's server-resolved neighbourhood).
 //      `persona` (first-time-buyer, downsizer, upsizer, relocation,
-//      investor, home-search) swaps in a more targeted entry greeting for
+//      investor, home-search, school-search) swaps in a more targeted entry greeting for
 //      a handful of pages with a distinct enough audience to be worth it,
 //      sometimes with one extra qualifying question spliced in further
 //      down the same tree — see PERSONA_ENTRIES below and the client
@@ -18,6 +18,7 @@
 import ContactForm from './ContactForm.astro';
 
 import type { ChatPersona } from '@/lib/chat-context';
+import { HIGH_SCHOOLS } from '@/data/high-schools';
 
 interface Props {
   bottomOffsetClass?: string;
@@ -40,7 +41,9 @@ const starterQuestions = [
 // Every button carries data-branch (buyer/seller/browsing, what the rest of
 // the script needs) and optionally data-quick (a specific answer the click
 // itself already supplies, letting the script skip asking it again).
-interface EntryOption { label: string; branch: 'buyer' | 'seller' | 'browsing'; quick?: string; }
+// `school` (school-search persona only) is the full school name the click
+// picks -- recorded as its own transcript line and the chat_qualifier field.
+interface EntryOption { label: string; branch: 'buyer' | 'seller' | 'browsing'; quick?: string; school?: string; }
 let greeting: string;
 let options: EntryOption[];
 
@@ -95,6 +98,22 @@ const PERSONA_ENTRIES: Record<ChatPersona, { greeting: string; options: EntryOpt
     options: [
       { label: 'I found a home I’m interested in', branch: 'buyer', quick: 'ready' },
       { label: 'Still comparing options', branch: 'buyer', quick: 'research' },
+      { label: 'Actually, I’m selling', branch: 'seller' },
+    ],
+  },
+  // The high-schools page. Same schools as that page's "homes near these
+  // schools" cards (the ones mapped to a neighbourhood we serve), so the two
+  // never drift apart. No quick answer -- picking a school goes on to the
+  // normal buyer timeline question.
+  'school-search': {
+    greeting: `Looking for a home near a particular school? Pick one and I'll help you find what's for sale in its area.`,
+    options: [
+      ...HIGH_SCHOOLS.filter((s) => s.servesAreas?.length).map((s) => ({
+        label: s.name.replace(/ School$/, ''),
+        branch: 'buyer' as const,
+        school: s.name,
+      })),
+      { label: 'Not sure which school yet', branch: 'buyer', school: 'Not sure yet' },
       { label: 'Actually, I’m selling', branch: 'seller' },
     ],
   },
@@ -187,6 +206,7 @@ if (persona && PERSONA_ENTRIES[persona]) {
                 class="ask-journey-btn flex items-center w-full min-h-[44px] text-left text-sm text-navy/80 bg-cream hover:bg-gold/10 rounded-lg px-3 py-2.5 transition-colors"
                 data-branch={opt.branch}
                 data-quick={opt.quick}
+                data-school={opt.school}
                 data-label={opt.label}
               >
                 {opt.label}
@@ -593,7 +613,11 @@ if (persona && PERSONA_ENTRIES[persona]) {
       const quick = el.dataset.quick;
       const label = el.dataset.label || '';
       transcript.push(`Started: ${label}`);
-      track('chat_journey_step', { step: 'entry', branch, quick });
+      if (el.dataset.school) {
+        transcript.push(`School wanted: ${el.dataset.school}`);
+        answers.qualifier = `School: ${el.dataset.school}`;
+      }
+      track('chat_journey_step', { step: 'entry', branch, quick, school: el.dataset.school });
 
       if (branch === 'browsing') {
         renderBrowsing();
