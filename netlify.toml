@@ -13,3 +13,8 @@
 
 [functions."monthly-digest-background"]
   included_files = ["netlify/functions/assets/fonts/**"]
+
+# london-letter-draft-background.mjs parses the blog list straight out of
+# src/data/blog.ts (a .ts file, so not auto-detected as an asset).
+[functions."london-letter-draft-background"]
+  included_files = ["src/data/blog.ts"]
