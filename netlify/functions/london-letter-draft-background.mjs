@@ -13,6 +13,8 @@
 //     west-end news item.
 //   - New Chapman listings: Sutton Group Chapman Realty listings ONLY (Justin's
 //     rule, 2026-09-24), newest first, London addresses, from the AMPRE feed.
+//   - Recently sold by the Chapman Team: same Chapman-only rule (Justin,
+//     2026-09-25), from the VOW feed, newest firm date first.
 //   - From the blog: newest non-market-update post in src/data/blog.ts.
 //   - Around London + the west-end item: Smile picks these by hand each
 //     month (Justin chose not to add an AI news search, 2026-09-25), so the
@@ -28,6 +30,7 @@ import { readFileSync } from 'node:fs';
 
 const DDF_ACCESS_TOKEN = process.env.DDF_ACCESS_TOKEN;
 const DDF_API_BASE_URL = process.env.DDF_API_BASE_URL;
+const VOW_ACCESS_TOKEN = process.env.VOW_ACCESS_TOKEN; // sold data -- DDF token only sees active listings
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
@@ -37,6 +40,8 @@ const SMILE_EMAIL = 'smile@homeswithjustin.ca';
 const SITE = 'https://www.liveinoakridge.ca'; // bare domain 301s to www
 const MIN_PLAUSIBLE_SALE_PRICE = 30000; // same floor as monthly-digest-background.mjs
 const LISTING_COUNT = 4;
+const SOLD_COUNT = 4;
+const SOLD_LOOKBACK_DAYS = 90; // older than this isn't "recently sold"
 const OAKRIDGE_MIN_SALES = 5; // below this, one month's median is too noisy to headline
 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -217,16 +222,17 @@ function oakridgeCorner(m, monthName) {
 
 // This AMPRE deployment only decodes %20 for spaces in $filter values (see
 // src/lib/ddf.ts) -- URLSearchParams' '+' breaks it, so encode by hand.
-async function odataGet(resource, params) {
+async function odataGet(resource, params, token = DDF_ACCESS_TOKEN) {
   const qs = Object.entries(params).map(([k, v]) => `${k}=${encodeURIComponent(v)}`).join('&');
   const res = await fetch(`${DDF_API_BASE_URL}${resource}?${qs}`, {
-    headers: { Authorization: `Bearer ${DDF_ACCESS_TOKEN}`, Accept: 'application/json' },
+    headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
   });
   if (!res.ok) throw new Error(`${resource} -> HTTP ${res.status}: ${await res.text().catch(() => '')}`);
   return res.json();
 }
 
 const STREET_ABBR = { Road: 'Rd', Drive: 'Dr', Street: 'St', Avenue: 'Ave', Boulevard: 'Blvd', Crescent: 'Cres', Court: 'Crt', Place: 'Pl', Lane: 'Lane', Way: 'Way', Terrace: 'Terr', Circle: 'Circ', Gate: 'Gate', Trail: 'Trail' };
+const AREA_NAMES = { oakridge: 'Oakridge', 'west-london': 'West London', whitehills: 'Whitehills', byron: 'Byron', westmount: 'Westmount', riverbend: 'Riverbend', lambeth: 'Lambeth' };
 const QUADRANT = { 'London North': 'North London', 'London South': 'South London', 'London East': 'East London', 'London West': 'West London' };
 
 // "455 Hyde Park Road 15, London North, ON N6H 3R9" -> "#15, 455 Hyde Park Rd"
@@ -243,12 +249,28 @@ function shortAddress(unparsed) {
 async function areaNamesByKey() {
   try {
     const snap = await getStore('area-newest-listings').get('latest', { type: 'json' });
-    const names = { oakridge: 'Oakridge', 'west-london': 'West London', whitehills: 'Whitehills', byron: 'Byron', westmount: 'Westmount', riverbend: 'Riverbend', lambeth: 'Lambeth' };
     const out = {};
-    for (const [slug, list] of Object.entries(snap?.areas || {})) for (const l of list) out[l.key] = names[slug] || null;
+    for (const [slug, list] of Object.entries(snap?.areas || {})) for (const l of list) out[l.key] = AREA_NAMES[slug] || null;
     return out;
   } catch {
     return {}; // blobs unavailable (local run) -- fall back to the address quadrant
+  }
+}
+
+async function primaryPhoto(listingKey, token) {
+  try {
+    const media = (await odataGet('Media', {
+      $filter: `contains(ResourceRecordKey,'${listingKey}')`,
+      $select: 'MediaURL,Order,ImageSizeDescription',
+      $orderby: 'Order',
+      $top: '10',
+    }, token)).value || [];
+    const firstOrder = Math.min(...media.map((m) => m.Order));
+    const first = media.filter((m) => m.Order === firstOrder);
+    return (first.find((m) => m.ImageSizeDescription === 'Large') || first[0])?.MediaURL || null;
+  } catch (err) {
+    console.error(`london-letter: photo lookup failed for ${listingKey}:`, err.message);
+    return null;
   }
 }
 
@@ -267,20 +289,7 @@ async function getChapmanListings() {
 
   const areaByKey = await areaNamesByKey();
   return Promise.all(listings.map(async (l) => {
-    let photo = null;
-    try {
-      const media = (await odataGet('Media', {
-        $filter: `contains(ResourceRecordKey,'${l.ListingKey}')`,
-        $select: 'MediaURL,Order,ImageSizeDescription',
-        $orderby: 'Order',
-        $top: '10',
-      })).value || [];
-      const firstOrder = Math.min(...media.map((m) => m.Order));
-      const first = media.filter((m) => m.Order === firstOrder);
-      photo = (first.find((m) => m.ImageSizeDescription === 'Large') || first[0])?.MediaURL || null;
-    } catch (err) {
-      console.error(`london-letter: photo lookup failed for ${l.ListingKey}:`, err.message);
-    }
+    const photo = await primaryPhoto(l.ListingKey);
     const quadrant = (String(l.UnparsedAddress).split(',')[1] || '').trim();
     return {
       key: l.ListingKey,
@@ -291,6 +300,61 @@ async function getChapmanListings() {
       baths: l.BathroomsTotalInteger,
       listedAt: String(l.OriginalEntryTimestamp || '').slice(0, 10),
       photo,
+    };
+  }));
+}
+
+// Chapman solds (VOW feed). PurchaseContractDate is the day the deal went
+// firm -- CloseDate is the future closing day, often weeks out, so it would
+// call a home "sold in November" in an October email. AMPRE rejects $orderby
+// on Property (see vow-sold-sync-background), so sort client-side.
+async function getChapmanSolds(supabase) {
+  const cutoff = new Date(Date.now() - SOLD_LOOKBACK_DAYS * 86400000).toISOString().slice(0, 10);
+  const params = {
+    $filter: "contains(ListOfficeName,'CHAPMAN')",
+    $select: 'ListingKey,UnparsedAddress,City,ClosePrice,ListPrice,BedroomsTotal,BathroomsTotalInteger,StandardStatus,TransactionType,PropertyType,PurchaseContractDate,ListOfficeName',
+    $top: '500',
+  };
+  const all = [];
+  let page = await odataGet('Property', params, VOW_ACCESS_TOKEN);
+  all.push(...(page.value || []));
+  for (let i = 0; page['@odata.nextLink'] && i < 10; i++) {
+    const res = await fetch(page['@odata.nextLink'], { headers: { Authorization: `Bearer ${VOW_ACCESS_TOKEN}`, Accept: 'application/json' } });
+    if (!res.ok) throw new Error(`Property nextLink -> HTTP ${res.status}`);
+    page = await res.json();
+    all.push(...(page.value || []));
+  }
+
+  const solds = all
+    .filter((l) => /SUTTON GROUP CHAPMAN/i.test(l.ListOfficeName || ''))
+    .filter((l) => l.StandardStatus === 'Closed' && l.TransactionType !== 'For Lease' && l.PropertyType !== 'Commercial')
+    .filter((l) => /,\s*London\b/.test(l.UnparsedAddress || '') && Number(l.ClosePrice) >= MIN_PLAUSIBLE_SALE_PRICE)
+    .filter((l) => String(l.PurchaseContractDate || '').slice(0, 10) >= cutoff)
+    .sort((a, b) => String(b.PurchaseContractDate).localeCompare(String(a.PurchaseContractDate)))
+    .slice(0, SOLD_COUNT);
+  if (solds.length === 0) return [];
+
+  // The sold sync already tagged each home's neighbourhood and cached its
+  // (watermarked) photo -- reuse both rather than re-deriving them.
+  const { data: synced } = await supabase
+    .from('vow_sold_listings')
+    .select('listing_key, area_slug, photo_url')
+    .in('listing_key', solds.map((l) => l.ListingKey));
+  const byKey = Object.fromEntries((synced || []).map((r) => [r.listing_key, r]));
+
+  return Promise.all(solds.map(async (l) => {
+    const row = byKey[l.ListingKey];
+    const quadrant = (String(l.UnparsedAddress).split(',')[1] || '').trim();
+    return {
+      key: l.ListingKey,
+      address: shortAddress(l.UnparsedAddress),
+      area: AREA_NAMES[row?.area_slug] || QUADRANT[quadrant] || 'London',
+      soldPrice: Number(l.ClosePrice),
+      listPrice: Number(l.ListPrice),
+      beds: l.BedroomsTotal,
+      baths: l.BathroomsTotalInteger,
+      firmDate: String(l.PurchaseContractDate).slice(0, 10),
+      photo: row?.photo_url || await primaryPhoto(l.ListingKey, VOW_ACCESS_TOKEN),
     };
   }));
 }
@@ -349,12 +413,28 @@ function listingCell(l) {
         </a></td>`;
 }
 
-function buildNewsletter({ sendMonthName, sendYear, monthName, market, listings, blog }) {
+// No link: sold homes have no public page on the site.
+function soldCell(s) {
+  const img = s.photo
+    ? `<img src="${esc(s.photo)}" width="260" alt="${esc(s.address)}" style="display:block;width:100%;height:auto;border-radius:4px;">`
+    : `<div style="height:160px;background:#dbe4ea;border-radius:4px;"></div>`;
+  const overAsking = s.listPrice > 0 && s.soldPrice > s.listPrice;
+  return `<td class="col" width="50%" valign="top" style="padding:0 8px 16px;color:#16283a;">
+        ${img}
+        <div style="font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#047857;font-weight:bold;margin-top:8px;">Sold${overAsking ? ' over asking' : ''}</div>
+        <div style="font-weight:bold;font-size:15px;">$${s.soldPrice.toLocaleString('en-CA')}</div>
+        <div style="font-size:13px;color:#5a7185;line-height:1.4;">${esc(s.beds)} bed &middot; ${esc(s.baths)} bath &middot; ${esc(s.area)}<br>${esc(s.address)}</div>
+      </td>`;
+}
+
+function buildNewsletter({ sendMonthName, sendYear, monthName, market, listings, solds, blog }) {
   const sentences = marketSentences(market, monthName);
   const corner = oakridgeCorner(market, monthName);
   const bullet = (s, last) => `<tr><td width="22" valign="top" style="padding:5px 0 ${last ? 0 : 10}px;"><div style="width:10px;height:10px;border-radius:5px;background:#10b981;"></div></td><td style="padding:0 0 ${last ? 0 : 10}px;">${s}</td></tr>`;
   const rows = [];
   for (let i = 0; i < listings.length; i += 2) rows.push(`<tr>${listings.slice(i, i + 2).map(listingCell).join('')}</tr>`);
+  const soldRowsHtml = [];
+  for (let i = 0; i < solds.length; i += 2) soldRowsHtml.push(`<tr>${solds.slice(i, i + 2).map(soldCell).join('')}</tr>`);
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -372,7 +452,7 @@ function buildNewsletter({ sendMonthName, sendYear, monthName, market, listings,
 </style>
 </head>
 <body style="margin:0;padding:0;background:#e8eef1;">
-<div style="display:none;max-height:0;overflow:hidden;">What London homes sold for in ${esc(monthName)}, new Chapman listings, and what's on in ${esc(sendMonthName)}.</div>
+<div style="display:none;max-height:0;overflow:hidden;">What London homes sold for in ${esc(monthName)}, new and recently sold Chapman listings, and what's on in ${esc(sendMonthName)}.</div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#e8eef1;">
 <tr><td align="center" style="padding:24px 12px;">
 <table role="presentation" class="wrap" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:600px;background:#ffffff;border-radius:6px;overflow:hidden;font-family:Helvetica,Arial,sans-serif;color:#16283a;">
@@ -426,6 +506,14 @@ ${listings.length ? `
     </table>
     <a href="${SITE}/search/" style="display:inline-block;margin-top:6px;color:#047857;font-weight:bold;font-size:14px;text-decoration:none;">See all homes for sale &rarr;</a>
   </td></tr>
+` : ''}${solds.length ? `
+  <tr><td class="pad" style="padding:26px 32px;border-top:1px solid #dbe4ea;">
+    <div style="font-family:Georgia,serif;font-size:21px;color:#0c2340;margin:0 0 12px;">Recently sold by the Chapman Team</div>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+      ${soldRowsHtml.join('\n      ')}
+    </table>
+    <a href="${SITE}/home-value-estimate/" style="display:inline-block;margin-top:6px;color:#047857;font-weight:bold;font-size:14px;text-decoration:none;">Wondering what yours would sell for? &rarr;</a>
+  </td></tr>
 ` : ''}
   <tr><td class="pad" style="padding:26px 32px;border-top:1px solid #dbe4ea;">
     <div style="font-family:Georgia,serif;font-size:21px;color:#0c2340;margin:0 0 6px;">Around London in ${esc(sendMonthName)}</div>
@@ -449,7 +537,7 @@ ${blog ? `
     <b style="color:#ffffff;">Justin Skrypnyk, Real Estate Broker</b> &middot; Chapman Team<br>
     Sutton Group Chapman Realty Inc., Brokerage<br>
     <a href="${SITE}/" style="color:#8fd9bd;">liveinoakridge.ca</a><br>
-    Listings shown are listed by Sutton Group Chapman Realty Inc., Brokerage. Not intended to solicit buyers or sellers currently under contract.
+    Listings and sales shown are listed by Sutton Group Chapman Realty Inc., Brokerage. Not intended to solicit buyers or sellers currently under contract.
   </td></tr>
 
 </table>
@@ -474,7 +562,7 @@ function subjectIdeas(market, monthName) {
   return ideas;
 }
 
-function buildSmileEmail({ sendMonthName, sendYear, monthName, market, listings, blog, newsletterHtml, isTest }) {
+function buildSmileEmail({ sendMonthName, sendYear, monthName, market, listings, solds, blog, newsletterHtml, isTest }) {
   const statsLine = `London: ${market.city.count} sales, typical price ${market.city.median ? fmtRoundPrice(market.city.median) : 'n/a'} (a year ago ${market.city.lastYear.median ? fmtRoundPrice(market.city.lastYear.median) : 'n/a'}), ${market.city.moi != null ? `${market.city.moi.toFixed(1)} months of inventory` : 'months of inventory n/a'}. Oakridge: ${market.oak.count} sales, typical price ${market.oak.median ? fmtRoundPrice(market.oak.median) : 'n/a'} (a year ago ${market.oak.lastYear.median ? fmtRoundPrice(market.oak.lastYear.median) : 'n/a'}).`;
   const body = `
 <div style="font-family:Helvetica,Arial,sans-serif;font-size:15px;line-height:1.55;color:#16283a;max-width:680px;">
@@ -488,6 +576,7 @@ function buildSmileEmail({ sendMonthName, sendYear, monthName, market, listings,
     <li><b>Justin's note:</b> replace the highlighted yellow line near the top with Justin's 2 or 3 sentences for this month.</li>
     <li><b>Local news:</b> fill in the two yellow spots. Add 1 west-end item in the West London corner (Oakridge, Byron, Westmount, Hyde Park and nearby) and 2 or 3 London items under "Around London", each with a link. Good places to look: london.ca/newsroom, londontourism.ca/events and CBC London. Only use things happening this month, and double-check the dates.</li>
     <li><b>Listings:</b> click each listing and confirm it's still for sale. If one has sold, swap in another current Sutton Group Chapman Realty listing (never another brokerage's).</li>
+    <li><b>Recently sold:</b> these fill in on their own (Chapman sales only). Nothing to do unless Justin wants one taken out.</li>
     <li>Pick a subject line (ideas below), send a test to yourself and Justin, and check it on your phone: photos show, links work, and the unsubscribe line and business address appear at the bottom.</li>
     <li>Send to the newsletter list once Justin approves the test.</li>
   </ol>
@@ -500,6 +589,7 @@ function buildSmileEmail({ sendMonthName, sendYear, monthName, market, listings,
   <ul>
     <li><b>Numbers:</b> ${esc(statsLine)}</li>
     <li><b>Listings:</b> ${listings.length ? listings.map((l) => `${esc(l.address)} (${esc(l.area)}, $${Number(l.price).toLocaleString('en-CA')}, listed ${esc(l.listedAt)})`).join('; ') : 'No active Chapman listings were found, so the listings section was left out.'}</li>
+    <li><b>Recently sold:</b> ${solds.length ? solds.map((s) => `${esc(s.address)} (${esc(s.area)}, sold $${s.soldPrice.toLocaleString('en-CA')}, firm ${esc(s.firmDate)})`).join('; ') : `No Chapman sales in the last ${SOLD_LOOKBACK_DAYS} days, so the section was left out.`}</li>
     <li><b>Blog:</b> ${blog ? `${esc(blog.title)} (${esc(blog.url)})` : 'No blog post found, so the section was left out.'}</li>
   </ul>
   <p style="font-size:13px;color:#5a7185;">The market sentences are written by fixed rules from the MLS&reg; numbers above, not by AI.</p>
@@ -551,7 +641,7 @@ export default async (req) => {
     // scheduled runs carry no JSON body
   }
 
-  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY || !DDF_ACCESS_TOKEN || !DDF_API_BASE_URL || (!dryRun && !RESEND_API_KEY)) {
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY || !DDF_ACCESS_TOKEN || !VOW_ACCESS_TOKEN || !DDF_API_BASE_URL || (!dryRun && !RESEND_API_KEY)) {
     console.error('london-letter: missing required env vars');
     return new Response('Missing env vars', { status: 500 });
   }
@@ -569,10 +659,14 @@ export default async (req) => {
 
   try {
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-    const [market, listings] = await Promise.all([
+    const [market, listings, solds] = await Promise.all([
       getMarket(supabase, reportYear, reportMonthIndex).then((m) => ({ ...m, year: reportYear })),
       getChapmanListings().catch((err) => {
         console.error('london-letter: Chapman listings failed:', err.message);
+        return [];
+      }),
+      getChapmanSolds(supabase).catch((err) => {
+        console.error('london-letter: Chapman solds failed:', err.message);
         return [];
       }),
     ]);
@@ -584,12 +678,12 @@ export default async (req) => {
     }
     if (market.city.count === 0) throw new Error(`No London sales found for ${monthName} ${reportYear} -- is the VOW sold sync running?`);
 
-    const parts = { sendMonthName, sendYear, monthName, market, listings, blog };
+    const parts = { sendMonthName, sendYear, monthName, market, listings, solds, blog };
     const newsletterHtml = buildNewsletter(parts);
     const smileHtml = buildSmileEmail({ ...parts, newsletterHtml, isTest });
 
     if (dryRun) {
-      return new Response(JSON.stringify({ newsletterHtml, smileHtml, market, listings, blog }), { headers: { 'Content-Type': 'application/json' } });
+      return new Response(JSON.stringify({ newsletterHtml, smileHtml, market, listings, solds, blog }), { headers: { 'Content-Type': 'application/json' } });
     }
 
     const fileName = `london-letter-${sendYear}-${String(sendMonthIndex + 1).padStart(2, '0')}.html`;
@@ -601,7 +695,7 @@ export default async (req) => {
       attachments: [{ filename: fileName, content: Buffer.from(newsletterHtml).toString('base64') }],
     });
 
-    const summary = `london-letter sent${isTest ? ' (test)' : ''}: ${market.city.count} London sales, ${listings.length} listings, blog ${blog ? blog.slug : 'none'}`;
+    const summary = `london-letter sent${isTest ? ' (test)' : ''}: ${market.city.count} London sales, ${listings.length} listings, ${solds.length} solds, blog ${blog ? blog.slug : 'none'}`;
     console.log(summary);
     return new Response(summary);
   } catch (err) {
