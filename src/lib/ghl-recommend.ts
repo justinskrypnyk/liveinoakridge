@@ -106,7 +106,7 @@ async function removeGhlTags(contactId: string, tags: string[]): Promise<void> {
   }
 }
 
-function formatListingLine(l: RecommendedListingLine): string {
+export function formatListingLine(l: RecommendedListingLine): string {
   const price = l.price != null ? `$${Math.round(l.price).toLocaleString('en-CA')}` : 'Price n/a';
   return `${l.address} — ${price} — ${l.url}`;
 }

@@ -45,7 +45,7 @@ const GHL_LOCATION_ID = process.env.GHL_LOCATION_ID;
 const GOOGLE_GEOCODING_API_KEY = process.env.GOOGLE_GEOCODING_API_KEY;
 const SITE_URL = 'https://www.liveinoakridge.ca';
 
-const FREQUENCY_MIN_HOURS = { daily: 20, weekly: 24 * 6.5, monthly: 24 * 27 };
+const FREQUENCY_MIN_HOURS = { daily: 20, mwf: 20, weekly: 24 * 6.5, monthly: 24 * 27 };
 const FETCH_TIMEOUT_MS = 15000;
 // warm-geocode-cache fills the store, so this job should rarely need Google
 // at all. Kept small: the whole site shares Google's 10k/month free
@@ -58,7 +58,17 @@ const SELECT_FIELDS = [
   'PropertyType', 'PropertySubType', 'OriginalEntryTimestamp',
 ].join(',');
 
+// 'mwf' (school leads, see api/ghl-lead.ts) is due on Monday, Wednesday and
+// Friday mornings, Toronto time. The window between those runs still
+// carries over (sinceIso is last_notified_at), so a Saturday listing shows
+// up in Monday's email. Still only emails when there are new homes.
+const MWF_DAYS = new Set(['Mon', 'Wed', 'Fri']);
+function isMwfDay() {
+  return MWF_DAYS.has(new Intl.DateTimeFormat('en-CA', { weekday: 'short', timeZone: 'America/Toronto' }).format(new Date()));
+}
+
 function isDue(sub) {
+  if (sub.frequency === 'mwf' && !isMwfDay()) return false;
   if (!sub.last_notified_at) return true;
   const hoursSince = (Date.now() - new Date(sub.last_notified_at).getTime()) / (1000 * 60 * 60);
   return hoursSince >= (FREQUENCY_MIN_HOURS[sub.frequency] ?? FREQUENCY_MIN_HOURS.weekly);

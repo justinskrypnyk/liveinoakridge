@@ -276,7 +276,7 @@ create table if not exists home_watch_subscriptions (
   latitude double precision not null,
   longitude double precision not null,
   radius_km numeric not null default 1.0,
-  frequency text not null default 'weekly', -- 'daily' | 'weekly' | 'monthly'
+  frequency text not null default 'weekly', -- 'daily' | 'mwf' | 'weekly' | 'monthly'
   created_at timestamptz not null default now(),
   last_notified_at timestamptz
 );
@@ -332,7 +332,7 @@ create table if not exists saved_searches (
   property_types text[],
   min_beds int,
   min_baths int,
-  frequency text not null default 'weekly', -- 'daily' | 'weekly' | 'monthly'
+  frequency text not null default 'weekly', -- 'daily' | 'mwf' | 'weekly' | 'monthly'
   created_at timestamptz not null default now(),
   last_notified_at timestamptz
 );

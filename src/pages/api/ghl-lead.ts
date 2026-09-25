@@ -15,11 +15,11 @@
 // endpoint's original approach) would reject every single real request.
 import type { APIRoute } from 'astro';
 import { createHmac, createHash, timingSafeEqual } from 'node:crypto';
-import { getMarketListingByKey } from '@/lib/ddf';
+import { getMarketListingByKey, getAreaMarketListings } from '@/lib/ddf';
 import { findSimilarActiveListings } from '@/lib/similar-listings';
 import { findAreaForPoint } from '@/lib/area-boundaries';
 import { getServiceRoleClient } from '@/lib/supabase';
-import { pushRecommendationToGhl, addGhlTags } from '@/lib/ghl-recommend';
+import { pushRecommendationToGhl, addGhlTags, formatListingLine } from '@/lib/ghl-recommend';
 import { HIGH_SCHOOLS } from '@/data/high-schools';
 
 export const prerender = false;
@@ -162,6 +162,64 @@ export const POST: APIRoute = async ({ request }) => {
     .filter(([formKey]) => data[formKey])
     .map(([formKey, key]) => ({ key, fieldValue: data[formKey] }));
 
+  // The school a lead picked -- high-schools page form (`school`) or the
+  // chatbot's school-search opening (`chat-qualifier` "School: ...") -- as
+  // its own custom fields so Smile's "School Search Lead" workflow email can
+  // merge it in ({{contact.school_interest}}, {{contact.school_areas}}).
+  // Set in the upsert, i.e. before addGhlTags fires the workflow trigger.
+  // REQUIRES these contact custom fields in GHL (single-line text):
+  //   "School Interest" -> school_interest   (e.g. "Oakridge Secondary School")
+  //   "School Areas"    -> school_areas      (e.g. "Oakridge and Whitehills")
+  // "Not sure yet"/"Another school" are still stored as the interest, just
+  // with no areas.
+  const schoolName = data.school || String(data['chat-qualifier'] || '').match(/^School: (.+)$/)?.[1] || '';
+  const school = HIGH_SCHOOLS.find((s) => s.name === schoolName && s.servesAreas?.length);
+  const schoolAreaNames = school?.servesAreas!.map((a) => a.name) || [];
+  const schoolCustomFields = schoolName
+    ? [
+        { key: 'school_interest', fieldValue: schoolName },
+        ...(schoolAreaNames.length
+          ? [{ key: 'school_areas', fieldValue: schoolAreaNames.join(schoolAreaNames.length === 2 ? ' and ' : ', ') }]
+          : []),
+      ]
+    : [];
+
+  // Welcome-email listings: the 3 newest homes for sale in the school's
+  // neighbourhoods, in the same Recommended Listing 1-3 fields the Mon/Wed/Fri
+  // search-area-alert fills later, so Smile's "School Search Lead" email can
+  // show real homes on day one. All 3 are always sent ('' clears stale values
+  // from an earlier alert). Capped at 6s -- a cold instance has to load the
+  // whole geocoded London pool, and the lead itself must not wait on it; on
+  // a timeout the fields just go out blank.
+  let schoolListingLines: string[] = [];
+  if (school) {
+    const lookup = Promise.all(school.servesAreas!.map((a) => getAreaMarketListings(a.slug)))
+      .then((perArea) => perArea.flat()
+        .sort((a, b) => String(b.OriginalEntryTimestamp || '').localeCompare(String(a.OriginalEntryTimestamp || '')))
+        .slice(0, 3)
+        .map((l) => formatListingLine({
+          address: String(l.UnparsedAddress || 'Address unavailable'),
+          price: Number(l.ListPrice) || null,
+          url: `${SITE_URL}/search/${l.ListingKey}/`,
+        })))
+      .catch((err) => {
+        console.error('School welcome listings failed:', err);
+        return [] as string[];
+      });
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const timeout = new Promise<string[]>((resolve) => {
+      timer = setTimeout(() => {
+        console.error('School welcome listings timed out');
+        resolve([]);
+      }, 6000);
+    });
+    schoolListingLines = await Promise.race([lookup, timeout]);
+    clearTimeout(timer);
+  }
+  const schoolListingFields = school
+    ? [0, 1, 2].map((i) => ({ key: `recommended_listing_${i + 1}`, fieldValue: schoolListingLines[i] ?? '' }))
+    : [];
+
   const authHeaders = {
     'Content-Type': 'application/json',
     Accept: 'application/json',
@@ -188,7 +246,10 @@ export const POST: APIRoute = async ({ request }) => {
     data['chat-intent'] && 'chatbot-lead',
     data['chat-intent'] === 'Buyer' && 'chatbot-buyer',
     data['chat-intent'] === 'Seller' && 'chatbot-seller',
-  ].filter(Boolean) as string[];
+    // Chatbot school picks get the same tag as the page form so one
+    // workflow trigger covers both.
+    schoolName && 'School Search Lead',
+  ].filter((t, i, all) => t && all.indexOf(t) === i) as string[];
 
   const res = await fetch('https://services.leadconnectorhq.com/contacts/upsert', {
     method: 'POST',
@@ -200,7 +261,7 @@ export const POST: APIRoute = async ({ request }) => {
       email,
       phone: data.phone || undefined,
       locationId: GHL_LOCATION_ID,
-      customFields: chatCustomFields,
+      customFields: [...chatCustomFields, ...schoolCustomFields, ...schoolListingFields],
       source: `Website — ${data.subject || submission.form_name || 'Contact Form'}`,
     }),
   });
@@ -228,6 +289,7 @@ export const POST: APIRoute = async ({ request }) => {
     propertyAddress && `Property: ${propertyAddress}`,
     mlsNumber && `MLS®: ${mlsNumber}`,
     data['school'] && `School wanted: ${data['school']}`,
+    schoolListingLines.length > 0 && `Homes near ${schoolName}:\n${schoolListingLines.join('\n')}`,
     data['rough-estimate-range'] && `Estimated range: ${data['rough-estimate-range']}`,
     data['neighbourhood'] && `Neighbourhood: ${data['neighbourhood']}`,
     data['property-type'] && `Property type: ${data['property-type']}`,
@@ -332,11 +394,9 @@ export const POST: APIRoute = async ({ request }) => {
   // and the chatbot's school-search opening (`chat-qualifier` "School: ...")
   // promise new listings near that school, so turn the pick into one
   // saved_searches row per neighbourhood the school serves; the daily
-  // saved-search-alerts job then does the rest. "Not sure yet"/"Another
+  // saved-search-alerts job then emails new matches Mon/Wed/Fri. "Not sure yet"/"Another
   // school" match no school and are skipped. Existing rows for the same
   // email+area aren't duplicated. Own try/catch: the lead is already saved.
-  const schoolName = data.school || String(data['chat-qualifier'] || '').replace(/^School: /, '');
-  const school = HIGH_SCHOOLS.find((s) => s.name === schoolName && s.servesAreas?.length);
   if (school) {
     try {
       const supabase = getServiceRoleClient();
@@ -354,7 +414,7 @@ export const POST: APIRoute = async ({ request }) => {
           last_name: lastName || null,
           phone: data.phone || null,
           area_slug: slug,
-          frequency: 'weekly',
+          frequency: 'mwf', // Mon/Wed/Fri, see saved-search-alerts
         }));
         if (rows.length > 0) {
           const { error } = await supabase.from('saved_searches').insert(rows);
