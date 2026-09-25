@@ -15,11 +15,11 @@
 // endpoint's original approach) would reject every single real request.
 import type { APIRoute } from 'astro';
 import { createHmac, createHash, timingSafeEqual } from 'node:crypto';
-import { getMarketListingByKey, getAreaMarketListings } from '@/lib/ddf';
+import { getMarketListingByKey, getAreaMarketListings, type RawListing } from '@/lib/ddf';
 import { findSimilarActiveListings } from '@/lib/similar-listings';
 import { findAreaForPoint } from '@/lib/area-boundaries';
 import { getServiceRoleClient } from '@/lib/supabase';
-import { pushRecommendationToGhl, addGhlTags, formatListingLine } from '@/lib/ghl-recommend';
+import { pushRecommendationToGhl, addGhlTags } from '@/lib/ghl-recommend';
 import { HIGH_SCHOOLS } from '@/data/high-schools';
 
 export const prerender = false;
@@ -53,7 +53,7 @@ function verifyNetlifySignature(signatureHeader: string, secret: string, rawBody
   return payload.sha256 === bodyHash;
 }
 
-export const POST: APIRoute = async ({ request }) => {
+export const POST: APIRoute = async ({ request, locals }) => {
   if (!GHL_API_TOKEN || !GHL_LOCATION_ID) {
     console.error('GHL env vars missing');
     return new Response('Not configured', { status: 500 });
@@ -184,42 +184,6 @@ export const POST: APIRoute = async ({ request }) => {
       ]
     : [];
 
-  // Welcome-email listings: the 3 newest homes for sale in the school's
-  // neighbourhoods, in the same Recommended Listing 1-3 fields the Mon/Wed/Fri
-  // search-area-alert fills later, so Smile's "School Search Lead" email can
-  // show real homes on day one. All 3 are always sent ('' clears stale values
-  // from an earlier alert). Capped at 6s -- a cold instance has to load the
-  // whole geocoded London pool, and the lead itself must not wait on it; on
-  // a timeout the fields just go out blank.
-  let schoolListingLines: string[] = [];
-  if (school) {
-    const lookup = Promise.all(school.servesAreas!.map((a) => getAreaMarketListings(a.slug)))
-      .then((perArea) => perArea.flat()
-        .sort((a, b) => String(b.OriginalEntryTimestamp || '').localeCompare(String(a.OriginalEntryTimestamp || '')))
-        .slice(0, 3)
-        .map((l) => formatListingLine({
-          address: String(l.UnparsedAddress || 'Address unavailable'),
-          price: Number(l.ListPrice) || null,
-          url: `${SITE_URL}/search/${l.ListingKey}/`,
-        })))
-      .catch((err) => {
-        console.error('School welcome listings failed:', err);
-        return [] as string[];
-      });
-    let timer: ReturnType<typeof setTimeout> | undefined;
-    const timeout = new Promise<string[]>((resolve) => {
-      timer = setTimeout(() => {
-        console.error('School welcome listings timed out');
-        resolve([]);
-      }, 6000);
-    });
-    schoolListingLines = await Promise.race([lookup, timeout]);
-    clearTimeout(timer);
-  }
-  const schoolListingFields = school
-    ? [0, 1, 2].map((i) => ({ key: `recommended_listing_${i + 1}`, fieldValue: schoolListingLines[i] ?? '' }))
-    : [];
-
   const authHeaders = {
     'Content-Type': 'application/json',
     Accept: 'application/json',
@@ -249,7 +213,11 @@ export const POST: APIRoute = async ({ request }) => {
     // Chatbot school picks get the same tag as the page form so one
     // workflow trigger covers both.
     schoolName && 'School Search Lead',
-  ].filter((t, i, all) => t && all.indexOf(t) === i) as string[];
+  ]
+    // A school we map to neighbourhoods gets School Search Lead from the
+    // welcome-listings step at the end instead, once its listings are in.
+    .filter((t) => !(school && t === 'School Search Lead'))
+    .filter((t, i, all) => t && all.indexOf(t) === i) as string[];
 
   const res = await fetch('https://services.leadconnectorhq.com/contacts/upsert', {
     method: 'POST',
@@ -261,7 +229,7 @@ export const POST: APIRoute = async ({ request }) => {
       email,
       phone: data.phone || undefined,
       locationId: GHL_LOCATION_ID,
-      customFields: [...chatCustomFields, ...schoolCustomFields, ...schoolListingFields],
+      customFields: [...chatCustomFields, ...schoolCustomFields],
       source: `Website — ${data.subject || submission.form_name || 'Contact Form'}`,
     }),
   });
@@ -289,7 +257,6 @@ export const POST: APIRoute = async ({ request }) => {
     propertyAddress && `Property: ${propertyAddress}`,
     mlsNumber && `MLS®: ${mlsNumber}`,
     data['school'] && `School wanted: ${data['school']}`,
-    schoolListingLines.length > 0 && `Homes near ${schoolName}:\n${schoolListingLines.join('\n')}`,
     data['rough-estimate-range'] && `Estimated range: ${data['rough-estimate-range']}`,
     data['neighbourhood'] && `Neighbourhood: ${data['neighbourhood']}`,
     data['property-type'] && `Property type: ${data['property-type']}`,
@@ -424,6 +391,53 @@ export const POST: APIRoute = async ({ request }) => {
     } catch (err) {
       console.error('School saved-search insert failed:', err);
     }
+  }
+
+  // Welcome-email listings: the 3 newest homes for sale in the school's
+  // neighbourhoods go into Recommended Listing 1-3 (the same fields the
+  // Mon/Wed/Fri search-area-alert fills later), THEN School Search Lead is
+  // added, so Smile's workflow email always has them. Runs after the lead is
+  // saved and, via waitUntil, after this response: a cold instance has to
+  // load the whole geocoded London pool, measured well over 6s right after a
+  // deploy. Capped at 20s; on a timeout/failure the fields go out blank but
+  // the tag is still added, so the welcome email is never lost.
+  if (school) {
+    const welcome = (async () => {
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      const timeout = new Promise<RawListing[]>((resolve) => {
+        timer = setTimeout(() => {
+          console.error('School welcome listings timed out');
+          resolve([]);
+        }, 20000);
+      });
+      const lookup = Promise.all(school.servesAreas!.map((a) => getAreaMarketListings(a.slug)))
+        .then((perArea) => perArea.flat())
+        .catch((err) => {
+          console.error('School welcome listings failed:', err);
+          return [] as RawListing[];
+        });
+      const listings = await Promise.race([lookup, timeout]);
+      clearTimeout(timer);
+      await pushRecommendationToGhl({
+        email,
+        firstName: firstName || undefined,
+        lastName: lastName || undefined,
+        phone: data.phone || undefined,
+        tag: 'School Search Lead',
+        intro: `Homes near ${school.name}:`,
+        listings: listings
+          .sort((a, b) => String(b.OriginalEntryTimestamp || '').localeCompare(String(a.OriginalEntryTimestamp || '')))
+          .slice(0, 3)
+          .map((l) => ({
+            address: String(l.UnparsedAddress || 'Address unavailable'),
+            price: Number(l.ListPrice) || null,
+            url: `${SITE_URL}/search/${l.ListingKey}/`,
+          })),
+      });
+    })();
+    const waitUntil = (locals as any)?.netlify?.context?.waitUntil;
+    if (typeof waitUntil === 'function') waitUntil.call((locals as any).netlify.context, welcome);
+    else await welcome;
   }
 
   return new Response('OK', { status: 200 });

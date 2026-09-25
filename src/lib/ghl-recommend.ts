@@ -50,7 +50,8 @@ export type RecommendationTag =
   | 'similar-homes-match'
   | 'search-area-alert'
   | 'market-update'
-  | 'vow-signup';
+  | 'vow-signup'
+  | 'School Search Lead';
 
 export interface RecommendedListingLine {
   address: string;
@@ -106,7 +107,7 @@ async function removeGhlTags(contactId: string, tags: string[]): Promise<void> {
   }
 }
 
-export function formatListingLine(l: RecommendedListingLine): string {
+function formatListingLine(l: RecommendedListingLine): string {
   const price = l.price != null ? `$${Math.round(l.price).toLocaleString('en-CA')}` : 'Price n/a';
   return `${l.address} — ${price} — ${l.url}`;
 }
