@@ -112,6 +112,32 @@ async function getNationalGeoMap() {
   return map;
 }
 
+// Newest-homes-per-neighbourhood snapshot, written at the end of each run
+// for the school-lead welcome email (src/pages/api/ghl-lead.ts). Reading one
+// small blob there replaces loading the whole geocoded pool, which took over
+// 20s on a cold instance. Point-in-polygon + boundary loading duplicated from
+// saved-search-alerts per this directory's isolation convention.
+const AREA_SNAPSHOT_PER_AREA = 10;
+
+function pointInRing(lat, lng, ring) {
+  let inside = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const [xi, yi] = ring[i];
+    const [xj, yj] = ring[j];
+    const intersects = yi > lat !== yj > lat && lng < ((xj - xi) * (lat - yi)) / (yj - yi) + xi;
+    if (intersects) inside = !inside;
+  }
+  return inside;
+}
+
+async function loadAreaRings() {
+  const { readFileSync } = await import('node:fs');
+  const { fileURLToPath } = await import('node:url');
+  const dataPath = fileURLToPath(new URL('../../src/data/area-boundaries.json', import.meta.url));
+  const raw = JSON.parse(readFileSync(dataPath, 'utf-8'));
+  return raw.features.map((f) => ({ slug: f.properties.slug, ring: f.geometry.coordinates[0] }));
+}
+
 async function geocodeGoogle(address) {
   try {
     const url = new URL('https://maps.googleapis.com/maps/api/geocode/json');
@@ -139,7 +165,7 @@ export default async () => {
   const [data, nationalGeoMap] = await Promise.all([
     odataGet('Property', {
       $filter: `contains(UnparsedAddress,'London')`,
-      $select: 'ListingKey,UnparsedAddress,StandardStatus,PropertyType,TransactionType',
+      $select: 'ListingKey,UnparsedAddress,StandardStatus,PropertyType,TransactionType,ListPrice,OriginalEntryTimestamp',
       $top: '5000',
     }),
     getNationalGeoMap(),
@@ -156,6 +182,7 @@ export default async () => {
   let skipped = 0;
   let failed = 0;
   let googleCalls = 0;
+  const located = []; // { listing, geo } for the area snapshot
 
   for (let i = 0; i < active.length; i += CONCURRENCY) {
     const batch = active.slice(i, i + CONCURRENCY);
@@ -165,12 +192,14 @@ export default async () => {
         if (!address) return;
         const cached = await store.get(address, { type: 'json' }).catch(() => null);
         if (cached) {
+          located.push({ listing, geo: cached });
           skipped++;
           return;
         }
         const national = nationalGeoMap.get(String(listing.ListingKey || '').toLowerCase());
         if (national) {
           await store.setJSON(address, national);
+          located.push({ listing, geo: national });
           fromNationalPool++;
           return;
         }
@@ -182,6 +211,7 @@ export default async () => {
         const geo = await geocodeGoogle(address);
         if (geo) {
           await store.setJSON(address, geo);
+          located.push({ listing, geo });
           geocoded++;
         } else {
           failed++;
@@ -190,7 +220,33 @@ export default async () => {
     );
   }
 
-  const summary = `warm-geocode-cache done: ${fromNationalPool} from National Pool (free), ${geocoded} newly geocoded via Google, ${skipped} already cached, ${failed} failed`;
+  let snapshotNote = '';
+  try {
+    const rings = await loadAreaRings();
+    const byArea = {};
+    for (const { listing, geo } of located) {
+      const area = rings.find((r) => pointInRing(Number(geo.lat), Number(geo.lng), r.ring));
+      if (!area) continue;
+      (byArea[area.slug] ||= []).push({
+        key: listing.ListingKey,
+        address: listing.UnparsedAddress,
+        price: Number(listing.ListPrice) || null,
+        listedAt: listing.OriginalEntryTimestamp || null,
+      });
+    }
+    for (const slug of Object.keys(byArea)) {
+      byArea[slug] = byArea[slug]
+        .sort((a, b) => String(b.listedAt || '').localeCompare(String(a.listedAt || '')))
+        .slice(0, AREA_SNAPSHOT_PER_AREA);
+    }
+    await getStore('area-newest-listings').setJSON('latest', { builtAt: new Date().toISOString(), areas: byArea });
+    snapshotNote = `, area snapshot written for ${Object.keys(byArea).length} areas`;
+  } catch (err) {
+    console.error('warm-geocode-cache: area snapshot failed:', err);
+    snapshotNote = ', area snapshot FAILED';
+  }
+
+  const summary = `warm-geocode-cache done: ${fromNationalPool} from National Pool (free), ${geocoded} newly geocoded via Google, ${skipped} already cached, ${failed} failed${snapshotNote}`;
   console.log(summary);
   return new Response(summary);
 };

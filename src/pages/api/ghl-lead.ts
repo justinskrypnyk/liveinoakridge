@@ -21,6 +21,7 @@ import { findAreaForPoint } from '@/lib/area-boundaries';
 import { getServiceRoleClient } from '@/lib/supabase';
 import { pushRecommendationToGhl, addGhlTags } from '@/lib/ghl-recommend';
 import { HIGH_SCHOOLS } from '@/data/high-schools';
+import { getStore } from '@netlify/blobs';
 
 export const prerender = false;
 
@@ -396,28 +397,51 @@ export const POST: APIRoute = async ({ request, locals }) => {
   // Welcome-email listings: the 3 newest homes for sale in the school's
   // neighbourhoods go into Recommended Listing 1-3 (the same fields the
   // Mon/Wed/Fri search-area-alert fills later), THEN School Search Lead is
-  // added, so Smile's workflow email always has them. Runs after the lead is
-  // saved and, via waitUntil, after this response: a cold instance has to
-  // load the whole geocoded London pool, measured well over 6s right after a
-  // deploy. Capped at 20s; on a timeout/failure the fields go out blank but
-  // the tag is still added, so the welcome email is never lost.
+  // added, so Smile's workflow email always has them. Source is the
+  // per-neighbourhood snapshot warm-geocode-cache writes daily (one small
+  // blob read); only if that's missing or stale does it fall back to the
+  // live geocoded pool, which took over 20s on a cold instance (measured
+  // 2026-09-24) -- hence running after the lead is saved, via waitUntil,
+  // capped at 20s. On a timeout/failure the fields go out blank but the tag
+  // is still added, so the welcome email is never lost.
   if (school) {
+    const slugs = school.servesAreas!.map((a) => a.slug);
     const welcome = (async () => {
-      let timer: ReturnType<typeof setTimeout> | undefined;
-      const timeout = new Promise<RawListing[]>((resolve) => {
-        timer = setTimeout(() => {
-          console.error('School welcome listings timed out');
-          resolve([]);
-        }, 20000);
-      });
-      const lookup = Promise.all(school.servesAreas!.map((a) => getAreaMarketListings(a.slug)))
-        .then((perArea) => perArea.flat())
-        .catch((err) => {
-          console.error('School welcome listings failed:', err);
-          return [] as RawListing[];
+      let picks: { key: string; address: string; price: number | null; listedAt: string | null }[] = [];
+      try {
+        const snap = await getStore('area-newest-listings').get('latest', { type: 'json' }) as
+          { builtAt: string; areas: Record<string, typeof picks> } | null;
+        if (snap && Date.now() - new Date(snap.builtAt).getTime() < 3 * 24 * 60 * 60 * 1000) {
+          picks = slugs.flatMap((slug) => snap.areas[slug] || []);
+        }
+      } catch (err) {
+        console.error('School welcome snapshot read failed:', err);
+      }
+
+      if (picks.length === 0) {
+        let timer: ReturnType<typeof setTimeout> | undefined;
+        const timeout = new Promise<RawListing[]>((resolve) => {
+          timer = setTimeout(() => {
+            console.error('School welcome listings timed out');
+            resolve([]);
+          }, 20000);
         });
-      const listings = await Promise.race([lookup, timeout]);
-      clearTimeout(timer);
+        const lookup = Promise.all(slugs.map((slug) => getAreaMarketListings(slug)))
+          .then((perArea) => perArea.flat())
+          .catch((err) => {
+            console.error('School welcome listings failed:', err);
+            return [] as RawListing[];
+          });
+        const live = await Promise.race([lookup, timeout]);
+        clearTimeout(timer);
+        picks = live.map((l) => ({
+          key: String(l.ListingKey),
+          address: String(l.UnparsedAddress || 'Address unavailable'),
+          price: Number(l.ListPrice) || null,
+          listedAt: (l.OriginalEntryTimestamp as string) || null,
+        }));
+      }
+
       await pushRecommendationToGhl({
         email,
         firstName: firstName || undefined,
@@ -425,14 +449,10 @@ export const POST: APIRoute = async ({ request, locals }) => {
         phone: data.phone || undefined,
         tag: 'School Search Lead',
         intro: `Homes near ${school.name}:`,
-        listings: listings
-          .sort((a, b) => String(b.OriginalEntryTimestamp || '').localeCompare(String(a.OriginalEntryTimestamp || '')))
+        listings: picks
+          .sort((a, b) => String(b.listedAt || '').localeCompare(String(a.listedAt || '')))
           .slice(0, 3)
-          .map((l) => ({
-            address: String(l.UnparsedAddress || 'Address unavailable'),
-            price: Number(l.ListPrice) || null,
-            url: `${SITE_URL}/search/${l.ListingKey}/`,
-          })),
+          .map((p) => ({ address: p.address, price: p.price, url: `${SITE_URL}/search/${p.key}/` })),
       });
     })();
     const waitUntil = (locals as any)?.netlify?.context?.waitUntil;
