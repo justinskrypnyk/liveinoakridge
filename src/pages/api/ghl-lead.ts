@@ -170,7 +170,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
   // Set in the upsert, i.e. before addGhlTags fires the workflow trigger.
   // REQUIRES these contact custom fields in GHL (single-line text):
   //   "School Interest" -> school_interest   (e.g. "Oakridge Secondary School")
-  //   "School Areas"    -> school_areas      (e.g. "Oakridge and Whitehills")
+  //   "School Areas"    -> school_areas      (e.g. "Oakridge, Byron and Riverbend")
   // "Not sure yet"/"Another school" are still stored as the interest, just
   // with no areas.
   const schoolName = data.school || String(data['chat-qualifier'] || '').match(/^School: (.+)$/)?.[1] || '';
@@ -180,7 +180,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
     ? [
         { key: 'school_interest', fieldValue: schoolName },
         ...(schoolAreaNames.length
-          ? [{ key: 'school_areas', fieldValue: schoolAreaNames.join(schoolAreaNames.length === 2 ? ' and ' : ', ') }]
+          ? [{ key: 'school_areas', fieldValue: schoolAreaNames.length > 1 ? `${schoolAreaNames.slice(0, -1).join(', ')} and ${schoolAreaNames.at(-1)}` : schoolAreaNames[0] }]
           : []),
       ]
     : [];

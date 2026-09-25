@@ -41,7 +41,8 @@ export const HIGH_SCHOOLS: RankedHighSchool[] = [
     address: '1360 Oxford St W',
     servesAreas: [
       { name: 'Oakridge', slug: 'oakridge' },
-      { name: 'Whitehills', slug: 'whitehills' },
+      { name: 'Byron', slug: 'byron' },
+      { name: 'Riverbend', slug: 'riverbend' },
     ],
   },
   {
