@@ -35,7 +35,7 @@
 // bug, copy-pasted into every one of this pipeline's customFields builders.
 // Fixed here and in ghl-lead.ts, home-watch-alerts-background.mjs,
 // saved-search-alerts-background.mjs, and market-update-mailout-background.mjs.
-import { listingCardHtml, listingCardFields } from '@/lib/listing-card.mjs';
+import { listingCardHtml, listingCardFields, withUtm } from '@/lib/listing-card.mjs';
 
 const GHL_API_TOKEN = import.meta.env.GHL_API_TOKEN;
 const SITE_URL = 'https://www.liveinoakridge.ca';
@@ -112,9 +112,9 @@ async function removeGhlTags(contactId: string, tags: string[]): Promise<void> {
   }
 }
 
-function formatListingLine(l: RecommendedListingLine): string {
+function formatListingLine(l: RecommendedListingLine, campaign: string): string {
   const price = l.price != null ? `$${Math.round(l.price).toLocaleString('en-CA')}` : 'Price n/a';
-  return `${l.address} — ${price} — ${l.url}`;
+  return `${l.address} — ${price} — ${withUtm(l.url, campaign)}`;
 }
 
 /** Fire-and-log: never throws -- a failed GHL push shouldn't break the caller's main flow (a save, a scheduled match, etc). */
@@ -124,7 +124,9 @@ export async function pushRecommendationToGhl(input: PushRecommendationInput): P
     return;
   }
 
-  const lines = (input.listings ?? []).slice(0, 3).map(formatListingLine);
+  // GA4 campaign name for this email's links, e.g. 'School Search Lead' -> 'school-search-lead'.
+  const campaign = input.tag.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+  const lines = (input.listings ?? []).slice(0, 3).map((l) => formatListingLine(l, campaign));
 
   const customFields = input.tag === 'market-update'
     ? (input.summary ? [{ key: 'market_update_summary', fieldValue: input.summary }] : [])
@@ -135,7 +137,7 @@ export async function pushRecommendationToGhl(input: PushRecommendationInput): P
         // Photo cards for the same listings (see listing-card.mjs). The text
         // lines above stay, so an email that still uses them keeps working.
         ...listingCardFields((input.listings ?? []).slice(0, 3).filter((l) => l.key).map((l) =>
-          listingCardHtml({ siteUrl: SITE_URL, key: l.key!, address: l.address, price: l.price, url: l.url }))),
+          listingCardHtml({ siteUrl: SITE_URL, key: l.key!, address: l.address, price: l.price, url: l.url, campaign }))),
       ];
 
   let contactId: string | null = null;

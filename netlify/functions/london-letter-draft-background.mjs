@@ -27,6 +27,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { getStore } from '@netlify/blobs';
 import { readFileSync } from 'node:fs';
+import { withUtm } from '../../src/lib/listing-card.mjs';
 
 const DDF_ACCESS_TOKEN = process.env.DDF_ACCESS_TOKEN;
 const DDF_API_BASE_URL = process.env.DDF_API_BASE_URL;
@@ -679,7 +680,10 @@ export default async (req) => {
     if (market.city.count === 0) throw new Error(`No London sales found for ${monthName} ${reportYear} -- is the VOW sold sync running?`);
 
     const parts = { sendMonthName, sendYear, monthName, market, listings, solds, blog };
-    const newsletterHtml = buildNewsletter(parts);
+    // Tag every site link so GA4 shows this issue's clicks as campaign
+    // london-letter-YYYY-MM (hrefs only -- image srcs stay untouched).
+    const campaign = `london-letter-${sendYear}-${String(sendMonthIndex + 1).padStart(2, '0')}`;
+    const newsletterHtml = buildNewsletter(parts).replace(/href="(https:\/\/www\.liveinoakridge\.ca[^"]*)"/g, (_, u) => `href="${withUtm(u.replace(/&amp;/g, '&'), campaign).replace(/&/g, '&amp;')}"`);
     const smileHtml = buildSmileEmail({ ...parts, newsletterHtml, isTest });
 
     if (dryRun) {

@@ -35,7 +35,7 @@
 
 import { getStore } from '@netlify/blobs';
 import { createClient } from '@supabase/supabase-js';
-import { listingCardHtml, listingCardFields } from '../../src/lib/listing-card.mjs';
+import { listingCardHtml, listingCardFields, withUtm } from '../../src/lib/listing-card.mjs';
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -305,10 +305,10 @@ export default async () => {
         phone: first.phone,
         intro: 'New homes matching your search:',
         lines: top.map((l) =>
-          `${l.UnparsedAddress} — $${Math.round(Number(l.ListPrice) || 0).toLocaleString('en-CA')} — ${SITE_URL}/search/${l.ListingKey}/`
+          `${l.UnparsedAddress} — $${Math.round(Number(l.ListPrice) || 0).toLocaleString('en-CA')} — ${withUtm(`${SITE_URL}/search/${l.ListingKey}/`, 'search-area-alert')}`
         ),
         cards: top.map((l) => listingCardHtml({
-          siteUrl: SITE_URL, key: l.ListingKey, address: l.UnparsedAddress, price: Number(l.ListPrice) || null, url: `${SITE_URL}/search/${l.ListingKey}/`,
+          siteUrl: SITE_URL, key: l.ListingKey, address: l.UnparsedAddress, price: Number(l.ListPrice) || null, url: `${SITE_URL}/search/${l.ListingKey}/`, campaign: 'search-area-alert',
         })),
       });
       sent++;

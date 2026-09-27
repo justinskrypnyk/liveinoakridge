@@ -11,7 +11,7 @@
 // deliberately separate (different module systems/env conventions); see
 // that file for the fuller reasoning on the custom-field/note split.
 import { createClient } from '@supabase/supabase-js';
-import { listingCardHtml, listingCardFields } from '../../src/lib/listing-card.mjs';
+import { listingCardHtml, listingCardFields, withUtm } from '../../src/lib/listing-card.mjs';
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -188,10 +188,10 @@ export default async () => {
         phone: sub.phone,
         intro: `Homes sold near ${sub.address_label}:`,
         lines: nearby.map((l) =>
-          `${l.address} — $${Math.round(Number(l.close_price)).toLocaleString('en-CA')} — ${SITE_URL}/sold-map/${l.listing_key}/`
+          `${l.address} — $${Math.round(Number(l.close_price)).toLocaleString('en-CA')} — ${withUtm(`${SITE_URL}/sold-map/${l.listing_key}/`, 'nosy-neighbour-alert')}`
         ),
         cards: nearby.map((l) => listingCardHtml({
-          siteUrl: SITE_URL, key: l.listing_key, address: l.address, price: Number(l.close_price), url: `${SITE_URL}/sold-map/${l.listing_key}/`, sold: true,
+          siteUrl: SITE_URL, key: l.listing_key, address: l.address, price: Number(l.close_price), url: `${SITE_URL}/sold-map/${l.listing_key}/`, sold: true, campaign: 'nosy-neighbour-alert',
         })),
       });
       sent++;
