@@ -35,7 +35,10 @@
 // bug, copy-pasted into every one of this pipeline's customFields builders.
 // Fixed here and in ghl-lead.ts, home-watch-alerts-background.mjs,
 // saved-search-alerts-background.mjs, and market-update-mailout-background.mjs.
+import { listingCardHtml, listingCardFields } from '@/lib/listing-card.mjs';
+
 const GHL_API_TOKEN = import.meta.env.GHL_API_TOKEN;
+const SITE_URL = 'https://www.liveinoakridge.ca';
 const GHL_LOCATION_ID = import.meta.env.GHL_LOCATION_ID;
 
 const AUTH_HEADERS = {
@@ -57,6 +60,8 @@ export interface RecommendedListingLine {
   address: string;
   price: number | null;
   url: string;
+  /** MLS ListingKey -- when present, a photo card goes into recommended_listing_N_card too. */
+  key?: string;
 }
 
 export interface PushRecommendationInput {
@@ -125,7 +130,13 @@ export async function pushRecommendationToGhl(input: PushRecommendationInput): P
     ? (input.summary ? [{ key: 'market_update_summary', fieldValue: input.summary }] : [])
     // Always all 3 -- an empty value clears the field (confirmed live), so a
     // 1-listing push doesn't email last time's leftover listings 2 and 3.
-    : [0, 1, 2].map((i) => ({ key: `recommended_listing_${i + 1}`, fieldValue: lines[i] ?? '' }));
+    : [
+        ...[0, 1, 2].map((i) => ({ key: `recommended_listing_${i + 1}`, fieldValue: lines[i] ?? '' })),
+        // Photo cards for the same listings (see listing-card.mjs). The text
+        // lines above stay, so an email that still uses them keeps working.
+        ...listingCardFields((input.listings ?? []).slice(0, 3).filter((l) => l.key).map((l) =>
+          listingCardHtml({ siteUrl: SITE_URL, key: l.key!, address: l.address, price: l.price, url: l.url }))),
+      ];
 
   let contactId: string | null = null;
   try {

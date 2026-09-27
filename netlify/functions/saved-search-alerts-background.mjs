@@ -35,6 +35,7 @@
 
 import { getStore } from '@netlify/blobs';
 import { createClient } from '@supabase/supabase-js';
+import { listingCardHtml, listingCardFields } from '../../src/lib/listing-card.mjs';
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -151,7 +152,7 @@ function makeGeocoder() {
   };
 }
 
-async function pushToGhl({ email, firstName, lastName, phone, intro, lines }) {
+async function pushToGhl({ email, firstName, lastName, phone, intro, lines, cards = [] }) {
   if (!GHL_API_TOKEN || !GHL_LOCATION_ID) {
     console.error('GHL env vars missing, skipping push for', email);
     return;
@@ -164,7 +165,10 @@ async function pushToGhl({ email, firstName, lastName, phone, intro, lines }) {
   };
   // Always all 3 -- an empty value clears the field (confirmed live), so a
   // 1-listing alert doesn't email last time's leftover listings 2 and 3.
-  const customFields = [0, 1, 2].map((i) => ({ key: `recommended_listing_${i + 1}`, fieldValue: lines[i] ?? '' }));
+  const customFields = [
+    ...[0, 1, 2].map((i) => ({ key: `recommended_listing_${i + 1}`, fieldValue: lines[i] ?? '' })),
+    ...listingCardFields(cards), // photo cards, see src/lib/listing-card.mjs
+  ];
 
   // No tags/source in the upsert -- GHL would replace the contact's tags and
   // overwrite its original source. See the header comment.
@@ -303,6 +307,9 @@ export default async () => {
         lines: top.map((l) =>
           `${l.UnparsedAddress} — $${Math.round(Number(l.ListPrice) || 0).toLocaleString('en-CA')} — ${SITE_URL}/search/${l.ListingKey}/`
         ),
+        cards: top.map((l) => listingCardHtml({
+          siteUrl: SITE_URL, key: l.ListingKey, address: l.UnparsedAddress, price: Number(l.ListPrice) || null, url: `${SITE_URL}/search/${l.ListingKey}/`,
+        })),
       });
       sent++;
     }

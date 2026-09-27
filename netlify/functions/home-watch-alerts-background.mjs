@@ -11,6 +11,7 @@
 // deliberately separate (different module systems/env conventions); see
 // that file for the fuller reasoning on the custom-field/note split.
 import { createClient } from '@supabase/supabase-js';
+import { listingCardHtml, listingCardFields } from '../../src/lib/listing-card.mjs';
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -43,7 +44,7 @@ function isDue(sub) {
   return hoursSince >= (FREQUENCY_MIN_HOURS[sub.frequency] ?? FREQUENCY_MIN_HOURS.weekly);
 }
 
-async function pushToGhl({ email, firstName, lastName, phone, intro, lines }) {
+async function pushToGhl({ email, firstName, lastName, phone, intro, lines, cards = [] }) {
   if (!GHL_API_TOKEN || !GHL_LOCATION_ID) {
     console.error('GHL env vars missing, skipping push for', email);
     return;
@@ -56,7 +57,10 @@ async function pushToGhl({ email, firstName, lastName, phone, intro, lines }) {
   };
   // Always all 3 -- an empty value clears the field (confirmed live), so a
   // 1-listing alert doesn't email last time's leftover listings 2 and 3.
-  const customFields = [0, 1, 2].map((i) => ({ key: `recommended_listing_${i + 1}`, fieldValue: lines[i] ?? '' }));
+  const customFields = [
+    ...[0, 1, 2].map((i) => ({ key: `recommended_listing_${i + 1}`, fieldValue: lines[i] ?? '' })),
+    ...listingCardFields(cards), // photo cards, see src/lib/listing-card.mjs
+  ];
 
   const res = await fetch('https://services.leadconnectorhq.com/contacts/upsert', {
     method: 'POST',
@@ -186,6 +190,9 @@ export default async () => {
         lines: nearby.map((l) =>
           `${l.address} — $${Math.round(Number(l.close_price)).toLocaleString('en-CA')} — ${SITE_URL}/sold-map/${l.listing_key}/`
         ),
+        cards: nearby.map((l) => listingCardHtml({
+          siteUrl: SITE_URL, key: l.listing_key, address: l.address, price: Number(l.close_price), url: `${SITE_URL}/sold-map/${l.listing_key}/`, sold: true,
+        })),
       });
       sent++;
     }

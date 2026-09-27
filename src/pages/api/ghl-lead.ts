@@ -349,6 +349,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
               address: String(l.UnparsedAddress || 'Address unavailable'),
               price: Number(l.ListPrice) || null,
               url: `${SITE_URL}/search/${l.ListingKey}/`,
+              key: String(l.ListingKey),
             })),
           });
         }
@@ -452,7 +453,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
         listings: picks
           .sort((a, b) => String(b.listedAt || '').localeCompare(String(a.listedAt || '')))
           .slice(0, 3)
-          .map((p) => ({ address: p.address, price: p.price, url: `${SITE_URL}/search/${p.key}/` })),
+          .map((p) => ({ address: p.address, price: p.price, url: `${SITE_URL}/search/${p.key}/`, key: p.key })),
       });
     })();
     const waitUntil = (locals as any)?.netlify?.context?.waitUntil;

@@ -141,6 +141,12 @@ async function fetchPhotos(listingKey: string): Promise<PhotoSet> {
   }
 }
 
+/** First photo of an active listing (Medium tier), via the shared 24h photo cache. Null if it has none. */
+export async function getListingPhotoUrl(listingKey: string): Promise<string | null> {
+  const { thumb, full } = await fetchPhotos(listingKey);
+  return thumb[0] ?? full[0] ?? null;
+}
+
 // National Pool (CREA's own ddfapi.realtor.ca) — a separate DDF destination
 // that, unlike AMPRE, actually populates Latitude/Longitude. Join key
 // confirmed empirically 2026-07-16: this feed's `ListingId` equals AMPRE's
