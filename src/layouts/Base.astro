@@ -143,6 +143,10 @@ const isProd = import.meta.env.PROD;
              GA4 already had, just started a few seconds later. STILL:
              verify a real /g/collect beacon fires after deploying, same
              check that caught the Partytown regression. -->
+        <!-- In-house heatmap (clicks, time on screen, scroll depth), 2026-09-27.
+             See public/hm.js; viewer at /admin/heatmap/. -->
+        <script is:inline src="/hm.js" defer></script>
+
         <script is:inline>
           window.dataLayer = window.dataLayer || [];
           function gtag(){dataLayer.push(arguments);}

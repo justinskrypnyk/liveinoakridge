@@ -18,6 +18,7 @@ export default defineConfig({
       priority: 0.7,
       lastmod: new Date(),
       customPages: [],
+      filter: (page) => !page.includes('/admin/'),
     }),
     mdx(),
     // Partytown (GA4 off the main thread, ~238ms TBT win) was removed

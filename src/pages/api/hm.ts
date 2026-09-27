@@ -1,0 +1,71 @@
+// Receives public/hm.js beacons (the in-house heatmap, 2026-09-27) and
+// stores each one as its own blob under heatmap-raw/<date>/..., so
+// concurrent visitors never overwrite each other. heatmap-rollup-background
+// folds them into weekly per-page summaries every hour and deletes them.
+//
+// Public and anonymous by design, so everything is validated and capped:
+// a malformed or oversized body is dropped with a 204 (a beacon never
+// reads the response anyway).
+import type { APIRoute } from 'astro';
+import { getStore } from '@netlify/blobs';
+
+export const prerender = false;
+
+const MAX_BODY = 20000;
+const BOT_UA = /bot|crawl|spider|slurp|headless|lighthouse|pagespeed|preview|monitor/i;
+
+// Listing detail pages are one layout with thousands of URLs; grouping them
+// makes their heatmap readable instead of 1 view per URL.
+function normalizePath(p: string): string {
+  return p
+    .replace(/^\/(search|properties|sold-map)\/[A-Za-z0-9]{5,20}\/?$/, '/$1/[listing]/')
+    .replace(/\/?$/, '/');
+}
+
+const clampInt = (n: unknown, lo: number, hi: number) => Math.min(hi, Math.max(lo, Math.round(Number(n) || 0)));
+
+export const POST: APIRoute = async ({ request }) => {
+  const ok = new Response(null, { status: 204 });
+  if (BOT_UA.test(request.headers.get('user-agent') || '')) return ok;
+  const raw = await request.text();
+  if (raw.length > MAX_BODY) return ok;
+  let b: any;
+  try {
+    b = JSON.parse(raw);
+  } catch {
+    return ok;
+  }
+  if (typeof b?.p !== 'string' || !b.p.startsWith('/') || b.p.length > 200 || b.p.startsWith('/admin')) return ok;
+  if (b.d !== 'm' && b.d !== 'd') return ok;
+
+  const bands: Record<string, number> = {};
+  for (const [k, v] of Object.entries(b.a && typeof b.a === 'object' ? b.a : {})) {
+    const band = clampInt(k, 0, 1000);
+    if (String(band) === k) bands[k] = clampInt(v, 0, 3600);
+  }
+  const path = b.p.split('?')[0];
+  const record = {
+    id: String(b.id || '').slice(0, 20),
+    p: normalizePath(path),
+    ex: path, // a real URL the viewer can show for grouped listing pages
+    d: b.d,
+    w: clampInt(b.w, 200, 4000),
+    h: clampInt(b.h, 200, 100000),
+    v: b.v === 1 ? 1 : 0,
+    c: (Array.isArray(b.c) ? b.c : []).slice(0, 200)
+      .filter((c: unknown) => Array.isArray(c) && c.length >= 2)
+      .map((c: unknown[]) => [clampInt(c[0], 0, 4000), clampInt(c[1], 0, 100000), String(c[2] ?? '').slice(0, 80)]),
+    a: bands,
+    s: clampInt(b.s, 0, 100000),
+    t: clampInt(b.t, 0, 3600),
+    at: new Date().toISOString(),
+  };
+
+  try {
+    const key = `${record.at.slice(0, 10)}/${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+    await getStore('heatmap-raw').setJSON(key, record);
+  } catch (err) {
+    console.error('hm: store failed', err instanceof Error ? err.message : err);
+  }
+  return ok;
+};

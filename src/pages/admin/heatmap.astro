@@ -1,0 +1,318 @@
+---
+// Private viewer for the in-house heatmap (Justin, 2026-09-27). Reads the
+// weekly summaries heatmap-rollup-background writes (heatmap-weeks) and
+// draws them over the live page in an iframe: Clicks, Attention (time on
+// screen per part of the page) and Scroll (how far down people get), for
+// desktop or mobile.
+//
+// Gated by ?key=HEATMAP_KEY (same idea as api/market-report.csv.ts). A
+// plain page on purpose -- not the site layout, so neither GA4, the Meta
+// Pixel nor the heatmap tracker itself counts Justin's own visits here.
+import { getStore } from '@netlify/blobs';
+
+export const prerender = false;
+
+const url = new URL(Astro.request.url);
+const key = url.searchParams.get('key') || '';
+const expected = import.meta.env.HEATMAP_KEY;
+Astro.response.headers.set('X-Robots-Tag', 'noindex, nofollow');
+Astro.response.headers.set('Cache-Control', 'no-store');
+const authorized = Boolean(expected) && key === expected;
+if (!authorized) Astro.response.status = 404;
+
+type PageSummary = {
+  views: number; secs: number; clicks: [number, number, number][]; labels: Record<string, number>;
+  bands: Record<string, number>; depth: Record<string, number>; heightSum: number; heightN: number; example?: string;
+};
+
+let weekList: string[] = [];
+let week = '';
+const device = url.searchParams.get('device') === 'm' ? 'm' : 'd';
+let pages: Record<string, PageSummary> = {};
+let updatedAt = '';
+if (authorized) {
+  try {
+    const store = getStore('heatmap-weeks');
+    const { blobs } = await store.list();
+    weekList = [...new Set(blobs.map((b) => b.key.slice(0, 10)))].sort().reverse();
+    week = weekList.includes(url.searchParams.get('week') || '') ? url.searchParams.get('week')! : weekList[0] || '';
+    if (week) {
+      const doc = (await store.get(`${week}/${device}`, { type: 'json' })) as { pages: Record<string, PageSummary>; updatedAt?: string } | null;
+      pages = doc?.pages || {};
+      updatedAt = doc?.updatedAt || '';
+    }
+  } catch (err) {
+    console.error('admin/heatmap: load failed', err);
+  }
+}
+
+const pageList = Object.entries(pages)
+  .map(([path, p]) => ({ path, views: p.views, avgSecs: p.views ? Math.round(p.secs / p.views) : 0, clicks: p.clicks.length }))
+  .sort((a, b) => b.views - a.views);
+const selected = pages[url.searchParams.get('page') || ''] ? url.searchParams.get('page')! : pageList[0]?.path || '';
+const sel = pages[selected];
+const frameSrc = sel ? (selected.includes('[listing]') ? sel.example || '/' : selected) : '/';
+const frameW = device === 'm' ? 390 : 1280;
+const frameH = sel && sel.heightN ? Math.round(sel.heightSum / sel.heightN) : 3000;
+const topLabels = sel ? Object.entries(sel.labels).sort((a, b) => b[1] - a[1]).slice(0, 15) : [];
+const totalClicks = topLabels.length && sel ? Object.values(sel.labels).reduce((s, n) => s + n, 0) : 0;
+const deadClicks = sel ? Object.entries(sel.labels).filter(([l]) => l.startsWith('(')).reduce((s, [, n]) => s + n, 0) : 0;
+
+const qs = (over: Record<string, string>) => {
+  const q = new URLSearchParams({ key, week, device, page: selected, ...over });
+  return `?${q.toString()}`;
+};
+const fmtWeek = (w: string) => {
+  const d = new Date(`${w}T12:00:00Z`);
+  const end = new Date(d.getTime() + 6 * 86400000);
+  const f = (x: Date) => x.toLocaleDateString('en-CA', { month: 'short', day: 'numeric', timeZone: 'UTC' });
+  return `${f(d)} – ${f(end)}`;
+};
+const fmtSecs = (s: number) => (s >= 60 ? `${Math.floor(s / 60)}m ${s % 60}s` : `${s}s`);
+const data = sel ? { clicks: sel.clicks, bands: sel.bands, depth: sel.depth, frameW, frameH, device } : null;
+---
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Site Heatmap</title>
+<style>
+  :root { --ink:#16283a; --muted:#5a7185; --line:#dbe4ea; --bg:#f4f6f8; --card:#fff; --accent:#047857; --navy:#0c2340; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: Inter, Helvetica, Arial, sans-serif; color:var(--ink); background:var(--bg); }
+  header { background:var(--navy); color:#fff; padding:16px 24px; display:flex; flex-wrap:wrap; gap:12px 24px; align-items:center; }
+  header h1 { font-size:18px; margin:0; font-weight:600; }
+  header .sub { color:#b8c7d6; font-size:13px; }
+  .controls { display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-left:auto; }
+  select, .seg a, .seg button { font:inherit; font-size:14px; }
+  select { padding:7px 10px; border-radius:6px; border:1px solid #2a4661; background:#fff; color:var(--ink); max-width:280px; }
+  .seg { display:inline-flex; border:1px solid var(--line); border-radius:6px; overflow:hidden; background:#fff; }
+  .seg a, .seg button { padding:7px 14px; border:0; background:#fff; color:var(--ink); text-decoration:none; cursor:pointer; }
+  .seg .on { background:var(--accent); color:#fff; }
+  main { display:grid; grid-template-columns: minmax(0,1fr) 340px; gap:20px; padding:20px 24px; align-items:start; }
+  @media (max-width: 1000px) { main { grid-template-columns: 1fr; } }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:16px; }
+  .card h2 { font-size:15px; margin:0 0 10px; }
+  .stats { display:grid; grid-template-columns: repeat(3, 1fr); gap:10px; margin-bottom:14px; }
+  .stat { background:var(--bg); border-radius:6px; padding:10px; }
+  .stat b { display:block; font-size:20px; }
+  .stat span { font-size:12px; color:var(--muted); }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  td, th { padding:6px 4px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top; }
+  td.n, th.n { text-align:right; white-space:nowrap; }
+  .toolbar { display:flex; gap:10px; align-items:center; margin-bottom:12px; flex-wrap:wrap; }
+  .legend { font-size:12px; color:var(--muted); }
+  #stage { position:relative; overflow:hidden; border:1px solid var(--line); border-radius:6px; background:#fff; }
+  #scaler { transform-origin: 0 0; position:absolute; top:0; left:0; }
+  #scaler iframe { border:0; display:block; background:#fff; pointer-events:none; }
+  #scaler canvas { position:absolute; top:0; left:0; pointer-events:none; }
+  .empty { padding:60px 24px; text-align:center; color:var(--muted); }
+  .pages a { color:var(--ink); text-decoration:none; }
+  .pages tr.sel td { background:#f0f9f6; font-weight:600; }
+  .note { font-size:12px; color:var(--muted); line-height:1.5; margin:10px 0 0; }
+</style>
+</head>
+<body>
+{!authorized ? (
+  <div class="empty">Not found.</div>
+) : (
+  <>
+    <header>
+      <div>
+        <h1>Site heatmap</h1>
+        <div class="sub">{week ? `Week of ${fmtWeek(week)}` : 'No data yet'}{updatedAt && ` · updated ${new Date(updatedAt).toLocaleString('en-CA', { timeZone: 'America/Toronto', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}`}</div>
+      </div>
+      <form class="controls" method="get">
+        <input type="hidden" name="key" value={key}>
+        <input type="hidden" name="device" value={device}>
+        <label class="sr" for="week" style="position:absolute;left:-9999px">Week</label>
+        <select id="week" name="week" onchange="this.form.submit()">
+          {weekList.map((w) => <option value={w} selected={w === week}>{fmtWeek(w)}</option>)}
+        </select>
+        <label for="page" style="position:absolute;left:-9999px">Page</label>
+        <select id="page" name="page" onchange="this.form.submit()">
+          {pageList.map((p) => <option value={p.path} selected={p.path === selected}>{p.path} ({p.views})</option>)}
+        </select>
+        <div class="seg" role="group" aria-label="Device">
+          <a href={qs({ device: 'd' })} class={device === 'd' ? 'on' : ''}>Desktop</a>
+          <a href={qs({ device: 'm' })} class={device === 'm' ? 'on' : ''}>Mobile</a>
+        </div>
+      </form>
+    </header>
+
+    {!sel ? (
+      <div class="empty">No {device === 'm' ? 'mobile' : 'desktop'} visits recorded {week ? 'this week' : 'yet'}. Data shows up within an hour of the first visits.</div>
+    ) : (
+      <main>
+        <section class="card">
+          <div class="toolbar">
+            <div class="seg" role="group" aria-label="View">
+              <button type="button" data-mode="clicks" class="on">Clicks</button>
+              <button type="button" data-mode="attention">Attention</button>
+              <button type="button" data-mode="scroll">Scroll</button>
+            </div>
+            <span class="legend" id="legend"></span>
+          </div>
+          <div id="stage" style={`max-width:${frameW}px;margin:0 auto`}><div id="scaler"><iframe id="frame" src={frameSrc} width={frameW} height={frameH} title="Page preview" loading="eager" scrolling="no" sandbox="allow-same-origin"></iframe><canvas id="heat" width={frameW} height={frameH}></canvas></div></div>
+          <p class="note">Shown at {frameW}px wide ({device === 'm' ? 'a typical phone' : 'a typical laptop'}). Visitors' screens vary, so spots near the edges of a layout can be a little off. The preview runs with scripts off (so your own viewing isn't counted in Google Analytics), which means maps and other live widgets show blank here. {selected.includes('[listing]') && 'This row groups every listing page; the preview uses one of them.'}</p>
+        </section>
+
+        <aside>
+          <div class="card">
+            <div class="stats">
+              <div class="stat"><b>{sel.views}</b><span>views</span></div>
+              <div class="stat"><b>{fmtSecs(sel.views ? Math.round(sel.secs / sel.views) : 0)}</b><span>avg. time on page</span></div>
+              <div class="stat"><b>{totalClicks ? Math.round((deadClicks / totalClicks) * 100) : 0}%</b><span>clicks on non-links</span></div>
+            </div>
+            <h2>What people clicked</h2>
+            <table>
+              <thead><tr><th>Element</th><th class="n">Clicks</th></tr></thead>
+              <tbody>
+                {topLabels.map(([label, n]) => <tr><td>{label}</td><td class="n">{n} <span style="color:var(--muted)">({Math.round((n / totalClicks) * 100)}%)</span></td></tr>)}
+              </tbody>
+            </table>
+            {topLabels.length === 0 && <p class="note">No clicks recorded on this page yet.</p>}
+          </div>
+
+          <div class="card" style="margin-top:16px">
+            <h2>All pages this week ({device === 'm' ? 'mobile' : 'desktop'})</h2>
+            <table class="pages">
+              <thead><tr><th>Page</th><th class="n">Views</th><th class="n">Avg. time</th></tr></thead>
+              <tbody>
+                {pageList.slice(0, 40).map((p) => (
+                  <tr class={p.path === selected ? 'sel' : ''}><td><a href={qs({ page: p.path })}>{p.path}</a></td><td class="n">{p.views}</td><td class="n">{fmtSecs(p.avgSecs)}</td></tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </aside>
+      </main>
+    )}
+    <script is:inline type="application/json" id="hm-data" set:html={JSON.stringify(data)}></script>
+    <script is:inline>
+      (function () {
+        var data = JSON.parse(document.getElementById('hm-data').textContent || 'null');
+        if (!data) return;
+        var stage = document.getElementById('stage'), scaler = document.getElementById('scaler');
+        var canvas = document.getElementById('heat'), ctx = canvas.getContext('2d');
+        var legend = document.getElementById('legend');
+        var W = data.frameW, H = data.frameH, BAND = 100;
+
+        function fit() {
+          var s = Math.min(1, stage.clientWidth / W);
+          scaler.style.transform = 'scale(' + s + ')';
+          stage.style.height = Math.ceil(H * s) + 'px';
+        }
+        window.addEventListener('resize', fit); fit();
+
+        // Heat colour ramp: transparent blue -> green -> yellow -> red.
+        var ramp = (function () {
+          var c = document.createElement('canvas'); c.width = 256; c.height = 1;
+          var g = c.getContext('2d'), gr = g.createLinearGradient(0, 0, 256, 0);
+          gr.addColorStop(0.0, 'rgba(0,0,255,0)'); gr.addColorStop(0.25, 'rgb(0,120,255)');
+          gr.addColorStop(0.5, 'rgb(0,200,80)'); gr.addColorStop(0.75, 'rgb(255,220,0)'); gr.addColorStop(1.0, 'rgb(230,20,20)');
+          g.fillStyle = gr; g.fillRect(0, 0, 256, 1);
+          return g.getImageData(0, 0, 256, 1).data;
+        })();
+        function heatColor(t, a) { var i = Math.max(0, Math.min(255, Math.round(t * 255))) * 4; return 'rgba(' + ramp[i] + ',' + ramp[i + 1] + ',' + ramp[i + 2] + ',' + a + ')'; }
+
+        // Map a click recorded at page width w onto the preview width. On
+        // desktop most content sits in a centred column, so keep the
+        // distance from the centre; on phones, keep the fraction of width.
+        function mapX(x, w) {
+          var mx = data.device === 'm' ? (x / w) * W : W / 2 + (x - w / 2);
+          return Math.max(0, Math.min(W, mx));
+        }
+
+        function drawClicks() {
+          ctx.clearRect(0, 0, W, H);
+          var r = data.device === 'm' ? 18 : 24;
+          var off = document.createElement('canvas'); off.width = W; off.height = H;
+          var o = off.getContext('2d');
+          var alpha = Math.max(0.04, Math.min(0.35, 30 / Math.max(1, data.clicks.length)));
+          data.clicks.forEach(function (c) {
+            var x = mapX(c[0], c[2] || W), y = c[1];
+            if (y > H) return;
+            var g = o.createRadialGradient(x, y, 0, x, y, r);
+            g.addColorStop(0, 'rgba(0,0,0,' + alpha + ')'); g.addColorStop(1, 'rgba(0,0,0,0)');
+            o.fillStyle = g; o.fillRect(x - r, y - r, r * 2, r * 2);
+          });
+          var img = o.getImageData(0, 0, W, H), px = img.data, max = 0;
+          for (var i = 3; i < px.length; i += 4) if (px[i] > max) max = px[i];
+          for (var j = 0; j < px.length; j += 4) {
+            var a = px[j + 3]; if (!a) continue;
+            var k = Math.round((a / max) * 255) * 4;
+            px[j] = ramp[k]; px[j + 1] = ramp[k + 1]; px[j + 2] = ramp[k + 2]; px[j + 3] = Math.min(220, 60 + a / max * 200);
+          }
+          ctx.putImageData(img, 0, 0);
+          legend.textContent = data.clicks.length + ' clicks · red = most clicked';
+        }
+
+        function drawAttention() {
+          ctx.clearRect(0, 0, W, H);
+          var keys = Object.keys(data.bands), max = 0, total = 0;
+          keys.forEach(function (k) { max = Math.max(max, data.bands[k]); total += data.bands[k]; });
+          keys.forEach(function (k) {
+            var y = Number(k) * BAND; if (y > H) return;
+            var t = data.bands[k] / max;
+            ctx.fillStyle = heatColor(t, 0.18 + t * 0.4);
+            ctx.fillRect(0, y, W, BAND);
+          });
+          // Label the most-watched spots.
+          keys.sort(function (a, b) { return data.bands[b] - data.bands[a]; }).slice(0, 3).forEach(function (k, i) {
+            var y = Number(k) * BAND + BAND / 2;
+            if (y > H) return;
+            ctx.font = 'bold 16px Helvetica, Arial, sans-serif';
+            var text = '#' + (i + 1) + ' most time on screen';
+            var tw = ctx.measureText(text).width;
+            ctx.fillStyle = 'rgba(12,35,64,0.9)'; ctx.fillRect(W - tw - 36, y - 16, tw + 20, 30);
+            ctx.fillStyle = '#fff'; ctx.fillText(text, W - tw - 26, y + 5);
+          });
+          legend.textContent = 'Red = where people spend the most time looking';
+        }
+
+        function drawScroll() {
+          ctx.clearRect(0, 0, W, H);
+          var views = 0;
+          Object.keys(data.depth).forEach(function (k) { views += data.depth[k]; });
+          if (!views) { legend.textContent = 'No scroll data yet'; return; }
+          var bandsDown = Math.ceil(H / BAND), reached = [];
+          for (var b = 0; b <= bandsDown; b++) {
+            var n = 0;
+            Object.keys(data.depth).forEach(function (k) { if (Number(k) >= b) n += data.depth[k]; });
+            reached[b] = n / views;
+          }
+          for (var b2 = 0; b2 < bandsDown; b2++) {
+            ctx.fillStyle = 'rgba(12,35,64,' + (0.6 * (1 - reached[b2])).toFixed(2) + ')';
+            ctx.fillRect(0, b2 * BAND, W, BAND);
+          }
+          [0.75, 0.5, 0.25].forEach(function (mark) {
+            var b3 = reached.findIndex(function (r) { return r < mark; });
+            if (b3 < 0) return;
+            var y = b3 * BAND;
+            ctx.fillStyle = '#e11d48'; ctx.fillRect(0, y - 1, W, 3);
+            ctx.font = 'bold 16px Helvetica, Arial, sans-serif';
+            var text = Math.round(mark * 100) + '% of visitors scroll this far';
+            var tw = ctx.measureText(text).width;
+            ctx.fillStyle = '#e11d48'; ctx.fillRect(12, y - 30, tw + 20, 28);
+            ctx.fillStyle = '#fff'; ctx.fillText(text, 22, y - 11);
+          });
+          legend.textContent = 'Darker = fewer visitors get this far';
+        }
+
+        var modes = { clicks: drawClicks, attention: drawAttention, scroll: drawScroll };
+        document.querySelectorAll('[data-mode]').forEach(function (btn) {
+          btn.addEventListener('click', function () {
+            document.querySelectorAll('[data-mode]').forEach(function (b) { b.classList.toggle('on', b === btn); });
+            modes[btn.getAttribute('data-mode')]();
+          });
+        });
+        drawClicks();
+      })();
+    </script>
+  </>
+)}
+</body>
+</html>
