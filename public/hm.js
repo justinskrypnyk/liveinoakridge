@@ -5,7 +5,18 @@
 // the page is on screen (attention), and how far down the visitor got.
 // Never records anything typed, form values, or who the visitor is. Skips
 // Do Not Track, automated browsers, and the admin viewer's own iframe.
+//
+// Opt-out for Justin, Smile and anyone testing the site: open any page with
+// ?hm=off once and this browser is never tracked again (?hm=on undoes it).
+// Visits from the Philippines (Smile) are also dropped server-side, in api/hm.ts.
 (function () {
+  try {
+    if (/[?&]hm=off\b/.test(location.search)) localStorage.setItem('hm_off', '1');
+    if (/[?&]hm=on\b/.test(location.search)) localStorage.removeItem('hm_off');
+    if (localStorage.getItem('hm_off')) return;
+  } catch (e) {
+    // storage blocked (private mode) -- carry on
+  }
   if (navigator.doNotTrack === '1' || navigator.webdriver || window.top !== window.self) return;
   if (!navigator.sendBeacon) return;
 

@@ -13,6 +13,24 @@ export const prerender = false;
 
 const MAX_BODY = 20000;
 const BOT_UA = /bot|crawl|spider|slurp|headless|lighthouse|pagespeed|preview|monitor/i;
+// Team testing isn't real visitor behaviour: Smile (Justin's VA) works from
+// the Philippines, and the site has no real audience there (Justin, 2026-09-27).
+const EXCLUDED_COUNTRIES = new Set(['PH']);
+
+// Netlify's geo lookup for this request: the adapter's context when present,
+// else the x-country / x-nf-geo headers Netlify adds in front of functions.
+function countryOf(request: Request, locals: any): string {
+  const fromContext = locals?.netlify?.context?.geo?.country?.code;
+  if (fromContext) return String(fromContext).toUpperCase();
+  const header = request.headers.get('x-country');
+  if (header) return header.toUpperCase();
+  try {
+    const geo = JSON.parse(Buffer.from(request.headers.get('x-nf-geo') || '', 'base64').toString('utf8'));
+    return String(geo?.country?.code || '').toUpperCase();
+  } catch {
+    return '';
+  }
+}
 
 // Listing detail pages are one layout with thousands of URLs; grouping them
 // makes their heatmap readable instead of 1 view per URL.
@@ -24,9 +42,10 @@ function normalizePath(p: string): string {
 
 const clampInt = (n: unknown, lo: number, hi: number) => Math.min(hi, Math.max(lo, Math.round(Number(n) || 0)));
 
-export const POST: APIRoute = async ({ request }) => {
+export const POST: APIRoute = async ({ request, locals }) => {
   const ok = new Response(null, { status: 204 });
   if (BOT_UA.test(request.headers.get('user-agent') || '')) return ok;
+  if (EXCLUDED_COUNTRIES.has(countryOf(request, locals))) return ok;
   const raw = await request.text();
   if (raw.length > MAX_BODY) return ok;
   let b: any;
