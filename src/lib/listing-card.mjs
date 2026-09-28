@@ -33,10 +33,15 @@ function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-// "455 Hyde Park Road 15, London North, ON N6H 3R9" -> ["455 Hyde Park Road 15", "London North"]
+// The feed puts the unit number after the street type ("925 Lawson Road 8"),
+// which reads like a typo in an email.
+const STREET_UNIT = /^(.+\b(?:Road|Rd|Street|St|Drive|Dr|Avenue|Ave|Crescent|Cres|Court|Crt|Ct|Boulevard|Blvd|Lane|Ln|Way|Place|Pl|Terrace|Terr|Trail|Circle|Cir|Gate|Parkway|Pkwy|Line|Square|Sq|Grove|Heights|Hts|Common|Commons|Private|Row|Walk|Path|Mews)\.?(?:\s+(?:E|W|N|S|East|West|North|South)\.?)?)\s+([A-Za-z]?\d+[A-Za-z]?)$/i;
+
+// "455 Hyde Park Road 15, London North, ON N6H 3R9" -> ["455 Hyde Park Road, Unit 15", "London North"]
 function addressLines(address) {
   const parts = String(address || '').split(',').map((p) => p.trim()).filter(Boolean);
-  return [parts[0] || 'Address unavailable', parts[1] || ''];
+  const street = (parts[0] || 'Address unavailable').replace(STREET_UNIT, '$1, Unit $2');
+  return [street, parts[1] || ''];
 }
 
 /**
@@ -60,7 +65,7 @@ export function listingCardHtml({ siteUrl, key, address, price, url: rawUrl, sol
 <td valign="middle" style="padding:10px 12px 10px 6px;font-family:Helvetica,Arial,sans-serif;color:#16283a;">
 <div style="font-size:12px;letter-spacing:1px;text-transform:uppercase;color:#047857;font-weight:bold;">${esc(label || (sold ? 'Sold' : 'For sale'))}</div>
 <div style="font-size:18px;font-weight:bold;margin-top:2px;">${priceText}${wasText}</div>
-<div style="font-size:14px;color:#5a7185;line-height:1.4;margin-top:2px;">${esc(street)}${area ? `<br>${esc(area)}` : ''}</div>
+<div style="font-size:14px;color:#5a7185;line-height:1.4;margin-top:2px;"><a href="${esc(url)}" style="color:#5a7185;text-decoration:none;">${esc(street)}${area ? `<br>${esc(area)}` : ''}</a></div>
 <a href="${esc(url)}" style="display:inline-block;margin-top:8px;font-size:14px;font-weight:bold;color:#047857;text-decoration:none;">${sold ? 'See the details' : 'View this home'} &rarr;</a>
 </td>
 </tr>
