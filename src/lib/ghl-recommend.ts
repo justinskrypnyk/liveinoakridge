@@ -62,6 +62,8 @@ export interface RecommendedListingLine {
   url: string;
   /** MLS ListingKey -- when present, a photo card goes into recommended_listing_N_card too. */
   key?: string;
+  beds?: number | null;
+  baths?: number | null;
 }
 
 export interface PushRecommendationInput {
@@ -137,7 +139,7 @@ export async function pushRecommendationToGhl(input: PushRecommendationInput): P
         // Photo cards for the same listings (see listing-card.mjs). The text
         // lines above stay, so an email that still uses them keeps working.
         ...listingCardFields((input.listings ?? []).slice(0, 3).filter((l) => l.key).map((l) =>
-          listingCardHtml({ siteUrl: SITE_URL, key: l.key!, address: l.address, price: l.price, url: l.url, campaign }))),
+          listingCardHtml({ siteUrl: SITE_URL, key: l.key!, address: l.address, price: l.price, url: l.url, campaign, beds: l.beds, baths: l.baths }))),
       ];
 
   let contactId: string | null = null;

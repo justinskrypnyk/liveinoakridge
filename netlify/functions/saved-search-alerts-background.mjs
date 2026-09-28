@@ -309,6 +309,7 @@ export default async () => {
         ),
         cards: top.map((l) => listingCardHtml({
           siteUrl: SITE_URL, key: l.ListingKey, address: l.UnparsedAddress, price: Number(l.ListPrice) || null, url: `${SITE_URL}/search/${l.ListingKey}/`, campaign: 'search-area-alert',
+          beds: l.BedroomsTotal, baths: l.BathroomsTotalInteger,
         })),
       });
       sent++;

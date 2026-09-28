@@ -165,7 +165,7 @@ export default async () => {
   const [data, nationalGeoMap] = await Promise.all([
     odataGet('Property', {
       $filter: `contains(UnparsedAddress,'London')`,
-      $select: 'ListingKey,UnparsedAddress,StandardStatus,PropertyType,TransactionType,ListPrice,OriginalEntryTimestamp',
+      $select: 'ListingKey,UnparsedAddress,StandardStatus,PropertyType,TransactionType,ListPrice,OriginalEntryTimestamp,BedroomsTotal,BathroomsTotalInteger',
       $top: '5000',
     }),
     getNationalGeoMap(),
@@ -232,6 +232,8 @@ export default async () => {
         address: listing.UnparsedAddress,
         price: Number(listing.ListPrice) || null,
         listedAt: listing.OriginalEntryTimestamp || null,
+        beds: Number(listing.BedroomsTotal) || null,
+        baths: Number(listing.BathroomsTotalInteger) || null,
       });
     }
     for (const slug of Object.keys(byArea)) {

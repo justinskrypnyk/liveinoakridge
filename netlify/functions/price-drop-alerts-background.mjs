@@ -172,6 +172,8 @@ export default async (req) => {
           url: url(drop.listing.ListingKey),
           campaign: TAG,
           label: saved ? 'Price drop · a home you saved' : 'Price drop',
+          beds: drop.listing.BedroomsTotal,
+          baths: drop.listing.BathroomsTotalInteger,
         }))),
       ],
     });

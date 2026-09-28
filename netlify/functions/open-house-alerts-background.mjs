@@ -152,6 +152,8 @@ export default async (req) => {
           url: url(home.listing.ListingKey),
           campaign: TAG,
           label: `Open house · ${when(home)}`,
+          beds: home.listing.BedroomsTotal,
+          baths: home.listing.BathroomsTotalInteger,
         }))),
       ],
     });

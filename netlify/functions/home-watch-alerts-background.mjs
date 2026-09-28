@@ -153,7 +153,7 @@ export default async () => {
   for (let from = 0; ; from += SOLD_PAGE_SIZE) {
     const { data: page, error: soldError } = await supabase
       .from('vow_sold_listings')
-      .select('listing_key, address, close_price, close_date, lat, lng')
+      .select('listing_key, address, close_price, close_date, lat, lng, beds, baths')
       .gte('close_date', since)
       .lte('close_date', todayStr)
       .eq('is_lease', false)
@@ -192,6 +192,7 @@ export default async () => {
         ),
         cards: nearby.map((l) => listingCardHtml({
           siteUrl: SITE_URL, key: l.listing_key, address: l.address, price: Number(l.close_price), url: `${SITE_URL}/sold-map/${l.listing_key}/`, sold: true, campaign: 'nosy-neighbour-alert',
+          beds: l.beds, baths: l.baths,
         })),
       });
       sent++;

@@ -355,6 +355,8 @@ export const POST: APIRoute = async ({ request, locals }) => {
               price: Number(l.ListPrice) || null,
               url: `${SITE_URL}/search/${l.ListingKey}/`,
               key: String(l.ListingKey),
+              beds: Number(l.BedroomsTotal) || null,
+              baths: Number(l.BathroomsTotalInteger) || null,
             })),
           });
         }
@@ -413,7 +415,8 @@ export const POST: APIRoute = async ({ request, locals }) => {
   if (school) {
     const slugs = school.servesAreas!.map((a) => a.slug);
     const welcome = (async () => {
-      let picks: { key: string; address: string; price: number | null; listedAt: string | null }[] = [];
+      // beds/baths are missing from snapshots written before 2026-09-28; the card just leaves that line out.
+      let picks: { key: string; address: string; price: number | null; listedAt: string | null; beds?: number | null; baths?: number | null }[] = [];
       try {
         const snap = await getStore('area-newest-listings').get('latest', { type: 'json' }) as
           { builtAt: string; areas: Record<string, typeof picks> } | null;
@@ -445,6 +448,8 @@ export const POST: APIRoute = async ({ request, locals }) => {
           address: String(l.UnparsedAddress || 'Address unavailable'),
           price: Number(l.ListPrice) || null,
           listedAt: (l.OriginalEntryTimestamp as string) || null,
+          beds: Number(l.BedroomsTotal) || null,
+          baths: Number(l.BathroomsTotalInteger) || null,
         }));
       }
 
@@ -458,7 +463,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
         listings: picks
           .sort((a, b) => String(b.listedAt || '').localeCompare(String(a.listedAt || '')))
           .slice(0, 3)
-          .map((p) => ({ address: p.address, price: p.price, url: `${SITE_URL}/search/${p.key}/`, key: p.key })),
+          .map((p) => ({ address: p.address, price: p.price, url: `${SITE_URL}/search/${p.key}/`, key: p.key, beds: p.beds, baths: p.baths })),
       });
     })();
     const waitUntil = (locals as any)?.netlify?.context?.waitUntil;

@@ -44,13 +44,20 @@ function addressLines(address) {
   return [street, parts[1] || ''];
 }
 
+// "3 bed · 2 bath"; either half is left out when the feed has no number for it.
+function bedsBathsText(beds, baths) {
+  const n = (v) => (v != null && v !== '' && Number.isFinite(Number(v)) && Number(v) > 0 ? Number(v) : null);
+  return [n(beds) != null ? `${n(beds)} bed` : '', n(baths) != null ? `${n(baths)} bath` : ''].filter(Boolean).join(' &middot; ');
+}
+
 /**
- * @param {{ siteUrl: string, key: string, address: string, price: number | null, url: string, sold?: boolean, campaign?: string, label?: string, previousPrice?: number | null }} l
+ * @param {{ siteUrl: string, key: string, address: string, price: number | null, url: string, sold?: boolean, campaign?: string, label?: string, previousPrice?: number | null, beds?: number | string | null, baths?: number | string | null }} l
+ *   key: the MLS® number (ListingKey), shown on the card and used for the photo.
  *   label: replaces the "For sale"/"Sold" line, e.g. "Open house · Sat 2-4 PM".
  *   previousPrice: shown crossed out after the price (price-drop alerts).
  * @returns {string}
  */
-export function listingCardHtml({ siteUrl, key, address, price, url: rawUrl, sold = false, campaign, label, previousPrice }) {
+export function listingCardHtml({ siteUrl, key, address, price, url: rawUrl, sold = false, campaign, label, previousPrice, beds, baths }) {
   const url = withUtm(rawUrl, campaign);
   const fmt = (n) => `$${Math.round(Number(n)).toLocaleString('en-CA')}`;
   const wasText = previousPrice != null && Number(previousPrice) > Number(price)
@@ -58,6 +65,7 @@ export function listingCardHtml({ siteUrl, key, address, price, url: rawUrl, sol
     : '';
   const [street, area] = addressLines(address);
   const priceText = price != null && Number(price) > 0 ? fmt(price) : 'Price on request';
+  const bedsBaths = bedsBathsText(beds, baths);
   const thumb = `${siteUrl}/api/email-thumb/${encodeURIComponent(key)}.jpg`;
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 14px;border:1px solid #dbe4ea;border-radius:6px;border-collapse:separate;max-width:560px;">
 <tr>
@@ -65,7 +73,8 @@ export function listingCardHtml({ siteUrl, key, address, price, url: rawUrl, sol
 <td valign="middle" style="padding:10px 12px 10px 6px;font-family:Helvetica,Arial,sans-serif;color:#16283a;">
 <div style="font-size:12px;letter-spacing:1px;text-transform:uppercase;color:#047857;font-weight:bold;">${esc(label || (sold ? 'Sold' : 'For sale'))}</div>
 <div style="font-size:18px;font-weight:bold;margin-top:2px;">${priceText}${wasText}</div>
-<div style="font-size:14px;color:#5a7185;line-height:1.4;margin-top:2px;"><a href="${esc(url)}" style="color:#5a7185;text-decoration:none;">${esc(street)}${area ? `<br>${esc(area)}` : ''}</a></div>
+${bedsBaths ? `<div style="font-size:14px;font-weight:bold;color:#16283a;margin-top:2px;">${bedsBaths}</div>\n` : ''}<div style="font-size:14px;color:#5a7185;line-height:1.4;margin-top:2px;"><a href="${esc(url)}" style="color:#5a7185;text-decoration:none;">${esc(street)}${area ? `<br>${esc(area)}` : ''}</a></div>
+<div style="font-size:12px;color:#5a7185;margin-top:4px;"><a href="${esc(url)}" style="color:#5a7185;text-decoration:none;">MLS&reg; ${esc(key)}</a></div>
 <a href="${esc(url)}" style="display:inline-block;margin-top:8px;font-size:14px;font-weight:bold;color:#047857;text-decoration:none;">${sold ? 'See the details' : 'View this home'} &rarr;</a>
 </td>
 </tr>
