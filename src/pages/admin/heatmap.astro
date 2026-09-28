@@ -9,6 +9,7 @@
 // plain page on purpose -- not the site layout, so neither GA4, the Meta
 // Pixel nor the heatmap tracker itself counts Justin's own visits here.
 import { getStore } from '@netlify/blobs';
+import { isLocal, FORM_NAMES, prettyField } from '@/lib/heatmap-shared.mjs';
 
 export const prerender = false;
 
@@ -23,12 +24,20 @@ if (!authorized) Astro.response.status = 404;
 type PageSummary = {
   views: number; secs: number; clicks: [number, number, number][]; labels: Record<string, number>;
   bands: Record<string, number>; depth: Record<string, number>; heightSum: number; heightN: number; example?: string;
+  places?: Record<string, number>;
+};
+type SiteSummary = {
+  searches: number; areas: Record<string, number>; prices: Record<string, number>; beds: Record<string, number>;
+  types: Record<string, number>; combos: Record<string, number>;
+  forms: Record<string, { started: number; sent: number; lastField: Record<string, number> }>;
 };
 
 let weekList: string[] = [];
 let week = '';
 const device = url.searchParams.get('device') === 'm' ? 'm' : 'd';
 let pages: Record<string, PageSummary> = {};
+let otherPages: Record<string, PageSummary> = {}; // the other device, for site-wide visitor places
+let site: SiteSummary | null = null;
 let updatedAt = '';
 if (authorized) {
   try {
@@ -40,6 +49,9 @@ if (authorized) {
       const doc = (await store.get(`${week}/${device}`, { type: 'json' })) as { pages: Record<string, PageSummary>; updatedAt?: string } | null;
       pages = doc?.pages || {};
       updatedAt = doc?.updatedAt || '';
+      const other = (await store.get(`${week}/${device === 'm' ? 'd' : 'm'}`, { type: 'json' })) as { pages: Record<string, PageSummary> } | null;
+      otherPages = other?.pages || {};
+      site = ((await store.get(`${week}/site`, { type: 'json' })) as { site?: SiteSummary } | null)?.site || null;
     }
   } catch (err) {
     console.error('admin/heatmap: load failed', err);
@@ -57,6 +69,16 @@ const frameH = sel && sel.heightN ? Math.round(sel.heightSum / sel.heightN) : 30
 const topLabels = sel ? Object.entries(sel.labels).sort((a, b) => b[1] - a[1]).slice(0, 15) : [];
 const totalClicks = topLabels.length && sel ? Object.values(sel.labels).reduce((s, n) => s + n, 0) : 0;
 const deadClicks = sel ? Object.entries(sel.labels).filter(([l]) => l.startsWith('(')).reduce((s, [, n]) => s + n, 0) : 0;
+
+const topOf = (rec: Record<string, number> | undefined, n: number) => Object.entries(rec || {}).sort((a, b) => b[1] - a[1]).slice(0, n);
+const sumOf = (rec: Record<string, number> | undefined) => Object.values(rec || {}).reduce((s, v) => s + v, 0);
+const sitePlaces: Record<string, number> = {};
+for (const p of [...Object.values(pages), ...Object.values(otherPages)]) for (const [k, v] of Object.entries(p.places || {})) sitePlaces[k] = (sitePlaces[k] || 0) + v;
+const siteVisits = sumOf(sitePlaces);
+const localVisits = Object.entries(sitePlaces).filter(([k]) => isLocal(k)).reduce((s, [, v]) => s + v, 0);
+const pagePlaces = topOf(sel?.places, 8);
+const pageVisitsWithPlace = sumOf(sel?.places);
+const pct = (n: number, d: number) => (d ? `${Math.round((n / d) * 100)}%` : '0%');
 
 const qs = (over: Record<string, string>) => {
   const q = new URLSearchParams({ key, week, device, page: selected, ...over });
@@ -177,6 +199,24 @@ const data = sel ? { clicks: sel.clicks, bands: sel.bands, depth: sel.depth, fra
           </div>
 
           <div class="card" style="margin-top:16px">
+            <h2>Where visitors are from</h2>
+            <p class="note" style="margin:0 0 8px">This page ({device === 'm' ? 'mobile' : 'desktop'}):</p>
+            <table>
+              <tbody>
+                {pagePlaces.map(([place, n]) => <tr><td>{place}{isLocal(place) ? '' : ' ✈'}</td><td class="n">{n} <span style="color:var(--muted)">({pct(n, pageVisitsWithPlace)})</span></td></tr>)}
+              </tbody>
+            </table>
+            {pagePlaces.length === 0 && <p class="note">No location data for this page yet.</p>}
+            <p class="note" style="margin:14px 0 8px">Whole site this week (phones and computers): <b>{pct(localVisits, siteVisits)} local</b> (London area), <b>{pct(siteVisits - localVisits, siteVisits)} out of town</b>.</p>
+            <table>
+              <tbody>
+                {topOf(sitePlaces, 10).map(([place, n]) => <tr><td>{place}{isLocal(place) ? '' : ' ✈'}</td><td class="n">{n} <span style="color:var(--muted)">({pct(n, siteVisits)})</span></td></tr>)}
+              </tbody>
+            </table>
+            <p class="note">✈ = outside the London area. Locations are the visitor's internet provider's best guess: reliable for the city or region, not exact. Phones on cell data often show up as Toronto even when they're in London.</p>
+          </div>
+
+          <div class="card" style="margin-top:16px">
             <h2>All pages this week ({device === 'm' ? 'mobile' : 'desktop'})</h2>
             <table class="pages">
               <thead><tr><th>Page</th><th class="n">Views</th><th class="n">Avg. time</th></tr></thead>
@@ -189,6 +229,41 @@ const data = sel ? { clicks: sel.clicks, bands: sel.bands, depth: sel.depth, fra
           </div>
         </aside>
       </main>
+    )}
+
+    {site && (
+      <section style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px;padding:0 24px 28px">
+        <div class="card">
+          <h2>What buyers are searching for ({site.searches} searches)</h2>
+          <p class="note" style="margin:0 0 8px">Filters people used on the /search page this week.</p>
+          <table>
+            <thead><tr><th>Most searched combinations</th><th class="n">Searches</th></tr></thead>
+            <tbody>{topOf(site.combos, 8).map(([k, n]) => <tr><td>{k}</td><td class="n">{n}</td></tr>)}</tbody>
+          </table>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
+            <table><thead><tr><th>Area</th><th class="n">#</th></tr></thead><tbody>{topOf(site.areas, 6).map(([k, n]) => <tr><td>{k}</td><td class="n">{n}</td></tr>)}</tbody></table>
+            <table><thead><tr><th>Price range</th><th class="n">#</th></tr></thead><tbody>{topOf(site.prices, 6).map(([k, n]) => <tr><td>{k}</td><td class="n">{n}</td></tr>)}</tbody></table>
+            <table><thead><tr><th>Bedrooms</th><th class="n">#</th></tr></thead><tbody>{topOf(site.beds, 6).map(([k, n]) => <tr><td>{k}</td><td class="n">{n}</td></tr>)}</tbody></table>
+            <table><thead><tr><th>Home type</th><th class="n">#</th></tr></thead><tbody>{topOf(site.types, 6).map(([k, n]) => <tr><td>{k}</td><td class="n">{n}</td></tr>)}</tbody></table>
+          </div>
+        </div>
+        <div class="card">
+          <h2>Forms: started vs. sent</h2>
+          <p class="note" style="margin:0 0 8px">"Started" = clicked into at least one field. For forms left unsent, the field people were last in is often where they got stuck.</p>
+          <table>
+            <thead><tr><th>Form</th><th class="n">Started</th><th class="n">Sent</th><th class="n">Finish rate</th></tr></thead>
+            <tbody>
+              {Object.entries(site.forms).sort((a, b) => b[1].started - a[1].started).map(([name, f]) => (
+                <tr>
+                  <td>{FORM_NAMES[name] || name}{topOf(f.lastField, 1).map(([field, n]) => <div style="font-size:12px;color:var(--muted)">Most often left at: {prettyField(field)} ({n})</div>)}</td>
+                  <td class="n">{f.started}</td><td class="n">{f.sent}</td><td class="n">{pct(f.sent, f.started)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {Object.keys(site.forms).length === 0 && <p class="note">No form activity recorded this week yet.</p>}
+        </div>
+      </section>
     )}
     <script is:inline type="application/json" id="hm-data" set:html={JSON.stringify(data)}></script>
     <script is:inline>

@@ -17,6 +17,9 @@
 // sc-domain:liveinoakridge.ca Search Console property -- no separate
 // permission-granting step needed (Search Console has no API for that
 // anyway).
+import { getStore } from '@netlify/blobs';
+import { isLocal, FORM_NAMES, prettyField, reachShare } from '../../src/lib/heatmap-shared.mjs';
+
 const GOOGLE_OAUTH_CREDENTIALS = process.env.GOOGLE_OAUTH_CREDENTIALS;
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const DIGEST_TO_EMAIL = process.env.DIGEST_TO_EMAIL || 'info@homeswithjustin.ca';
@@ -166,6 +169,92 @@ async function sendFailureAlert(message) {
   } catch {
     // best-effort -- if RESEND_API_KEY itself is the problem, this fails too, same known gap as the other digests' failure alerts
   }
+}
+
+// "On the site" -- highlights from the in-house heatmap's summary for the
+// week (heatmap-weeks, written by heatmap-rollup-background): what people
+// read and clicked, where they were from, what buyers searched for, and
+// which forms got abandoned. Best-effort: returns '' if there's no data.
+async function onSiteSection(weekStartStr) {
+  const store = getStore('heatmap-weeks');
+  const [d, m, s] = await Promise.all(['d', 'm', 'site'].map((k) => store.get(`${weekStartStr}/${k}`, { type: 'json' }).catch(() => null)));
+  const devices = [['Desktop', d?.pages || {}], ['Mobile', m?.pages || {}]];
+  const site = s?.site;
+  if (!Object.keys(devices[0][1]).length && !Object.keys(devices[1][1]).length) return '';
+
+  const td = 'style="padding:4px 10px;"';
+  const head = (cols) => `<tr style="font-weight:bold;border-bottom:1px solid #ccc;">${cols.map((c) => `<td ${td}>${c}</td>`).join('')}</tr>`;
+  const pct = (x) => (x == null ? '—' : `${Math.round(x * 100)}%`);
+  const secs = (n) => (n >= 60 ? `${Math.floor(n / 60)}m ${Math.round(n % 60)}s` : `${Math.round(n)}s`);
+
+  // Pages: views on each device, avg time, share reaching halfway.
+  const byPath = new Map();
+  for (const [label, pages] of devices) {
+    for (const [path, p] of Object.entries(pages)) {
+      const row = byPath.get(path) || { path, views: 0, secs: 0, cells: {} };
+      row.views += p.views; row.secs += p.secs;
+      row.cells[label] = { views: p.views, half: reachShare(p, 0.5) };
+      byPath.set(path, row);
+    }
+  }
+  const topPages = [...byPath.values()].sort((a, b) => b.views - a.views).slice(0, 8);
+  const pagesHtml = topPages.map((r) => `<tr><td ${td}>${esc(r.path)}</td><td ${td}>${fmtNum(r.views)}</td><td ${td}>${secs(r.views ? r.secs / r.views : 0)}</td>`
+    + `<td ${td}>${pct(r.cells.Desktop?.half)}</td><td ${td}>${pct(r.cells.Mobile?.half)}</td></tr>`).join('');
+
+  // Clicks site-wide, and pages where people click things that aren't links.
+  const labels = {};
+  const deadByPage = {};
+  for (const [, pages] of devices) {
+    for (const [path, p] of Object.entries(pages)) {
+      for (const [l, n] of Object.entries(p.labels || {})) {
+        if (l.startsWith('(')) deadByPage[path] = (deadByPage[path] || 0) + n;
+        else labels[l] = (labels[l] || 0) + n;
+      }
+    }
+  }
+  const topClicks = Object.entries(labels).sort((a, b) => b[1] - a[1]).slice(0, 8);
+  const topDead = Object.entries(deadByPage).sort((a, b) => b[1] - a[1]).slice(0, 3);
+
+  // Where visitors were from.
+  const places = {};
+  for (const [, pages] of devices) for (const p of Object.values(pages)) for (const [k, n] of Object.entries(p.places || {})) places[k] = (places[k] || 0) + n;
+  const visits = Object.values(places).reduce((a, n) => a + n, 0);
+  const local = Object.entries(places).filter(([k]) => isLocal(k)).reduce((a, [, n]) => a + n, 0);
+  const awayTop = Object.entries(places).filter(([k]) => !isLocal(k) && k !== 'Unknown').sort((a, b) => b[1] - a[1]).slice(0, 5);
+
+  const viewer = process.env.HEATMAP_KEY ? `${SITE_ORIGIN}/admin/heatmap/?key=${encodeURIComponent(process.env.HEATMAP_KEY)}&week=${weekStartStr}` : null;
+  return `
+      <h3>On the Site (our own heatmap)</h3>
+      <p style="font-size:13px;margin:0 0 6px;">What visitors actually did on the pages, from the site's own tracking.${viewer ? ` <a href="${viewer}">Open the heatmap for this week</a>.` : ''}</p>
+      <table style="border-collapse:collapse;font-size:13px;">
+        ${head(['Page', 'Views', 'Avg. time', 'Read halfway (desktop)', 'Read halfway (mobile)'])}
+        ${pagesHtml}
+      </table>
+
+      <p style="font-size:13px;margin:12px 0 4px;"><strong>Most clicked</strong></p>
+      <table style="border-collapse:collapse;font-size:13px;">
+        ${head(['Button or link', 'Clicks'])}
+        ${topClicks.map(([l, n]) => `<tr><td ${td}>${esc(l)}</td><td ${td}>${fmtNum(n)}</td></tr>`).join('') || `<tr><td ${td} colspan="2">No clicks recorded</td></tr>`}
+      </table>
+      ${topDead.length ? `<p style="font-size:13px;margin:8px 0 0;">Most clicks on things that aren't links (people may expect them to do something): ${topDead.map(([path, n]) => `${esc(path)} (${fmtNum(n)})`).join(', ')}.</p>` : ''}
+
+      <p style="font-size:13px;margin:12px 0 4px;"><strong>Where visitors were from</strong></p>
+      <p style="font-size:13px;margin:0;">${visits ? `${pct(local / visits)} London area, ${pct((visits - local) / visits)} out of town.` : 'No location data yet.'}${awayTop.length ? ` Top out-of-town: ${awayTop.map(([k, n]) => `${esc(k)} (${fmtNum(n)})`).join(', ')}.` : ''} <span style="color:#888;">(Internet-provider estimate: good for city/region, not exact.)</span></p>
+      ${site && site.searches ? `
+      <p style="font-size:13px;margin:12px 0 4px;"><strong>What buyers searched for (${fmtNum(site.searches)} searches)</strong></p>
+      <table style="border-collapse:collapse;font-size:13px;">
+        ${head(['Search', 'Times'])}
+        ${Object.entries(site.combos).sort((a, b) => b[1] - a[1]).slice(0, 6).map(([k, n]) => `<tr><td ${td}>${esc(k)}</td><td ${td}>${fmtNum(n)}</td></tr>`).join('')}
+      </table>` : ''}
+      ${site && Object.keys(site.forms || {}).length ? `
+      <p style="font-size:13px;margin:12px 0 4px;"><strong>Forms: started vs. sent</strong></p>
+      <table style="border-collapse:collapse;font-size:13px;">
+        ${head(['Form', 'Started', 'Sent', 'Most often left at'])}
+        ${Object.entries(site.forms).sort((a, b) => b[1].started - a[1].started).map(([name, f]) => {
+          const left = Object.entries(f.lastField || {}).sort((a, b) => b[1] - a[1])[0];
+          return `<tr><td ${td}>${esc(FORM_NAMES[name] || name)}</td><td ${td}>${fmtNum(f.started)}</td><td ${td}>${fmtNum(f.sent)}</td><td ${td}>${left ? `${esc(prettyField(left[0]))} (${fmtNum(left[1])})` : '—'}</td></tr>`;
+        }).join('')}
+      </table>` : ''}`;
 }
 
 export default async () => {
@@ -321,6 +410,13 @@ export default async () => {
         };
       });
 
+    let onSiteHtml = '';
+    try {
+      onSiteHtml = await onSiteSection(weekStartStr);
+    } catch (err) {
+      console.error('weekly-traffic-digest: heatmap section failed (non-fatal)', err);
+    }
+
     // ---- Build the email ----
     const overviewRow = (label, cur, pri, isPct = false) => `<tr>
       <td style="padding:4px 10px;">${label}</td>
@@ -409,6 +505,8 @@ export default async () => {
         <tr style="font-weight:bold;border-bottom:1px solid #ccc;"><td style="padding:4px 10px;">Query</td><td style="padding:4px 10px;">Clicks</td><td style="padding:4px 10px;">Impressions</td><td style="padding:4px 10px;">CTR</td><td style="padding:4px 10px;">Avg. Position</td></tr>
         ${topQueriesHtml}
       </table>
+
+      ${onSiteHtml}
 
       <p style="font-size:12px;color:#888;">Auto-generated from live GA4 (property 542463311) and Search Console (liveinoakridge.ca) data -- no AI involved in compiling these numbers. Full query and page-level data attached as CSVs.</p>
     `;

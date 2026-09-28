@@ -26,7 +26,32 @@ function weekOf(iso) {
 }
 
 function emptyPage() {
-  return { views: 0, secs: 0, clicks: [], labels: {}, bands: {}, depth: {}, heightSum: 0, heightN: 0 };
+  return { views: 0, secs: 0, clicks: [], labels: {}, bands: {}, depth: {}, heightSum: 0, heightN: 0, places: {} };
+}
+
+// Buyer-demand labels for a /search filter set.
+const k50 = (n) => `$${Math.round(Number(n) / 1000)}K`;
+function priceBand(q) {
+  const lo = Number(q.minPrice) || 0, hi = Number(q.maxPrice) || 0;
+  if (lo && hi) return `${k50(lo)}–${k50(hi)}`;
+  if (hi) return `Under ${k50(hi)}`;
+  if (lo) return `${k50(lo)}+`;
+  return null;
+}
+const titleCase = (s) => String(s).replace(/[-_]+/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+
+function emptySite() {
+  return {
+    searches: 0, areas: {}, prices: {}, beds: {}, types: {}, combos: {},
+    forms: {}, // formName -> { started, sent, lastField: { field: abandons } }
+  };
+}
+
+// "London, ON", "Toronto, ON", "Calgary, AB", "Detroit, MI", "Manila, PH"
+function placeOf(g) {
+  if (!g || !g.co) return 'Unknown';
+  const where = g.co === 'CA' || g.co === 'US' ? (g.reg || g.co) : g.co;
+  return g.city ? `${g.city}, ${where}` : `(somewhere in) ${where}`;
 }
 
 export default async () => {
@@ -46,6 +71,7 @@ export default async () => {
 
   // One view can send several beacons (tab switches) -- keep its deepest scroll once.
   const depthByView = new Map();
+  const formsByView = new Map(); // viewKey -> { site, forms: { name: { s, l } } }
   const used = [];
   for (const key of keys) {
     const r = await raw.get(key, { type: 'json' }).catch(() => null);
@@ -56,6 +82,11 @@ export default async () => {
 
     if (r.ex) page.example = r.ex;
     page.views += r.v === 1 ? 1 : 0;
+    if (r.v === 1) {
+      page.places ||= {};
+      const place = placeOf(r.g);
+      page.places[place] = (page.places[place] || 0) + 1;
+    }
     page.secs += r.t || 0;
     if (r.h) { page.heightSum += r.h; page.heightN += 1; }
     for (const [x, y, label] of r.c || []) {
@@ -67,8 +98,40 @@ export default async () => {
     for (const [band, secs] of Object.entries(r.a || {})) page.bands[band] = (page.bands[band] || 0) + secs;
 
     const viewKey = `${r.d}|${r.p}|${r.id || key}`;
+
+    // Site-wide, both devices: buyer search demand and form drop-off.
+    const site = ((await docFor(`${weekOf(r.at)}/site`)).site ||= emptySite());
+    if (r.q) {
+      const q = r.q;
+      site.searches += 1;
+      const area = q.area ? titleCase(q.area) : 'All areas';
+      const price = priceBand(q);
+      const beds = q.minBeds ? `${q.minBeds}+ bed` : null;
+      site.areas[area] = (site.areas[area] || 0) + 1;
+      if (price) site.prices[price] = (site.prices[price] || 0) + 1;
+      if (beds) site.beds[beds] = (site.beds[beds] || 0) + 1;
+      for (const t of String(q.types || '').split(',').filter(Boolean)) site.types[titleCase(t)] = (site.types[titleCase(t)] || 0) + 1;
+      const combo = [area, beds, price].filter(Boolean).join(' · ');
+      site.combos[combo] = (site.combos[combo] || 0) + 1;
+    }
+    if (r.f && Object.keys(r.f).length) {
+      const prevForms = formsByView.get(viewKey)?.forms || {};
+      for (const [name, st] of Object.entries(r.f)) {
+        const p = prevForms[name] || { s: 0, l: '' };
+        prevForms[name] = { s: p.s || st.s, l: st.l || p.l };
+      }
+      formsByView.set(viewKey, { site, forms: prevForms });
+    }
     const prev = depthByView.get(viewKey);
     if (!prev || r.s > prev.s) depthByView.set(viewKey, { s: r.s, page });
+  }
+  for (const { site, forms } of formsByView.values()) {
+    for (const [name, st] of Object.entries(forms)) {
+      const f = (site.forms[name] ||= { started: 0, sent: 0, lastField: {} });
+      f.started += 1;
+      if (st.s) f.sent += 1;
+      else if (st.l) f.lastField[st.l] = (f.lastField[st.l] || 0) + 1;
+    }
   }
   for (const { s, page } of depthByView.values()) {
     const band = Math.floor(s / BAND);

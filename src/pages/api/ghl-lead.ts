@@ -270,6 +270,11 @@ export const POST: APIRoute = async ({ request, locals }) => {
     data.utm_term && `Keyword: ${data.utm_term}`,
     data.utm_content && `Ad content: ${data.utm_content}`,
     data.gclid && `GCLID: ${data.gclid}`,
+    // How they found the site (attribution-client.ts, every visitor since 2026-09-27).
+    data.first_referrer && `Found the site through: ${data.first_referrer}`,
+    data.first_page && `First page they saw: ${data.first_page}${data.first_seen ? ` (${data.first_seen})` : ''}`,
+    data.visits && `Visits before this form: ${data.visits}`,
+    data.lead_page && `Filled this form in on: ${data.lead_page}`,
   ].filter(Boolean);
 
   if (noteLines.length > 0 && contactId) {

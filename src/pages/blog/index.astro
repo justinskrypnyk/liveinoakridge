@@ -84,6 +84,18 @@ const sortedPosts = [...BLOG_POSTS].sort((a, b) => new Date(b.date).getTime() - 
       <p class="text-white/60 mb-8">Get monthly market updates, neighbourhood insights, and real estate tips delivered to your inbox.</p>
       <form id="newsletter-form" name="newsletter" method="POST" data-netlify="true" class="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
         <input type="hidden" name="form-name" value="newsletter" />
+        <!-- Registered here so Netlify Forms keeps them (see ContactForm.astro); filled from attribution-client.ts on submit. -->
+        <input type="hidden" name="utm_source" />
+        <input type="hidden" name="utm_medium" />
+        <input type="hidden" name="utm_campaign" />
+        <input type="hidden" name="utm_term" />
+        <input type="hidden" name="utm_content" />
+        <input type="hidden" name="gclid" />
+        <input type="hidden" name="first_referrer" />
+        <input type="hidden" name="first_page" />
+        <input type="hidden" name="first_seen" />
+        <input type="hidden" name="visits" />
+        <input type="hidden" name="lead_page" />
         <input
           type="email"
           name="email"
@@ -126,7 +138,8 @@ const sortedPosts = [...BLOG_POSTS].sort((a, b) => new Date(b.date).getTime() - 
       const data = new FormData(form);
       const body = new URLSearchParams();
       data.forEach((value, key) => body.append(key, String(value)));
-      Object.entries(getStoredAttribution()).forEach(([key, value]) => body.append(key, value));
+      // set, not append: the form now declares these as (empty) hidden inputs.
+      Object.entries(getStoredAttribution()).forEach(([key, value]) => body.set(key, value));
       const res = await fetch('/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },

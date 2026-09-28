@@ -82,6 +82,8 @@
       a: bands,
       s: Math.round(maxDepth),
       t: visibleSecs,
+      q: firstSend ? search : null,
+      f: forms,
     };
     if (navigator.sendBeacon('/api/hm', JSON.stringify(payload))) {
       firstSend = false;
@@ -90,6 +92,44 @@
       visibleSecs = 0;
     }
   }
+
+  // /search filters in use (buyer demand). Free-text boxes (q, keyword) are
+  // left out -- people type their own address there. Page 2+ of the same
+  // search isn't counted again.
+  var search = null;
+  if (location.pathname.replace(/\/$/, '') === '/search') {
+    var sp = new URLSearchParams(location.search);
+    if (!sp.get('page') || sp.get('page') === '1') {
+      search = {};
+      ['area', 'minPrice', 'maxPrice', 'types', 'minBeds', 'minBaths'].forEach(function (k) {
+        var v = sp.get(k);
+        if (v) search[k] = v.slice(0, 80);
+      });
+      if (!Object.keys(search).length) search = null;
+    }
+  }
+
+  // Forms people start but don't finish: which form, the last field they
+  // were in, and whether they sent it. Never the values typed.
+  var forms = {};
+  function formName(f) {
+    var n = f.querySelector('input[name="form-name"]');
+    return ((n && n.value) || f.getAttribute('name') || f.id || 'form').slice(0, 40);
+  }
+  document.addEventListener('focusin', function (e) {
+    var el = e.target, f = el && el.form;
+    if (!f || !el.name || el.type === 'hidden' || el.name === 'bot-field') return;
+    var k = formName(f);
+    forms[k] = forms[k] || { s: 0 };
+    forms[k].l = el.name.slice(0, 40);
+  }, true);
+  document.addEventListener('submit', function (e) {
+    var f = e.target;
+    if (!f || f.tagName !== 'FORM') return;
+    var k = formName(f);
+    forms[k] = forms[k] || {};
+    forms[k].s = 1;
+  }, true);
 
   document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'hidden') send(); });
   window.addEventListener('pagehide', send);
