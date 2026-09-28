@@ -60,3 +60,7 @@ https://liveinoakridge.ca/*   https://www.liveinoakridge.ca/:splat   301!
 # post was already live for a few hours under the wrong slug before the
 # rename -- redirect rather than 404 it).
 /blog/september-2026-london-ontario-market-update-auto/   /blog/august-2026-london-ontario-market-update-auto/   301!
+
+# A visitor landed on a cut-off copy of the high schools link (2026-09-28,
+# heatmap) -- likely a link shortened when pasted or shared.
+/best-high-   /best-high-schools-london-ontario/   301!
