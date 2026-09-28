@@ -11,7 +11,8 @@
 //   1. anyone who saved a home that has an open house this weekend, first;
 //   2. anyone whose saved search matches a home with an open house.
 // Tag `open-house-alert` fires Smile's GHL workflow, which emails the photo
-// cards in recommended_listing_1..3_card, each labelled with its times.
+// cards in recommended_listing_1..3_card, each labelled with its times; the
+// times alone also go in open_house_1..3.
 //
 // Manual test: POST {"dryRun": true} returns who would get what, sends nothing.
 
@@ -32,17 +33,17 @@ function torontoDate(days) {
   return new Date(Date.UTC(y, m - 1, d + days)).toISOString().slice(0, 10);
 }
 
-// "Sat 2-4 PM", "Sun 1:30-3 PM", "Sat 11 AM-1 PM"
+// "Sat, Oct 3, 2-4 PM", "Sun, Oct 4, 1:30-3 PM", "Sat, Oct 3, 11 AM-1 PM"
 function timeRange(startIso, endIso) {
   const part = (iso) => {
-    const p = Object.fromEntries(new Intl.DateTimeFormat('en-US', { timeZone: TZ, weekday: 'short', hour: 'numeric', minute: '2-digit', hour12: true })
+    const p = Object.fromEntries(new Intl.DateTimeFormat('en-US', { timeZone: TZ, weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true })
       .formatToParts(new Date(iso)).map((x) => [x.type, x.value]));
-    return { day: p.weekday, time: p.minute === '00' ? p.hour : `${p.hour}:${p.minute}`, ampm: p.dayPeriod.toUpperCase() };
+    return { day: `${p.weekday}, ${p.month} ${p.day}`, time: p.minute === '00' ? p.hour : `${p.hour}:${p.minute}`, ampm: p.dayPeriod.toUpperCase() };
   };
   const s = part(startIso);
-  if (!endIso) return `${s.day} ${s.time} ${s.ampm}`;
+  if (!endIso) return `${s.day}, ${s.time} ${s.ampm}`;
   const e = part(endIso);
-  return s.ampm === e.ampm ? `${s.day} ${s.time}–${e.time} ${e.ampm}` : `${s.day} ${s.time} ${s.ampm}–${e.time} ${e.ampm}`;
+  return s.ampm === e.ampm ? `${s.day}, ${s.time}–${e.time} ${e.ampm}` : `${s.day}, ${s.time} ${s.ampm}–${e.time} ${e.ampm}`;
 }
 
 async function fetchOpenHouses() {
@@ -144,6 +145,9 @@ export default async (req) => {
       lines: top.map(({ home }) => line(home)),
       customFields: [
         ...[0, 1, 2].map((i) => ({ key: `recommended_listing_${i + 1}`, fieldValue: top[i] ? line(top[i].home) : '' })),
+        // Date and time on their own (Smile, 2026-09-28), matching card 1-3,
+        // e.g. "Sat, Oct 3, 2–4 PM". Always all 3, so a blank clears last week's.
+        ...[0, 1, 2].map((i) => ({ key: `open_house_${i + 1}`, fieldValue: top[i] ? when(top[i].home) : '' })),
         ...listingCardFields(top.map(({ home }) => listingCardHtml({
           siteUrl: SITE_URL,
           key: home.listing.ListingKey,
