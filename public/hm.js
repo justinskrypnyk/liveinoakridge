@@ -2,8 +2,9 @@
 // for where this goes and src/pages/admin/heatmap.astro for the viewer.
 //
 // Records, per page view: where clicks land, how long each 100px band of
-// the page is on screen (attention), and how far down the visitor got.
-// Never records anything typed, form values, or who the visitor is. Skips
+// the page is on screen (attention), and how far down the visitor got,
+// tagged with an anonymous visit id so one visit's pages can be shown in
+// order. Never records anything typed, form values, or who the visitor is. Skips
 // Do Not Track, automated browsers, and the admin viewer's own iframe.
 //
 // Opt-out for Justin, Smile and anyone testing the site: open any page with
@@ -22,6 +23,37 @@
 
   var BAND = 100; // px per attention band
   var device = window.innerWidth < 768 ? 'm' : 'd';
+  var loadedAt = Date.now();
+
+  // Anonymous visit id, so the session viewer can show one visitor's pages
+  // in order (Justin, 2026-09-28). A random string, kept in this browser
+  // only, and replaced after 30 minutes of no activity -- it never
+  // identifies the person.
+  var sessionId = (function () {
+    var fresh = Math.random().toString(36).slice(2, 12);
+    try {
+      var saved = (localStorage.getItem('hm_s') || '').split('|');
+      var id = saved[0] && Date.now() - Number(saved[1]) < 30 * 60000 ? saved[0] : fresh;
+      localStorage.setItem('hm_s', id + '|' + Date.now());
+      return id;
+    } catch (e) {
+      return fresh;
+    }
+  })();
+  function touchSession() {
+    try { localStorage.setItem('hm_s', sessionId + '|' + Date.now()); } catch (e) { /* storage blocked */ }
+  }
+
+  // Where this page view came from: another site's name (never the full
+  // address), and any campaign tag on the link.
+  var ref = '';
+  try {
+    var rh = document.referrer ? new URL(document.referrer).hostname : '';
+    if (rh && rh !== location.hostname) ref = rh.replace(/^www\./, '');
+  } catch (e) { /* bad referrer */ }
+  var cp = new URLSearchParams(location.search);
+  var campaign = [cp.get('utm_source'), cp.get('utm_campaign')].filter(Boolean).join(' / ') || (cp.get('gclid') ? 'Google Ads' : '');
+
   var clicks = [];
   var bands = {};
   var maxDepth = 0;
@@ -51,7 +83,7 @@
 
   document.addEventListener('click', function (e) {
     if (clicks.length >= 200) return;
-    clicks.push([Math.round(e.pageX), Math.round(e.pageY), labelFor(e.target)]);
+    clicks.push([Math.round(e.pageX), Math.round(e.pageY), labelFor(e.target), Math.round((Date.now() - loadedAt) / 1000)]);
   }, true);
 
   ['scroll', 'pointermove', 'keydown', 'touchstart'].forEach(function (ev) {
@@ -84,7 +116,14 @@
       t: visibleSecs,
       q: firstSend ? search : null,
       f: forms,
+      sid: sessionId,
+      st: loadedAt, // page opened; with n, lets the server place it in time whatever this device's clock says
+      n: Date.now(),
+      ti: firstSend ? document.title.slice(0, 100) : '',
+      r: firstSend ? ref : '',
+      u: firstSend ? campaign.slice(0, 80) : '',
     };
+    touchSession();
     if (navigator.sendBeacon('/api/hm', JSON.stringify(payload))) {
       firstSend = false;
       clicks = [];

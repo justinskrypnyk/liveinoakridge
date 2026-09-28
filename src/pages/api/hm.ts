@@ -11,7 +11,7 @@ import { getStore } from '@netlify/blobs';
 
 export const prerender = false;
 
-const MAX_BODY = 20000;
+const MAX_BODY = 25000;
 const BOT_UA = /bot|crawl|spider|slurp|headless|lighthouse|pagespeed|preview|monitor/i;
 // Team testing isn't real visitor behaviour: Smile (Justin's VA) works from
 // the Philippines, and the site has no real audience there (Justin, 2026-09-27).
@@ -82,7 +82,8 @@ export const POST: APIRoute = async ({ request, locals }) => {
     v: b.v === 1 ? 1 : 0,
     c: (Array.isArray(b.c) ? b.c : []).slice(0, 200)
       .filter((c: unknown) => Array.isArray(c) && c.length >= 2)
-      .map((c: unknown[]) => [clampInt(c[0], 0, 4000), clampInt(c[1], 0, 100000), String(c[2] ?? '').slice(0, 80)]),
+      // [x, y, label, seconds after the page opened]
+      .map((c: unknown[]) => [clampInt(c[0], 0, 4000), clampInt(c[1], 0, 100000), String(c[2] ?? '').slice(0, 80), clampInt(c[3], 0, 86400)]),
     a: bands,
     s: clampInt(b.s, 0, 100000),
     t: clampInt(b.t, 0, 3600),
@@ -94,7 +95,20 @@ export const POST: APIRoute = async ({ request, locals }) => {
     f: Object.fromEntries(Object.entries(b.f && typeof b.f === 'object' ? b.f : {}).slice(0, 10)
       .map(([k, v]: [string, any]) => [String(k).slice(0, 40), { s: v?.s === 1 ? 1 : 0, l: String(v?.l || '').slice(0, 40) }])),
     at: new Date().toISOString(),
+    // For the visitor-sessions view (2026-09-28): the anonymous visit id,
+    // when the page was opened (worked out from the gap between the
+    // device's own "opened" and "sent" times, so a wrong device clock
+    // doesn't matter), its title, and where the visit came from.
+    sid: /^[a-z0-9]{4,20}$/.test(String(b.sid || '')) ? String(b.sid) : '',
+    opened: '',
+    ti: String(b.ti || '').slice(0, 100),
+    r: /^[a-z0-9.-]{1,80}$/i.test(String(b.r || '')) ? String(b.r).toLowerCase() : '',
+    u: String(b.u || '').slice(0, 80),
   };
+  const openedAgo = Number(b.n) - Number(b.st);
+  if (Number.isFinite(openedAgo) && openedAgo >= 0 && openedAgo < 86400000) {
+    record.opened = new Date(Date.parse(record.at) - openedAgo).toISOString();
+  }
 
   try {
     const key = `${record.at.slice(0, 10)}/${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;

@@ -16,6 +16,14 @@ const MAX_RAW_PER_RUN = 20000;
 const MAX_CLICK_POINTS = 5000; // per page per week per device
 const KEEP_WEEKS = 26;
 const BAND = 100;
+// Visitor sessions (2026-09-28): one doc per Toronto day in heatmap-sessions,
+// listing each anonymous visit's pages in order, for admin/sessions.astro.
+const KEEP_SESSION_DAYS = 60;
+const MAX_SESSIONS_PER_DAY = 3000;
+const MAX_VIEWS_PER_SESSION = 100;
+const MAX_CLICKS_PER_VIEW = 40;
+
+const torontoDay = (iso) => new Date(iso).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' });
 
 // Monday (Toronto) of the week an ISO timestamp falls in, as YYYY-MM-DD.
 function weekOf(iso) {
@@ -57,6 +65,7 @@ function placeOf(g) {
 export default async () => {
   const raw = getStore('heatmap-raw');
   const weeks = getStore('heatmap-weeks');
+  const sessionStore = getStore('heatmap-sessions');
 
   const { blobs } = await raw.list();
   const keys = blobs.map((b) => b.key).sort().slice(0, MAX_RAW_PER_RUN);
@@ -67,6 +76,12 @@ export default async () => {
   const docFor = async (docKey) => {
     if (!docs.has(docKey)) docs.set(docKey, (await weeks.get(docKey, { type: 'json' }).catch(() => null)) || { pages: {} });
     return docs.get(docKey);
+  };
+
+  const dayDocs = new Map();
+  const dayDoc = async (day) => {
+    if (!dayDocs.has(day)) dayDocs.set(day, (await sessionStore.get(day, { type: 'json' }).catch(() => null)) || { sessions: {} });
+    return dayDocs.get(day);
   };
 
   // One view can send several beacons (tab switches) -- keep its deepest scroll once.
@@ -124,6 +139,39 @@ export default async () => {
     }
     const prev = depthByView.get(viewKey);
     if (!prev || r.s > prev.s) depthByView.set(viewKey, { s: r.s, page });
+
+    // Visitor sessions. Beacons from before the visit id existed become a
+    // one-page visit each.
+    const opened = r.opened || r.at;
+    const day = await dayDoc(torontoDay(opened));
+    const sid = r.sid || `v${r.id || key.slice(-8)}`;
+    let sess = day.sessions[sid];
+    if (!sess) {
+      if (Object.keys(day.sessions).length >= MAX_SESSIONS_PER_DAY) continue;
+      sess = day.sessions[sid] = { place: placeOf(r.g), d: r.d, ref: '', camp: '', views: [] };
+    }
+    if (!sess.ref && r.r) sess.ref = r.r;
+    if (!sess.camp && r.u) sess.camp = r.u;
+    const viewId = r.id || key;
+    let v = sess.views.find((x) => x.id === viewId);
+    if (!v) {
+      if (sess.views.length >= MAX_VIEWS_PER_SESSION) continue;
+      v = { id: viewId, at: opened, p: r.ex || r.p, ti: '', secs: 0, depth: 0, h: 0, clicks: [], forms: {}, q: null };
+      sess.views.push(v);
+    }
+    if (opened < v.at) v.at = opened;
+    if (r.ti) v.ti = r.ti;
+    v.secs += r.t || 0;
+    if (r.h) v.h = r.h;
+    if (r.s > v.depth) v.depth = r.s;
+    for (const [, , label, t] of r.c || []) {
+      if (v.clicks.length < MAX_CLICKS_PER_VIEW) v.clicks.push([label || '(not a link)', Number.isFinite(t) ? t : null]);
+    }
+    for (const [name, st] of Object.entries(r.f || {})) {
+      const p = v.forms[name] || { s: 0, l: '' };
+      v.forms[name] = { s: p.s || st.s, l: st.l || p.l };
+    }
+    if (r.q) v.q = r.q;
   }
   for (const { site, forms } of formsByView.values()) {
     for (const [name, st] of Object.entries(forms)) {
@@ -142,7 +190,16 @@ export default async () => {
     doc.updatedAt = new Date().toISOString();
     await weeks.setJSON(docKey, doc);
   }
+  for (const [day, doc] of dayDocs) {
+    for (const s of Object.values(doc.sessions)) s.views.sort((a, b) => a.at.localeCompare(b.at));
+    doc.updatedAt = new Date().toISOString();
+    await sessionStore.setJSON(day, doc);
+  }
   for (const key of used) await raw.delete(key).catch(() => {});
+
+  const dayCutoff = new Date(Date.now() - KEEP_SESSION_DAYS * 86400000).toISOString().slice(0, 10);
+  const { blobs: dayBlobs } = await sessionStore.list();
+  for (const b of dayBlobs) if (b.key < dayCutoff) await sessionStore.delete(b.key).catch(() => {});
 
   // Drop summaries older than KEEP_WEEKS.
   const cutoff = new Date(Date.now() - KEEP_WEEKS * 7 * 86400000).toISOString().slice(0, 10);

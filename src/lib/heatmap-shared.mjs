@@ -9,6 +9,15 @@ export const LONDON_AREA = new Set([
 ]);
 export const isLocal = (place) => LONDON_AREA.has(String(place).split(',')[0].trim());
 
+// Towns that are mostly giant cloud data centres (Amazon, Google, Microsoft,
+// Meta). A "visitor" from one of these is almost always an automated bot,
+// e.g. the Boardman, OR homepage form press on 2026-09-28.
+export const DATA_CENTRE_PLACES = new Set([
+  'Boardman, OR', 'Ashburn, VA', 'Council Bluffs, IA', 'The Dalles, OR', 'Prineville, OR', 'Quincy, WA',
+  'Forest City, NC', 'Moncks Corner, SC', 'Altoona, IA', 'Papillion, NE', 'Beauharnois, QC',
+]);
+export const isDataCentre = (place) => DATA_CENTRE_PLACES.has(String(place));
+
 export const FORM_NAMES = {
   contact: 'Contact form', 'home-value-lead': 'Home value estimate', 'school-listings': 'Listings by school',
   'save-listing': 'Save a listing', 'market-map-notify': 'Market map alerts', newsletter: 'Newsletter',

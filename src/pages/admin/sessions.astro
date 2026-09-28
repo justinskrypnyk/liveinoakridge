@@ -1,0 +1,240 @@
+---
+// Private "what did each visitor do" viewer (Justin, 2026-09-28), next to the
+// heatmap. Reads the per-day session docs heatmap-rollup-background writes
+// (heatmap-sessions/<YYYY-MM-DD>): each anonymous visit's pages in order,
+// with time on page, how far they read, what they clicked, forms and
+// searches. Not a recording, and never who the visitor is.
+//
+// Same ?key=HEATMAP_KEY gate and plain (untracked) page as admin/heatmap.
+import { getStore } from '@netlify/blobs';
+import { isLocal, isDataCentre, FORM_NAMES, prettyField } from '@/lib/heatmap-shared.mjs';
+
+export const prerender = false;
+
+const url = new URL(Astro.request.url);
+const key = url.searchParams.get('key') || '';
+const expected = import.meta.env.HEATMAP_KEY;
+Astro.response.headers.set('X-Robots-Tag', 'noindex, nofollow');
+Astro.response.headers.set('Cache-Control', 'no-store');
+const authorized = Boolean(expected) && key === expected;
+if (!authorized) Astro.response.status = 404;
+
+type View = {
+  id: string; at: string; p: string; ti: string; secs: number; depth: number; h: number;
+  clicks: [string, number | null][]; forms: Record<string, { s: number; l: string }>;
+  q: Record<string, string> | null;
+};
+type Session = { place: string; d: 'd' | 'm'; ref: string; camp: string; views: View[] };
+
+let days: string[] = [];
+let day = '';
+let sessions: [string, Session][] = [];
+let updatedAt = '';
+if (authorized) {
+  try {
+    const store = getStore('heatmap-sessions');
+    const { blobs } = await store.list();
+    days = blobs.map((b) => b.key).sort().reverse();
+    day = days.includes(url.searchParams.get('day') || '') ? url.searchParams.get('day')! : days[0] || '';
+    if (day) {
+      const doc = (await store.get(day, { type: 'json' })) as { sessions: Record<string, Session>; updatedAt?: string } | null;
+      sessions = Object.entries(doc?.sessions || {});
+      updatedAt = doc?.updatedAt || '';
+    }
+  } catch (err) {
+    console.error('admin/sessions: load failed', err);
+  }
+}
+
+const place = url.searchParams.get('place') || '';
+const scope = url.searchParams.get('scope') || ''; // '' | 'local' | 'away'
+const placeCounts: Record<string, number> = {};
+for (const [, s] of sessions) placeCounts[s.place] = (placeCounts[s.place] || 0) + 1;
+const shown = sessions
+  .filter(([, s]) => !place || s.place === place)
+  .filter(([, s]) => scope !== 'local' || isLocal(s.place))
+  .filter(([, s]) => scope !== 'away' || !isLocal(s.place))
+  .sort((a, b) => (b[1].views[0]?.at || '').localeCompare(a[1].views[0]?.at || ''));
+
+const TZ = 'America/Toronto';
+const time = (iso: string) => new Date(iso).toLocaleTimeString('en-CA', { timeZone: TZ, hour: 'numeric', minute: '2-digit' });
+const fmtDay = (d: string) => new Date(`${d}T12:00:00Z`).toLocaleDateString('en-CA', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' });
+const fmtSecs = (s: number) => (s >= 60 ? `${Math.floor(s / 60)}m ${s % 60}s` : `${s}s`);
+const clock = (t: number | null) => (t == null ? '' : `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`);
+
+// "Oakridge Homes for Sale | Justin Skrypnyk ..." -> "Oakridge Homes for Sale"
+const pageName = (v: View) => {
+  const t = (v.ti || '').split(/\s+[|·–-]\s+/)[0].trim();
+  return t || (v.p === '/' ? 'Homepage' : v.p);
+};
+const clickText = (label: string) => {
+  if (label.startsWith('Link: ')) return `Clicked the link “${label.slice(6)}”`;
+  if (label.startsWith('Button: ')) return `Pressed “${label.slice(8)}”`;
+  if (label === 'Form field') return 'Tapped into a form field';
+  if (label === '(photo, not a link)') return 'Clicked a photo (not a link)';
+  return 'Clicked something that isn’t a link';
+};
+const searchText = (q: Record<string, string>) => {
+  const k = (n: string) => `$${Math.round(Number(n) / 1000)}K`;
+  const price = q.minPrice && q.maxPrice ? `${k(q.minPrice)}–${k(q.maxPrice)}` : q.maxPrice ? `under ${k(q.maxPrice)}` : q.minPrice ? `${k(q.minPrice)}+` : '';
+  const title = (s: string) => s.replace(/[-_]+/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+  return [q.area && title(q.area), q.types && title(q.types.replace(/,/g, ', ')), q.minBeds && `${q.minBeds}+ bed`, q.minBaths && `${q.minBaths}+ bath`, price]
+    .filter(Boolean).join(' · ') || 'all listings';
+};
+const sourceOf = (s: Session) => {
+  if (s.camp) return s.camp;
+  if (!s.ref) return 'Came directly (typed, bookmark, or an app)';
+  if (/google\./.test(s.ref)) return 'Google';
+  if (/facebook|fb\.|instagram/.test(s.ref)) return 'Facebook / Instagram';
+  if (/bing\./.test(s.ref)) return 'Bing';
+  if (/chatgpt|openai|perplexity|claude|gemini|copilot/.test(s.ref)) return `AI assistant (${s.ref})`;
+  return s.ref;
+};
+const lengthOf = (s: Session) => {
+  const first = Date.parse(s.views[0]?.at || '');
+  const lastV = s.views[s.views.length - 1];
+  const end = Date.parse(lastV?.at || '') + (lastV?.secs || 0) * 1000;
+  const secs = Math.max(0, Math.round((end - first) / 1000));
+  return Number.isFinite(secs) ? secs : 0;
+};
+const sentForm = (s: Session) => s.views.some((v) => Object.values(v.forms).some((f) => f.s));
+
+const qs = (over: Record<string, string>) => {
+  const q = new URLSearchParams({ key, day, place, scope, ...over });
+  for (const [k, v] of [...q.entries()]) if (!v) q.delete(k);
+  return `?${q.toString()}`;
+};
+---
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Visitor Sessions</title>
+<style>
+  :root { --ink:#16283a; --muted:#5a7185; --line:#dbe4ea; --bg:#f4f6f8; --card:#fff; --accent:#047857; --navy:#0c2340; --warn:#b45309; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: Inter, Helvetica, Arial, sans-serif; color:var(--ink); background:var(--bg); }
+  header { background:var(--navy); color:#fff; padding:16px 24px; display:flex; flex-wrap:wrap; gap:12px 24px; align-items:center; }
+  header h1 { font-size:18px; margin:0; font-weight:600; }
+  header .sub { color:#b8c7d6; font-size:13px; }
+  header a.back { color:#b8c7d6; font-size:13px; }
+  .controls { display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-left:auto; }
+  select { font:inherit; font-size:14px; padding:7px 10px; border-radius:6px; border:1px solid #2a4661; background:#fff; color:var(--ink); max-width:260px; }
+  .seg { display:inline-flex; border:1px solid var(--line); border-radius:6px; overflow:hidden; background:#fff; }
+  .seg a { padding:7px 12px; color:var(--ink); text-decoration:none; font-size:14px; }
+  .seg .on { background:var(--accent); color:#fff; }
+  main { max-width:900px; margin:0 auto; padding:20px 16px 40px; }
+  .count { color:var(--muted); font-size:14px; margin:0 0 14px; }
+  .sess { background:var(--card); border:1px solid var(--line); border-radius:8px; margin-bottom:12px; }
+  .sess > summary { list-style:none; cursor:pointer; padding:12px 16px; display:grid; grid-template-columns: 1fr auto; gap:4px 12px; }
+  .sess > summary::-webkit-details-marker { display:none; }
+  .sess .who { font-weight:600; }
+  .sess .meta { color:var(--muted); font-size:13px; }
+  .sess .right { text-align:right; font-size:13px; color:var(--muted); white-space:nowrap; }
+  .tag { display:inline-block; font-size:11px; font-weight:700; letter-spacing:.3px; padding:2px 7px; border-radius:10px; margin-left:6px; vertical-align:1px; }
+  .tag.sent { background:#dcfce7; color:#166534; }
+  .tag.bot { background:#fef3c7; color:var(--warn); }
+  .tag.away { background:#e0e7ff; color:#3730a3; }
+  ol.steps { list-style:none; margin:0; padding:4px 16px 14px 16px; border-top:1px solid var(--line); }
+  ol.steps > li { position:relative; padding:10px 0 10px 64px; border-bottom:1px dashed var(--line); }
+  ol.steps > li:last-child { border-bottom:0; }
+  ol.steps .t { position:absolute; left:0; top:11px; font-size:13px; color:var(--muted); width:56px; }
+  ol.steps .pg { font-weight:600; }
+  ol.steps .pg a { color:var(--ink); }
+  ol.steps .path { color:var(--muted); font-size:12px; word-break:break-all; }
+  ol.steps .facts { font-size:13px; color:var(--muted); margin-top:2px; }
+  ol.steps ul { margin:6px 0 0; padding-left:18px; font-size:13px; }
+  ol.steps ul li { margin:2px 0; }
+  .ok { color:#166534; font-weight:600; }
+  .stop { color:var(--warn); }
+  .empty { padding:60px 24px; text-align:center; color:var(--muted); }
+  .note { font-size:12px; color:var(--muted); line-height:1.5; }
+</style>
+</head>
+<body>
+{!authorized ? (
+  <div class="empty">Not found.</div>
+) : (
+  <>
+    <header>
+      <div>
+        <h1>Visitor sessions</h1>
+        <div class="sub">{day ? fmtDay(day) : 'No data yet'}{updatedAt && ` · updated ${new Date(updatedAt).toLocaleString('en-CA', { timeZone: TZ, month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}`} · <a class="back" href={`/admin/heatmap/?key=${encodeURIComponent(key)}`}>Back to heatmap</a></div>
+      </div>
+      <form class="controls" method="get">
+        <input type="hidden" name="key" value={key}>
+        <input type="hidden" name="scope" value={scope}>
+        <label for="day" style="position:absolute;left:-9999px">Day</label>
+        <select id="day" name="day" onchange="this.form.submit()">
+          {days.map((d) => <option value={d} selected={d === day}>{fmtDay(d)}</option>)}
+        </select>
+        <label for="place" style="position:absolute;left:-9999px">Where from</label>
+        <select id="place" name="place" onchange="this.form.submit()">
+          <option value="">Everywhere ({sessions.length})</option>
+          {Object.entries(placeCounts).sort((a, b) => b[1] - a[1]).map(([p, n]) => <option value={p} selected={p === place}>{p} ({n})</option>)}
+          {place && !placeCounts[place] && <option value={place} selected>{place} (0)</option>}
+        </select>
+        <div class="seg" role="group" aria-label="Local or out of town">
+          <a href={qs({ scope: '' })} class={scope === '' ? 'on' : ''}>All</a>
+          <a href={qs({ scope: 'local' })} class={scope === 'local' ? 'on' : ''}>London area</a>
+          <a href={qs({ scope: 'away' })} class={scope === 'away' ? 'on' : ''}>Out of town</a>
+        </div>
+      </form>
+    </header>
+
+    <main>
+      {!day ? (
+        <div class="empty">No visits recorded yet. Visits show up here within an hour.</div>
+      ) : (
+        <>
+          <p class="count">{shown.length} {shown.length === 1 ? 'visit' : 'visits'}{place && ` from ${place}`}. Newest first. Click a visit to see each step.</p>
+          {shown.map(([, s]) => {
+            const bot = isDataCentre(s.place);
+            return (
+              <details class="sess" open={shown.length <= 8 && !bot}>
+                <summary>
+                  <div>
+                    <span class="who">{time(s.views[0].at)} · {s.place}</span>
+                    {sentForm(s) && <span class="tag sent">Sent a form</span>}
+                    {bot && <span class="tag bot">Likely a bot (data centre)</span>}
+                    {!bot && !isLocal(s.place) && <span class="tag away">Out of town</span>}
+                    <div class="meta">{s.d === 'm' ? 'Phone' : 'Computer'} · {sourceOf(s)}</div>
+                  </div>
+                  <div class="right">{s.views.length} {s.views.length === 1 ? 'page' : 'pages'}<br>{fmtSecs(lengthOf(s))}</div>
+                </summary>
+                <ol class="steps">
+                  {s.views.map((v) => {
+                    const read = v.h ? Math.min(100, Math.round((v.depth / v.h) * 100)) : null;
+                    return (
+                      <li>
+                        <span class="t">{time(v.at)}</span>
+                        <div class="pg"><a href={v.p} target="_blank" rel="noopener">{pageName(v)}</a></div>
+                        <div class="path">{v.p}</div>
+                        <div class="facts">{fmtSecs(v.secs)} actively on the page{read != null && ` · scrolled ${read}% of the way down`}</div>
+                        {(v.clicks.length > 0 || v.q || Object.keys(v.forms).length > 0) && (
+                          <ul>
+                            {v.q && <li>Searched: {searchText(v.q)}</li>}
+                            {v.clicks.map(([label, t]) => <li>{t != null && <span style="color:var(--muted)">{clock(t)} </span>}{clickText(label)}</li>)}
+                            {Object.entries(v.forms).map(([name, f]) => f.s
+                              ? <li class="ok">Sent the {FORM_NAMES[name] || name}</li>
+                              : <li class="stop">Started the {FORM_NAMES[name] || name} but didn’t send it{f.l && ` (last field: ${prettyField(f.l)})`}</li>)}
+                          </ul>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ol>
+              </details>
+            );
+          })}
+          {shown.length === 0 && <div class="empty">No visits match these filters on this day.</div>}
+          <p class="note">Each visit is anonymous: a random id kept only in the visitor's browser, reset after 30 minutes of no activity. Nothing typed into forms is ever recorded. "Actively on the page" only counts time the page was on screen with someone scrolling or moving. Locations are the internet provider's best guess (phones on cell data often show as Toronto). "Likely a bot" means the visit came from a town that's mostly cloud data centres. "Sent a form" means the visitor pressed send; check GHL for the actual lead, since the spam filter can still stop bots after that. Visits are linked together from the evening of Sept 28, 2026 onward; anything earlier only exists in the heatmap totals.</p>
+        </>
+      )}
+    </main>
+  </>
+)}
+</body>
+</html>

@@ -157,6 +157,7 @@ const data = sel ? { clicks: sel.clicks, bands: sel.bands, depth: sel.depth, fra
         <select id="page" name="page" onchange="this.form.submit()">
           {pageList.map((p) => <option value={p.path} selected={p.path === selected}>{p.path} ({p.views})</option>)}
         </select>
+        <a href={`/admin/sessions/?key=${encodeURIComponent(key)}`} style="color:#fff;font-size:14px">Visitor sessions →</a>
         <div class="seg" role="group" aria-label="Device">
           <a href={qs({ device: 'd' })} class={device === 'd' ? 'on' : ''}>Desktop</a>
           <a href={qs({ device: 'm' })} class={device === 'm' ? 'on' : ''}>Mobile</a>
@@ -210,10 +211,10 @@ const data = sel ? { clicks: sel.clicks, bands: sel.bands, depth: sel.depth, fra
             <p class="note" style="margin:14px 0 8px">Whole site this week (phones and computers): <b>{pct(localVisits, siteVisits)} local</b> (London area), <b>{pct(siteVisits - localVisits, siteVisits)} out of town</b>.</p>
             <table>
               <tbody>
-                {topOf(sitePlaces, 10).map(([place, n]) => <tr><td>{place}{isLocal(place) ? '' : ' ✈'}</td><td class="n">{n} <span style="color:var(--muted)">({pct(n, siteVisits)})</span></td></tr>)}
+                {topOf(sitePlaces, 10).map(([place, n]) => <tr><td><a href={`/admin/sessions/?key=${encodeURIComponent(key)}&place=${encodeURIComponent(place)}`} style="color:inherit">{place}</a>{isLocal(place) ? '' : ' ✈'}</td><td class="n">{n} <span style="color:var(--muted)">({pct(n, siteVisits)})</span></td></tr>)}
               </tbody>
             </table>
-            <p class="note">✈ = outside the London area. Locations are the visitor's internet provider's best guess: reliable for the city or region, not exact. Phones on cell data often show up as Toronto even when they're in London.</p>
+            <p class="note">Click a place to see what each of those visitors did, step by step (visits from Sept 28, 2026 on). ✈ = outside the London area. Locations are the visitor's internet provider's best guess: reliable for the city or region, not exact. Phones on cell data often show up as Toronto even when they're in London.</p>
           </div>
 
           <div class="card" style="margin-top:16px">
