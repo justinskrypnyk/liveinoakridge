@@ -116,6 +116,12 @@ export default async () => {
 
     // Site-wide, both devices: buyer search demand and form drop-off.
     const site = ((await docFor(`${weekOf(r.at)}/site`)).site ||= emptySite());
+    // Page views per Toronto day -- site-health compares yesterday's count with GA4.
+    if (r.v === 1) {
+      const day = new Date(r.at).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' });
+      site.daily ||= {};
+      site.daily[day] = (site.daily[day] || 0) + 1;
+    }
     if (r.q) {
       const q = r.q;
       site.searches += 1;

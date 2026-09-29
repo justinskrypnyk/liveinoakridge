@@ -23,3 +23,7 @@ node_modules/
 # never belongs in a shared/public repo
 .claude/settings.local.json
 src/data/listings.json
+
+# Local .env backups (never commit)
+.env.bak
+.env.*.bak
