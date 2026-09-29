@@ -36,6 +36,7 @@
 // Fixed here and in ghl-lead.ts, home-watch-alerts-background.mjs,
 // saved-search-alerts-background.mjs, and market-update-mailout-background.mjs.
 import { listingCardHtml, listingCardFields, withUtm } from '@/lib/listing-card.mjs';
+import { assignOwnerIfUnowned } from '@/lib/ghl-owner.mjs';
 
 const GHL_API_TOKEN = import.meta.env.GHL_API_TOKEN;
 const SITE_URL = 'https://www.liveinoakridge.ca';
@@ -165,6 +166,7 @@ export async function pushRecommendationToGhl(input: PushRecommendationInput): P
     }
     const upserted = await res.json();
     contactId = upserted?.contact?.id ?? null;
+    await assignOwnerIfUnowned(upserted, AUTH_HEADERS);
   } catch (err) {
     console.error('GHL recommendation upsert failed:', err);
     return;

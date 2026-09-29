@@ -6,6 +6,7 @@
 // pool is one broad contains() fetch and why coordinates come from the
 // geocode cache.
 import { getStore } from '@netlify/blobs';
+import { assignOwnerIfUnowned } from './ghl-owner.mjs';
 // Imported (not read from disk) so the bundler inlines it into each function
 // that uses this file -- a path relative to this module wouldn't survive bundling.
 import areaBoundaries from '../data/area-boundaries.json' with { type: 'json' };
@@ -150,8 +151,10 @@ export async function pushListingAlert({ email, firstName, lastName, phone, intr
     return false;
   }
   try {
-    const contactId = (await res.json())?.contact?.id;
+    const upserted = await res.json();
+    const contactId = upserted?.contact?.id;
     if (!contactId) return false;
+    await assignOwnerIfUnowned(upserted, headers);
     const noteRes = await fetch(`https://services.leadconnectorhq.com/contacts/${contactId}/notes`, {
       method: 'POST',
       headers,

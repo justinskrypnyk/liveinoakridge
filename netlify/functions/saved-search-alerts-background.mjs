@@ -36,6 +36,7 @@
 import { getStore } from '@netlify/blobs';
 import { createClient } from '@supabase/supabase-js';
 import { listingCardHtml, listingCardFields, withUtm } from '../../src/lib/listing-card.mjs';
+import { assignOwnerIfUnowned } from '../../src/lib/ghl-owner.mjs';
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -191,6 +192,7 @@ async function pushToGhl({ email, firstName, lastName, phone, intro, lines, card
   try {
     const upserted = await res.json();
     const contactId = upserted?.contact?.id;
+    await assignOwnerIfUnowned(upserted, authHeaders);
     if (!contactId) return;
 
     // A "Notify Me" search from /search never went through a form, so the

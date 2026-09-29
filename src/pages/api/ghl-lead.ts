@@ -20,6 +20,7 @@ import { findSimilarActiveListings } from '@/lib/similar-listings';
 import { findAreaForPoint } from '@/lib/area-boundaries';
 import { getServiceRoleClient } from '@/lib/supabase';
 import { pushRecommendationToGhl, addGhlTags } from '@/lib/ghl-recommend';
+import { assignOwnerIfUnowned } from '@/lib/ghl-owner.mjs';
 import { HIGH_SCHOOLS } from '@/data/high-schools';
 import { getStore } from '@netlify/blobs';
 
@@ -244,6 +245,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
   const upserted = await res.json().catch(() => null);
   const contactId: string | undefined = upserted?.contact?.id;
   if (contactId) await addGhlTags(contactId, tags);
+  await assignOwnerIfUnowned(upserted, authHeaders);
 
   // Property/MLS context (save-listing), the home-value-estimate calculator's
   // inputs/result (previously collected by the page but silently dropped
