@@ -64,6 +64,39 @@ const pageList = Object.entries(pages)
 const selected = pages[url.searchParams.get('page') || ''] ? url.searchParams.get('page')! : pageList[0]?.path || '';
 const sel = pages[selected];
 const frameSrc = sel ? (selected.includes('[listing]') ? sel.example || '/' : selected) : '/';
+// Which listings a grouped [listing] row is made of (Justin, 2026-09-29).
+// The week summary keeps only one example URL, but the visitor-sessions
+// docs keep every view's real URL, so read the week's seven days from there.
+// Sessions only go back to Sept 28, 2026 and are kept 60 days.
+type ListingRow = { path: string; title: string; price: string; views: number; secs: number; photos: number; places: Record<string, number>; day: string };
+let listingRows: ListingRow[] = [];
+if (authorized && week && selected.includes('[listing]')) {
+  const prefix = selected.replace('[listing]/', '');
+  const store = getStore('heatmap-sessions');
+  const days = Array.from({ length: 7 }, (_, i) => new Date(Date.parse(`${week}T12:00:00Z`) + i * 86400000).toISOString().slice(0, 10));
+  const byPath = new Map<string, ListingRow>();
+  for (const day of days) {
+    const doc = (await store.get(day, { type: 'json' }).catch(() => null)) as { sessions: Record<string, any> } | null;
+    for (const s of Object.values(doc?.sessions || {})) {
+      if (s.d !== device) continue;
+      for (const v of s.views || []) {
+        const path = String(v.p || '').replace(/\/?$/, '/');
+        if (!path.startsWith(prefix) || !/^\/[a-z-]+\/[A-Za-z0-9]{5,20}\/$/.test(path)) continue;
+        const [title = '', price = ''] = String(v.ti || '').split(' | ');
+        const row = byPath.get(path) || { path, title: '', price: '', views: 0, secs: 0, photos: 0, places: {}, day };
+        if (title) { row.title = title; row.price = price.startsWith('$') ? price : row.price; }
+        row.views += 1;
+        row.secs += v.secs || 0;
+        row.photos += (v.clicks || []).filter((c: any[]) => /photo/i.test(String(c[0]))).length;
+        row.places[s.place] = (row.places[s.place] || 0) + 1;
+        row.day = day;
+        byPath.set(path, row);
+      }
+    }
+  }
+  listingRows = [...byPath.values()].sort((a, b) => b.secs - a.secs);
+}
+
 const frameW = device === 'm' ? 390 : 1280;
 const frameH = sel && sel.heightN ? Math.round(sel.heightSum / sel.heightN) : 3000;
 const topLabels = sel ? Object.entries(sel.labels).sort((a, b) => b[1] - a[1]).slice(0, 15) : [];
@@ -198,6 +231,32 @@ const data = sel ? { clicks: sel.clicks, bands: sel.bands, depth: sel.depth, fra
             </table>
             {topLabels.length === 0 && <p class="note">No clicks recorded on this page yet.</p>}
           </div>
+
+          {selected.includes('[listing]') && (
+            <div class="card" style="margin-top:16px">
+              <h2>Which listings ({device === 'm' ? 'mobile' : 'desktop'})</h2>
+              <table>
+                <thead><tr><th>Listing</th><th class="n">Views</th><th class="n">Time</th><th class="n">Photos</th></tr></thead>
+                <tbody>
+                  {listingRows.map((l) => (
+                    <tr>
+                      <td>
+                        <a href={l.path} target="_blank" rel="noopener" style="color:inherit">{l.title || l.path}</a>
+                        <div style="font-size:12px;color:var(--muted)">
+                          {l.price && `${l.price} · `}
+                          {Object.entries(l.places).map(([p, n]) => `${p}${isLocal(p) ? '' : ' ✈'}${n > 1 ? ` ×${n}` : ''}`).join(', ')}
+                          {' · '}<a href={`/admin/sessions/?key=${encodeURIComponent(key)}&day=${l.day}`} style="color:inherit">visit</a>
+                        </div>
+                      </td>
+                      <td class="n">{l.views}</td><td class="n">{fmtSecs(l.secs)}</td><td class="n">{l.photos}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {listingRows.length === 0 && <p class="note">No listing details for this week. They're read from visitor sessions, which start Sept 28, 2026 and are kept for 60 days.</p>}
+              <p class="note">Sorted by total time on the listing. "Photos" = photo clicks (next, previous, view all). Click an address to open the listing, or "visit" to see that day's visitors step by step.</p>
+            </div>
+          )}
 
           <div class="card" style="margin-top:16px">
             <h2>Where visitors are from</h2>
