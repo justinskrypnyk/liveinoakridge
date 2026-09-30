@@ -50,7 +50,35 @@ function captureJourney(): void {
     sessionStorage.setItem(SESSION_KEY, '1');
     journey.visits = (Number(journey.visits) || 0) + 1;
   }
+  recordSignals(journey, now);
   localStorage.setItem(JOURNEY_KEY, JSON.stringify(journey));
+}
+
+// Buying signals for hot-lead scoring (2026-09-29): which listings they've
+// opened, how many filtered searches, which days they came, and whether
+// they've used the seller tools. Sent with every lead as `signals` and
+// scored in lead-score.ts. Only page addresses and dates -- never anything
+// typed.
+const LISTING_PATH = /^\/search\/([A-Za-z0-9]{5,20})\/?$/;
+const SOLD_PATH = /^\/sold-map\/([A-Za-z0-9]{5,20})\/?$/;
+const SEARCH_FILTERS = ['area', 'minPrice', 'maxPrice', 'types', 'minBeds', 'minBaths', 'q'];
+function recordSignals(journey: any, today: string): void {
+  const s = (journey.sig ||= { listings: [], solds: [], days: [], searches: 0, pages: 0, valueTool: 0, soldMap: 0 });
+  const addOnce = (list: string[], value: string, cap: number) => {
+    if (!list.includes(value)) list.push(value);
+    if (list.length > cap) list.splice(0, list.length - cap);
+  };
+  const path = window.location.pathname;
+  const params = new URLSearchParams(window.location.search);
+  s.pages += 1;
+  addOnce(s.days, today, 60);
+  const listing = path.match(LISTING_PATH)?.[1];
+  if (listing) addOnce(s.listings, listing.toUpperCase(), 100);
+  const sold = path.match(SOLD_PATH)?.[1];
+  if (sold) addOnce(s.solds, sold.toUpperCase(), 100);
+  if (/^\/search\/?$/.test(path) && SEARCH_FILTERS.some((k) => params.get(k)) && (!params.get('page') || params.get('page') === '1')) s.searches += 1;
+  if (/^\/home-value-estimate\/?$/.test(path)) s.valueTool = 1;
+  if (/^\/(sold-map|market-map)\/?$/.test(path)) s.soldMap = 1;
 }
 const FIELDS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'gclid'] as const;
 
@@ -85,6 +113,13 @@ export function getStoredAttribution(): Record<string, string> {
     const journey = JSON.parse(localStorage.getItem(JOURNEY_KEY) || 'null');
     if (journey) {
       for (const k of ['first_referrer', 'first_page', 'first_seen', 'visits']) if (journey[k] != null) out[k] = String(journey[k]);
+      if (journey.sig) {
+        const s = journey.sig;
+        // Counts only, kept short -- l=listings opened, so=sold listings
+        // opened, se=searches, d=days visited, p=pages, vt/sm=used the home
+        // value tool / sold or market map.
+        out.signals = `l=${s.listings.length};so=${s.solds.length};se=${s.searches};d=${s.days.length};p=${s.pages};vt=${s.valueTool};sm=${s.soldMap}`;
+      }
     }
   } catch {
     // storage blocked

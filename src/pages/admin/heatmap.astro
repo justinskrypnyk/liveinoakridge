@@ -24,7 +24,7 @@ if (!authorized) Astro.response.status = 404;
 type PageSummary = {
   views: number; secs: number; clicks: [number, number, number][]; labels: Record<string, number>;
   bands: Record<string, number>; depth: Record<string, number>; heightSum: number; heightN: number; example?: string;
-  places?: Record<string, number>;
+  places?: Record<string, number>; perf?: { l: number[]; i: number[]; c: number[] };
 };
 type SiteSummary = {
   searches: number; areas: Record<string, number>; prices: Record<string, number>; beds: Record<string, number>;
@@ -123,6 +123,24 @@ const fmtWeek = (w: string) => {
   const f = (x: Date) => x.toLocaleDateString('en-CA', { month: 'short', day: 'numeric', timeZone: 'UTC' });
   return `${f(d)} – ${f(end)}`;
 };
+// Real-world speed for the selected page: the 75th percentile, the same
+// cut Google uses, rated against Google's own good / needs-work limits.
+const p75 = (xs: number[] | undefined) => {
+  if (!xs || !xs.length) return null;
+  const s = [...xs].sort((a, b) => a - b);
+  return s[Math.min(s.length - 1, Math.floor(s.length * 0.75))];
+};
+const rate = (v: number | null, good: number, poor: number) => (v == null ? '' : v <= good ? 'good' : v <= poor ? 'ok' : 'poor');
+const RATING_LABEL: Record<string, string> = { good: 'Good', ok: 'Needs work', poor: 'Poor' };
+const speed = sel?.perf?.l?.length
+  ? [
+      { label: 'Main content showed', value: p75(sel.perf.l), fmt: (v: number) => `${(v / 1000).toFixed(1)}s`, rating: rate(p75(sel.perf.l), 2500, 4000) },
+      { label: 'Response to taps/clicks', value: p75(sel.perf.i), fmt: (v: number) => `${v}ms`, rating: rate(p75(sel.perf.i), 200, 500) },
+      { label: 'Layout jumping', value: p75(sel.perf.c), fmt: (v: number) => v.toFixed(2), rating: rate(p75(sel.perf.c), 0.1, 0.25) },
+    ]
+  : null;
+const speedN = sel?.perf?.l?.length || 0;
+
 const fmtSecs = (s: number) => (s >= 60 ? `${Math.floor(s / 60)}m ${s % 60}s` : `${s}s`);
 const data = sel ? { clicks: sel.clicks, bands: sel.bands, depth: sel.depth, frameW, frameH, device } : null;
 ---
@@ -154,6 +172,9 @@ const data = sel ? { clicks: sel.clicks, bands: sel.bands, depth: sel.depth, fra
   .stat { background:var(--bg); border-radius:6px; padding:10px; }
   .stat b { display:block; font-size:20px; }
   .stat span { font-size:12px; color:var(--muted); }
+  .speed-good { background:#e7f6ee; } .speed-good b { color:#047857; }
+  .speed-ok { background:#fdf3e1; } .speed-ok b { color:#b45309; }
+  .speed-poor { background:#fde8e8; } .speed-poor b { color:#b91c1c; }
   table { width:100%; border-collapse:collapse; font-size:13px; }
   td, th { padding:6px 4px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top; }
   td.n, th.n { text-align:right; white-space:nowrap; }
@@ -222,6 +243,19 @@ const data = sel ? { clicks: sel.clicks, bands: sel.bands, depth: sel.depth, fra
               <div class="stat"><b>{fmtSecs(sel.views ? Math.round(sel.secs / sel.views) : 0)}</b><span>avg. time on page</span></div>
               <div class="stat"><b>{totalClicks ? Math.round((deadClicks / totalClicks) * 100) : 0}%</b><span>clicks on non-links</span></div>
             </div>
+            <h2>Real-world speed</h2>
+            {speed ? (
+              <>
+                <div class="stats">
+                  {speed.map((s) => (
+                    <div class={`stat speed-${s.rating}`}><b>{s.value == null ? '–' : s.fmt(s.value)}</b><span>{s.label}<br />{RATING_LABEL[s.rating]}</span></div>
+                  ))}
+                </div>
+                <p class="note" style="margin:-4px 0 14px">What 3 in 4 visitors got or better, from {speedN} {device === 'm' ? 'phone' : 'computer'} visit{speedN === 1 ? '' : 's'} this week. Rated on Google's own limits.</p>
+              </>
+            ) : (
+              <p class="note" style="margin:0 0 14px">No speed readings for this page yet. They're recorded from Sept 29, 2026 on.</p>
+            )}
             <h2>What people clicked</h2>
             <table>
               <thead><tr><th>Element</th><th class="n">Clicks</th></tr></thead>

@@ -2,7 +2,8 @@
 // for where this goes and src/pages/admin/heatmap.astro for the viewer.
 //
 // Records, per page view: where clicks land, how long each 100px band of
-// the page is on screen (attention), and how far down the visitor got,
+// the page is on screen (attention), how far down the visitor got, how fast
+// the page loaded and responded for them,
 // tagged with an anonymous visit id so one visit's pages can be shown in
 // order. Never records anything typed, form values, or who the visitor is. Skips
 // Do Not Track, automated browsers, and the admin viewer's own iframe.
@@ -64,6 +65,20 @@
   // so the rollup counts its view and scroll depth once.
   var viewId = Math.random().toString(36).slice(2, 12);
 
+  // Real-world speed for this page view (2026-09-29), the three numbers
+  // Google judges pages on: LCP (how long until the main content showed),
+  // INP (the slowest response to a tap or click, roughly) and CLS (how much
+  // the layout jumped around). Sent with the page view's first beacon.
+  var perf = { lcp: 0, inp: 0, cls: 0 };
+  function observe(type, fn, opts) {
+    try {
+      new PerformanceObserver(function (list) { list.getEntries().forEach(fn); }).observe(Object.assign({ type: type, buffered: true }, opts || {}));
+    } catch (e) { /* not supported in this browser */ }
+  }
+  observe('largest-contentful-paint', function (e) { perf.lcp = Math.round(e.startTime); });
+  observe('event', function (e) { if (e.interactionId && e.duration > perf.inp) perf.inp = Math.round(e.duration); }, { durationThreshold: 40 });
+  observe('layout-shift', function (e) { if (!e.hadRecentInput) perf.cls += e.value; });
+
   function docW() { return document.documentElement.clientWidth || window.innerWidth; }
   function docH() { return Math.max(document.body.scrollHeight, document.documentElement.scrollHeight); }
 
@@ -122,6 +137,7 @@
       ti: firstSend ? document.title.slice(0, 100) : '',
       r: firstSend ? ref : '',
       u: firstSend ? campaign.slice(0, 80) : '',
+      pf: firstSend && perf.lcp ? { l: perf.lcp, i: perf.inp, c: Math.round(perf.cls * 1000) / 1000 } : null,
     };
     touchSession();
     if (navigator.sendBeacon('/api/hm', JSON.stringify(payload))) {

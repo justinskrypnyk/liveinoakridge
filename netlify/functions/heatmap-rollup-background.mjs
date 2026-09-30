@@ -7,13 +7,14 @@
 //
 // Per page, a week summary holds: views, visible seconds, click points
 // (x, y, and the page width they were recorded at, capped), click counts by
-// label, seconds on screen per 100px band (attention), and how far each view
-// got (scroll depth).
+// label, seconds on screen per 100px band (attention), how far each view
+// got (scroll depth), and a sample of real-world speed readings (perf).
 
 import { getStore } from '@netlify/blobs';
 
 const MAX_RAW_PER_RUN = 20000;
 const MAX_CLICK_POINTS = 5000; // per page per week per device
+const MAX_PERF_SAMPLES = 500; // speed readings kept per page per week per device
 const KEEP_WEEKS = 26;
 const BAND = 100;
 // Visitor sessions (2026-09-28): one doc per Toronto day in heatmap-sessions,
@@ -104,6 +105,14 @@ export default async () => {
     }
     page.secs += r.t || 0;
     if (r.h) { page.heightSum += r.h; page.heightN += 1; }
+    if (r.pf) {
+      // Real-world speed samples, one per view: LCP ms, INP ms, CLS score.
+      page.perf ||= { l: [], i: [], c: [] };
+      for (const [k, v] of [['l', r.pf.l], ['i', r.pf.i], ['c', r.pf.c]]) {
+        if (page.perf[k].length < MAX_PERF_SAMPLES) page.perf[k].push(v);
+        else page.perf[k][Math.floor(Math.random() * MAX_PERF_SAMPLES)] = v;
+      }
+    }
     for (const [x, y, label] of r.c || []) {
       if (page.clicks.length < MAX_CLICK_POINTS) page.clicks.push([x, y, r.w]);
       else page.clicks[Math.floor(Math.random() * MAX_CLICK_POINTS)] = [x, y, r.w]; // keep a fair sample

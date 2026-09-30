@@ -23,6 +23,7 @@ import { pushRecommendationToGhl, addGhlTags } from '@/lib/ghl-recommend';
 import { assignOwnerIfUnowned } from '@/lib/ghl-owner.mjs';
 import { HIGH_SCHOOLS } from '@/data/high-schools';
 import { getStore } from '@netlify/blobs';
+import { scoreLead, describeScore } from '@/lib/lead-score';
 
 export const prerender = false;
 
@@ -124,6 +125,15 @@ export const POST: APIRoute = async ({ request, locals }) => {
   ];
   const subjectTag = SUBJECT_TAG_PREFIXES.find(([prefix]) => data.subject?.startsWith(prefix))?.[1];
 
+  const leadScore = scoreLead({
+    formName: submission.form_name,
+    subjectTag,
+    visits: data.visits,
+    signals: data.signals,
+    hasPhone: Boolean(String(data.phone || '').trim()),
+    chatIntent: data['chat-intent'],
+  });
+
   // AskWidget's scripted buyer/seller journey (see that file's client
   // script) writes each collected answer as a `chat-<key>` hidden field
   // right before submit -- same "extra field not in the static template
@@ -215,6 +225,9 @@ export const POST: APIRoute = async ({ request, locals }) => {
     // Chatbot school picks get the same tag as the page form so one
     // workflow trigger covers both.
     schoolName && 'School Search Lead',
+    // Who to call first (lead-score.ts). Early leads get no score tag.
+    leadScore.level === 'Hot' && 'Hot Lead',
+    leadScore.level === 'Warm' && 'Warm Lead',
   ]
     // A school we map to neighbourhoods gets School Search Lead from the
     // welcome-listings step at the end instead, once its listings are in.
@@ -257,6 +270,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
   // tag. A note failure shouldn't fail the whole request -- the contact
   // itself is already saved at this point.
   const noteLines = [
+    describeScore(leadScore),
     propertyAddress && `Property: ${propertyAddress}`,
     mlsNumber && `MLS®: ${mlsNumber}`,
     data['school'] && `School wanted: ${data['school']}`,

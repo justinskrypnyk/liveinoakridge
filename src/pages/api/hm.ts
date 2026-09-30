@@ -104,6 +104,10 @@ export const POST: APIRoute = async ({ request, locals }) => {
     ti: String(b.ti || '').slice(0, 100),
     r: /^[a-z0-9.-]{1,80}$/i.test(String(b.r || '')) ? String(b.r).toLowerCase() : '',
     u: String(b.u || '').slice(0, 80),
+    // Real-world speed (2026-09-29): LCP and INP in ms, CLS as a score.
+    pf: b.pf && typeof b.pf === 'object' && Number(b.pf.l) > 0
+      ? { l: clampInt(b.pf.l, 1, 60000), i: clampInt(b.pf.i, 0, 10000), c: Math.min(10, Math.max(0, Number(b.pf.c) || 0)) }
+      : null,
   };
   const openedAgo = Number(b.n) - Number(b.st);
   if (Number.isFinite(openedAgo) && openedAgo >= 0 && openedAgo < 86400000) {
