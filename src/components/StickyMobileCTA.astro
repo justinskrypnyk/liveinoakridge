@@ -1,5 +1,15 @@
 ---
 import { SITE } from '@/data/site';
+
+// The main button is a seller offer everywhere except pages whose visitors
+// are clearly buyers. The schools page is mostly parents planning a move,
+// and on phones none of them reached its listings form (heatmap,
+// 2026-09-29), so there the button goes straight to it.
+const PAGE_ACTIONS: Record<string, { href: string; label: string }> = {
+  '/best-high-schools-london-ontario/': { href: '#school-listings', label: 'Get Listings Near a School' },
+};
+const path = Astro.url.pathname.replace(/\/?$/, '/');
+const primary = PAGE_ACTIONS[path] || { href: '/contact/', label: 'Book Complimentary Evaluation' };
 ---
 
 <div
@@ -18,9 +28,9 @@ import { SITE } from '@/data/site';
     Call
   </a>
   <a
-    href="/contact/"
+    href={primary.href}
     class="flex-[2] inline-flex items-center justify-center bg-gold text-navy font-semibold text-sm px-4 py-2.5 rounded-lg active:bg-gold-dark transition-colors"
   >
-    Book Complimentary Evaluation
+    {primary.label}
   </a>
 </div>

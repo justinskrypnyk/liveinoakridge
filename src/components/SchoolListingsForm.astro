@@ -10,9 +10,13 @@
 // preselect the dropdown and scroll here.
 interface Props {
   schools: string[];
+  // The rest of the city's ranked schools, listed after a divider so every
+  // row of the page's table can preselect its own school (2026-09-29).
+  // These get a lead and a GHL note but no automatic area alerts.
+  otherSchools?: string[];
 }
 
-const { schools } = Astro.props;
+const { schools, otherSchools = [] } = Astro.props;
 ---
 
 <div id="school-listings" class="bg-navy rounded-2xl p-8 sm:p-10 max-w-2xl mx-auto scroll-mt-24">
@@ -48,7 +52,16 @@ const { schools } = Astro.props;
           class="w-full px-4 py-3 rounded-lg border border-white/20 bg-navy-light text-white text-sm outline-none focus:border-gold focus:ring-2 focus:ring-gold/20"
         >
           <option value="" disabled selected>Choose a school</option>
-          {schools.map((s) => <option value={s}>{s}</option>)}
+          {otherSchools.length ? (
+            <optgroup label="West London">
+              {schools.map((s) => <option value={s}>{s}</option>)}
+            </optgroup>
+          ) : schools.map((s) => <option value={s}>{s}</option>)}
+          {otherSchools.length > 0 && (
+            <optgroup label="Other London high schools">
+              {otherSchools.map((s) => <option value={s}>{s}</option>)}
+            </optgroup>
+          )}
           <option value="Another school">Another school</option>
           <option value="Not sure yet">Not sure yet — help me choose</option>
         </select>
@@ -122,6 +135,13 @@ const { schools } = Astro.props;
 
   document.querySelectorAll<HTMLElement>('[data-school-pick]').forEach((btn) => {
     btn.addEventListener('click', (e) => {
+      // Whole table rows are pickers too; let their other links (area
+      // pages) work normally, and handle a nested picker link only once.
+      const link = (e.target as HTMLElement).closest('a');
+      if (link && link !== btn) {
+        if (!link.hasAttribute('data-school-pick')) return;
+        if (btn.tagName === 'TR') return;
+      }
       e.preventDefault();
       if (select) select.value = btn.dataset.schoolPick || '';
       document.getElementById('school-listings')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
