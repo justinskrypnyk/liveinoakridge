@@ -82,11 +82,66 @@ function recordSignals(journey: any, today: string): void {
 }
 const FIELDS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'gclid'] as const;
 
+// "Your lead is back" (2026-09-29). A browser counts as a known lead once
+// it has sent a form here (it then carries a random browser_id, which
+// ghl-lead.ts links to the GHL contact) or arrived from a GHL email link
+// carrying ?lid={{contact.id}}. When a known lead comes back, each page
+// they view is reported to /api/lead-back, and lead-back-alerts emails
+// Justin a summary once the visit is over. Skipped for ?hm=off browsers
+// (Justin, Smile, testing), Do Not Track and automated browsers.
+const LEAD_ID_KEY = 'lead_lid';
+const BROWSER_ID_KEY = 'lead_bt';
+
+function captureLeadLink(): void {
+  const url = new URL(window.location.href);
+  const lid = url.searchParams.get('lid');
+  if (!lid) return;
+  if (/^[A-Za-z0-9]{15,40}$/.test(lid)) localStorage.setItem(LEAD_ID_KEY, lid);
+  // Take it back out of the address bar, so it isn't copied into a shared
+  // link or read by the analytics tags.
+  url.searchParams.delete('lid');
+  history.replaceState(history.state, '', url.pathname + url.search + url.hash);
+}
+
+function watchKnownLead(): void {
+  const lid = localStorage.getItem(LEAD_ID_KEY);
+  const bt = localStorage.getItem(BROWSER_ID_KEY);
+  if (!lid && !bt) return;
+  // hm.js saves the ?hm=off opt-out, but may run after this does.
+  if (/[?&]hm=off\b/.test(window.location.search)) localStorage.setItem('hm_off', '1');
+  if (localStorage.getItem('hm_off') || navigator.doNotTrack === '1' || navigator.webdriver || !navigator.sendBeacon) return;
+  const params = new URLSearchParams(window.location.search);
+  const search: Record<string, string> = {};
+  if (/^\/search\/?$/.test(window.location.pathname)) {
+    for (const k of ['area', 'minPrice', 'maxPrice', 'types', 'minBeds', 'minBaths']) if (params.get(k)) search[k] = String(params.get(k)).slice(0, 60);
+  }
+  let sent = false;
+  // Only once a real person has engaged (a scroll, tap or key, or 8 seconds
+  // with the tab in view) -- email security scanners that open links
+  // don't count as the lead coming back.
+  const report = () => {
+    if (sent || document.visibilityState !== 'visible') return;
+    sent = true;
+    navigator.sendBeacon('/api/lead-back', JSON.stringify({
+      lid: lid || '', bt: bt || '', p: window.location.pathname, ti: document.title.slice(0, 120),
+      q: Object.keys(search).length ? search : null,
+    }));
+  };
+  ['scroll', 'pointerdown', 'keydown', 'touchstart'].forEach((ev) => window.addEventListener(ev, report, { once: true, passive: true }));
+  setTimeout(report, 8000);
+}
+
 export function captureAttribution(): void {
   try {
     captureJourney();
   } catch {
     // storage blocked -- the journey is a nice-to-have
+  }
+  try {
+    captureLeadLink();
+    watchKnownLead();
+  } catch {
+    // storage blocked
   }
   try {
     if (localStorage.getItem(STORAGE_KEY)) return; // first touch already recorded
@@ -121,6 +176,17 @@ export function getStoredAttribution(): Record<string, string> {
         out.signals = `l=${s.listings.length};so=${s.solds.length};se=${s.searches};d=${s.days.length};p=${s.pages};vt=${s.valueTool};sm=${s.soldMap}`;
       }
     }
+  } catch {
+    // storage blocked
+  }
+  try {
+    // Sending a form makes this a known lead's browser (see watchKnownLead).
+    let bt = localStorage.getItem(BROWSER_ID_KEY);
+    if (!bt) {
+      bt = Array.from(crypto.getRandomValues(new Uint8Array(12)), (b) => b.toString(36).padStart(2, '0')).join('').slice(0, 24);
+      localStorage.setItem(BROWSER_ID_KEY, bt);
+    }
+    out.browser_id = bt;
   } catch {
     // storage blocked
   }

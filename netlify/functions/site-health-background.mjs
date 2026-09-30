@@ -149,6 +149,13 @@ export default async (req) => {
     blobFresh('Newest-listings snapshot (school welcome emails)', 'area-newest-listings', 'latest', 'builtAt', 36),
     blobFresh('Price history (price-drop alerts)', 'listing-price-history', 'latest', 'updatedAt', 36),
   ]);
+  await check('"Your lead is back" alerts running', async () => {
+    // lead-back-alerts runs every 20 minutes and clears finished visits.
+    const { blobs } = await getStore('lead-activity').list();
+    const oldest = blobs.map((b) => Number(b.key.split('/')[1]?.split('-')[0])).filter(Boolean).sort((a, b) => a - b)[0];
+    if (oldest && Date.now() - oldest > 3 * HOUR) return { ok: false, detail: `${blobs.length} returning-lead page views waiting since ${ageText(hoursAgo(new Date(oldest).toISOString()))} -- the alert job has stopped` };
+    return { ok: true, detail: `${blobs.length} page views waiting (normal)` };
+  });
   let heatmapYesterday = null;
   await check('Heatmap rollup running', async () => {
     const { blobs } = await getStore('heatmap-raw').list();

@@ -260,6 +260,16 @@ export const POST: APIRoute = async ({ request, locals }) => {
   if (contactId) await addGhlTags(contactId, tags);
   await assignOwnerIfUnowned(upserted, authHeaders);
 
+  // "Your lead is back" (api/lead-back.ts): remember which GHL contact this
+  // browser belongs to, so a later visit from it can be reported.
+  if (contactId && /^[a-z0-9]{16,32}$/.test(String(data.browser_id || ''))) {
+    try {
+      await getStore('lead-browsers').setJSON(data.browser_id, { contactId, at: new Date().toISOString() });
+    } catch (err) {
+      console.error('ghl-lead: could not save lead browser', err);
+    }
+  }
+
   // Property/MLS context (save-listing), the home-value-estimate calculator's
   // inputs/result (previously collected by the page but silently dropped
   // here -- Justin had no way to see what someone actually estimated), the
