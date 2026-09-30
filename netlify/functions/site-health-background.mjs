@@ -118,11 +118,15 @@ export default async (req) => {
   await Promise.all([
     ddfCheck('Listing feed (DDF) access', env.DDF_ACCESS_TOKEN),
     ddfCheck('Sold data feed (VOW) access', env.VOW_ACCESS_TOKEN),
+    // The token only has contacts scopes (no locations.readonly), so test with the same
+    // kind of call the lead code makes, not /locations/{id} (which always 401s).
     check('GHL access', async () => {
-      const res = await fetchWithTimeout(`https://services.leadconnectorhq.com/locations/${env.GHL_LOCATION_ID}`, {
+      const res = await fetchWithTimeout(`https://services.leadconnectorhq.com/contacts/?locationId=${env.GHL_LOCATION_ID}&limit=1`, {
         headers: { Authorization: `Bearer ${env.GHL_API_TOKEN}`, Version: '2021-07-28', Accept: 'application/json' },
       });
-      return res.ok ? { ok: true, detail: 'OK' } : { ok: false, detail: `HTTP ${res.status} -- leads, alerts and school emails can't reach GHL` };
+      if (res.ok) return { ok: true, detail: 'OK' };
+      const msg = (await res.text().catch(() => '')).slice(0, 120);
+      return { ok: false, detail: `HTTP ${res.status} -- leads, alerts and school emails can't reach GHL${msg ? ` (${msg})` : ''}` };
     }),
   ]);
 
