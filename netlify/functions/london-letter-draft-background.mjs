@@ -477,7 +477,7 @@ function buildNewsletter({ sendMonthName, sendYear, monthName, market, listings,
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="font-size:15px;line-height:1.5;">
       ${sentences.map((s, i) => bullet(s, i === sentences.length - 1)).join('\n      ')}
     </table>
-    <p style="margin:12px 0 0;font-size:12px;color:#5a7185;">Based on MLS&reg; sales in the City of London, ${esc(monthName)} ${market.year}.</p>
+    <p style="margin:12px 0 0;font-size:12px;color:#5a7185;">Based on MLS&reg; sales in the City of London, ${esc(monthName)} ${market.year}. Early figures: a few late-${esc(monthName)} sales may still be reported in the coming days.</p>
   </td></tr>
 
   <tr><td class="pad" style="padding:26px 32px;border-top:1px solid #dbe4ea;background:#f6f8fa;">

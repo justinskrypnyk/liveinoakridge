@@ -1070,6 +1070,7 @@ export default async (req) => {
         <h3 style="margin:18px 0 6px;">London, ${esc(monthLabel)}</h3>
         <p>${citywide.unitsSold} sales by firm date${citywide.momUnitsSold != null ? ` (${fmtPct(citywide.momUnitsSold)} vs last month)` : ''} &middot; median sale price ${fmtPrice(citywide.medianSoldPrice)}${citywide.momMedianSoldPrice != null ? ` (${fmtPct(citywide.momMedianSoldPrice)})` : ''} &middot; ${citywide.activeCount} homes for sale &middot; ${citywide.monthsOfInventory != null ? `${citywide.monthsOfInventory.toFixed(1)} months of inventory` : 'months of inventory n/a'}</p>
         <table style="border-collapse:collapse;font-size:13px;"><tr style="font-weight:bold;"><td style="padding:3px 10px;">Area</td><td style="padding:3px 10px;">Sales</td><td style="padding:3px 10px;">Median</td><td style="padding:3px 10px;">MoM</td><td style="padding:3px 10px;">For sale</td><td style="padding:3px 10px;">New</td><td style="padding:3px 10px;">Inventory</td></tr>${servedRows.map(row).join('')}</table>
+        <p>These are early figures: late-month sales keep reaching the MLS for several days, so the post gets an "early figures" note, and we refresh its numbers around the 6th.</p>
         <p>The attached hero image is a starting point (headline: "${esc(cardCopy.line1)} ${esc(cardCopy.line2)}"). We'll set the headline to match the story we pick.</p>
 `;
       await sendNotifyEmail(`${monthLabel} market update: numbers ready, let's write it`, html, [{ filename: `${slug}-hero-draft.webp`, content: Buffer.from(imageWebp).toString('base64') }], false);
