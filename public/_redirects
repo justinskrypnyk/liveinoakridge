@@ -59,7 +59,7 @@ https://liveinoakridge.ca/*   https://www.liveinoakridge.ca/:splat   301!
 # actually August's completed month (the code bug is fixed, but this one
 # post was already live for a few hours under the wrong slug before the
 # rename -- redirect rather than 404 it).
-/blog/september-2026-london-ontario-market-update-auto/   /blog/august-2026-london-ontario-market-update-auto/   301!
+/blog/september-2026-london-ontario-market-update-auto/   /blog/september-2026-london-ontario-housing-market/   301!
 
 # A visitor landed on a cut-off copy of the high schools link (2026-09-28,
 # heatmap) -- likely a link shortened when pasted or shared.

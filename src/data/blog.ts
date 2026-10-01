@@ -29,6 +29,100 @@ export interface BlogPost {
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    slug: 'september-2026-london-ontario-housing-market',
+    title: `London Ontario Housing Market, September 2026: Detached Homes Are Moving, Condos Are Waiting, and Price Decides Everything`,
+    description: `371 homes sold in London Ontario in September 2026 at a $540,000 median. What rising fixed rates, soft condos and pricing mean for buyers and sellers heading into the fall market.`,
+    date: '2026-10-01',
+    dateDisplay: 'October 1, 2026',
+    category: 'Market Updates',
+    author: 'Justin Skrypnyk',
+    readTime: '7 min read',
+    image: '/images/september-2026-london-ontario-housing-market.webp',
+    imageAlt: 'September 2026 London Ontario housing market update: detached homes moving, condos waiting',
+    content: `
+      <p>London sold 371 homes in September 2026, up 10.1% from August's 337 and 3.6% more than September 2025. The median sale price was $540,000, down 1.8% from August and 6.6% from a year ago. Homes are selling, but at about 95% of their original asking price, which makes pricing the single biggest factor in how a sale goes right now.</p>
+
+      <h2>What Happened in London's Housing Market in September 2026?</h2>
+      <p>September was a steady month with more sales and slightly softer prices. Sales picked up from August, new listings jumped as sellers came back after summer, and the median price eased for the second month in a row.</p>
+      <table>
+        <thead>
+          <tr><th></th><th>September 2026</th><th>August 2026</th><th>September 2025</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Homes sold</td><td>371</td><td>337</td><td>358</td></tr>
+          <tr><td>Median sale price</td><td>$540,000</td><td>$550,000</td><td>$578,093</td></tr>
+          <tr><td>Detached median</td><td>$610,000</td><td>$619,950</td><td>$625,000</td></tr>
+          <tr><td>Condo median</td><td>$437,000</td><td>$371,000</td><td>$472,500</td></tr>
+          <tr><td>Average sale-to-list</td><td>96.9%</td><td>97.2%</td><td>97.1%</td></tr>
+          <tr><td>Sold over asking</td><td>11.1%</td><td>13.4%</td><td>12.8%</td></tr>
+          <tr><td>New listings</td><td>1,175</td><td>968</td><td>1,188</td></tr>
+        </tbody>
+      </table>
+      <p>A quick note on how these are counted: a home is counted as sold on the day the deal went firm, the same way the MLS® system records its sold date. That matters, because a home that firmed up in July but closed in September is a July sale, not a September one. As of October 1, there were 2,094 homes for sale across London.</p>
+
+      <h2>Did London's Market Slow Down After Labour Day?</h2>
+      <p>The first week of September was the quiet one. School starts, routines reset, and for most families buying or selling a home isn't on the brain that week. That first week had 74 firm sales, compared with 90 to 104 in each of the three weeks that followed.</p>
+      <p>This is a pattern I see every year. Last September it was even clearer: 157 sales in the first half of the month and 201 in the second. Activity builds through the back half of September, and that momentum carries into October, which is when London's real fall market usually sets up. If you're watching the market and wondering whether things have stalled, early September is rarely the right month to judge by.</p>
+
+      <h2>Why Are Fixed Mortgage Rates Going Up, and Will That Affect Prices?</h2>
+      <p>Fixed mortgage rates are rising because Canadian bond yields are rising. Lenders price fixed mortgages off the 5-year Government of Canada bond, so when that yield climbs, fixed rates usually follow within days.</p>
+      <p>In late September, the 5-year yield reached a 52-week high near 3.73%, and several lenders, including CIBC and TD, raised their fixed rates in response, according to <a href="https://www.canadianmortgagetrends.com/mortgage-wire/2026/09/29/cibc-and-td-raise-fixed-mortgage-rates-as-bond-yields-remain-elevated/" target="_blank" rel="noopener">Canadian Mortgage Trends</a>. Some lenders moved their rates up by nearly a full percentage point (<a href="https://www.canadianmortgagetrends.com/2026/09/bond-yield-surge-pushes-fixed-mortgage-rates-higher-across-canada/" target="_blank" rel="noopener">Canadian Mortgage Trends</a>).</p>
+      <p>Higher fixed rates shrink what a buyer can qualify for, and that can put downward pressure on prices. How much depends on the area and the type of home. Neighbourhoods with a deep pool of buyers and limited supply tend to hold up, while areas with more homes sitting on the market feel it first. If you're buying with a pre-approval from earlier this year, it's worth checking that your rate hold is still in place.</p>
+
+      <h2>Are Detached Homes or Condos Selling Better in London Right Now?</h2>
+      <p>Detached homes are moving, and condos are still soft. The clearest way to see it is months of inventory, which is how long it would take to sell every home on the market at the current pace of sales. Under about 3 months usually favours sellers, 3 to 6 is balanced, and over 6 starts to favour buyers.</p>
+      <table>
+        <thead>
+          <tr><th></th><th>Detached</th><th>Condos</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>September sales</td><td>247</td><td>91</td></tr>
+          <tr><td>Median sale price</td><td>$610,000</td><td>$437,000</td></tr>
+          <tr><td>Average sale-to-list</td><td>97.1%</td><td>96.4%</td></tr>
+          <tr><td>Sold over asking</td><td>12%</td><td>7%</td></tr>
+          <tr><td>Months of inventory</td><td>5.0</td><td>6.5</td></tr>
+          <tr><td>Active listings with a price reduction</td><td>21%</td><td>25%</td></tr>
+        </tbody>
+      </table>
+      <p>Detached homes sit in balanced territory, and well-presented ones are still drawing competition. Condos have crossed into buyer-favoured territory, with a quarter of active condo listings already reduced. The condo median rose from August, but with 91 sales it moves with whichever units happen to sell that month. Compared with last September, the condo median is down 7.5%.</p>
+
+      <h2>How Far Below Asking Are London Homes Selling?</h2>
+      <p>On average, London homes sold at 96.9% of their final list price in September, but only 95.0% of their original list price. That gap is the story of this market. Of the 371 homes that sold, 140 went for more than 5% below what they were first listed at.</p>
+      <p>In plain terms, buyers are paying fair value and not much more. Homes that start at the right price tend to sell close to it. Homes that start high usually get there anyway, just weeks later and after a price reduction or two. Pricing is still the biggest factor in how a sale goes, more than staging, timing, or marketing.</p>
+
+      <h2>How Did Oakridge and London's West End Perform in September?</h2>
+      <p>Oakridge had 11 sales at a median of $730,000, with 57 homes for sale and about 3.1 months of inventory, which keeps it on the tighter, more balanced side of London. Byron was the busiest of the west-end areas with 20 sales.</p>
+      <table>
+        <thead>
+          <tr><th>Neighbourhood</th><th>Sales</th><th>Median price</th><th>For sale now</th><th>New listings</th><th>Months of inventory</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><a href="/areas/oakridge/">Oakridge</a></td><td>11</td><td>$730,000</td><td>57</td><td>34</td><td>3.1</td></tr>
+          <tr><td><a href="/areas/byron/">Byron</a></td><td>20</td><td>$655,250</td><td>69</td><td>55</td><td>3.9</td></tr>
+          <tr><td><a href="/areas/westmount/">Westmount</a></td><td>13</td><td>$719,000</td><td>51</td><td>38</td><td>3.2</td></tr>
+          <tr><td><a href="/areas/riverbend/">Riverbend</a></td><td>12</td><td>$697,113</td><td>46</td><td>26</td><td>5.3</td></tr>
+          <tr><td><a href="/areas/lambeth/">Lambeth</a></td><td>9</td><td>$665,000</td><td>91</td><td>45</td><td>11.4</td></tr>
+          <tr><td><a href="/areas/whitehills/">Whitehills</a></td><td>10</td><td>$412,500</td><td>46</td><td>26</td><td>3.9</td></tr>
+          <tr><td><a href="/areas/west-london/">West London</a></td><td>13</td><td>$605,000</td><td>72</td><td>43</td><td>4.9</td></tr>
+        </tbody>
+      </table>
+      <p>Neighbourhood medians are based on a small number of sales each month, so one large or small home can move them noticeably. Treat them as a direction rather than a precise value. Months of inventory uses the last 90 days of sales, which makes it steadier. Lambeth has the most homes for sale relative to its recent sales, which gives buyers there the most choice in the west end. For every neighbourhood in the city, the <a href="/market-map/">London neighbourhood heat map</a> has the same numbers.</p>
+
+      <h2>What Should Buyers Do This Fall in London?</h2>
+      <p>Buyers have more room to negotiate than they've had in a while, especially on condos and on homes that have been listed for a few weeks. A home that has already had a price reduction often has a seller who's ready to talk.</p>
+      <p>Two things matter most right now. First, confirm your mortgage rate hold, since fixed rates moved up in late September and your budget may have changed with them. Second, look at a home's original list price and how long it's been on the market, not just today's asking price. You can browse <a href="/search/">every home for sale in London</a> with those details.</p>
+
+      <h2>What Should Sellers Do Before the October Market?</h2>
+      <p>Price for the market you're in today, from day one. The numbers this month are clear: homes priced right at the start sell close to asking, and homes priced high end up selling for less after sitting.</p>
+      <p>If you're thinking about listing this fall, October is usually when buyer activity picks up after the September reset, so getting your price right before you list is the best move you can make. A <a href="/services/home-evaluation/">complimentary home evaluation</a> gives you a range based on what's actually selling in your neighbourhood, and I'm always happy to walk through it with you.</p>
+
+      <p style="font-size:12px;color:#888;">Source: MLS® residential data from the London and St. Thomas Association of REALTORS® (LSTAR) board feed for London East, London North and London South, compiled October 1, 2026. Sales are counted by firm (sold) date. Leases and vacant land are excluded. Neighbourhoods follow the City of London's planning district boundaries, which can differ slightly from MLS® area boundaries.</p>
+    `,
+    charts: [{"title":"London firm sales by week, September 2026","color":"#e8b84b","labels":["Sept 1-7","Sept 8-14","Sept 15-21","Sept 22-30"],"values":[74,103,90,104]},{"title":"Months of inventory, detached vs condo","color":"#1e3a5f","labels":["Detached","Condo"],"values":[5,6.5],"valueSuffix":" mo"}],
+    faqs: [{"question":"How many homes sold in London Ontario in September 2026?","answer":"371 homes sold in London Ontario in September 2026, counted by the date each sale went firm. That is up 10.1% from 337 in August 2026 and up 3.6% from 358 in September 2025."},{"question":"Are house prices going down in London Ontario?","answer":"Prices eased slightly in September 2026. The median sale price in London was $540,000, down 1.8% from August and 6.6% from September 2025, and homes sold at about 95% of their original asking price on average."},{"question":"Is London Ontario a buyer's or seller's market right now?","answer":"London is a balanced market overall, with about 5.5 months of inventory as of October 1, 2026. Detached homes are balanced at about 5.0 months, while condos lean toward buyers at about 6.5 months."},{"question":"Is fall a good time to sell a house in London Ontario?","answer":"Fall can be a good time to sell in London, since buyer activity usually builds through late September and into October. Pricing matters most: in September 2026, homes sold at 96.9% of their final list price but 95.0% of their original list price, so starting at the right price is the biggest advantage a seller has."},{"question":"Why are condos selling slower than houses in London Ontario?","answer":"Condos have more supply relative to sales right now, with about 6.5 months of inventory compared with 5.0 for detached homes in London. Only 7% of condos sold over asking in September 2026, and a quarter of active condo listings had already been reduced."}],
+  },
+
+  {
     slug: 'august-2026-london-ontario-market-update-auto',
     title: `August 2026 London Ontario Real Estate Market Update`,
     description: `527 homes sold across London Ontario in August 2026. See the full breakdown by neighbourhood and what it means for buyers and sellers.`,
