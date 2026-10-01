@@ -81,6 +81,46 @@ ${bedsBaths ? `<div style="font-size:14px;font-weight:bold;color:#16283a;margin-
 </table>`;
 }
 
+/**
+ * Adds lid=<GHL contact id> to every site link in the field values, so a click
+ * from the email feeds the "your lead is back" alerts (see src/pages/api/lead-back.ts).
+ * Smile adds ?lid={{contact.id}} by hand in her templates, but these fields are
+ * filled by the site, and GHL doesn't fill merge tags inside a field's value.
+ * Photo URLs (/api/...) are left alone. Card fields are HTML, so "&" is escaped there.
+ */
+export function withLeadId(customFields, contactId) {
+  const lid = encodeURIComponent(contactId);
+  return customFields.map((f) => {
+    const value = String(f.fieldValue ?? '');
+    const html = value.startsWith('<');
+    const fieldValue = value.replace(/https:\/\/(?:www\.)?liveinoakridge\.ca[^\s"'<>]*/g, (url) => {
+      if (/\/api\//.test(url) || /[?&;]lid=/.test(url)) return url;
+      return `${url}${url.includes('?') ? (html ? '&amp;' : '&') : '?'}lid=${lid}`;
+    });
+    return { ...f, fieldValue };
+  });
+}
+
+/**
+ * Re-saves the fields with lid added. Runs after the upsert (the only place a
+ * new contact's id comes from) and before the tag, so the tag's email gets the
+ * tagged links. If it fails the email still goes out, just without lid.
+ */
+export async function saveLeadIdLinks(contactId, customFields, headers) {
+  const tagged = withLeadId(customFields, contactId);
+  if (tagged.every((f, i) => f.fieldValue === customFields[i].fieldValue)) return;
+  try {
+    const res = await fetch(`https://services.leadconnectorhq.com/contacts/${contactId}`, {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify({ customFields: tagged }),
+    });
+    if (!res.ok) console.error('GHL lid fields failed:', res.status, await res.text().catch(() => ''));
+  } catch (err) {
+    console.error('GHL lid fields failed:', err);
+  }
+}
+
 /** The three card custom fields, always all 3 -- an empty value clears a slot (same rule as recommended_listing_1..3). */
 export function listingCardFields(cards) {
   return [0, 1, 2].map((i) => ({ key: `recommended_listing_${i + 1}_card`, fieldValue: cards[i] ?? '' }));

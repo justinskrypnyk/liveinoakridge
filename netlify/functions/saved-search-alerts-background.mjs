@@ -35,7 +35,7 @@
 
 import { getStore } from '@netlify/blobs';
 import { createClient } from '@supabase/supabase-js';
-import { listingCardHtml, listingCardFields, withUtm } from '../../src/lib/listing-card.mjs';
+import { listingCardHtml, listingCardFields, saveLeadIdLinks, withUtm } from '../../src/lib/listing-card.mjs';
 import { assignOwnerIfUnowned } from '../../src/lib/ghl-owner.mjs';
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
@@ -194,6 +194,7 @@ async function pushToGhl({ email, firstName, lastName, phone, intro, lines, card
     const contactId = upserted?.contact?.id;
     await assignOwnerIfUnowned(upserted, authHeaders);
     if (!contactId) return;
+    await saveLeadIdLinks(contactId, customFields, authHeaders);
 
     // A "Notify Me" search from /search never went through a form, so the
     // alert can be the contact's first touch -- label only those.

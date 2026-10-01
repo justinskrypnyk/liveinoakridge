@@ -7,6 +7,7 @@
 // geocode cache.
 import { getStore } from '@netlify/blobs';
 import { assignOwnerIfUnowned } from './ghl-owner.mjs';
+import { saveLeadIdLinks } from './listing-card.mjs';
 // Imported (not read from disk) so the bundler inlines it into each function
 // that uses this file -- a path relative to this module wouldn't survive bundling.
 import areaBoundaries from '../data/area-boundaries.json' with { type: 'json' };
@@ -155,6 +156,7 @@ export async function pushListingAlert({ email, firstName, lastName, phone, intr
     const contactId = upserted?.contact?.id;
     if (!contactId) return false;
     await assignOwnerIfUnowned(upserted, headers);
+    await saveLeadIdLinks(contactId, customFields, headers);
     const noteRes = await fetch(`https://services.leadconnectorhq.com/contacts/${contactId}/notes`, {
       method: 'POST',
       headers,

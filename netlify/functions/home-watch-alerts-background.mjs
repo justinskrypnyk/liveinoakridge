@@ -11,7 +11,7 @@
 // deliberately separate (different module systems/env conventions); see
 // that file for the fuller reasoning on the custom-field/note split.
 import { createClient } from '@supabase/supabase-js';
-import { listingCardHtml, listingCardFields, withUtm } from '../../src/lib/listing-card.mjs';
+import { listingCardHtml, listingCardFields, saveLeadIdLinks, withUtm } from '../../src/lib/listing-card.mjs';
 import { assignOwnerIfUnowned } from '../../src/lib/ghl-owner.mjs';
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
@@ -87,6 +87,7 @@ async function pushToGhl({ email, firstName, lastName, phone, intro, lines, card
     const contactId = upserted?.contact?.id;
     await assignOwnerIfUnowned(upserted, authHeaders);
     if (contactId) {
+      await saveLeadIdLinks(contactId, customFields, authHeaders);
       const noteRes = await fetch(`https://services.leadconnectorhq.com/contacts/${contactId}/notes`, {
         method: 'POST',
         headers: authHeaders,

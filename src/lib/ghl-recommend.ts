@@ -35,7 +35,7 @@
 // bug, copy-pasted into every one of this pipeline's customFields builders.
 // Fixed here and in ghl-lead.ts, home-watch-alerts-background.mjs,
 // saved-search-alerts-background.mjs, and market-update-mailout-background.mjs.
-import { listingCardHtml, listingCardFields, withUtm } from '@/lib/listing-card.mjs';
+import { listingCardHtml, listingCardFields, saveLeadIdLinks, withUtm } from '@/lib/listing-card.mjs';
 import { assignOwnerIfUnowned } from '@/lib/ghl-owner.mjs';
 
 const GHL_API_TOKEN = import.meta.env.GHL_API_TOKEN;
@@ -174,6 +174,7 @@ export async function pushRecommendationToGhl(input: PushRecommendationInput): P
 
 
   if (!contactId) return;
+  await saveLeadIdLinks(contactId, customFields, AUTH_HEADERS);
 
   const noteBody = [input.intro, ...lines, input.summary].filter(Boolean).join('\n');
   if (noteBody) {
