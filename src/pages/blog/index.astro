@@ -3,8 +3,19 @@ import Base from '@/layouts/Base.astro';
 import Schema from '@/components/Schema.astro';
 import { BLOG_POSTS } from '@/data/blog';
 
-const categories = ['All', 'Market Updates', 'Neighbourhood Guides', 'Mortgage & Rates', 'Market Analysis', 'Buying Tips', 'Selling Tips', 'Referral Partners'];
 const sortedPosts = [...BLOG_POSTS].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+// Built from the posts themselves, so every button has posts behind it and
+// every post's category has a button. Preferred order first, then any new
+// category alphabetically.
+const PREFERRED_ORDER = ['Market Updates', 'Neighbourhood Guides', 'Market Analysis', 'Buyer Guides', 'Seller Guides', 'Selling Tips', 'Mortgage & Rates'];
+const categories = ['All', ...[...new Set(sortedPosts.map((p) => p.category))].sort((a, b) => {
+  const ai = PREFERRED_ORDER.indexOf(a);
+  const bi = PREFERRED_ORDER.indexOf(b);
+  if (ai !== -1 && bi !== -1) return ai - bi;
+  if (ai !== -1) return -1;
+  if (bi !== -1) return 1;
+  return a.localeCompare(b);
+})];
 ---
 
 <Base
@@ -34,17 +45,22 @@ const sortedPosts = [...BLOG_POSTS].sort((a, b) => new Date(b.date).getTime() - 
 
   <section class="py-10 md:py-20 bg-cream">
     <div class="container-site">
-      <div class="flex flex-wrap gap-2 mb-12">
+      <div class="flex flex-wrap gap-2 mb-12" role="group" aria-label="Filter posts by category">
         {categories.map((cat, i) => (
-          <button class={`px-4 py-2 rounded-full text-sm font-medium transition-all ${i === 0 ? 'bg-gold text-navy' : 'bg-white text-navy/70 hover:bg-gold hover:text-navy border border-gray-200'}`}>
+          <button
+            type="button"
+            data-category={cat}
+            aria-pressed={i === 0 ? 'true' : 'false'}
+            class="blog-filter px-4 py-2 rounded-full text-sm font-medium transition-all border border-gray-200 bg-white text-navy/70 hover:bg-gold hover:text-navy aria-pressed:bg-gold aria-pressed:text-navy aria-pressed:border-gold"
+          >
             {cat}
           </button>
         ))}
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div id="blog-grid" class="grid grid-cols-1 md:grid-cols-2 gap-8">
         {sortedPosts.map((post, i) => (
-          <a href={post.href ?? `/blog/${post.slug}/`} class={`bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden group ${i === 0 ? 'md:col-span-2' : ''}`}>
+          <a href={post.href ?? `/blog/${post.slug}/`} data-category={post.category} class={`blog-card bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden group ${i === 0 ? 'md:col-span-2' : ''}`}>
             <div class={`relative bg-gradient-to-br from-navy-light to-navy flex items-end p-6 ${i === 0 ? 'h-64' : 'h-48'}`}>
               {post.image && (
                 <img
@@ -114,7 +130,31 @@ const sortedPosts = [...BLOG_POSTS].sort((a, b) => new Date(b.date).getTime() - 
 </Base>
 
 <script>
-  import { getStoredAttribution } from '@/lib/attribution-client';
+  // Category filter. ?category=Market%20Updates in the URL opens a filter
+  // directly, so a link can point at one kind of post.
+  {
+    const buttons = [...document.querySelectorAll<HTMLButtonElement>('.blog-filter')];
+    const cards = [...document.querySelectorAll<HTMLElement>('.blog-card')];
+    const apply = (category: string) => {
+      if (!buttons.some((b) => b.dataset.category === category)) category = 'All';
+      buttons.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.category === category)));
+      let first = true;
+      for (const card of cards) {
+        const show = category === 'All' || card.dataset.category === category;
+        card.hidden = !show;
+        // The first visible post gets the wide "featured" card.
+        card.classList.toggle('md:col-span-2', show && first);
+        if (show) first = false;
+      }
+      const url = new URL(location.href);
+      if (category === 'All') url.searchParams.delete('category');
+      else url.searchParams.set('category', category);
+      history.replaceState(null, '', url);
+    };
+    buttons.forEach((b) => b.addEventListener('click', () => apply(b.dataset.category || 'All')));
+    const initial = new URL(location.href).searchParams.get('category');
+    if (initial) apply(initial);
+  }
 
   // Same fetch()-instead-of-native-POST pattern as ContactForm.astro -- this
   // page is static so Netlify Forms catches a native POST fine, but this
