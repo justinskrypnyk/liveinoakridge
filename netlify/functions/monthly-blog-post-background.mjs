@@ -1,4 +1,13 @@
-// Scheduled job -- writes and publishes a monthly market-update blog post
+// CHANGED 2026-10-01 (Justin): the scheduled run no longer publishes. It
+// emails Justin the month's numbers and a hero-image preview, and the post
+// is written together with him to Nico Gorrono's GEO standard (interview
+// first, outline approval, at least 50% different from earlier posts) --
+// see the september-2026-london-ontario-housing-market post. The fixed
+// template below repeats the same sentences every month. It still runs for
+// POST {"publish": true} (and {"preview": ...}), but nothing calls that on a
+// schedule.
+//
+// Original note: writes and publishes a monthly market-update blog post
 // with NO human review step, per Justin's explicit choice (2026-08-25).
 // That choice only holds up because this file guarantees one thing: no LLM
 // call happens anywhere in this pipeline. Every sentence is picked from a
@@ -697,10 +706,12 @@ export default async (req) => {
   // database reads or writes, no GitHub commit, no email. For checking a
   // month's post before its numbers are live.
   let preview = null;
+  let publish = false;
   try {
     const body = await req?.json?.();
     if (body?.branch && typeof body.branch === 'string') branch = body.branch;
     if (body?.preview?.snapshotRows) preview = body.preview;
+    publish = body?.publish === true;
   } catch {
     // no body / not JSON -- fine, stay on 'main'
   }
@@ -1042,6 +1053,23 @@ export default async (req) => {
 
     if (preview) {
       return new Response(JSON.stringify({ slug, postEntry, image: Buffer.from(imageWebp).toString('base64') }), { headers: { 'Content-Type': 'application/json' } });
+    }
+
+    // ---- Default (scheduled) run: email Justin the numbers and the hero
+    // preview so the post can be written together. Nothing is published.
+    if (!publish) {
+      const row = (r) => `<tr><td style="padding:3px 10px;">${esc(r.area_name)}</td><td style="padding:3px 10px;">${r.units_sold_month ?? 0}</td><td style="padding:3px 10px;">${fmtPrice(r.median_sold_price_month)}</td><td style="padding:3px 10px;">${fmtPct(r.changes.median_sold_price_month?.mom_pct_change ?? null)}</td><td style="padding:3px 10px;">${r.active_count ?? 'n/a'}</td><td style="padding:3px 10px;">${r.new_listings_count ?? 'n/a'}</td><td style="padding:3px 10px;">${r.months_of_inventory != null ? `${r.months_of_inventory.toFixed(1)} mo` : 'n/a'}</td></tr>`;
+      const html = `
+        <p>Hi Justin,</p>
+        <p>The ${esc(monthLabel)} numbers are in. Nothing has been published: let's write this month's market update together, the same way as September (your read on the month first, then keywords and an outline for you to approve).</p>
+        <p><b>To start:</b> open Claude Code in the london-realtor project and say <i>"Let's write the ${esc(monthLabel)} market update."</i> Have ready: what you saw with buyers and sellers this month, and if you can, an MLS Quick CMA for Oakridge (sold by firm date in ${esc(monthLabel)}, plus active) so we can check the numbers home by home.</p>
+        <h3 style="margin:18px 0 6px;">London, ${esc(monthLabel)}</h3>
+        <p>${citywide.unitsSold} sales by firm date${citywide.momUnitsSold != null ? ` (${fmtPct(citywide.momUnitsSold)} vs last month)` : ''} &middot; median sale price ${fmtPrice(citywide.medianSoldPrice)}${citywide.momMedianSoldPrice != null ? ` (${fmtPct(citywide.momMedianSoldPrice)})` : ''} &middot; ${citywide.activeCount} homes for sale &middot; ${citywide.monthsOfInventory != null ? `${citywide.monthsOfInventory.toFixed(1)} months of inventory` : 'months of inventory n/a'}</p>
+        <table style="border-collapse:collapse;font-size:13px;"><tr style="font-weight:bold;"><td style="padding:3px 10px;">Area</td><td style="padding:3px 10px;">Sales</td><td style="padding:3px 10px;">Median</td><td style="padding:3px 10px;">MoM</td><td style="padding:3px 10px;">For sale</td><td style="padding:3px 10px;">New</td><td style="padding:3px 10px;">Inventory</td></tr>${servedRows.map(row).join('')}</table>
+        <p>The attached hero image is a starting point (headline: "${esc(cardCopy.line1)} ${esc(cardCopy.line2)}"). We'll set the headline to match the story we pick.</p>
+        <p style="font-size:12px;color:#5a7185;">Open question from 2026-10-01: confirm with the board that a post Justin authors and approves, written with AI help from VOW sold data, fits the VOW rules.</p>`;
+      await sendNotifyEmail(`${monthLabel} market update: numbers ready, let's write it`, html, [{ filename: `${slug}-hero-draft.webp`, content: Buffer.from(imageWebp).toString('base64') }], false);
+      return new Response(`monthly-blog-post: draft numbers emailed for ${monthLabel}, nothing published`);
     }
 
     // ---- Publish: two commits, to whichever branch this run targeted.
