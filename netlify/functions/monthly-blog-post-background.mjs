@@ -5,7 +5,9 @@
 // see the september-2026-london-ontario-housing-market post. The fixed
 // template below repeats the same sentences every month. It still runs for
 // POST {"publish": true} (and {"preview": ...}), but nothing calls that on a
-// schedule.
+// schedule. VOW: Justin confirmed (2026-10-01) that AI-assisted posts are
+// fine as long as he's involved -- he gives his read, approves the outline
+// and the final post.
 //
 // Original note: writes and publishes a monthly market-update blog post
 // with NO human review step, per Justin's explicit choice (2026-08-25).
@@ -1067,7 +1069,7 @@ export default async (req) => {
         <p>${citywide.unitsSold} sales by firm date${citywide.momUnitsSold != null ? ` (${fmtPct(citywide.momUnitsSold)} vs last month)` : ''} &middot; median sale price ${fmtPrice(citywide.medianSoldPrice)}${citywide.momMedianSoldPrice != null ? ` (${fmtPct(citywide.momMedianSoldPrice)})` : ''} &middot; ${citywide.activeCount} homes for sale &middot; ${citywide.monthsOfInventory != null ? `${citywide.monthsOfInventory.toFixed(1)} months of inventory` : 'months of inventory n/a'}</p>
         <table style="border-collapse:collapse;font-size:13px;"><tr style="font-weight:bold;"><td style="padding:3px 10px;">Area</td><td style="padding:3px 10px;">Sales</td><td style="padding:3px 10px;">Median</td><td style="padding:3px 10px;">MoM</td><td style="padding:3px 10px;">For sale</td><td style="padding:3px 10px;">New</td><td style="padding:3px 10px;">Inventory</td></tr>${servedRows.map(row).join('')}</table>
         <p>The attached hero image is a starting point (headline: "${esc(cardCopy.line1)} ${esc(cardCopy.line2)}"). We'll set the headline to match the story we pick.</p>
-        <p style="font-size:12px;color:#5a7185;">Open question from 2026-10-01: confirm with the board that a post Justin authors and approves, written with AI help from VOW sold data, fits the VOW rules.</p>`;
+`;
       await sendNotifyEmail(`${monthLabel} market update: numbers ready, let's write it`, html, [{ filename: `${slug}-hero-draft.webp`, content: Buffer.from(imageWebp).toString('base64') }], false);
       return new Response(`monthly-blog-post: draft numbers emailed for ${monthLabel}, nothing published`);
     }
