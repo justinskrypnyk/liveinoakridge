@@ -46,8 +46,12 @@ export async function fetchVowLondonListings({ baseUrl, token, select }) {
 
 /** Residential for-sale listings (every status) in one outlying MLS City, e.g. 'St. Thomas'. */
 export async function fetchVowCityListings({ baseUrl, token, select, city }) {
+  // The feed returns nothing for a contains() value with a space in it
+  // ('St. Thomas', 'Middlesex Centre'), so search on the longest single word
+  // and keep only exact City matches (same workaround as outlying-sold-sync).
+  const term = city.split(/[\s.]+/).filter(Boolean).sort((a, b) => b.length - a.length)[0];
   const keep = (l) => l.City === city && isHomeForSale(l);
-  return fetchVow({ baseUrl, token, select, filter: `contains(City,'${city.replace(/'/g, "''")}')`, keep });
+  return fetchVow({ baseUrl, token, select, filter: `contains(City,'${term.replace(/'/g, "''")}')`, keep });
 }
 
 async function fetchVow({ baseUrl, token, select, filter, keep }) {
