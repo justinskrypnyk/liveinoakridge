@@ -34,13 +34,16 @@
 // color/number here is a fixed lookup against already-computed aggregates,
 // not an AI interpreting the underlying sold data.
 import { createClient } from '@supabase/supabase-js';
+import { CITYWIDE_METHOD_SINCE, fetchVowCityListings, fetchVowLondonListings, firmSales, previousMonthRange, SALE_FIELDS, torontoDate } from '../../src/lib/vow-listings.mjs';
 import sharp from 'sharp';
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import os from 'node:os';
 import path from 'node:path';
 
-const DDF_ACCESS_TOKEN = process.env.DDF_ACCESS_TOKEN;
+// Citywide active stats come from the VOW feed -- DDF misses ~15% of
+// London's listings (see src/lib/vow-listings.mjs).
+const VOW_ACCESS_TOKEN = process.env.VOW_ACCESS_TOKEN;
 const DDF_API_BASE_URL = process.env.DDF_API_BASE_URL;
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -74,17 +77,19 @@ function sortAreasServedFirst(areas) {
 // always runs off a 'month-end' capture (see the guard below), so "_month"
 // here always means the full completed month being reported on.
 const REPORT_METRICS = [
-  { key: 'units_sold_month', label: 'Total Sales', fmt: (n) => (n == null ? 'n/a' : String(n)) },
-  // Firm-sale count (first observed 'Active Under Contract'), NOT closing
-  // date -- a much closer match to LSTAR's own "Sales Activity" than Total
-  // Sales above. No history before 2026-09-03 (see migrations/004), so
-  // this reads 0 for August 2026 and earlier -- expected, not a bug.
-  { key: 'units_firmed_month', label: 'Homes Firmed Up', fmt: (n) => (n == null ? 'n/a' : String(n)) },
+  // Sales by firm date, matching the MLS "Sold Date" (see firmSales in
+  // src/lib/vow-listings.mjs). The old separate "Homes Firmed Up" column
+  // (units_firmed_month, from vow_firm_tracker) was dropped 2026-10-01 --
+  // this one now measures the same thing, more completely.
+  { key: 'units_sold_month', label: 'Sales', fmt: (n) => (n == null ? 'n/a' : String(n)) },
   { key: 'new_listings_count', label: 'New Listings', fmt: (n) => (n == null ? 'n/a' : String(n)) },
   { key: 'active_count', label: 'Active Listings', fmt: (n) => (n == null ? 'n/a' : String(n)) },
   { key: 'median_list_price', label: 'Med. List Price', fmt: fmtPrice },
   { key: 'median_sold_price_month', label: 'Med. Sale Price', fmt: fmtPrice },
-  { key: 'avg_days_on_market', label: 'Med. Days on Market', fmt: (n) => (n == null ? 'n/a' : String(Math.round(n))) },
+  // Average age of the listings still for sale at capture time -- NOT how
+  // long sold homes took (vow_sold_listings has no reliable list date).
+  // Was labelled "Med. Days on Market" until 2026-10-01.
+  { key: 'avg_days_on_market', label: 'Avg. Days Listed (still for sale)', fmt: (n) => (n == null ? 'n/a' : String(Math.round(n))) },
   { key: 'avg_sale_to_list_ratio_month', label: 'List-to-Sale %', fmt: (n) => (n == null ? 'n/a' : `${(n * 100).toFixed(1)}%`) },
   { key: 'price_per_sqft', label: 'Price/Sqft', fmt: (n) => (n == null ? 'n/a' : `$${Math.round(n)}`) },
   { key: 'median_bedrooms', label: 'Med. Bedrooms', fmt: (n) => (n == null ? 'n/a' : String(n)) },
@@ -100,6 +105,7 @@ const REPORT_METRICS = [
 ];
 
 const METRIC_LABELS = Object.fromEntries(REPORT_METRICS.map((m) => [m.key, m.label]));
+const METRIC_FMT = Object.fromEntries(REPORT_METRICS.map((m) => [m.key, m.fmt]));
 
 function fmtPrice(n) {
   if (n == null) return 'n/a';
@@ -376,31 +382,15 @@ function outlyingAreaSlug(mlsCity) {
   return `outlying-${mlsCity.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')}`;
 }
 
-// Reads the calendar-month sold prices outlying-sold-sync-background.mjs
-// keeps synced into vow_sold_listings, instead of this function's old
-// approach: a single live, undated $top=2000 fetch straight to AMPRE at
-// email-send time. That was wrong two ways -- no CloseDate filter at all
-// (so "this month" next to the number was never actually true), and this
-// AMPRE deployment's feed empirically returns oldest-first with no
-// $orderby available, so a bounded fetch for a town with years of history
-// on this feed mostly never reached recent closings anyway. Fixed
-// 2026-09-03, same pass as the units_sold/median_sold_price month
-// mislabeling -- see outlying-sold-sync-background.mjs's header for the
-// fuller story.
+// Median price of the town's sales that went firm in the reported month,
+// straight from the VOW feed -- the same firm-date rule as every London
+// figure (see firmSales in src/lib/vow-listings.mjs). Until 2026-10-01 this
+// read vow_sold_listings by closing date, like everything else.
 async function medianSoldPriceForCity(supabase, exactCityName, monthStart, monthEnd) {
   if (!exactCityName) return null;
   try {
-    const { data, error } = await supabase
-      .from('vow_sold_listings')
-      .select('close_price')
-      .eq('area_slug', outlyingAreaSlug(exactCityName))
-      .eq('is_lease', false)
-      .gte('close_price', MIN_PLAUSIBLE_SALE_PRICE)
-      .gte('close_date', monthStart)
-      .lte('close_date', monthEnd);
-    if (error) throw error;
-    const prices = (data || []).map((l) => Number(l.close_price)).filter((n) => n > 0);
-    return median(prices);
+    const listings = await fetchVowCityListings({ baseUrl: DDF_API_BASE_URL, token: VOW_ACCESS_TOKEN, select: SALE_FIELDS, city: exactCityName });
+    return median(firmSales(listings, monthStart, monthEnd).map((l) => Number(l.ClosePrice)));
   } catch (err) {
     console.error(`medianSoldPriceForCity(${exactCityName}) failed:`, err.message);
     return null;
@@ -416,14 +406,6 @@ function daysSince(timestamp) {
   const listed = new Date(timestamp).getTime();
   if (Number.isNaN(listed)) return null;
   return Math.max(0, Math.floor((Date.now() - listed) / (1000 * 60 * 60 * 24)));
-}
-
-async function odataGet(resource, params) {
-  const url = new URL(`${DDF_API_BASE_URL}${resource}`);
-  for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
-  const res = await fetch(url, { headers: { Authorization: `Bearer ${DDF_ACCESS_TOKEN}`, Accept: 'application/json' } });
-  if (!res.ok) throw new Error(`${resource} -> HTTP ${res.status}: ${await res.text().catch(() => '')}`);
-  return res.json();
 }
 
 function pctChange(previous, current) {
@@ -449,75 +431,25 @@ function pctChange(previous, current) {
 // only against the most recent prior row of the SAME period_type" rule
 // heat-map-snapshot-background.mjs already uses for market_map_changes.
 async function getCitywideStats(supabase, monthStart, monthEnd, periodType, captureDate) {
-  const data = await odataGet('Property', {
-    $filter: `contains(UnparsedAddress,'London')`,
-    $select: 'ListPrice,StandardStatus,PropertyType,TransactionType,OriginalEntryTimestamp',
-    $top: '5000',
+  // Sales and active listings both come from one VOW pull. Sales are counted
+  // by firm date, like the MLS (see firmSales in src/lib/vow-listings.mjs),
+  // and the City check keeps out other towns' "London Road" addresses.
+  const listings = await fetchVowLondonListings({
+    baseUrl: DDF_API_BASE_URL,
+    token: VOW_ACCESS_TOKEN,
+    select: ['OriginalEntryTimestamp', ...SALE_FIELDS],
   });
-  const active = (data.value || []).filter(
-    (l) => l.StandardStatus === 'Active' && l.PropertyType !== 'Commercial' && l.TransactionType !== 'For Lease'
-  );
+  const active = listings.filter((l) => l.StandardStatus === 'Active');
   const listPrices = active.map((l) => Number(l.ListPrice)).filter((n) => n > 0);
   const dom = active.map((l) => daysSince(l.OriginalEntryTimestamp)).filter((n) => n !== null);
+  const soldPrices = firmSales(listings, monthStart, monthEnd).map((l) => Number(l.ClosePrice));
+  // Last month's sales for the same day range, recomputed from the feed
+  // under the same rules -- comparable even when last month's saved row isn't.
+  const prevSoldPrices = firmSales(listings, ...previousMonthRange(monthStart, monthEnd)).map((l) => Number(l.ClosePrice));
 
-  // Paginated explicitly -- Supabase's default .select() caps at 1,000 rows
-  // with no error (see heat-map-snapshot-background.mjs's own comment on
-  // this exact bug, caught 2026-08).
-  const soldPrices = [];
-  const PAGE_SIZE = 1000;
-  for (let from = 0; ; from += PAGE_SIZE) {
-    const { data: page, error } = await supabase
-      .from('vow_sold_listings')
-      .select('close_price')
-      .eq('is_lease', false)
-      .gte('close_price', MIN_PLAUSIBLE_SALE_PRICE)
-      .gte('close_date', monthStart)
-      .lte('close_date', monthEnd)
-      .range(from, from + PAGE_SIZE - 1);
-    if (error) {
-      console.error('monthly-digest: citywide sold query failed:', error.message);
-      break;
-    }
-    soldPrices.push(...(page || []).map((r) => Number(r.close_price)).filter((n) => n > 0));
-    if (!page || page.length < PAGE_SIZE) break;
-  }
-
-  // Citywide months of inventory: active_count / (90-day rolling sold
-  // count / 3) -- same basis as the per-neighbourhood months_of_inventory
-  // column (see heat-map-snapshot-background.mjs), so this needs no
-  // separate pace-adjustment for the reported month's date range above.
-  // count:'exact', head:true returns a row count via Postgres COUNT()
-  // without the default 1,000-row return cap applying at all.
-  //
-  // Upper-bounded to today AND outlying towns excluded -- confirmed
-  // 2026-09-16 (Justin caught the resulting MOI reading suspiciously low):
-  // vow_sold_listings carries pre-construction rows with a close_date over
-  // a year in the future (as far out as 2027-10-07, signed but not
-  // actually closed yet), and also carries outlying-town sales (tagged
-  // area_slug LIKE 'outlying-%') that the numerator (active.length, a
-  // London-only DDF pull) never counts -- both inflated the denominator
-  // and understated the ratio (2.2mo measured vs. the real ~4.1mo). Same
-  // root cause just fixed in heat-map-snapshot-background.mjs's own
-  // recentSolds query.
-  //
-  // Uses .or() rather than .not('area_slug','like',...) alone -- a plain
-  // .not(...) silently drops NULL area_slug rows too (SQL's NULL LIKE x is
-  // NULL, not true, so NOT NULL is also NULL -- excluded by WHERE either
-  // way), undercounting real London sales that just failed area-matching
-  // (22 such rows confirmed in the current 90-day window). This keeps
-  // those rows (not explicitly tagged outlying) while still excluding ones
-  // that ARE.
-  const ninetyDaysAgoStr = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
-  const todayStr = new Date().toISOString().slice(0, 10);
-  const { count: rolling90dSoldCount, error: rollingError } = await supabase
-    .from('vow_sold_listings')
-    .select('*', { count: 'exact', head: true })
-    .eq('is_lease', false)
-    .gte('close_price', MIN_PLAUSIBLE_SALE_PRICE)
-    .gte('close_date', ninetyDaysAgoStr)
-    .lte('close_date', todayStr)
-    .or('area_slug.is.null,area_slug.not.like.outlying-%');
-  if (rollingError) console.error('monthly-digest: citywide 90-day rolling count failed:', rollingError.message);
+  // Months of inventory: active listings / (sales in the last 90 days / 3),
+  // the same basis as the per-neighbourhood column.
+  const rolling90dSoldCount = firmSales(listings, torontoDate(90), torontoDate()).length;
 
   const current = {
     activeCount: active.length,
@@ -533,6 +465,7 @@ async function getCitywideStats(supabase, monthStart, monthEnd, periodType, capt
     .select('median_list_price, avg_days_on_market, median_sold_price, months_of_inventory')
     .eq('period_type', periodType)
     .lt('capture_date', captureDate)
+    .gte('capture_date', CITYWIDE_METHOD_SINCE)
     .order('capture_date', { ascending: false })
     .limit(1);
   if (prevError) console.error('monthly-digest: citywide_snapshots history query failed:', prevError.message);
@@ -554,7 +487,8 @@ async function getCitywideStats(supabase, monthStart, monthEnd, periodType, capt
 
   return {
     ...current,
-    momMedianSoldPrice: prev ? pctChange(prev.median_sold_price, current.medianSoldPrice) : null,
+    momMedianSoldPrice: prevSoldPrices.length > 0 ? pctChange(median(prevSoldPrices), current.medianSoldPrice) : null,
+    momUnitsSold: prevSoldPrices.length > 0 ? pctChange(prevSoldPrices.length, current.unitsSold) : null,
     momMedianListPrice: prev ? pctChange(prev.median_list_price, current.medianListPrice) : null,
     momAvgDaysOnMarket: prev ? pctChange(prev.avg_days_on_market, current.avgDaysOnMarket) : null,
     momMonthsOfInventory: prev ? pctChange(prev.months_of_inventory, current.monthsOfInventory) : null,
@@ -826,10 +760,10 @@ async function sendFailureAlert(message) {
 }
 
 export default async () => {
-  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY || !RESEND_API_KEY || !DDF_ACCESS_TOKEN || !DDF_API_BASE_URL) {
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY || !RESEND_API_KEY || !VOW_ACCESS_TOKEN || !DDF_API_BASE_URL) {
     console.error('monthly-digest: missing required env vars', {
       SUPABASE_URL: !!SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY: !!SUPABASE_SERVICE_ROLE_KEY, RESEND_API_KEY: !!RESEND_API_KEY,
-      DDF_ACCESS_TOKEN: !!DDF_ACCESS_TOKEN, DDF_API_BASE_URL: !!DDF_API_BASE_URL,
+      VOW_ACCESS_TOKEN: !!VOW_ACCESS_TOKEN, DDF_API_BASE_URL: !!DDF_API_BASE_URL,
     });
     return new Response('Missing required env vars', { status: 500 });
   }
@@ -921,7 +855,7 @@ export default async () => {
   function notableLineHtml(c) {
     const direction = c.mom_pct_change > 0 ? '▲' : '▼';
     const label = METRIC_LABELS[c.metric] || c.metric;
-    return `<li>${direction} <strong>${esc(c.area_name)}</strong> — ${esc(label)}: ${fmtPct(c.mom_pct_change)} MoM (now ${c.current_value})</li>`;
+    return `<li>${direction} <strong>${esc(c.area_name)}</strong> — ${esc(label)}: ${fmtPct(c.mom_pct_change)} MoM (now ${esc((METRIC_FMT[c.metric] || String)(c.current_value))})</li>`;
   }
 
   const tableRows = sortedRows.map((r) => {
@@ -947,11 +881,11 @@ export default async () => {
 
   const html = `
     <h2>Full Month Review — ${esc(monthLabel)}</h2>
-    <p>Total Sales: ${totalSold} · New Listings: ${totalNewListings} · ${snapshotRows.length} neighbourhoods</p>
-    <p style="font-size:12px;color:#888;">MoM/YoY % change needs history this pipeline hasn't built up yet (brand new as of July 2026) -- these will read "n/a" for a while, then populate automatically once enough monthly captures exist. No rebuild needed when that happens.</p>
+    <p>Sales: ${totalSold} · New Listings: ${totalNewListings} · ${snapshotRows.length} neighbourhoods</p>
+    <p style="font-size:12px;color:#888;">Sales are counted by the date they went firm (the MLS sold date), like the board does. Active listings, list prices and new listings count every London listing on the MLS (VOW feed). New Listings = listings that came on during ${esc(monthLabel)}, including any that have since sold. Left Market = listings for sale at the end of last month that are no longer for sale now (sold, conditional, expired or pulled). MoM compares with the previous month-end report, starting with October 2026 (these rules started with the September 2026 report, so its MoM reads n/a); YoY fills in from late 2027.</p>
 
     <h3>🏙️ London — Citywide</h3>
-    <p>Med. Sale Price: ${fmtPrice(citywide.medianSoldPrice)} (${fmtPct(citywide.momMedianSoldPrice)} MoM, ${citywide.unitsSold} sold) · Med. List Price: ${fmtPrice(citywide.medianListPrice)} (${fmtPct(citywide.momMedianListPrice)} MoM) · Med. Days on Market: ${citywide.avgDaysOnMarket ?? 'n/a'} (${fmtPct(citywide.momAvgDaysOnMarket)} MoM)</p>
+    <p>Med. Sale Price: ${fmtPrice(citywide.medianSoldPrice)} (${fmtPct(citywide.momMedianSoldPrice)} MoM, ${citywide.unitsSold} sold) · Med. List Price: ${fmtPrice(citywide.medianListPrice)} (${fmtPct(citywide.momMedianListPrice)} MoM) · Avg. Days Listed (still for sale): ${citywide.avgDaysOnMarket ?? 'n/a'} (${fmtPct(citywide.momAvgDaysOnMarket)} MoM)</p>
     <p>Months of Inventory: ${citywide.monthsOfInventory != null ? `${citywide.monthsOfInventory.toFixed(1)} mo` : 'n/a'} (${fmtPct(citywide.momMonthsOfInventory)} MoM)${citywide.monthsOfInventory != null ? ` -- ${moiTierLabel(citywide.monthsOfInventory)}` : ''}</p>
 
     <h3>🔔 Notable Moves — Your 7 Areas (10%+ month-over-month)</h3>

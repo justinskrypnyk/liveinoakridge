@@ -9,8 +9,10 @@
 // duplicates the minimal fetch/geocode logic instead of importing
 // src/lib/ddf.ts, to avoid any risk to the already-working site code.
 import { getStore } from '@netlify/blobs';
+import { fetchVowLondonListings } from '../../src/lib/vow-listings.mjs';
 
 const DDF_ACCESS_TOKEN = process.env.DDF_ACCESS_TOKEN;
+const VOW_ACCESS_TOKEN = process.env.VOW_ACCESS_TOKEN;
 const DDF_API_BASE_URL = process.env.DDF_API_BASE_URL;
 const GOOGLE_GEOCODING_API_KEY = process.env.GOOGLE_GEOCODING_API_KEY;
 const DDF_NATIONAL_USERNAME = process.env.DDF_NATIONAL_USERNAME;
@@ -220,6 +222,46 @@ export default async () => {
     );
   }
 
+  // Second pass: listings only the VOW feed has, which the market stats in
+  // heat-map-snapshot-background.mjs now count (see src/lib/vow-listings.mjs).
+  // Active ones, anything entered in the last 45 days (so a month's new
+  // listings that already sold can still be placed in a neighbourhood), and
+  // anything that went firm in the last 90 days (the sales window). Runs
+  // after the DDF pass so the site's own listings get Google budget first.
+  // Cache only -- never added to `located`, which feeds emails and pages.
+  let vowNote = '';
+  if (VOW_ACCESS_TOKEN) {
+    try {
+      const cutoff = Date.now() - 45 * 24 * 60 * 60 * 1000;
+      const soldCutoff = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+      const ddfAddresses = new Set(active.map((l) => l.UnparsedAddress));
+      const vow = (await fetchVowLondonListings({
+        baseUrl: DDF_API_BASE_URL,
+        token: VOW_ACCESS_TOKEN,
+        select: ['ListingKey', 'UnparsedAddress', 'OriginalEntryTimestamp', 'PurchaseContractDate'],
+      })).filter((l) => l.UnparsedAddress && !ddfAddresses.has(l.UnparsedAddress)
+        && (l.StandardStatus === 'Active' || new Date(l.OriginalEntryTimestamp).getTime() >= cutoff
+          || (l.PurchaseContractDate && l.PurchaseContractDate >= soldCutoff)));
+      let vowNational = 0, vowGoogle = 0, vowCached = 0, vowLeft = 0;
+      for (let i = 0; i < vow.length; i += CONCURRENCY) {
+        await Promise.all(vow.slice(i, i + CONCURRENCY).map(async (listing) => {
+          const address = listing.UnparsedAddress;
+          if (await store.get(address, { type: 'json' }).catch(() => null)) { vowCached++; return; }
+          const national = nationalGeoMap.get(String(listing.ListingKey || '').toLowerCase());
+          if (national) { await store.setJSON(address, national); vowNational++; return; }
+          if (googleCalls >= MAX_GOOGLE_GEOCODES_PER_RUN) { vowLeft++; return; }
+          googleCalls++;
+          const geo = await geocodeGoogle(address);
+          if (geo) { await store.setJSON(address, geo); vowGoogle++; } else failed++;
+        }));
+      }
+      vowNote = `; VOW-only: ${vowCached} cached, ${vowNational} from National Pool, ${vowGoogle} via Google, ${vowLeft} left for later runs`;
+    } catch (err) {
+      console.error('warm-geocode-cache: VOW pass failed:', err);
+      vowNote = '; VOW pass FAILED';
+    }
+  }
+
   let snapshotNote = '';
   try {
     const rings = await loadAreaRings();
@@ -248,7 +290,7 @@ export default async () => {
     snapshotNote = ', area snapshot FAILED';
   }
 
-  const summary = `warm-geocode-cache done: ${fromNationalPool} from National Pool (free), ${geocoded} newly geocoded via Google, ${skipped} already cached, ${failed} failed${snapshotNote}`;
+  const summary = `warm-geocode-cache done: ${fromNationalPool} from National Pool (free), ${geocoded} newly geocoded via Google, ${skipped} already cached, ${failed} failed${snapshotNote}${vowNote}`;
   console.log(summary);
   return new Response(summary);
 };

@@ -41,8 +41,11 @@ import { getStore } from '@netlify/blobs';
 import { createClient } from '@supabase/supabase-js';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { fetchVowLondonListings, firmSales, SALE_FIELDS, torontoDate, torontoMonthBounds } from '../../src/lib/vow-listings.mjs';
 
-const DDF_ACCESS_TOKEN = process.env.DDF_ACCESS_TOKEN;
+// Listings come from the VOW feed, not DDF -- DDF was missing ~15% of
+// London's active listings (see src/lib/vow-listings.mjs).
+const VOW_ACCESS_TOKEN = process.env.VOW_ACCESS_TOKEN;
 const DDF_API_BASE_URL = process.env.DDF_API_BASE_URL;
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -52,11 +55,16 @@ const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 // per metric.
 const NOTABLE_PCT_THRESHOLD = 0.10;
 
-// Safety net alongside is_lease -- see weekly-digest-background.mjs's own
-// copy of this constant for the full story (confirmed 2026-09-08: AMPRE's
-// TransactionType/MlsStatus aren't always settled at first-sync time, so
-// some leases get is_lease wrongly false and never get revisited).
-const MIN_PLAUSIBLE_SALE_PRICE = 30000;
+// Captures before these dates used the old rules (DDF listings, sales by
+// closing date, half-month new listings), so they're never used as the
+// "previous month". The four month figures below can be rebuilt for any
+// past month from the VOW feed, and the 2026-09-01 row's were (see
+// ?backfill_month_metrics=true), so they compare from that capture; every
+// other metric reads n/a until a capture under the current rules exists.
+const CURRENT_METHOD_SINCE = '2026-10-01';
+const MONTH_METRICS = ['units_sold_month', 'median_sold_price_month', 'avg_sale_to_list_ratio_month', 'new_listings_count'];
+const MONTH_METRICS_SINCE = '2026-09-01';
+const comparableSince = (metric) => (MONTH_METRICS.includes(metric) ? MONTH_METRICS_SINCE : CURRENT_METHOD_SINCE);
 
 function loadAllAreaBoundaries() {
   const dataPath = fileURLToPath(new URL('../../src/data/area-boundaries.json', import.meta.url));
@@ -85,16 +93,6 @@ function findAreaForPoint(polygons, lat, lng) {
     if (rings[0] && pointInRing(lat, lng, rings[0])) return slug;
   }
   return null;
-}
-
-async function odataGet(resource, params) {
-  const url = new URL(`${DDF_API_BASE_URL}${resource}`);
-  for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
-  const res = await fetch(url, {
-    headers: { Authorization: `Bearer ${DDF_ACCESS_TOKEN}`, Accept: 'application/json' },
-  });
-  if (!res.ok) throw new Error(`${resource} -> HTTP ${res.status}: ${await res.text().catch(() => '')}`);
-  return res.json();
 }
 
 function median(numbers) {
@@ -154,14 +152,27 @@ const METRICS = [
 ];
 
 export default async (req) => {
-  const now = new Date();
   const forced = req && new URL(req.url).searchParams.get('force') === 'true';
+  // ?as_of=2026-09-01 (forced runs only): compute as if it were that
+  // morning -- the month figures, which the VOW feed keeps for any past
+  // month, come out right; active-listing figures still reflect today.
+  const asOf = forced ? new URL(req.url).searchParams.get('as_of') : null;
+  const now = /^\d{4}-\d{2}-\d{2}$/.test(asOf || '') ? new Date(`${asOf}T09:00:00Z`) : new Date();
+  const backfillMonthMetrics = forced && new URL(req.url).searchParams.get('backfill_month_metrics') === 'true';
   const forcedKind = req && new URL(req.url).searchParams.get('period_type');
   const kind = forced ? (forcedKind === 'month-end' ? 'month-end' : 'mid-month') : captureKind(now);
+  // POST {"dryRun":true} with ?force=true: compute and return the rows,
+  // write nothing (no Supabase rows, no saved listing keys).
+  let dryRun = false;
+  try {
+    dryRun = (await req?.json?.())?.dryRun === true;
+  } catch {
+    // scheduled runs have no body
+  }
 
-  if (!DDF_ACCESS_TOKEN || !DDF_API_BASE_URL || !SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+  if (!VOW_ACCESS_TOKEN || !DDF_API_BASE_URL || !SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
     console.error('heat-map-snapshot: missing required env vars', {
-      DDF_ACCESS_TOKEN: !!DDF_ACCESS_TOKEN,
+      VOW_ACCESS_TOKEN: !!VOW_ACCESS_TOKEN,
       DDF_API_BASE_URL: !!DDF_API_BASE_URL,
       SUPABASE_URL: !!SUPABASE_URL,
       SUPABASE_SERVICE_ROLE_KEY: !!SUPABASE_SERVICE_ROLE_KEY,
@@ -182,161 +193,124 @@ export default async (req) => {
   const geocodeStore = getStore('ddf-geocode-cache');
   const polygons = loadAllAreaBoundaries();
 
-  const data = await odataGet('Property', {
-    $filter: `contains(UnparsedAddress,'London')`,
-    $select:
-      'ListingKey,UnparsedAddress,StandardStatus,PropertyType,PropertySubType,TransactionType,ListPrice,OriginalEntryTimestamp,BuildingAreaTotal,BedroomsTotal,BathroomsTotalInteger',
-    $top: '5000',
+  // Every status, so new listings that already sold or were pulled still
+  // count. Residential for sale only -- the old `!== 'For Lease'` check let
+  // 'For Sub-Lease' rentals through.
+  const all = await fetchVowLondonListings({
+    baseUrl: DDF_API_BASE_URL,
+    token: VOW_ACCESS_TOKEN,
+    select: ['ListingKey', 'UnparsedAddress', 'PropertySubType', 'OriginalEntryTimestamp', 'BuildingAreaTotal', 'BedroomsTotal', 'BathroomsTotalInteger', ...SALE_FIELDS],
   });
-  const all = data.value || [];
-  const active = all.filter(
-    (l) => l.StandardStatus === 'Active' && l.PropertyType !== 'Commercial' && l.TransactionType !== 'For Lease'
-  );
+  const active = all.filter((l) => l.StandardStatus === 'Active');
 
-  // Most recent capture across EITHER period type — "new listings this
-  // period" means new since the last pull of any kind (pulls happen ~every
-  // 15 days regardless of which label they carry), not new since the last
-  // pull of this exact period_type specifically.
-  //
-  // Excludes anything less than an hour old -- confirmed 2026-09-16 that
-  // Netlify's background-function runtime can invoke this function TWICE
-  // for a single trigger (real production behaviour, not just a manual
-  // "Trigger and verify" quirk -- same double-fire also hit mid-month-
-  // digest-background.mjs that same day). Without this guard, a second
-  // invocation minutes after the first would self-referentially compare
-  // against the FIRST invocation's own just-written row, read ~0 new
-  // listings for every single area, and silently overwrite the correct
-  // value on upsert -- confirmed: this exact thing happened, corrupting
-  // new_listings_count sitewide for the 2026-09-16 capture. Real captures
-  // are always ~15 days apart, so a 1-hour floor never affects normal
-  // operation but makes this immune to any accidental rapid re-invocation,
-  // however many times it fires.
-  const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000).toISOString();
-  const { data: lastAnyCapture } = await supabase
-    .from('market_map_snapshots')
-    .select('captured_at')
-    .lt('captured_at', oneHourAgo)
-    .order('captured_at', { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  const sincePrevious = lastAnyCapture ? new Date(lastAnyCapture.captured_at).getTime() : null;
+  // The month this capture reports on: the full month that just closed on a
+  // month-end capture, month-to-date on a mid-month one. New listings and
+  // "left market" both cover exactly this range (they used to cover only the
+  // ~15 days since the previous capture, so a month-end report showed half
+  // a month -- caught 2026-10-01).
+  const reportMonth = kind === 'month-end'
+    ? new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1))
+    : new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+  const { start: reportStartMs, end: reportEndMs } = torontoMonthBounds(reportMonth.getUTCFullYear(), reportMonth.getUTCMonth());
+  const enteredInRange = all.filter((l) => {
+    const t = new Date(l.OriginalEntryTimestamp).getTime();
+    return t >= reportStartMs && t < Math.min(reportEndMs, now.getTime());
+  });
 
   // "Listings that left active status this period" — a market-velocity
   // proxy that needs no sold/VOW data at all: just the previous run's
   // per-area ListingKey set, diffed against this run's. Stored in Blobs
   // (not Supabase) since it's pure job-scoped state, same convention as the
   // geocode cache above.
+  //
+  // Diffed against the last MONTH-END capture's keys (not the last capture
+  // of any kind), so both captures cover the same range as new listings:
+  // month-end = the whole month, mid-month = month-to-date. No month-end
+  // key set yet (the first run under these rules) means n/a, not a diff
+  // against some other date.
   const previousKeysStore = getStore('heat-map-previous-keys');
-  const previousKeysByArea = (await previousKeysStore.get('latest', { type: 'json' }).catch(() => null)) || {};
+  const previousKeysByArea = (await previousKeysStore.get('month-end', { type: 'json' }).catch(() => null)) || {};
 
+  // Addresses are geocoded ahead of time by warm-geocode-cache-background.mjs.
+  // Read up front, 40 at a time -- ~4,000 one-by-one reads ran past
+  // the background function's 15-minute limit.
+  const geoByAddress = new Map();
+  {
+    const needed = [...active, ...enteredInRange, ...firmSales(all, torontoDate(90), torontoDate())];
+    const addresses = [...new Set(needed.map((l) => l.UnparsedAddress).filter(Boolean))];
+    for (let i = 0; i < addresses.length; i += 40) {
+      await Promise.all(addresses.slice(i, i + 40).map(async (a) => {
+        geoByAddress.set(a, await geocodeStore.get(a, { type: 'json' }).catch(() => null));
+      }));
+    }
+  }
+  const areaOf = async (listing) => {
+    const geo = listing.UnparsedAddress ? geoByAddress.get(listing.UnparsedAddress) : null;
+    return geo ? findAreaForPoint(polygons, geo.lat, geo.lng) : null;
+  };
   const byArea = new Map(polygons.map((p) => [p.slug, []]));
+  const newByArea = new Map(polygons.map((p) => [p.slug, 0]));
+  let notGeocoded = 0;
   for (const listing of active) {
-    const address = listing.UnparsedAddress;
-    if (!address) continue;
-    const geo = await geocodeStore.get(address, { type: 'json' }).catch(() => null);
-    if (!geo) continue;
-    const slug = findAreaForPoint(polygons, geo.lat, geo.lng);
+    const slug = await areaOf(listing);
+    if (!slug && listing.UnparsedAddress) notGeocoded++;
     if (slug && byArea.has(slug)) byArea.get(slug).push(listing);
   }
-
-  // Rolling 90-day window of closed sales per area, from vow_sold_listings
-  // (kept in sync by vow-sold-sync-background.mjs) -- a twice-monthly
-  // capture period is too thin a window on its own for a stable median.
-  const ninetyDaysAgo = new Date(now);
-  ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
-  const todayStr = now.toISOString().slice(0, 10);
-  // is_lease excluded -- leases stay in vow_sold_listings for the website
-  // (sold-map etc.) but must never factor into reported price stats.
-  //
-  // Upper-bounded to today -- confirmed 2026-09-16 (while adding
-  // months_of_inventory) that vow_sold_listings carries pre-construction
-  // rows with a close_date over a YEAR in the future (signed contract, not
-  // yet actually closed) -- as far out as 2027-10-07. Without this bound,
-  // this query's own "90-day rolling window" silently counted homes that
-  // haven't sold yet, inflating units_sold/deflating months_of_inventory
-  // sitewide since this pill was first built in July -- same root cause as
-  // the "resale only, excludes pre-construction/future-dated closings"
-  // bound weekly-digest-background.mjs's own sold query already had.
-  //
-  // Paginated explicitly -- a plain .select() silently caps at Supabase's
-  // default 1,000-row limit with no error, and this window already exceeds
-  // that (2,150+ rows sitewide as of Aug 2026 and growing), so every area's
-  // stats were being computed from an arbitrarily-truncated slice with no
-  // indication anything was missing.
-  const recentSolds = [];
-  const SOLDS_PAGE_SIZE = 1000;
-  for (let from = 0; ; from += SOLDS_PAGE_SIZE) {
-    const { data: page, error: soldsError } = await supabase
-      .from('vow_sold_listings')
-      .select('area_slug, close_price, list_price')
-      .gte('close_date', ninetyDaysAgo.toISOString().slice(0, 10))
-      .lte('close_date', todayStr)
-      .eq('is_lease', false)
-      .gte('close_price', MIN_PLAUSIBLE_SALE_PRICE)
-      .not('area_slug', 'is', null)
-      .range(from, from + SOLDS_PAGE_SIZE - 1);
-    if (soldsError) {
-      console.error('heat-map-snapshot: recentSolds query failed:', soldsError.message);
-      break;
-    }
-    recentSolds.push(...(page || []));
-    if (!page || page.length < SOLDS_PAGE_SIZE) break;
+  for (const listing of enteredInRange) {
+    const slug = await areaOf(listing);
+    if (slug && newByArea.has(slug)) newByArea.set(slug, newByArea.get(slug) + 1);
   }
-  const soldsByArea = new Map();
-  for (const row of recentSolds || []) {
-    if (!soldsByArea.has(row.area_slug)) soldsByArea.set(row.area_slug, []);
-    soldsByArea.get(row.area_slug).push(row);
-  }
+  console.log(`heat-map-snapshot: ${active.length} active, ${enteredInRange.length} new in range, ${notGeocoded} active not geocoded yet`);
 
-  // True single-calendar-month sold figures, alongside the 90-day rolling
-  // ones above -- the 90-day window stays the right choice for the heat
-  // map's own medians (see comment above: a ~15-day capture gap is too
-  // thin a sample on its own), but every consumer that narrates "this
-  // month" / "in August" needs an actual calendar-month figure instead of
-  // that rolling one relabeled. Added 2026-09-03 after Justin caught the
-  // monthly blog post/digest reporting the 90-day `units_sold` figure as a
-  // single month's sales ("2,531 homes sold in August 2026" vs LSTAR's
-  // official board-wide 526).
-  //
-  // The reporting month depends on which capture this is (Justin's own
-  // framing, confirmed 2026-09-03): a month-end capture (runs the 1st)
-  // reports the FULL calendar month that just closed; a mid-month capture
-  // (runs the 16th, capturing the full 15th -- moved 2026-09-16) reports
-  // the CURRENT calendar month MONTH-TO-DATE -- partial, since that month
-  // isn't over yet, but real dates within it rather than a rolling window
-  // that reaches back into the prior month.
+  // Sales, counted by the date they went firm (the MLS "Sold Date") straight
+  // from the VOW pull above -- see firmSales in src/lib/vow-listings.mjs for
+  // why not vow_sold_listings.close_date (possession day; Oakridge Sept 2026
+  // showed 19 vs the MLS's 11). Two windows:
+  //  - rolling 90 days, for the map's median sold price / sale-to-list pills
+  //    and months of inventory (a half-month alone is too thin a sample);
+  //  - the report month (full month on month-end, month-to-date mid-month),
+  //    for every "sold in <month>" figure.
+  const monthRangeStart = reportMonth;
   const monthRangeEnd = kind === 'month-end'
     ? new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 0)) // last day of the month that just closed
     : now; // mid-month: month-to-date, through today
-  const monthRangeStart = kind === 'month-end'
-    ? new Date(Date.UTC(monthRangeEnd.getUTCFullYear(), monthRangeEnd.getUTCMonth(), 1))
-    : new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)); // mid-month: 1st of the current month
+  const ymd = (d) => d.toISOString().slice(0, 10);
 
+  const recentSales = firmSales(all, torontoDate(90), torontoDate());
+  const monthSales = firmSales(all, ymd(monthRangeStart), ymd(monthRangeEnd));
+
+  // Sold listings are often older than the geocode cache's window, so fall
+  // back to the coordinates vow-sold-sync stored for them.
+  const soldCoords = new Map();
+  const saleKeys = [...new Set(recentSales.map((l) => l.ListingKey))];
+  for (let i = 0; i < saleKeys.length; i += 200) {
+    const { data, error } = await supabase
+      .from('vow_sold_listings')
+      .select('listing_key, lat, lng')
+      .in('listing_key', saleKeys.slice(i, i + 200));
+    if (error) console.error('heat-map-snapshot: sold coordinates query failed:', error.message);
+    for (const r of data || []) if (r.lat && r.lng) soldCoords.set(r.listing_key, { lat: r.lat, lng: r.lng });
+  }
+  const saleArea = async (l) => {
+    const c = soldCoords.get(l.ListingKey);
+    return c ? findAreaForPoint(polygons, c.lat, c.lng) : areaOf(l);
+  };
+  const toRow = (l) => ({ close_price: Number(l.ClosePrice), list_price: Number(l.ListPrice) });
+  const soldsByArea = new Map();
   const monthSoldsByArea = new Map();
-  {
-    const monthSolds = [];
-    for (let from = 0; ; from += SOLDS_PAGE_SIZE) {
-      const { data: page, error: monthSoldsError } = await supabase
-        .from('vow_sold_listings')
-        .select('area_slug, close_price, list_price')
-        .gte('close_date', monthRangeStart.toISOString().slice(0, 10))
-        .lte('close_date', monthRangeEnd.toISOString().slice(0, 10))
-        .eq('is_lease', false)
-        .gte('close_price', MIN_PLAUSIBLE_SALE_PRICE)
-        .not('area_slug', 'is', null)
-        .range(from, from + SOLDS_PAGE_SIZE - 1);
-      if (monthSoldsError) {
-        console.error('heat-map-snapshot: monthSolds query failed:', monthSoldsError.message);
-        break;
-      }
-      monthSolds.push(...(page || []));
-      if (!page || page.length < SOLDS_PAGE_SIZE) break;
-    }
-    for (const row of monthSolds) {
-      if (!monthSoldsByArea.has(row.area_slug)) monthSoldsByArea.set(row.area_slug, []);
-      monthSoldsByArea.get(row.area_slug).push(row);
+  const monthSaleKeys = new Set(monthSales.map((l) => l.ListingKey));
+  let salesNotPlaced = 0;
+  for (const l of recentSales) {
+    const slug = await saleArea(l);
+    if (!slug) { salesNotPlaced++; continue; }
+    if (!soldsByArea.has(slug)) soldsByArea.set(slug, []);
+    soldsByArea.get(slug).push(toRow(l));
+    if (monthSaleKeys.has(l.ListingKey)) {
+      if (!monthSoldsByArea.has(slug)) monthSoldsByArea.set(slug, []);
+      monthSoldsByArea.get(slug).push(toRow(l));
     }
   }
+  console.log(`heat-map-snapshot: ${recentSales.length} sales in 90 days, ${monthSales.length} in the report month, ${salesNotPlaced} not placed in a neighbourhood`);
 
   // Firm-sale counts for the same month range, from vow_firm_tracker
   // (populated daily by firm-sale-tracker-background.mjs) -- a much closer
@@ -344,6 +318,7 @@ export default async (req) => {
   // monthSoldsByArea count above. No history before 2026-09-03 (migrations/004),
   // so this reads 0 for any month range entirely before that date.
   const monthFirmedByArea = new Map();
+  const SOLDS_PAGE_SIZE = 1000;
   {
     const monthFirmed = [];
     for (let from = 0; ; from += SOLDS_PAGE_SIZE) {
@@ -366,7 +341,10 @@ export default async (req) => {
     }
   }
 
-  const captureDate = now.toISOString().slice(0, 10);
+  // A forced re-run can overwrite a specific capture (e.g. ?capture_date=2026-10-01
+  // to redo that morning's month-end row under the current rules).
+  const captureDateParam = forced ? new URL(req.url).searchParams.get('capture_date') : null;
+  const captureDate = /^\d{4}-\d{2}-\d{2}$/.test(captureDateParam || '') ? captureDateParam : now.toISOString().slice(0, 10);
   const capturedAt = now.toISOString();
   const snapshotRows = [];
 
@@ -376,9 +354,7 @@ export default async (req) => {
     const listings = byArea.get(slug) || [];
     const prices = listings.map((l) => Number(l.ListPrice)).filter((n) => n > 0);
     const dom = listings.map((l) => daysSince(l.OriginalEntryTimestamp)).filter((n) => n !== null);
-    const newListings = sincePrevious == null
-      ? null
-      : listings.filter((l) => new Date(l.OriginalEntryTimestamp).getTime() > sincePrevious).length;
+    const newListings = newByArea.get(slug) || 0;
 
     const sqftPrices = listings
       .map((l) => {
@@ -450,16 +426,6 @@ export default async (req) => {
     });
   }
 
-  await previousKeysStore.setJSON('latest', currentKeysByArea);
-
-  const { error: upsertError } = await supabase
-    .from('market_map_snapshots')
-    .upsert(snapshotRows, { onConflict: 'area_slug,capture_date,period_type' });
-  if (upsertError) {
-    console.error('heat-map-snapshot: snapshot upsert failed:', upsertError.message);
-    return new Response('Snapshot upsert failed', { status: 500 });
-  }
-
   // History for MoM/YoY, fetched once for all areas rather than per-area
   // queries — a couple thousand rows at most even after several years at
   // this cadence.
@@ -468,6 +434,7 @@ export default async (req) => {
     .select('area_slug, capture_date, median_list_price, active_count, new_listings_count, avg_days_on_market, price_per_sqft, median_sold_price, units_sold, avg_sale_to_list_ratio, median_sold_price_month, units_sold_month, avg_sale_to_list_ratio_month, units_firmed_month, median_bedrooms, median_bathrooms, pct_detached, delisted_count, months_of_inventory')
     .eq('period_type', kind)
     .lt('capture_date', captureDate)
+    .gte('capture_date', MONTH_METRICS_SINCE)
     .order('capture_date', { ascending: false });
 
   const historyByArea = new Map();
@@ -483,10 +450,12 @@ export default async (req) => {
   const changeRows = [];
   for (const row of snapshotRows) {
     const rows = historyByArea.get(row.area_slug) || [];
-    const momRow = rows[0] || null; // most recent prior row of this period_type
-    const yoyRow = rows.find((r) => r.capture_date <= elevenMonthsAgoStr) || null;
-
     for (const metric of METRICS) {
+      // Most recent prior row of this period_type made under rules this
+      // metric can be compared with (see comparableSince).
+      const usable = rows.filter((r) => r.capture_date >= comparableSince(metric));
+      const momRow = usable[0] || null;
+      const yoyRow = usable.find((r) => r.capture_date <= elevenMonthsAgoStr) || null;
       const currentValue = row[metric];
       const momPrevious = momRow ? momRow[metric] : null;
       const yoyPrevious = yoyRow ? yoyRow[metric] : null;
@@ -507,6 +476,37 @@ export default async (req) => {
         is_notable: momPct != null && Math.abs(momPct) >= NOTABLE_PCT_THRESHOLD,
       });
     }
+  }
+
+  if (dryRun) {
+    return new Response(JSON.stringify({ kind, captureDate, rows: snapshotRows, changes: changeRows }, null, 1), { headers: { 'Content-Type': 'application/json' } });
+  }
+
+  // Rewrites only the four month figures on an existing capture (e.g. the
+  // 2026-09-01 row, rebuilt with ?as_of=2026-09-01) so they can serve as the
+  // previous month under the current rules. Nothing else is touched.
+  if (backfillMonthMetrics) {
+    for (const row of snapshotRows) {
+      const { error } = await supabase
+        .from('market_map_snapshots')
+        .update(Object.fromEntries(MONTH_METRICS.map((m) => [m, row[m]])))
+        .eq('area_slug', row.area_slug)
+        .eq('capture_date', captureDate)
+        .eq('period_type', kind);
+      if (error) return new Response(`Backfill failed for ${row.area_slug}: ${error.message}`, { status: 500 });
+    }
+    return new Response(`heat-map-snapshot: backfilled ${MONTH_METRICS.join(', ')} for ${snapshotRows.length} areas on ${kind} ${captureDate}`);
+  }
+
+  await previousKeysStore.setJSON('latest', currentKeysByArea);
+  if (kind === 'month-end') await previousKeysStore.setJSON('month-end', currentKeysByArea);
+
+  const { error: upsertError } = await supabase
+    .from('market_map_snapshots')
+    .upsert(snapshotRows, { onConflict: 'area_slug,capture_date,period_type' });
+  if (upsertError) {
+    console.error('heat-map-snapshot: snapshot upsert failed:', upsertError.message);
+    return new Response('Snapshot upsert failed', { status: 500 });
   }
 
   const { error: changesError } = await supabase

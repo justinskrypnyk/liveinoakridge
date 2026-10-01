@@ -24,14 +24,18 @@
 // helpers -- same isolation convention as every function in this
 // directory (see that file's own header comment for the fuller reasoning).
 import { createClient } from '@supabase/supabase-js';
+import { CITYWIDE_METHOD_SINCE, fetchVowLondonListings, firmSales, previousMonthRange, SALE_FIELDS, torontoDate } from '../../src/lib/vow-listings.mjs';
 import sharp from 'sharp';
+import opentype from 'opentype.js';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, Table, TableRow, TableCell, WidthType } from 'docx';
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import os from 'node:os';
 import path from 'node:path';
 
-const DDF_ACCESS_TOKEN = process.env.DDF_ACCESS_TOKEN;
+// Citywide active stats come from the VOW feed -- DDF misses ~15% of
+// London's listings (see src/lib/vow-listings.mjs).
+const VOW_ACCESS_TOKEN = process.env.VOW_ACCESS_TOKEN;
 const DDF_API_BASE_URL = process.env.DDF_API_BASE_URL;
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -258,8 +262,8 @@ function sellerMarketTier(ratio) {
 }
 const SELL_GUIDANCE = {
   hot: 'Yes, decisively. Homes are averaging at or above asking price citywide, and accurately priced listings are drawing competitive offers rather than sitting.',
-  balanced: 'For accurately priced homes, yes. The citywide average sale-to-list ratio is holding close to full asking price -- well-priced homes are still finding motivated buyers; overpriced ones are the ones sitting.',
-  soft: "Only if you price to today's market, not last season's. The citywide average sale-to-list ratio has softened, giving buyers more room to negotiate on anything priced ahead of the market.",
+  balanced: 'For accurately priced homes, yes. The average sale-to-list ratio is holding close to full asking price -- well-priced homes are still finding motivated buyers; overpriced ones are the ones sitting.',
+  soft: "Only if you price to today's market, not last season's. The average sale-to-list ratio has softened, giving buyers more room to negotiate on anything priced ahead of the market.",
 };
 const BUY_GUIDANCE = {
   hot: "Be ready to move decisively. With homes averaging at or above asking citywide, competitive offers are common on well-priced listings -- know your budget before you view, not after.",
@@ -291,40 +295,28 @@ function capitalize(s) {
 // covers (see renderStatCardWebp) -- built from the same headline pick
 // the post body already narrates, so the card never says something
 // different from the post underneath it.
-function buildCardCopy({ headline, totalSold, monthLabel }) {
+function buildCardCopy({ headline, totalSold, monthLabel, citywide }) {
   const monthWord = monthLabel.split(' ')[0];
+  const upDown = (pct) => `${pct >= 0 ? 'UP' : 'DOWN'} ${Math.abs(pct * 100).toFixed(1)}%`;
+  // Pills: the template's "SALES UP x% / PRICES DOWN y%" pair, citywide,
+  // against last month under the same rules (getCitywideStats).
+  const pillGreenText = citywide?.momUnitsSold != null ? `SALES ${upDown(citywide.momUnitsSold)}` : `${totalSold} HOMES SOLD`;
+  const pillRedText = citywide?.momMedianSoldPrice != null
+    ? `PRICES ${upDown(citywide.momMedianSoldPrice)}`
+    : `MEDIAN ${citywide?.medianSoldPrice ? `$${Math.round(citywide.medianSoldPrice / 1000)}K` : 'N/A'}`;
+  const captionLine = `The Full ${monthWord} Market Breakdown`;
   if (!headline) {
-    return {
-      topicLine: 'London Ontario Homes Sold',
-      boldLine: `${totalSold} This Month`,
-      pillGreenText: `${totalSold} SOLD CITYWIDE`,
-      pillRedText: `${SERVED_AREA_ORDER.length} AREAS TRACKED`,
-      captionLine: `The Full ${monthWord} Market Breakdown`,
-    };
+    return { line1: `${totalSold} HOMES`, line2: `SOLD IN ${monthWord.toUpperCase()}`, pillGreenText, pillRedText, captionLine };
   }
   const pct = headline.change.mom_pct_change;
-  const pillGreenText = `${headline.metric.shortLabel.toUpperCase()} ${pct >= 0 ? 'UP' : 'DOWN'} ${Math.abs(pct * 100).toFixed(1)}%`;
-
-  // Contrast stat: a different metric for the same headline area, so the
-  // two pills tell two different halves of the story (e.g. sales up,
-  // price down) -- the exact "Sales Up 6.1% / Prices Down 7.2%" pairing
-  // Justin's own template uses. Falls back to a citywide total on the
-  // rare month the headline area has no second metric with MoM data yet.
-  let pillRedText = `${totalSold} SOLD CITYWIDE`;
-  for (const m of REPORT_METRICS) {
-    if (m.key === headline.metric.key) continue;
-    const c = headline.area.changes[m.key];
-    if (c?.mom_pct_change == null) continue;
-    pillRedText = `${m.shortLabel.toUpperCase()} ${c.mom_pct_change >= 0 ? 'UP' : 'DOWN'} ${Math.abs(c.mom_pct_change * 100).toFixed(1)}%`;
-    break;
-  }
-
+  const word = { units_sold_month: 'SALES', median_sold_price_month: 'PRICES', avg_sale_to_list_ratio_month: 'SALE-TO-LIST', new_listings_count: 'NEW LISTINGS', avg_days_on_market: 'DAYS LISTED', months_of_inventory: 'INVENTORY' }[headline.metric.key]
+    || headline.metric.shortLabel.toUpperCase();
   return {
-    topicLine: `${headline.area.area_name} ${headline.metric.shortLabel}`,
-    boldLine: `${capitalize(magnitudeWord(pct))} ${fmtPct(pct)}`,
+    line1: `${headline.area.area_name.toUpperCase()} ${word}`,
+    line2: `${pct >= 0 ? 'UP' : 'DOWN'} ${Math.round(Math.abs(pct * 100))}%`,
     pillGreenText,
     pillRedText,
-    captionLine: `The Full ${monthWord} Market Breakdown`,
+    captionLine,
   };
 }
 
@@ -390,6 +382,12 @@ function ensureCardFonts() {
     ['PTSans-Bold.ttf', fileURLToPath(new URL('./assets/fonts/PTSans-Bold.ttf', import.meta.url))],
     ['PTSerif-Regular.ttf', fileURLToPath(new URL('./assets/fonts/PTSerif-Regular.ttf', import.meta.url))],
     ['PTSerif-Bold.ttf', fileURLToPath(new URL('./assets/fonts/PTSerif-Bold.ttf', import.meta.url))],
+    // Montserrat (OFL) -- the face Justin's own covers use. Static weights
+    // cut from Google's variable font: sharp's bundled font engine ignores
+    // variable-font weights and falls back to a generic sans.
+    ['Montserrat-Regular.ttf', fileURLToPath(new URL('./assets/fonts/Montserrat-Regular.ttf', import.meta.url))],
+    ['Montserrat-Bold.ttf', fileURLToPath(new URL('./assets/fonts/Montserrat-Bold.ttf', import.meta.url))],
+    ['Montserrat-ExtraBold.ttf', fileURLToPath(new URL('./assets/fonts/Montserrat-ExtraBold.ttf', import.meta.url))],
   ];
   for (const [name, src] of bundled) {
     const dest = path.join(fontDir, name);
@@ -417,24 +415,77 @@ function estimateTextWidth(text, fontSize) {
 // Colors below are sampled directly from that PNG (same "don't guess,
 // sample the real template" rule market-map's legend colors already
 // follow), not eyeballed.
-export async function renderStatCardWebp({ monthLabel, locationLabel, topicLine, boldLine, pillGreenText, pillRedText, captionLine }) {
-  ensureCardFonts();
-  const W = 1200, H = 630; // standard blog og-image aspect, matches other post images
-  const PHOTO_W = 460; // left photo panel width, fades out over its right ~180px into the background
-  const TEXT_X = 545;
+// Card text is drawn as vector shapes straight from the bundled Montserrat
+// files (opentype.js), not left to the server's font system: librsvg on
+// macOS ignores bundled fonts entirely, and a font miss on any machine would
+// silently swap in a generic sans. This also gives exact text widths, so
+// pills and the caption arrow are sized and placed precisely.
+let cardFonts = null;
+function loadCardFonts() {
+  if (cardFonts) return cardFonts;
+  const load = (url) => { const b = readFileSync(fileURLToPath(url)); return opentype.parse(b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength)); };
+  cardFonts = {
+    regular: load(new URL('./assets/fonts/Montserrat-Regular.ttf', import.meta.url)),
+    bold: load(new URL('./assets/fonts/Montserrat-Bold.ttf', import.meta.url)),
+    extraBold: load(new URL('./assets/fonts/Montserrat-ExtraBold.ttf', import.meta.url)),
+  };
+  return cardFonts;
+}
+
+function textWidth(font, text, size, spacing = 0) {
+  return font.getAdvanceWidth(text, size, { letterSpacing: spacing / size, kerning: true });
+}
+
+// anchor: 'start' | 'middle' | 'end'; spacing in px.
+function textShape(font, text, x, y, size, fill, { anchor = 'start', spacing = 0 } = {}) {
+  const w = textWidth(font, text, size, spacing);
+  const left = anchor === 'middle' ? x - w / 2 : anchor === 'end' ? x - w : x;
+  // Path data built by hand: opentype.js 2.0's toPathData(decimals) writes
+  // "NaN" for some coordinates (seen on the apostrophe and K), which makes
+  // librsvg drop the rest of the line.
+  const n = (v) => (Math.round(v * 100) / 100).toString();
+  const d = font.getPath(text, left, y, size, { letterSpacing: spacing / size, kerning: true }).commands.map((c) => {
+    if (c.type === 'M' || c.type === 'L') return `${c.type}${n(c.x)} ${n(c.y)}`;
+    if (c.type === 'Q') return `Q${n(c.x1)} ${n(c.y1)} ${n(c.x)} ${n(c.y)}`;
+    if (c.type === 'C') return `C${n(c.x1)} ${n(c.y1)} ${n(c.x2)} ${n(c.y2)} ${n(c.x)} ${n(c.y)}`;
+    return 'Z';
+  }).join('');
+  return `<path d="${d}" fill="${fill}" />`;
+}
+
+export async function renderStatCardWebp({ monthLabel, locationLabel, line1, line2, pillGreenText, pillRedText, captionLine }) {
+  const F = loadCardFonts();
+  // Same proportions and layout as Justin's own covers (public/images/
+  // may-2026-london-ontario-market-update.webp, 1584x720): photo left, gold
+  // rule, a big two-line headline, "HERE'S THE STORY.", the pills right
+  // under the gold line. Everything that matters sits in the middle band,
+  // so the blog list's wide crop still shows the headline and pills.
+  const W = 1584, H = 720;
+  const PHOTO_W = 720;
+  const RULE_X = 735;
+  const TEXT_X = 768;
+  const TEXT_MAX_W = W - TEXT_X - 60;
 
   const GOLD = '#ffc159';
   const GOLD_LINE = '#efad10';
+  const BLUE = '#7cc4f2';
   const GREEN = '#128040';
   const RED = '#c31f1f';
 
-  const pillFontSize = 20;
-  const pillPadX = 22;
-  const pillH = 46;
-  const pillGap = 18;
-  const greenW = estimateTextWidth(pillGreenText, pillFontSize) + pillPadX * 2;
-  const redW = estimateTextWidth(pillRedText, pillFontSize) + pillPadX * 2;
-  const pillY = 400;
+  // Largest size (up to 104px) at which both headline lines fit.
+  const headSize = Math.min(104, ...[line1, line2].map((t) => Math.floor((104 * (TEXT_MAX_W - 26)) / textWidth(F.extraBold, t, 104))));
+
+  const pillFont = 27;
+  const pillPadX = 30;
+  const pillH = 58;
+  const pillGap = 28;
+  const pillY = 498;
+  const greenW = textWidth(F.bold, pillGreenText, pillFont) + pillPadX * 2;
+  const redW = textWidth(F.bold, pillRedText, pillFont) + pillPadX * 2;
+  const pillTextY = pillY + pillH / 2 + pillFont * 0.36;
+
+  const caption = captionLine.toUpperCase();
+  const captionW = textWidth(F.regular, caption, 28, 0.5);
 
   const svg = `
     <svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
@@ -445,24 +496,26 @@ export async function renderStatCardWebp({ monthLabel, locationLabel, topicLine,
         </linearGradient>
       </defs>
       <rect width="${W}" height="${H}" fill="url(#bg)" />
+      <rect x="${RULE_X - 4}" y="0" width="8" height="${H}" fill="${GOLD_LINE}" />
 
-      <line x1="${PHOTO_W + 40}" y1="45" x2="${PHOTO_W + 40}" y2="${H - 45}" stroke="${GOLD_LINE}" stroke-width="3" />
+      ${textShape(F.bold, `${locationLabel}  \u2022  ${monthLabel.toUpperCase()}`, TEXT_X + 26, 98, 28, BLUE, { spacing: 4 })}
 
-      <text x="${TEXT_X}" y="70" font-family="PT Sans" font-size="20" font-weight="bold" fill="${GOLD}" letter-spacing="1.5">${esc(locationLabel)}  &#8226;  ${esc(monthLabel).toUpperCase()}</text>
+      ${textShape(F.extraBold, line1, TEXT_X + 26, 335 - headSize * 1.08, headSize, '#ffffff')}
+      ${textShape(F.extraBold, line2, TEXT_X + 26, 335, headSize, '#ffffff')}
 
-      <text x="${TEXT_X}" y="150" font-family="PT Sans" font-size="38" fill="#ffffff">${esc(topicLine)}</text>
-      <text x="${TEXT_X}" y="205" font-family="PT Sans" font-size="46" font-weight="bold" fill="#ffffff">${esc(boldLine)}</text>
-
-      <text x="${TEXT_X}" y="270" font-family="PT Sans" font-size="30" font-weight="bold" fill="${GOLD}" letter-spacing="0.5">HERE&#8217;S THE STORY.</text>
-      <line x1="${TEXT_X}" y1="290" x2="${W - 70}" y2="290" stroke="${GOLD_LINE}" stroke-width="2" />
+      ${textShape(F.extraBold, 'HERE\u2019S THE STORY.', TEXT_X, 436, 60, GOLD)}
+      <rect x="${TEXT_X}" y="462" width="${Math.min(TEXT_MAX_W, textWidth(F.extraBold, 'HERE\u2019S THE STORY.', 60))}" height="3" fill="${GOLD_LINE}" />
 
       <rect x="${TEXT_X}" y="${pillY}" width="${greenW}" height="${pillH}" rx="${pillH / 2}" fill="${GREEN}" />
-      <text x="${TEXT_X + greenW / 2}" y="${pillY + pillH / 2 + 7}" font-family="PT Sans" font-size="${pillFontSize}" font-weight="bold" fill="#ffffff" text-anchor="middle">${esc(pillGreenText)}</text>
-
+      ${textShape(F.bold, pillGreenText, TEXT_X + greenW / 2, pillTextY, pillFont, '#ffffff', { anchor: 'middle' })}
       <rect x="${TEXT_X + greenW + pillGap}" y="${pillY}" width="${redW}" height="${pillH}" rx="${pillH / 2}" fill="${RED}" />
-      <text x="${TEXT_X + greenW + pillGap + redW / 2}" y="${pillY + pillH / 2 + 7}" font-family="PT Sans" font-size="${pillFontSize}" font-weight="bold" fill="#ffffff" text-anchor="middle">${esc(pillRedText)}</text>
+      ${textShape(F.bold, pillRedText, TEXT_X + greenW + pillGap + redW / 2, pillTextY, pillFont, '#ffffff', { anchor: 'middle' })}
 
-      <text x="${TEXT_X}" y="${H - 55}" font-family="PT Sans" font-size="19" fill="#ffffff" opacity="0.85" letter-spacing="0.5">${esc(captionLine).toUpperCase()}  &#8594;</text>
+      ${textShape(F.regular, caption, TEXT_X + 16, 640, 28, '#ffffff', { spacing: 0.5 })}
+      <g transform="translate(${TEXT_X + 16 + captionW + 16}, 630)" stroke="#ffffff" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="0" y1="0" x2="38" y2="0" />
+        <polyline points="28,-9 38,0 28,9" />
+      </g>
     </svg>
   `;
 
@@ -541,14 +594,6 @@ function daysSince(timestamp) {
   return Math.max(0, Math.floor((Date.now() - listed) / (1000 * 60 * 60 * 24)));
 }
 
-async function odataGet(resource, params) {
-  const url = new URL(`${DDF_API_BASE_URL}${resource}`);
-  for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
-  const res = await fetch(url, { headers: { Authorization: `Bearer ${DDF_ACCESS_TOKEN}`, Accept: 'application/json' } });
-  if (!res.ok) throw new Error(`${resource} -> HTTP ${res.status}: ${await res.text().catch(() => '')}`);
-  return res.json();
-}
-
 function pctChange(previous, current) {
   if (previous == null || current == null || previous === 0) return null;
   return (current - previous) / previous;
@@ -573,72 +618,26 @@ function pctChange(previous, current) {
 // period_type='month-end'/capture_date (the 1st); harmless to write twice,
 // the values are identical since both run the same query for the same
 // reported month.
-async function getCitywideStats(supabase, monthStart, monthEnd, periodType, captureDate) {
-  const data = await odataGet('Property', {
-    $filter: `contains(UnparsedAddress,'London')`,
-    $select: 'ListPrice,StandardStatus,PropertyType,TransactionType,OriginalEntryTimestamp',
-    $top: '5000',
+async function getCitywideStats(supabase, monthStart, monthEnd, periodType, captureDate, { persist = true } = {}) {
+  // Sales and active listings both come from one VOW pull. Sales are counted
+  // by firm date, like the MLS (see firmSales in src/lib/vow-listings.mjs),
+  // and the City check keeps out other towns' "London Road" addresses.
+  const listings = await fetchVowLondonListings({
+    baseUrl: DDF_API_BASE_URL,
+    token: VOW_ACCESS_TOKEN,
+    select: ['OriginalEntryTimestamp', ...SALE_FIELDS],
   });
-  const active = (data.value || []).filter(
-    (l) => l.StandardStatus === 'Active' && l.PropertyType !== 'Commercial' && l.TransactionType !== 'For Lease'
-  );
+  const active = listings.filter((l) => l.StandardStatus === 'Active');
   const listPrices = active.map((l) => Number(l.ListPrice)).filter((n) => n > 0);
   const dom = active.map((l) => daysSince(l.OriginalEntryTimestamp)).filter((n) => n !== null);
+  const soldPrices = firmSales(listings, monthStart, monthEnd).map((l) => Number(l.ClosePrice));
+  // Last month's sales for the same day range, recomputed from the feed
+  // under the same rules -- comparable even when last month's saved row isn't.
+  const prevSoldPrices = firmSales(listings, ...previousMonthRange(monthStart, monthEnd)).map((l) => Number(l.ClosePrice));
 
-  // Paginated explicitly -- Supabase's default .select() caps at 1,000 rows
-  // with no error (see heat-map-snapshot-background.mjs's own comment on
-  // this exact bug, caught 2026-08).
-  const soldPrices = [];
-  const PAGE_SIZE = 1000;
-  for (let from = 0; ; from += PAGE_SIZE) {
-    const { data: page, error } = await supabase
-      .from('vow_sold_listings')
-      .select('close_price')
-      .eq('is_lease', false)
-      .gte('close_price', MIN_PLAUSIBLE_SALE_PRICE)
-      .gte('close_date', monthStart)
-      .lte('close_date', monthEnd)
-      .range(from, from + PAGE_SIZE - 1);
-    if (error) {
-      console.error('monthly-blog-post: citywide sold query failed:', error.message);
-      break;
-    }
-    soldPrices.push(...(page || []).map((r) => Number(r.close_price)).filter((n) => n > 0));
-    if (!page || page.length < PAGE_SIZE) break;
-  }
-
-  // Citywide months of inventory: active_count / (90-day rolling sold
-  // count / 3) -- same basis as the per-neighbourhood months_of_inventory
-  // column (see heat-map-snapshot-background.mjs).
-  //
-  // Upper-bounded to today AND outlying towns excluded -- confirmed
-  // 2026-09-16 (Justin caught the resulting MOI reading suspiciously low):
-  // vow_sold_listings carries pre-construction rows with a close_date over
-  // a year in the future (as far out as 2027-10-07, signed but not
-  // actually closed yet), and also carries outlying-town sales (tagged
-  // area_slug LIKE 'outlying-%') that the numerator (active.length, a
-  // London-only DDF pull) never counts -- both inflated the denominator
-  // and understated the ratio. Same root cause just fixed in heat-map-
-  // snapshot-background.mjs's own recentSolds query.
-  //
-  // Uses .or() rather than .not('area_slug','like',...) alone -- a plain
-  // .not(...) silently drops NULL area_slug rows too (SQL's NULL LIKE x is
-  // NULL, not true, so NOT NULL is also NULL -- excluded by WHERE either
-  // way), undercounting real London sales that just failed area-matching
-  // (22 such rows confirmed in the current 90-day window). This keeps
-  // those rows (not explicitly tagged outlying) while still excluding ones
-  // that ARE.
-  const ninetyDaysAgoStr = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
-  const todayStr = new Date().toISOString().slice(0, 10);
-  const { count: rolling90dSoldCount, error: rollingError } = await supabase
-    .from('vow_sold_listings')
-    .select('*', { count: 'exact', head: true })
-    .eq('is_lease', false)
-    .gte('close_price', MIN_PLAUSIBLE_SALE_PRICE)
-    .gte('close_date', ninetyDaysAgoStr)
-    .lte('close_date', todayStr)
-    .or('area_slug.is.null,area_slug.not.like.outlying-%');
-  if (rollingError) console.error('monthly-blog-post: citywide 90-day rolling count failed:', rollingError.message);
+  // Months of inventory: active listings / (sales in the last 90 days / 3),
+  // the same basis as the per-neighbourhood column.
+  const rolling90dSoldCount = firmSales(listings, torontoDate(90), torontoDate()).length;
 
   const current = {
     activeCount: active.length,
@@ -654,12 +653,13 @@ async function getCitywideStats(supabase, monthStart, monthEnd, periodType, capt
     .select('median_list_price, avg_days_on_market, median_sold_price, months_of_inventory')
     .eq('period_type', periodType)
     .lt('capture_date', captureDate)
+    .gte('capture_date', CITYWIDE_METHOD_SINCE)
     .order('capture_date', { ascending: false })
     .limit(1);
   if (prevError) console.error('monthly-blog-post: citywide_snapshots history query failed:', prevError.message);
   const prev = prevRows?.[0] || null;
 
-  const { error: upsertError } = await supabase
+  const { error: upsertError } = !persist ? {} : await supabase
     .from('citywide_snapshots')
     .upsert({
       period_type: periodType,
@@ -675,7 +675,8 @@ async function getCitywideStats(supabase, monthStart, monthEnd, periodType, capt
 
   return {
     ...current,
-    momMedianSoldPrice: prev ? pctChange(prev.median_sold_price, current.medianSoldPrice) : null,
+    momMedianSoldPrice: prevSoldPrices.length > 0 ? pctChange(median(prevSoldPrices), current.medianSoldPrice) : null,
+    momUnitsSold: prevSoldPrices.length > 0 ? pctChange(prevSoldPrices.length, current.unitsSold) : null,
     momMedianListPrice: prev ? pctChange(prev.median_list_price, current.medianListPrice) : null,
     momAvgDaysOnMarket: prev ? pctChange(prev.avg_days_on_market, current.avgDaysOnMarket) : null,
     momMonthsOfInventory: prev ? pctChange(prev.months_of_inventory, current.monthsOfInventory) : null,
@@ -691,20 +692,26 @@ export default async (req) => {
   // run can never be mistaken for the real monthly post even if the branch
   // gets merged by accident.
   let branch = 'main';
+  // POST {"preview": {captureDate, snapshotRows, changeRows}}: build the post
+  // from those rows (e.g. a heat-map-snapshot dry run) and return it -- no
+  // database reads or writes, no GitHub commit, no email. For checking a
+  // month's post before its numbers are live.
+  let preview = null;
   try {
     const body = await req?.json?.();
     if (body?.branch && typeof body.branch === 'string') branch = body.branch;
+    if (body?.preview?.snapshotRows) preview = body.preview;
   } catch {
     // no body / not JSON -- fine, stay on 'main'
   }
   const isTest = branch !== 'main';
 
-  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY || !RESEND_API_KEY || !GITHUB_TOKEN || !DDF_ACCESS_TOKEN || !DDF_API_BASE_URL) {
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY || !RESEND_API_KEY || !GITHUB_TOKEN || !VOW_ACCESS_TOKEN || !DDF_API_BASE_URL) {
     const msg = 'monthly-blog-post: missing required env vars';
     console.error(msg, {
       SUPABASE_URL: !!SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY: !!SUPABASE_SERVICE_ROLE_KEY,
       RESEND_API_KEY: !!RESEND_API_KEY, GITHUB_TOKEN: !!GITHUB_TOKEN,
-      DDF_ACCESS_TOKEN: !!DDF_ACCESS_TOKEN, DDF_API_BASE_URL: !!DDF_API_BASE_URL,
+      VOW_ACCESS_TOKEN: !!VOW_ACCESS_TOKEN, DDF_API_BASE_URL: !!DDF_API_BASE_URL,
     });
     await sendNotifyEmail('⚠️ Monthly blog post FAILED to publish', `<p>${esc(msg)}</p><p>Check Netlify env vars, especially GITHUB_TOKEN.</p>`, undefined, false);
     return new Response(msg, { status: 500 });
@@ -713,13 +720,15 @@ export default async (req) => {
   try {
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    const { data: latestMonthEnd } = await supabase
-      .from('market_map_snapshots')
-      .select('capture_date')
-      .eq('period_type', 'month-end')
-      .order('capture_date', { ascending: false })
-      .limit(1)
-      .maybeSingle();
+    const { data: latestMonthEnd } = preview
+      ? { data: { capture_date: preview.captureDate } }
+      : await supabase
+        .from('market_map_snapshots')
+        .select('capture_date')
+        .eq('period_type', 'month-end')
+        .order('capture_date', { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
     if (!latestMonthEnd) {
       // Same "gate not met yet, quiet no-op" convention as
@@ -751,14 +760,18 @@ export default async (req) => {
       .toISOString().slice(0, 10);
 
     // ---- Idempotency guard: check blog.ts BEFORE doing any real work ----
-    const { content: blogTsContent, sha: blogTsSha } = await githubGet(BLOG_DATA_PATH, branch);
-    if (blogTsContent.includes(`slug: '${slug}'`)) {
+    const { content: blogTsContent, sha: blogTsSha } = preview
+      ? { content: readFileSync(fileURLToPath(new URL('../../src/data/blog.ts', import.meta.url)), 'utf-8'), sha: null }
+      : await githubGet(BLOG_DATA_PATH, branch);
+    if (!preview && blogTsContent.includes(`slug: '${slug}'`)) {
       console.log(`monthly-blog-post: ${slug} already published, skipping`);
       return new Response(`Already published: ${slug}`);
     }
 
     // ---- Pull the same data monthly-digest-background.mjs already computed ----
-    const [{ data: snapshotRows, error: snapError }, { data: changeRows, error: changeError }] = await Promise.all([
+    const [{ data: snapshotRows, error: snapError }, { data: changeRows, error: changeError }] = preview
+      ? [{ data: preview.snapshotRows }, { data: (preview.changeRows || []).filter((c) => REPORT_METRICS.some((m) => m.key === c.metric)) }]
+      : await Promise.all([
       supabase
         .from('market_map_snapshots')
         .select(['area_slug', 'area_name', 'capture_date', ...REPORT_METRICS.map((m) => m.key)].join(','))
@@ -766,7 +779,7 @@ export default async (req) => {
         .eq('capture_date', captureDate),
       supabase
         .from('market_map_changes')
-        .select('area_slug, area_name, metric, current_value, mom_pct_change, yoy_pct_change, is_notable')
+        .select('area_slug, area_name, metric, current_value, mom_previous_value, mom_pct_change, yoy_pct_change, is_notable')
         .eq('period_type', 'month-end')
         .eq('capture_date', captureDate)
         .in('metric', REPORT_METRICS.map((m) => m.key)),
@@ -785,15 +798,28 @@ export default async (req) => {
 
     const totalSold = snapshotRows.reduce((sum, r) => sum + (r.units_sold_month || 0), 0);
     const totalNewListings = snapshotRows.reduce((sum, r) => sum + (r.new_listings_count || 0), 0);
-    const citywide = await getCitywideStats(supabase, reportedMonthStart, reportedMonthEnd, 'month-end', captureDate);
+    const citywide = await getCitywideStats(supabase, reportedMonthStart, reportedMonthEnd, 'month-end', captureDate, { persist: !preview });
 
     // ---- Headline metric: deterministic rule, not a judgment call ----
-    // Largest |MoM%| among the 7 served areas, across the narrated metrics.
+    // Largest |MoM%| among the 7 served areas, across the narrated metrics,
+    // skipping small samples: a count needs at least 10 last month (5 -> 12
+    // sales is "+140%" but says little), and a price or ratio needs 5+ sales
+    // in both months.
+    const COUNT_METRICS = ['units_sold_month', 'new_listings_count'];
+    const SALE_BASED = ['median_sold_price_month', 'avg_sale_to_list_ratio_month'];
+    const bigEnough = (r, m, c) => {
+      if (COUNT_METRICS.includes(m.key)) return Number(c.mom_previous_value) >= 10;
+      if (SALE_BASED.includes(m.key)) {
+        const sales = r.changes.units_sold_month;
+        return Number(r.units_sold_month) >= 5 && Number(sales?.mom_previous_value) >= 5;
+      }
+      return true;
+    };
     let headline = null;
     for (const r of servedRows) {
       for (const m of REPORT_METRICS) {
         const c = r.changes[m.key];
-        if (c?.mom_pct_change == null) continue;
+        if (c?.mom_pct_change == null || !bigEnough(r, m, c)) continue;
         if (!headline || Math.abs(c.mom_pct_change) > Math.abs(headline.change.mom_pct_change)) {
           headline = { area: r, metric: m, change: c };
         }
@@ -803,7 +829,7 @@ export default async (req) => {
     // ---- Card copy: mirrors Justin's manually-designed monthly covers
     // (topic + bold stat, "HERE'S THE STORY.", a green/red pill pair) --
     // built from the same headline computed above, not a separate pick.
-    const cardCopy = buildCardCopy({ headline, totalSold, monthLabel });
+    const cardCopy = buildCardCopy({ headline, totalSold, monthLabel, citywide });
 
     // ---- Prose: template + phrase bank, zero generation ----
     const introSentence = headline
@@ -882,7 +908,7 @@ export default async (req) => {
     const marketTier = sellerMarketTier(citywideSaleToList);
     const sellBuyHtml = citywideSaleToList != null ? `
       <h2>Is Now a Good Time to Sell in London Ontario?</h2>
-      <p>${SELL_GUIDANCE[marketTier]} The citywide average sale-to-list ratio sat at ${(citywideSaleToList * 100).toFixed(1)}% in ${esc(monthLabel)}. Not sure where your own home stands? A <a href="/services/home-evaluation/">complimentary home evaluation</a> gets you a real, current number.</p>
+      <p>${SELL_GUIDANCE[marketTier]} Across our 7 west-end neighbourhoods, the average sale-to-list ratio sat at ${(citywideSaleToList * 100).toFixed(1)}% in ${esc(monthLabel)}. Not sure where your own home stands? A <a href="/services/home-evaluation/">complimentary home evaluation</a> gets you a real, current number.</p>
 
       <h2>Is Now a Good Time to Buy in London Ontario?</h2>
       <p>${BUY_GUIDANCE[marketTier]} Buyers weighing where their budget goes furthest can explore <a href="/areas/">all the areas we serve</a> or dig into the numbers themselves on the <a href="/market-map/">interactive Neighbourhood Heat Map</a>.</p>
@@ -900,7 +926,7 @@ export default async (req) => {
       <p>${introSentence}</p>
 
       <h2>How Did London Ontario's Housing Market Perform in ${esc(monthLabel)}?</h2>
-      <p>${totalSold} homes sold citywide, with ${totalNewListings} new listings coming onto the market across all 39 mapped neighbourhoods. Citywide, the median sale price was ${fmtPrice(citywide.medianSoldPrice)}${citywide.momMedianSoldPrice != null ? ` (${fmtPct(citywide.momMedianSoldPrice)} month-over-month)` : ''}, the median list price sat at ${fmtPrice(citywide.medianListPrice)}${citywide.momMedianListPrice != null ? ` (${fmtPct(citywide.momMedianListPrice)} month-over-month)` : ''}, and homes averaged ${citywide.avgDaysOnMarket ?? 'n/a'} days on market${citywide.momAvgDaysOnMarket != null ? ` (${fmtPct(citywide.momAvgDaysOnMarket)} month-over-month)` : ''}.${citywide.monthsOfInventory != null ? ` At the current sales pace, London is carrying about ${citywide.monthsOfInventory.toFixed(1)} months of inventory${citywide.momMonthsOfInventory != null ? ` (${fmtPct(citywide.momMonthsOfInventory)} month-over-month)` : ''} -- a ${moiTierLabel(citywide.monthsOfInventory)}.` : ''}</p>
+      <p>${totalSold} homes sold citywide, with ${totalNewListings} new listings coming onto the market across all 39 mapped neighbourhoods. Citywide, the median sale price was ${fmtPrice(citywide.medianSoldPrice)}${citywide.momMedianSoldPrice != null ? ` (${fmtPct(citywide.momMedianSoldPrice)} month-over-month)` : ''}, the median list price sat at ${fmtPrice(citywide.medianListPrice)}${citywide.momMedianListPrice != null ? ` (${fmtPct(citywide.momMedianListPrice)} month-over-month)` : ''}, and homes still for sale had been listed an average of ${citywide.avgDaysOnMarket ?? 'n/a'} days${citywide.momAvgDaysOnMarket != null ? ` (${fmtPct(citywide.momAvgDaysOnMarket)} month-over-month)` : ''}.${citywide.monthsOfInventory != null ? ` At the current sales pace, London is carrying about ${citywide.monthsOfInventory.toFixed(1)} months of inventory${citywide.momMonthsOfInventory != null ? ` (${fmtPct(citywide.momMonthsOfInventory)} month-over-month)` : ''} -- a ${moiTierLabel(citywide.monthsOfInventory)}.` : ''}</p>
 
       ${oakridgeHtml}
 
@@ -965,7 +991,7 @@ export default async (req) => {
       }] : []),
       ...(citywideSaleToList != null ? [{
         question: `Is London Ontario a buyer's or seller's market right now?`,
-        answer: `${marketTier === 'hot' ? "Conditions favour sellers." : marketTier === 'soft' ? 'Conditions favour buyers.' : 'Conditions are close to balanced.'} The citywide average sale-to-list ratio was ${(citywideSaleToList * 100).toFixed(1)}% in ${esc(monthLabel)} -- ${marketTier === 'soft' ? 'accurately priced homes are still selling, but buyers have room to negotiate.' : 'accurately priced homes are finding motivated buyers close to (or above) asking.'}`,
+        answer: `${marketTier === 'hot' ? "Conditions favour sellers." : marketTier === 'soft' ? 'Conditions favour buyers.' : 'Conditions are close to balanced.'} Across our 7 west-end neighbourhoods, the average sale-to-list ratio was ${(citywideSaleToList * 100).toFixed(1)}% in ${esc(monthLabel)} -- ${marketTier === 'soft' ? 'accurately priced homes are still selling, but buyers have room to negotiate.' : 'accurately priced homes are finding motivated buyers close to (or above) asking.'}`,
       }] : []),
       ...(oakridgeRow ? [{
         question: `How is the Oakridge, London Ontario real estate market doing?`,
@@ -1013,6 +1039,10 @@ export default async (req) => {
     const updatedBlogTs =
       blogTsContent.slice(0, insertAt + marker.length) + '\n' + postEntry +
       blogTsContent.slice(insertAt + marker.length);
+
+    if (preview) {
+      return new Response(JSON.stringify({ slug, postEntry, image: Buffer.from(imageWebp).toString('base64') }), { headers: { 'Content-Type': 'application/json' } });
+    }
 
     // ---- Publish: two commits, to whichever branch this run targeted.
     // Real scheduled runs always target main and trigger the normal deploy;

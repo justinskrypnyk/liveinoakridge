@@ -5,7 +5,8 @@
 // which local events to keep, and a final check of the listings.
 //
 // Sections and where each comes from (layout agreed with Justin 2026-09-24/25):
-//   - London in a minute: vow_sold_listings for the completed month vs. the
+//   - London in a minute: sales that went firm in the completed month (VOW
+//     feed, MLS sold date) vs. the
 //     same month a year earlier, plus months of inventory from
 //     citywide_snapshots. Turned into plain-English sentences by fixed rules
 //     below -- no AI touches the numbers or the wording around them.
@@ -28,6 +29,7 @@ import { createClient } from '@supabase/supabase-js';
 import { getStore } from '@netlify/blobs';
 import { readFileSync } from 'node:fs';
 import { withUtm } from '../../src/lib/listing-card.mjs';
+import { fetchVowLondonListings, firmSales, placeSales, SALE_FIELDS } from '../../src/lib/vow-listings.mjs';
 
 const DDF_ACCESS_TOKEN = process.env.DDF_ACCESS_TOKEN;
 const DDF_API_BASE_URL = process.env.DDF_API_BASE_URL;
@@ -74,49 +76,35 @@ function monthRange(year, monthIndex) {
 // Market numbers
 // ---------------------------------------------------------------------------
 
-// Paginated explicitly -- Supabase's default .select() silently caps at
-// 1,000 rows (the 2026-08 truncation bug, see heat-map-snapshot-background).
-async function soldRows(supabase, from, to, areaSlug) {
-  const rows = [];
-  for (let offset = 0; ; offset += 1000) {
-    let q = supabase
-      .from('vow_sold_listings')
-      .select('close_price, list_price')
-      .eq('is_lease', false)
-      .gte('close_price', MIN_PLAUSIBLE_SALE_PRICE)
-      .gte('close_date', from)
-      .lte('close_date', to);
-    // Citywide excludes outlying towns but keeps NULL area_slug rows (real
-    // London sales that just failed polygon matching) -- same .or() as
-    // monthly-digest's rolling count, for the same reason.
-    q = areaSlug ? q.eq('area_slug', areaSlug) : q.or('area_slug.is.null,area_slug.not.like.outlying-%');
-    const { data, error } = await q.range(offset, offset + 999);
-    if (error) throw new Error(`vow_sold_listings query failed: ${error.message}`);
-    rows.push(...data);
-    if (data.length < 1000) break;
-  }
-  return rows;
-}
-
-function summarize(rows) {
-  const prices = rows.map((r) => Number(r.close_price)).filter((n) => n > 0);
-  const withList = rows.filter((r) => Number(r.list_price) > 0);
+function summarize(sales) {
+  const prices = sales.map((l) => Number(l.ClosePrice)).filter((n) => n > 0);
+  const withList = sales.filter((l) => Number(l.ListPrice) > 0);
   return {
     count: prices.length,
     median: median(prices),
-    saleToList: withList.length ? withList.reduce((s, r) => s + r.close_price / r.list_price, 0) / withList.length : null,
+    saleToList: withList.length ? withList.reduce((s, l) => s + Number(l.ClosePrice) / Number(l.ListPrice), 0) / withList.length : null,
   };
 }
 
 async function getMarket(supabase, year, monthIndex) {
   const [from, to] = monthRange(year, monthIndex);
   const [lyFrom, lyTo] = monthRange(year - 1, monthIndex);
-  const [city, cityLastYear, oak, oakLastYear] = await Promise.all([
-    soldRows(supabase, from, to).then(summarize),
-    soldRows(supabase, lyFrom, lyTo).then(summarize),
-    soldRows(supabase, from, to, 'oakridge').then(summarize),
-    soldRows(supabase, lyFrom, lyTo, 'oakridge').then(summarize),
-  ]);
+  // Sales by firm date (the MLS sold date), London only -- see firmSales in
+  // src/lib/vow-listings.mjs. Until 2026-10-01 this read vow_sold_listings
+  // by closing date, which put May-August deals into "September".
+  const listings = await fetchVowLondonListings({
+    baseUrl: process.env.DDF_API_BASE_URL,
+    token: VOW_ACCESS_TOKEN,
+    select: ['ListingKey', 'UnparsedAddress', ...SALE_FIELDS],
+  });
+  const citySales = firmSales(listings, from, to);
+  const citySalesLastYear = firmSales(listings, lyFrom, lyTo);
+  const placed = await placeSales(supabase, [...citySales, ...citySalesLastYear]);
+  const inOakridge = (l) => placed.get(l.ListingKey) === 'oakridge';
+  const city = summarize(citySales);
+  const cityLastYear = summarize(citySalesLastYear);
+  const oak = summarize(citySales.filter(inOakridge));
+  const oakLastYear = summarize(citySalesLastYear.filter(inOakridge));
 
   // Months of inventory: newest capture on or before today. On the 1st that
   // is the 'month-end' row monthly-digest-background writes at 13:00 UTC,
