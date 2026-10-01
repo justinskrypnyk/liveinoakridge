@@ -46,6 +46,11 @@ const LISTING_COUNT = 4;
 const SOLD_COUNT = 4;
 const SOLD_LOOKBACK_DAYS = 90; // older than this isn't "recently sold"
 const OAKRIDGE_MIN_SALES = 5; // below this, one month's median is too noisy to headline
+// Calling a price trend needs more: Sept 2026 had 11 Oakridge sales against
+// 11 a year earlier, and the medians ($730K vs $601K) read as "climbing" the
+// same month the median fell 6% from August. Below this, report the number
+// without a direction.
+const OAKRIDGE_TREND_MIN_SALES = 15;
 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
@@ -179,7 +184,8 @@ function oakridgeCorner(m, monthName) {
       body: `Only ${o.count} Oakridge home${o.count === 1 ? '' : 's'} sold in ${monthName}, which is too few for a reliable typical price.${o.moi != null ? ` There are about ${o.moi.toFixed(1)} months' worth of homes for sale in the neighbourhood, a ${moiWords(o.moi).tier}.` : ''}`,
     };
   }
-  const oakChange = yoy(o.median, o.lastYear.median);
+  const enoughForTrend = o.count >= OAKRIDGE_TREND_MIN_SALES && (o.lastYear.count || 0) >= OAKRIDGE_TREND_MIN_SALES;
+  const oakChange = enoughForTrend ? yoy(o.median, o.lastYear.median) : null;
   const cityChange = yoy(m.city.median, m.city.lastYear.median);
   const price = fmtRoundPrice(o.median);
   let heading;
@@ -195,7 +201,7 @@ function oakridgeCorner(m, monthName) {
     first = `The typical Oakridge home sold for about ${price}, down from about ${fmtRoundPrice(o.lastYear.median)} last ${monthName}.`;
   } else {
     heading = `Oakridge in ${monthName}`;
-    first = `The typical Oakridge home sold for about ${price}.`;
+    first = `${o.count} Oakridge homes sold in ${monthName}, at a typical price of about ${price}. With this few sales, the typical price can swing quite a bit from month to month, so it's best read as a snapshot.`;
   }
   let second = '';
   if (o.moi != null) {
