@@ -568,7 +568,12 @@ export async function renderNeighbourhoodMapPng(snapshotRows, dateLabel) {
   // Whitehills stays fully wired for listings/geocoding elsewhere -- Justin
   // just doesn't want it drawn on this map (its traced shape overlaps
   // Medway's, and he'd rather not show that overlap here).
-  const polygons = loadAreaBoundaries().filter((p) => p.slug !== 'whitehills');
+  // Also left off this map only (stats still tracked everywhere else): the
+  // rural edge areas that almost never have a sale -- 0 to 4 firm sales in
+  // the 12 months to September 2026 (Justin, 2026-10-01). Every other area
+  // had sales in at least 9 of those 12 months.
+  const MAP_HIDDEN = new Set(['whitehills', 'airport', 'bradley', 'crumlin', 'highbury', 'oldvictoria', 'sharoncreek']);
+  const polygons = loadAreaBoundaries().filter((p) => !MAP_HIDDEN.has(p.slug));
   const logoBase64 = loadLogoBase64();
   const riverLines = loadRiverLines(); // both Thames branches, hand-traced by Justin via geojson.io
 
