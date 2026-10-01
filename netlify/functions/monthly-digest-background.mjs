@@ -160,7 +160,11 @@ const PRICE_BANDS = [
   { max: 1000000, color: '#f16c2f' },
   { max: Infinity, color: '#b13b3c' },
 ];
-const NO_DATA_COLOR = '#c9c9c9';
+// No sales in the month: a hatch pattern (see #noSales in the map SVG),
+// not a flat grey -- the template's lowest band (#d0d6c7) is nearly the same
+// grey, so "under $400K" and "no sales" looked identical (Southcrest,
+// September 2026).
+const NO_DATA_COLOR = 'url(#noSales)';
 
 function priceBandColor(price) {
   if (price == null) return NO_DATA_COLOR;
@@ -617,7 +621,7 @@ export async function renderNeighbourhoodMapPng(snapshotRows, dateLabel) {
   // Legend -- exact colors/order sampled from Justin's own template, wrapped
   // in a rounded-rect clip so the overall bar reads as one soft pill instead
   // of a strip of hard-edged blocks.
-  const legendLabels = ['$300', '$400k', '$500k', '$600k', '$700k', '$800', '$900', '$1M+'];
+  const legendLabels = ['$300k', '$400k', '$500k', '$600k', '$700k', '$800k', '$900k', '$1M+'];
   const legendX = 60;
   const legendW = CANVAS_W - 120;
   const swatchW = legendW / PRICE_BANDS.length;
@@ -627,6 +631,8 @@ export async function renderNeighbourhoodMapPng(snapshotRows, dateLabel) {
   `).join('\n');
   const legendSvg = `
     <text x="${CANVAS_W / 2}" y="${LEGEND_CAPTION_Y}" font-family="PT Sans" font-size="13" font-weight="bold" fill="#5b5346" text-anchor="middle" letter-spacing="2">MEDIAN SOLD PRICE</text>
+    <rect x="${legendX + legendW - 150}" y="${LEGEND_CAPTION_Y - 13}" width="22" height="16" rx="3" fill="url(#noSales)" stroke="#1c2b3a" stroke-width="1" stroke-opacity="0.55" />
+    <text x="${legendX + legendW - 120}" y="${LEGEND_CAPTION_Y}" font-family="PT Sans" font-size="13" font-weight="bold" fill="#5b5346" letter-spacing="1">NO SALES</text>
     <g clip-path="url(#legendClip)">
       ${legendSwatches}
     </g>
@@ -669,6 +675,10 @@ export async function renderNeighbourhoodMapPng(snapshotRows, dateLabel) {
         <filter id="riverShadow" x="-40%" y="-40%" width="180%" height="180%">
           <feGaussianBlur in="SourceGraphic" stdDeviation="2.5" />
         </filter>
+        <pattern id="noSales" patternUnits="userSpaceOnUse" width="10" height="10" patternTransform="rotate(45)">
+          <rect width="10" height="10" fill="#f4f1ea" />
+          <line x1="0" y1="0" x2="0" y2="10" stroke="#9a9488" stroke-width="3" />
+        </pattern>
         <clipPath id="legendClip">
           <rect x="${legendX}" y="${LEGEND_Y}" width="${legendW}" height="${LEGEND_H}" rx="8" />
         </clipPath>
