@@ -679,7 +679,11 @@ export default async (req) => {
     // Tag every site link so GA4 shows this issue's clicks as campaign
     // london-letter-YYYY-MM (hrefs only -- image srcs stay untouched).
     const campaign = `london-letter-${sendYear}-${String(sendMonthIndex + 1).padStart(2, '0')}`;
-    const newsletterHtml = buildNewsletter(parts).replace(/href="(https:\/\/www\.liveinoakridge\.ca[^"]*)"/g, (_, u) => `href="${withUtm(u.replace(/&amp;/g, '&'), campaign).replace(/&/g, '&amp;')}"`);
+    // Every site link gets the email's UTM tags plus lid={{contact.id}}, which
+    // GHL fills in per recipient, so a click from the newsletter can set off
+    // the "your lead is back" alert (src/pages/api/lead-back.ts). Added
+    // 2026-10-01: Smile's templates had it, but this HTML is new each month.
+    const newsletterHtml = buildNewsletter(parts).replace(/href="(https:\/\/www\.liveinoakridge\.ca[^"]*)"/g, (_, u) => `href="${withUtm(u.replace(/&amp;/g, '&'), campaign).replace(/&/g, '&amp;')}&amp;lid={{contact.id}}"`);
     const smileHtml = buildSmileEmail({ ...parts, newsletterHtml, isTest });
 
     if (dryRun) {
