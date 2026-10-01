@@ -25,6 +25,7 @@
 // [TEST]. {"dryRun": true} builds everything and returns the HTML without
 // sending any email.
 
+import { wrongLondonHour } from '../../src/lib/london-time.mjs';
 import { createClient } from '@supabase/supabase-js';
 import { getStore } from '@netlify/blobs';
 import { readFileSync } from 'node:fs';
@@ -626,6 +627,7 @@ async function sendFailureAlert(message) {
 }
 
 export default async (req) => {
+  if (await wrongLondonHour(req, 7)) return new Response('Not 7 a.m. in London yet, skipping this run');
   let isTest = false;
   let dryRun = false;
   try {
@@ -704,5 +706,5 @@ export default async (req) => {
 };
 
 export const config = {
-  schedule: '0 15 1 * *', // 1st of month, 3pm UTC -- after heat-map-snapshot (9am) and monthly-digest (1pm), which writes the month-end citywide_snapshots row read here
+  schedule: '30 11,12 1 * *', // 7:30 a.m. London on the 1st (see src/lib/london-time.mjs) -- after monthly-digest (7:00), which writes the month-end citywide_snapshots row read here
 };

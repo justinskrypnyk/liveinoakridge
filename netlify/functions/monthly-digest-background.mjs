@@ -33,6 +33,7 @@
 // Same AI-free compilation principle as weekly-digest-background.mjs: every
 // color/number here is a fixed lookup against already-computed aggregates,
 // not an AI interpreting the underlying sold data.
+import { wrongLondonHour } from '../../src/lib/london-time.mjs';
 import { createClient } from '@supabase/supabase-js';
 import { CITYWIDE_METHOD_SINCE, fetchVowCityListings, fetchVowLondonListings, firmSales, previousMonthRange, SALE_FIELDS, torontoDate } from '../../src/lib/vow-listings.mjs';
 import sharp from 'sharp';
@@ -774,7 +775,8 @@ async function sendFailureAlert(message) {
   }
 }
 
-export default async () => {
+export default async (req) => {
+  if (await wrongLondonHour(req, 7)) return new Response('Not 7 a.m. in London yet, skipping this run');
   if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY || !RESEND_API_KEY || !VOW_ACCESS_TOKEN || !DDF_API_BASE_URL) {
     console.error('monthly-digest: missing required env vars', {
       SUPABASE_URL: !!SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY: !!SUPABASE_SERVICE_ROLE_KEY, RESEND_API_KEY: !!RESEND_API_KEY,
@@ -947,5 +949,5 @@ export default async () => {
 };
 
 export const config = {
-  schedule: '0 13 1 * *', // 1st of month, 1pm UTC -- after heat-map-snapshot's 9am UTC month-end capture same day
+  schedule: '0 11,12 1 * *', // 7:00 a.m. London on the 1st (11:00 UTC in summer, 12:00 in winter; wrongLondonHour skips the other) -- heat-map-snapshot's month-end capture runs at 09:00 UTC, well before
 };

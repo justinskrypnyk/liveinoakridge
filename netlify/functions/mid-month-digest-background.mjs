@@ -44,6 +44,7 @@
 // Same AI-free compilation principle as the other digests: every number
 // here is a fixed lookup/aggregate over live MLS data, not an AI
 // interpreting it.
+import { wrongLondonHour } from '../../src/lib/london-time.mjs';
 import { createClient } from '@supabase/supabase-js';
 import { CITYWIDE_METHOD_SINCE, fetchVowLondonListings, firmSales, previousMonthRange, SALE_FIELDS, torontoDate } from '../../src/lib/vow-listings.mjs';
 
@@ -256,7 +257,8 @@ async function sendFailureAlert(message) {
   }
 }
 
-export default async () => {
+export default async (req) => {
+  if (await wrongLondonHour(req, 7)) return new Response('Not 7 a.m. in London yet, skipping this run');
   if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY || !RESEND_API_KEY || !VOW_ACCESS_TOKEN || !DDF_API_BASE_URL) {
     console.error('mid-month-digest: missing required env vars', {
       SUPABASE_URL: !!SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY: !!SUPABASE_SERVICE_ROLE_KEY, RESEND_API_KEY: !!RESEND_API_KEY,
@@ -387,5 +389,5 @@ export default async () => {
 };
 
 export const config = {
-  schedule: '0 10 16 * *', // 16th of month, 10am UTC (~5-6am Eastern) -- shortly after heat-map-snapshot's 9am UTC mid-month capture same day
+  schedule: '45 11,12 16 * *', // 7:45 a.m. London on the 16th (see src/lib/london-time.mjs) -- heat-map-snapshot's mid-month capture runs at 09:00 UTC, well before
 };

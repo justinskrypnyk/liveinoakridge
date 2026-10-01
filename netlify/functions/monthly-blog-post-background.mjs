@@ -34,6 +34,7 @@
 // Self-contained rather than importing monthly-digest-background.mjs's
 // helpers -- same isolation convention as every function in this
 // directory (see that file's own header comment for the fuller reasoning).
+import { wrongLondonHour } from '../../src/lib/london-time.mjs';
 import { createClient } from '@supabase/supabase-js';
 import { CITYWIDE_METHOD_SINCE, fetchVowLondonListings, firmSales, previousMonthRange, SALE_FIELDS, torontoDate } from '../../src/lib/vow-listings.mjs';
 import sharp from 'sharp';
@@ -695,6 +696,7 @@ async function getCitywideStats(supabase, monthStart, monthEnd, periodType, capt
 }
 
 export default async (req) => {
+  if (await wrongLondonHour(req, 7)) return new Response('Not 7 a.m. in London yet, skipping this run');
   // Real scheduled invocations (Netlify's own cron trigger) carry no usable
   // JSON body -- branch defaults to 'main'. A manual test POST can override
   // it, e.g. {"branch": "test/auto-blog-dry-run"}, so a first real run can
@@ -1127,5 +1129,5 @@ export default async (req) => {
 };
 
 export const config = {
-  schedule: '0 14 1 * *', // 1st of month, 2pm UTC -- after heat-map-snapshot's 9am capture and monthly-digest's 1pm email
+  schedule: '15 11,12 1 * *', // 7:15 a.m. London on the 1st (see src/lib/london-time.mjs) -- after the 7:00 Full Month Review
 };
