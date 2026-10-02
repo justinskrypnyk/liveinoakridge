@@ -8,6 +8,9 @@ interface Props {
   // ads conversion (e.g. showing-request) vs. which are just visibility
   // (e.g. a generic contact-page inquiry) without any code changes later.
   formType?: string;
+  // Listing pages pass the home's neighbourhood so the lead gets an
+  // "Area: ..." tag in GHL (api/ghl-lead.ts).
+  neighbourhood?: string | null;
 }
 
 const {
@@ -15,6 +18,7 @@ const {
   ctaLabel = 'Send Message',
   dark = false,
   formType = 'contact',
+  neighbourhood = null,
 } = Astro.props;
 
 const inputClass = dark
@@ -60,6 +64,7 @@ const fieldId = (name: string) => `${name}-${uid}`;
        actually worked. Netlify's build-time bot only registers field names
        it finds in static HTML; anything submitted that it never saw gets
        silently stripped before the outgoing webhook ever sees it. -->
+  <input type="hidden" name="neighbourhood" value={neighbourhood ?? ''} />
   <input type="hidden" name="chat-intent" />
   <input type="hidden" name="chat-neighbourhood" />
   <input type="hidden" name="chat-persona" />

@@ -123,6 +123,7 @@ function daysSince(timestamp) {
 function captureKind(date) {
   if (date.getDate() === 16) return 'mid-month';
   if (date.getDate() === 1) return 'month-end';
+  if (date.getDate() === 6) return 'sales-recount';
   return null;
 }
 
@@ -153,12 +154,22 @@ const METRICS = [
 
 export default async (req) => {
   const forced = req && new URL(req.url).searchParams.get('force') === 'true';
+  // On the 6th the scheduled run recounts the month that just closed: sales
+  // that went firm late in the month keep reaching the MLS for days (Sept
+  // 2026: 371 on the 1st, 377 that evening), so the monthly reports now go
+  // out on the 6th (Justin + Smile, 2026-10-02). It rewrites only the month
+  // figures on the 1st's month-end row -- active listings and the month-end
+  // keys stay as captured on the 1st.
+  const salesRecount = !forced && captureKind(new Date()) === 'sales-recount';
   // ?as_of=2026-09-01 (forced runs only): compute as if it were that
   // morning -- the month figures, which the VOW feed keeps for any past
   // month, come out right; active-listing figures still reflect today.
   const asOf = forced ? new URL(req.url).searchParams.get('as_of') : null;
-  const now = /^\d{4}-\d{2}-\d{2}$/.test(asOf || '') ? new Date(`${asOf}T09:00:00Z`) : new Date();
-  const backfillMonthMetrics = forced && new URL(req.url).searchParams.get('backfill_month_metrics') === 'true';
+  const firstOfMonth = new Date().toISOString().slice(0, 8) + '01';
+  const now = salesRecount
+    ? new Date(`${firstOfMonth}T09:00:00Z`)
+    : /^\d{4}-\d{2}-\d{2}$/.test(asOf || '') ? new Date(`${asOf}T09:00:00Z`) : new Date();
+  const backfillMonthMetrics = salesRecount || (forced && new URL(req.url).searchParams.get('backfill_month_metrics') === 'true');
   const forcedKind = req && new URL(req.url).searchParams.get('period_type');
   const kind = forced ? (forcedKind === 'month-end' ? 'month-end' : 'mid-month') : captureKind(now);
   // POST {"dryRun":true} with ?force=true: compute and return the rows,
@@ -344,7 +355,9 @@ export default async (req) => {
   // A forced re-run can overwrite a specific capture (e.g. ?capture_date=2026-10-01
   // to redo that morning's month-end row under the current rules).
   const captureDateParam = forced ? new URL(req.url).searchParams.get('capture_date') : null;
-  const captureDate = /^\d{4}-\d{2}-\d{2}$/.test(captureDateParam || '') ? captureDateParam : now.toISOString().slice(0, 10);
+  const captureDate = salesRecount
+    ? firstOfMonth
+    : /^\d{4}-\d{2}-\d{2}$/.test(captureDateParam || '') ? captureDateParam : now.toISOString().slice(0, 10);
   const capturedAt = now.toISOString();
   const snapshotRows = [];
 
@@ -495,6 +508,12 @@ export default async (req) => {
         .eq('period_type', kind);
       if (error) return new Response(`Backfill failed for ${row.area_slug}: ${error.message}`, { status: 500 });
     }
+    // Their MoM changes too -- market-update-mailout reads median_sold_price_month's.
+    const { error: changesError } = await supabase
+      .from('market_map_changes')
+      .upsert(changeRows.filter((c) => MONTH_METRICS.includes(c.metric)), { onConflict: 'area_slug,metric,capture_date,period_type' });
+    if (changesError) console.error('heat-map-snapshot: month changes upsert failed:', changesError.message);
+    console.log(`heat-map-snapshot: recounted ${MONTH_METRICS.join(', ')} on ${kind} ${captureDate}`);
     return new Response(`heat-map-snapshot: backfilled ${MONTH_METRICS.join(', ')} for ${snapshotRows.length} areas on ${kind} ${captureDate}`);
   }
 
@@ -523,5 +542,5 @@ export default async (req) => {
 };
 
 export const config = {
-  schedule: '0 9 * * *', // daily, 9am UTC — internal captureKind() guard makes this an effective 16th/1st-of-month cadence
+  schedule: '0 9 * * *', // daily, 9am UTC — internal captureKind() guard: captures on the 1st and 16th, sales recount on the 6th
 };

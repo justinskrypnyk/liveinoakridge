@@ -111,7 +111,7 @@ async function loadAreaRings() {
   const { fileURLToPath } = await import('node:url');
   const dataPath = fileURLToPath(new URL('../../src/data/area-boundaries.json', import.meta.url));
   const raw = JSON.parse(readFileSync(dataPath, 'utf-8'));
-  return raw.features.map((f) => ({ slug: f.properties.slug, ring: f.geometry.coordinates[0] }));
+  return raw.features.map((f) => ({ slug: f.properties.slug, name: f.properties.name, ring: f.geometry.coordinates[0] }));
 }
 
 // Same as firm-sale-tracker-background.mjs's geocodeGoogle -- duplicated per
@@ -153,7 +153,7 @@ function makeGeocoder() {
   };
 }
 
-async function pushToGhl({ email, firstName, lastName, phone, intro, lines, cards = [] }) {
+async function pushToGhl({ email, firstName, lastName, phone, intro, lines, cards = [], areaTags = [] }) {
   if (!GHL_API_TOKEN || !GHL_LOCATION_ID) {
     console.error('GHL env vars missing, skipping push for', email);
     return;
@@ -227,7 +227,7 @@ async function pushToGhl({ email, firstName, lastName, phone, intro, lines, card
     const tagRes = await fetch(`https://services.leadconnectorhq.com/contacts/${contactId}/tags`, {
       method: 'POST',
       headers: authHeaders,
-      body: JSON.stringify({ tags: ['search-area-alert'] }),
+      body: JSON.stringify({ tags: ['search-area-alert', ...areaTags] }),
     });
     if (!tagRes.ok) console.error('GHL add-tags failed:', tagRes.status, await tagRes.text().catch(() => ''));
   } catch (err) {
@@ -307,6 +307,8 @@ export default async () => {
         lastName: first.last_name,
         phone: first.phone,
         intro: 'New homes matching your search:',
+        // "Area: Westmount" per searched neighbourhood, same tag ghl-lead.ts gives form leads.
+        areaTags: [...new Set(subs.map((s) => areaRings.find((a) => a.slug === s.area_slug)?.name).filter(Boolean))].map((n) => `Area: ${n}`),
         lines: top.map((l) =>
           `${l.UnparsedAddress} — $${Math.round(Number(l.ListPrice) || 0).toLocaleString('en-CA')} — ${withUtm(`${SITE_URL}/search/${l.ListingKey}/`, 'search-area-alert')}`
         ),

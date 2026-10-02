@@ -33,7 +33,7 @@
 // Same AI-free compilation principle as weekly-digest-background.mjs: every
 // color/number here is a fixed lookup against already-computed aggregates,
 // not an AI interpreting the underlying sold data.
-import { wrongLondonHour } from '../../src/lib/london-time.mjs';
+import { wrongLondonHour, beforeSixthOfMonthStart } from '../../src/lib/london-time.mjs';
 import { createClient } from '@supabase/supabase-js';
 import { CITYWIDE_METHOD_SINCE, fetchVowCityListings, fetchVowLondonListings, firmSales, previousMonthRange, SALE_FIELDS, torontoDate } from '../../src/lib/vow-listings.mjs';
 import sharp from 'sharp';
@@ -777,6 +777,7 @@ async function sendFailureAlert(message) {
 
 export default async (req) => {
   if (await wrongLondonHour(req, 7)) return new Response('Not 7 a.m. in London yet, skipping this run');
+  if (await beforeSixthOfMonthStart(req)) return new Response('Monthly sends move to the 6th starting Nov 6, 2026; skipping');
   if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY || !RESEND_API_KEY || !VOW_ACCESS_TOKEN || !DDF_API_BASE_URL) {
     console.error('monthly-digest: missing required env vars', {
       SUPABASE_URL: !!SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY: !!SUPABASE_SERVICE_ROLE_KEY, RESEND_API_KEY: !!RESEND_API_KEY,
@@ -899,7 +900,7 @@ export default async (req) => {
   const html = `
     <h2>Full Month Review — ${esc(monthLabel)}</h2>
     <p>Sales: ${totalSold} · New Listings: ${totalNewListings} · ${snapshotRows.length} neighbourhoods</p>
-    <p style="font-size:12px;color:#888;"><b>Early figures:</b> sales that went firm late in the month can take several days to reach the MLS, so these totals usually rise a little by about the 6th (September 2026 went from 371 to 377 by the next evening). Sales are counted by the date they went firm (the MLS sold date), like the board does. Active listings, list prices and new listings count every London listing on the MLS (VOW feed). New Listings = listings that came on during ${esc(monthLabel)}, including any that have since sold. Left Market = listings for sale at the end of last month that are no longer for sale now (sold, conditional, expired or pulled). MoM compares with the previous month-end report. Sales, sale prices and new listings can be rebuilt for past months under these rules, so they compare from September 2026; the other figures start comparing in October 2026. YoY fills in from late 2027.</p>
+    <p style="font-size:12px;color:#888;">Sales are counted by the date they went firm (the MLS sold date), like the board does. Active listings, list prices and new listings count every London listing on the MLS (VOW feed). New Listings = listings that came on during ${esc(monthLabel)}, including any that have since sold. Left Market = listings for sale at the end of last month that are no longer for sale now (sold, conditional, expired or pulled). MoM compares with the previous month-end report. Sales, sale prices and new listings can be rebuilt for past months under these rules, so they compare from September 2026; the other figures start comparing in October 2026. YoY fills in from late 2027.</p>
 
     <h3>🏙️ London — Citywide</h3>
     <p>Med. Sale Price: ${fmtPrice(citywide.medianSoldPrice)} (${fmtPct(citywide.momMedianSoldPrice)} MoM, ${citywide.unitsSold} sold) · Med. List Price: ${fmtPrice(citywide.medianListPrice)} (${fmtPct(citywide.momMedianListPrice)} MoM) · Avg. Days Listed (still for sale): ${citywide.avgDaysOnMarket ?? 'n/a'} (${fmtPct(citywide.momAvgDaysOnMarket)} MoM)</p>
@@ -949,5 +950,5 @@ export default async (req) => {
 };
 
 export const config = {
-  schedule: '0 11,12 1 * *', // 7:00 a.m. London on the 1st (11:00 UTC in summer, 12:00 in winter; wrongLondonHour skips the other) -- heat-map-snapshot's month-end capture runs at 09:00 UTC, well before
+  schedule: '0 11,12 6 * *', // 7:00 a.m. London on the 6th (11:00 UTC in summer, 12:00 in winter; wrongLondonHour skips the other) -- the 6th so late-reported sales are in (Justin + Smile, 2026-10-02); heat-map-snapshot's 09:00 UTC run that morning recounts the month's sales on the 1st's month-end row first
 };

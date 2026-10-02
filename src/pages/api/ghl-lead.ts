@@ -17,7 +17,7 @@ import type { APIRoute } from 'astro';
 import { createHmac, createHash, timingSafeEqual } from 'node:crypto';
 import { getMarketListingByKey, getAreaMarketListings, type RawListing } from '@/lib/ddf';
 import { findSimilarActiveListings } from '@/lib/similar-listings';
-import { findAreaForPoint, areaNameForSlug } from '@/lib/area-boundaries';
+import { findAreaForPoint, areaNameForSlug, knownAreaName } from '@/lib/area-boundaries';
 import { getServiceRoleClient } from '@/lib/supabase';
 import { pushRecommendationToGhl, addGhlTags } from '@/lib/ghl-recommend';
 import { assignOwnerIfUnowned } from '@/lib/ghl-owner.mjs';
@@ -233,6 +233,18 @@ export const POST: APIRoute = async ({ request, locals }) => {
     // Who to call first (lead-score.ts). Early leads get no score tag.
     leadScore.level === 'Hot' && 'Hot Lead',
     leadScore.level === 'Warm' && 'Warm Lead',
+    // "Area: Westmount" for every neighbourhood we know they care about, so
+    // Smile can filter a list per area (Justin, 2026-10-02). Sources: the
+    // blog post's area (ticked box or not), the school's neighbourhoods, the
+    // chatbot's / home-value form's / listing page's neighbourhood, and an
+    // /areas/<slug>/ page the form was filled in on. Unknown names are dropped.
+    ...[
+      submission.form_name === 'blog-signup' ? data.area : null,
+      ...(school?.servesAreas ?? []).map((a) => a.slug),
+      data['chat-neighbourhood'],
+      data['neighbourhood'],
+      String(data.lead_page || '').match(/^\/areas\/([^/]+)\//)?.[1],
+    ].map(knownAreaName).filter(Boolean).map((name) => `Area: ${name}`),
   ]
     // A school we map to neighbourhoods gets School Search Lead from the
     // welcome-listings step at the end instead, once its listings are in.
@@ -341,6 +353,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
         const lat = Number(listing.Latitude), lng = Number(listing.Longitude);
         const areaSlug = Number.isFinite(lat) && Number.isFinite(lng) ? findAreaForPoint(lat, lng) : null;
         const listPrice = Number(listing.ListPrice) || null;
+        if (contactId && areaSlug) await addGhlTags(contactId, [`Area: ${areaNameForSlug(areaSlug)}`]);
 
         const supabase = getServiceRoleClient();
         if (supabase) {

@@ -35,6 +35,18 @@ export function areaNameForSlug(slug: string): string {
   return names[slug] ?? slug.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
+/**
+ * Canonical area name for a slug or a name ("west-london", "West London"),
+ * or null when it isn't one of our areas -- so free text never becomes a
+ * GHL "Area: ..." tag.
+ */
+export function knownAreaName(value: unknown): string | null {
+  const v = String(value ?? '').trim().toLowerCase();
+  if (!v) return null;
+  if (names[v]) return names[v];
+  return Object.values(names).find((n) => n.toLowerCase() === v) ?? null;
+}
+
 /** Returns the area slug whose boundary contains the given point, or null if none match. */
 export function findAreaForPoint(lat: number, lng: number): string | null {
   for (const { slug, rings } of polygons) {

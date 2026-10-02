@@ -9,6 +9,7 @@
 // built from already-computed numbers, no interpretation.
 import { createClient } from '@supabase/supabase-js';
 import { assignOwnerIfUnowned } from '../../src/lib/ghl-owner.mjs';
+import { SIXTH_OF_MONTH_SENDS_START } from '../../src/lib/london-time.mjs';
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -117,6 +118,8 @@ async function pushMarketUpdate({ email, firstName, lastName, phone, summary }) 
 }
 
 export default async () => {
+  // Scheduled-only job, moved from the 1st to the 6th on 2026-10-02 -- September went out Oct 1, so start with October.
+  if (new Date().toISOString().slice(0, 10) < SIXTH_OF_MONTH_SENDS_START) return new Response('market-update-mailout: moves to the 6th starting Nov 6, 2026; skipping');
   if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
     console.error('market-update-mailout: missing Supabase env vars');
     return new Response('Missing env vars', { status: 500 });
@@ -189,5 +192,5 @@ export default async () => {
 };
 
 export const config = {
-  schedule: '0 15 1 * *', // 1st of month, 3pm UTC -- after monthly-digest (1pm) and its map render
+  schedule: '0 15 6 * *', // 6th of month (settled sales, see monthly-digest), 3pm UTC -- after monthly-digest (1pm) and its map render
 };

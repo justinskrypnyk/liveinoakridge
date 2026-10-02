@@ -11,6 +11,10 @@
 // builds ONE field list per form name from whichever page it reads, so
 // area-listings is rendered (hidden) on general posts too, or the checkbox
 // on area posts gets silently dropped (caught 2026-10-01).
+//
+// 2026-10-02 (Justin): last name added, and the listings box now starts
+// unticked -- under CASL a pre-ticked box isn't consent, and the listing
+// alerts are a separate kind of email from the London Letter.
 interface Props {
   postTitle: string;
   area?: { slug: string; name: string };
@@ -53,6 +57,11 @@ const listingsLabel = area ? `See homes for sale in ${area.name}` : 'Browse all 
           class="w-full px-4 py-3 rounded-lg border border-white/20 bg-white/10 text-white placeholder-white/40 text-sm outline-none focus:border-gold focus:ring-2 focus:ring-gold/20" />
       </div>
       <div>
+        <label for="blog-signup-last" class="block text-xs font-semibold text-white/70 mb-1">Last name</label>
+        <input type="text" id="blog-signup-last" name="last-name" required autocomplete="family-name"
+          class="w-full px-4 py-3 rounded-lg border border-white/20 bg-white/10 text-white placeholder-white/40 text-sm outline-none focus:border-gold focus:ring-2 focus:ring-gold/20" />
+      </div>
+      <div class="sm:col-span-2">
         <label for="blog-signup-email" class="block text-xs font-semibold text-white/70 mb-1">Email</label>
         <input type="email" id="blog-signup-email" name="email" required autocomplete="email" placeholder="you@example.com"
           class="w-full px-4 py-3 rounded-lg border border-white/20 bg-white/10 text-white placeholder-white/40 text-sm outline-none focus:border-gold focus:ring-2 focus:ring-gold/20" />
@@ -60,7 +69,7 @@ const listingsLabel = area ? `See homes for sale in ${area.name}` : 'Browse all 
       {!area && <input type="hidden" name="area-listings" value="" />}
       {area && (
         <label for="blog-signup-listings" class="sm:col-span-2 flex items-start gap-2 text-sm text-white/80 cursor-pointer">
-          <input type="checkbox" id="blog-signup-listings" name="area-listings" value="yes" checked class="mt-1 accent-gold" />
+          <input type="checkbox" id="blog-signup-listings" name="area-listings" value="yes" class="mt-1 accent-gold" />
           <span>Also email me new {area.name} listings as they come on the market</span>
         </label>
       )}
@@ -74,7 +83,7 @@ const listingsLabel = area ? `See homes for sale in ${area.name}` : 'Browse all 
 
   <div id="blog-signup-success" class="hidden py-2">
     <p class="font-serif text-lg text-white font-bold mb-1">You're on the list.</p>
-    <p class="text-sm text-white/70">The next London Letter comes out at the start of the month.{area ? ` New ${area.name} listings will come to your inbox as they list.` : ''}</p>
+    <p class="text-sm text-white/70">The next London Letter comes out at the start of the month.{area && <span id="blog-signup-listings-note" class="hidden"> New {area.name} listings will come to your inbox as they list.</span>}</p>
   </div>
 
   <a href={listingsHref} class="inline-flex items-center gap-1 mt-5 text-sm font-semibold text-gold hover:text-white transition-colors">
@@ -114,6 +123,7 @@ const listingsLabel = area ? `See homes for sale in ${area.name}` : 'Browse all 
         body: body.toString(),
       });
       if (!res.ok) throw new Error(`${res.status}`);
+      if (data.get('area-listings') === 'yes') document.getElementById('blog-signup-listings-note')?.classList.remove('hidden');
       document.getElementById('blog-signup-body')?.classList.add('hidden');
       document.getElementById('blog-signup-success')?.classList.remove('hidden');
       window.fbq?.('track', 'Lead');
