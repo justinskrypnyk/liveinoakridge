@@ -1,0 +1,128 @@
+---
+// End-of-post sign-up for blog readers (2026-10-01). Most blog visitors are
+// researching rather than ready to call, and until now a post offered them
+// nothing to sign up for. Same fetch()/no-reload pattern as
+// SchoolListingsForm.astro: Netlify Forms -> outgoing webhook ->
+// /api/ghl-lead, which tags the contact "London Letter Subscriber" and, on a
+// post about one of the 7 served areas with the box left ticked, adds a
+// saved search for that area so the existing Mon/Wed/Fri search-area-alert
+// emails start. Every field the script sends (incl. attribution-client's
+// utm_* etc.) must be a real input here or Netlify drops it.
+interface Props {
+  postTitle: string;
+  area?: { slug: string; name: string };
+}
+
+const { postTitle, area } = Astro.props;
+const listingsHref = area ? `/areas/${area.slug}/` : '/search/';
+const listingsLabel = area ? `See homes for sale in ${area.name}` : 'Browse all London homes for sale';
+---
+
+<div id="blog-signup" class="bg-navy rounded-2xl p-6 sm:p-8 mt-12 scroll-mt-24">
+  <div id="blog-signup-body">
+    <h2 class="font-serif text-2xl text-white font-bold mb-2">Get the London Letter</h2>
+    <p class="text-white/70 text-sm mb-5 leading-relaxed">
+      Once a month: what London homes actually sold for, new listings, and what's happening in the west end. Plain language, no spam.
+    </p>
+
+    <form id="blog-signup-form" name="blog-signup" data-netlify="true" netlify-honeypot="bot-field" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <input type="hidden" name="form-name" value="blog-signup" />
+      <p class="hidden"><label>Leave this empty <input name="bot-field" /></label></p>
+      <input type="hidden" name="post" value={postTitle} />
+      <input type="hidden" name="area" value={area?.slug ?? ''} />
+      <input type="hidden" name="utm_source" />
+      <input type="hidden" name="utm_medium" />
+      <input type="hidden" name="utm_campaign" />
+      <input type="hidden" name="utm_term" />
+      <input type="hidden" name="utm_content" />
+      <input type="hidden" name="gclid" />
+      <input type="hidden" name="first_referrer" />
+      <input type="hidden" name="first_page" />
+      <input type="hidden" name="first_seen" />
+      <input type="hidden" name="visits" />
+      <input type="hidden" name="signals" />
+      <input type="hidden" name="browser_id" />
+      <input type="hidden" name="lead_page" />
+
+      <div>
+        <label for="blog-signup-name" class="block text-xs font-semibold text-white/70 mb-1">First name</label>
+        <input type="text" id="blog-signup-name" name="first-name" required autocomplete="given-name"
+          class="w-full px-4 py-3 rounded-lg border border-white/20 bg-white/10 text-white placeholder-white/40 text-sm outline-none focus:border-gold focus:ring-2 focus:ring-gold/20" />
+      </div>
+      <div>
+        <label for="blog-signup-email" class="block text-xs font-semibold text-white/70 mb-1">Email</label>
+        <input type="email" id="blog-signup-email" name="email" required autocomplete="email" placeholder="you@example.com"
+          class="w-full px-4 py-3 rounded-lg border border-white/20 bg-white/10 text-white placeholder-white/40 text-sm outline-none focus:border-gold focus:ring-2 focus:ring-gold/20" />
+      </div>
+      {area && (
+        <label for="blog-signup-listings" class="sm:col-span-2 flex items-start gap-2 text-sm text-white/80 cursor-pointer">
+          <input type="checkbox" id="blog-signup-listings" name="area-listings" value="yes" checked class="mt-1 accent-gold" />
+          <span>Also email me new {area.name} listings as they come on the market</span>
+        </label>
+      )}
+      <button type="submit" id="blog-signup-submit" class="btn-primary justify-center sm:col-span-2">Sign Me Up</button>
+    </form>
+    <p id="blog-signup-error" class="hidden text-xs text-red-300 mt-3"></p>
+    <p class="text-xs text-white/50 mt-4">
+      By signing up, you agree to our <a href="/privacy-policy/" class="underline hover:text-gold transition-colors">Privacy Policy</a>. Unsubscribe any time.
+    </p>
+  </div>
+
+  <div id="blog-signup-success" class="hidden py-2">
+    <p class="font-serif text-lg text-white font-bold mb-1">You're on the list.</p>
+    <p class="text-sm text-white/70">The next London Letter comes out at the start of the month.{area ? ` New ${area.name} listings will come to your inbox as they list.` : ''}</p>
+  </div>
+
+  <a href={listingsHref} class="inline-flex items-center gap-1 mt-5 text-sm font-semibold text-gold hover:text-white transition-colors">
+    {listingsLabel}
+    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+  </a>
+</div>
+
+<script>
+  import { getStoredAttribution } from '@/lib/attribution-client';
+
+  declare global {
+    interface Window {
+      fbq?: (...args: unknown[]) => void;
+      gtag?: (...args: unknown[]) => void;
+    }
+  }
+
+  const form = document.getElementById('blog-signup-form') as HTMLFormElement | null;
+  const submitBtn = document.getElementById('blog-signup-submit') as HTMLButtonElement | null;
+  const errorEl = document.getElementById('blog-signup-error');
+
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!submitBtn) return;
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Signing you up...';
+    errorEl?.classList.add('hidden');
+    try {
+      const data = new FormData(form);
+      Object.entries(getStoredAttribution()).forEach(([key, value]) => data.set(key, value));
+      const body = new URLSearchParams();
+      data.forEach((value, key) => body.append(key, String(value)));
+      const res = await fetch('/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: body.toString(),
+      });
+      if (!res.ok) throw new Error(`${res.status}`);
+      document.getElementById('blog-signup-body')?.classList.add('hidden');
+      document.getElementById('blog-signup-success')?.classList.remove('hidden');
+      window.fbq?.('track', 'Lead');
+      window.gtag?.('event', 'generate_lead', { form_type: 'blog-signup', area: String(data.get('area') || '') });
+      form.reset();
+    } catch {
+      if (errorEl) {
+        errorEl.textContent = 'Something went wrong signing you up. Please try again.';
+        errorEl.classList.remove('hidden');
+      }
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Sign Me Up';
+    }
+  });
+</script>

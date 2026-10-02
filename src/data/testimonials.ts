@@ -9,6 +9,16 @@ export interface Testimonial {
 // Use first name + last initial only (e.g. "Kyle R.") for privacy — not full last names.
 export const TESTIMONIALS: Testimonial[] = [
   {
+    text: 'Best real estate experience I\'ve ever had. Thorough, responsive, patient, and exceptionally knowledgeable. Legitimately what every agent to strive to be like. Honestly felt like you were his only client every time you reached out. Even though I know how popular and busy he is - he never made you feel that way. No question was ever considered "dumb" and there was never any pressure. Just outcomes.',
+    author: 'Trevor G.',
+    date: 'September 2026',
+  },
+  {
+    text: 'We had a great experience start to finish working with Justin. He communicated well, was flexible and knowledgeable on the current market - specifically in Oakridge. He provided his past experience and advice without any pressure. Would recommend working with him for your next home listing or purchase.',
+    author: 'Julie R.',
+    date: 'September 2026',
+  },
+  {
     text: "We can't recommend Justin enough! He sold our house quickly, but when we started to worry about finding our next home, he went above and beyond. Justin reached out to other agents to learn what was coming to the market, helping us get ahead of the competition. Thanks to his hard work and dedication, we found an amazing house we love and got an incredible deal. We're so grateful for everything he did for us.",
     author: 'James M.',
     date: 'June 2026',

@@ -4,6 +4,7 @@ import Schema from '@/components/Schema.astro';
 import TrendLineChart from '@/components/TrendLineChart.astro';
 import { SITE } from '@/data/site';
 import { BLOG_POSTS } from '@/data/blog';
+import BlogSignup from '@/components/BlogSignup.astro';
 
 export function getStaticPaths() {
   // Entries with `href` (e.g. best-high-schools-london-ontario) are standalone
@@ -16,10 +17,26 @@ export function getStaticPaths() {
 }
 
 const { post } = Astro.props;
+
+// The served area a post is about, read from its slug (first match), so the
+// end-of-post sign-up can offer that area's listings. General posts get none.
+const SERVED_AREAS = [
+  { slug: 'oakridge', name: 'Oakridge' },
+  { slug: 'byron', name: 'Byron' },
+  { slug: 'westmount', name: 'Westmount' },
+  { slug: 'riverbend', name: 'Riverbend' },
+  { slug: 'lambeth', name: 'Lambeth' },
+  { slug: 'whitehills', name: 'Whitehills' },
+  { slug: 'west-london', name: 'West London' },
+];
+const postArea = SERVED_AREAS
+  .map((a) => ({ ...a, at: post.slug.indexOf(a.slug) }))
+  .filter((a) => a.at !== -1)
+  .sort((a, b) => a.at - b.at)[0];
 ---
 
 <Base
-  title={`${post.title} | Live In Oakridge Blog`}
+  title={post.seoTitle ?? `${post.title} | Live In Oakridge Blog`}
   description={post.description}
   type="article"
   image={post.image}
@@ -177,6 +194,8 @@ const { post } = Astro.props;
               </div>
             </div>
           )}
+
+          <BlogSignup postTitle={post.title} area={postArea ? { slug: postArea.slug, name: postArea.name } : undefined} />
 
           <div class="mt-8 bg-navy text-white rounded-2xl p-8 flex gap-6 items-start">
             <img src="/images/justin-skrypnyk-headshot-avatar.webp" alt="Justin Skrypnyk" width="64" height="64" class="w-16 h-16 rounded-2xl object-cover shrink-0" />

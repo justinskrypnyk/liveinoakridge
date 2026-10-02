@@ -110,6 +110,11 @@ export const POST: APIRoute = async ({ request, locals }) => {
     'save-listing': 'Saved Listing Lead',
     'market-map-notify': 'Market Map Subscriber',
     'school-listings': 'School Search Lead',
+    // End-of-post sign-up (BlogSignup.astro) and the /blog/ page's newsletter
+    // box both sign people up for the monthly London Letter -- one tag so
+    // Smile's newsletter send can target it.
+    'blog-signup': 'London Letter Subscriber',
+    'newsletter': 'London Letter Subscriber',
   };
 
   // "Request a Showing" and "Request More Info" on /search/[listingKey]/ are
@@ -284,6 +289,8 @@ export const POST: APIRoute = async ({ request, locals }) => {
     propertyAddress && `Property: ${propertyAddress}`,
     mlsNumber && `MLS®: ${mlsNumber}`,
     data['school'] && `School wanted: ${data['school']}`,
+    submission.form_name === 'blog-signup' && `Signed up for the London Letter from the blog post: ${data.post || 'unknown'}`,
+    submission.form_name === 'blog-signup' && data['area-listings'] === 'yes' && data.area && `Also wants new ${data.area} listings (Mon/Wed/Fri alerts)`,
     data['rough-estimate-range'] && `Estimated range: ${data['rough-estimate-range']}`,
     data['neighbourhood'] && `Neighbourhood: ${data['neighbourhood']}`,
     data['property-type'] && `Property type: ${data['property-type']}`,
@@ -425,6 +432,38 @@ export const POST: APIRoute = async ({ request, locals }) => {
       }
     } catch (err) {
       console.error('School saved-search insert failed:', err);
+    }
+  }
+
+  // Blog sign-ups on a post about one of the 7 served areas, with "also email
+  // me new <area> listings" left ticked: one saved_searches row for that
+  // area, so the existing Mon/Wed/Fri search-area-alert emails start (same
+  // as school leads above). Only the served areas are accepted.
+  const BLOG_ALERT_AREAS = ['oakridge', 'byron', 'westmount', 'riverbend', 'lambeth', 'whitehills', 'west-london'];
+  if (submission.form_name === 'blog-signup' && data['area-listings'] === 'yes' && BLOG_ALERT_AREAS.includes(String(data.area || ''))) {
+    try {
+      const supabase = getServiceRoleClient();
+      if (supabase) {
+        const { data: existing } = await supabase
+          .from('saved_searches')
+          .select('id')
+          .eq('email', email)
+          .eq('area_slug', data.area)
+          .limit(1);
+        if (!existing?.length) {
+          const { error } = await supabase.from('saved_searches').insert({
+            email,
+            first_name: firstName || null,
+            last_name: lastName || null,
+            phone: data.phone || null,
+            area_slug: data.area,
+            frequency: 'mwf',
+          });
+          if (error) console.error('Blog sign-up saved-search insert failed:', error.message);
+        }
+      }
+    } catch (err) {
+      console.error('Blog sign-up saved-search insert failed:', err);
     }
   }
 

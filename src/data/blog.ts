@@ -15,6 +15,9 @@ export interface BlogPost {
   category: string;
   author: string;
   readTime: string;
+  /** Title shown in Google results, when the on-page headline is too long or
+   *  doesn't match what people search for. Falls back to `title`. */
+  seoTitle?: string;
   image?: string;
   imageAlt?: string;
   content?: string;
@@ -804,7 +807,8 @@ export const BLOG_POSTS: BlogPost[] = [
   {
     slug: 'real-estate-broker-vs-agent-ontario',
     title: 'Real Estate Broker vs. Real Estate Agent in Ontario: What Every Buyer Needs to Know',
-    description: 'Confused about the difference between a Real Estate Broker and a Real Estate Agent in Ontario? Here is what the distinction actually means for buyers and sellers in London Ontario.',
+    seoTitle: "Real Estate Broker vs Agent in Ontario: What's the Difference?",
+    description: "In Ontario, agents are registered as salespeople or brokers. Here's what separates the two, what a broker of record does, and why it matters when you buy or sell.",
     date: '2026-05-05',
     dateDisplay: 'May 5, 2026',
     category: 'Real Estate Education',
@@ -968,57 +972,81 @@ export const BLOG_POSTS: BlogPost[] = [
   {
     slug: 'house-prices-expected-to-rise-london-ontario',
     title: 'Are House Prices Expected to Rise Again in London, Ontario?',
-    description: 'Price projections, market stabilization signals, and what the data says about the next 12-18 months for London Ontario real estate.',
-    date: '2026-04-10',
-    dateDisplay: 'April 10, 2026',
+    seoTitle: 'Will House Prices Go Up in London, Ontario? The 2026 Outlook',
+    description: "London, Ontario's median sale price was about 7% lower than a year earlier in September 2026. What's holding prices back, what could lift them, and what to expect next.",
+    date: '2026-10-01',
+    dateDisplay: 'Updated October 1, 2026',
     category: 'Market Analysis',
     author: 'Justin Skrypnyk',
-    readTime: '8 min read',
+    readTime: '7 min read',
     image: '/images/areas/sifton-bog-sunrise-skyline-oakridge.webp',
     imageAlt: 'Aerial sunset view over Sifton Bog with the London Ontario skyline on the horizon',
     content: `
-      <p>London Ontario home prices have stabilized following the 2022 peak and 2023 correction, and current data points to modest appreciation ahead. The city\'s fundamental demand drivers — population growth, constrained supply, and relative GTA affordability — remain intact. Here is what the evidence actually shows.</p>
+      <p>House prices in London, Ontario are not rising right now. The median sale price was $540,000 in September 2026, about 6.6% lower than a year earlier, and every month this summer came in 5% to 9% below the same month in 2025. Prices have eased gently rather than fallen sharply, and how a home is priced matters more than ever.</p>
 
-      <h2>Where We Are Now</h2>
-      <p>The London Ontario average home price is currently around $620,000 to $650,000, below the 2022 peak but well above pre-pandemic levels. The correction has softened, and we are seeing balanced-to-slight seller market conditions in desirable West London neighbourhoods like <a href="/areas/oakridge/">Oakridge</a>, <a href="/areas/byron/">Byron</a>, and <a href="/areas/lambeth/">Lambeth</a>.</p>
+      <h2>What Are House Prices Doing in London, Ontario Right Now?</h2>
+      <p>Prices have softened year over year while holding fairly steady month to month. The typical home has sold for between about $540,000 and $550,000 in each of the last three months.</p>
+      <table>
+        <thead>
+          <tr><th>Month</th><th>Median sale price 2026</th><th>Same month 2025</th><th>Change</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>July</td><td>$549,450</td><td>$605,000</td><td>-9.2%</td></tr>
+          <tr><td>August</td><td>$550,000</td><td>$580,000</td><td>-5.2%</td></tr>
+          <tr><td>September</td><td>$540,000</td><td>$578,093</td><td>-6.6%</td></tr>
+        </tbody>
+      </table>
+      <p><em>Source: MLS® residential sales for London East, London North and London South from the London and St. Thomas Association of REALTORS® (LSTAR) board feed, counted by firm (sold) date. September figures are early and may rise slightly as late sales are reported.</em></p>
+      <p>The month-by-month picture is in our <a href="/blog/september-2026-london-ontario-housing-market/">September 2026 market update</a>.</p>
 
-      <h2>Signals Pointing to Modest Price Growth</h2>
-      <p>Several fundamentals support modest price appreciation in 2026–2027. <a href="https://www.statcan.gc.ca/en/subjects-start/population_and_demography" target="_blank" rel="noopener noreferrer">Population growth driven by immigration</a> is maintaining housing demand. <a href="https://www.cmhc-schl.gc.ca/observer" target="_blank" rel="noopener noreferrer">CMHC supply reports</a> confirm that supply remains constrained across Ontario. Interest rates have eased from peak levels. And London's economic base continues to diversify and grow, anchored by Western University, London Health Sciences Centre, and an expanding tech sector.</p>
+      <h2>Why Aren't Prices Going Up?</h2>
+      <p>There are more homes for sale than buyers need. As of October 1, 2026 London had about 2,100 homes for sale, roughly 5.5 months of inventory at the current pace of sales. Under about 3 months usually pushes prices up, so 5.5 months gives buyers time and room to negotiate.</p>
+      <p>Borrowing costs are also moving the wrong way for buyers. Fixed mortgage rates follow the 5-year Government of Canada bond yield, and that yield reached a 52-week high near 3.73% in late September 2026. Several lenders, including CIBC and TD, raised their fixed rates in response, according to <a href="https://www.canadianmortgagetrends.com/mortgage-wire/2026/09/29/cibc-and-td-raise-fixed-mortgage-rates-as-bond-yields-remain-elevated/" target="_blank" rel="noopener noreferrer">Canadian Mortgage Trends</a>. Higher rates shrink what buyers can qualify for, which keeps a lid on prices.</p>
+      <p>What I'm seeing on the ground matches the numbers: buyers are paying fair value and not much more. In September, homes sold for about 96.9% of their final list price but only 95% of their original list price, so most of the negotiating happens through price reductions before a sale.</p>
 
-      <h2>The Counterweights</h2>
-      <p>Affordability remains stretched relative to local incomes, which limits how much prices can rise without commensurate income growth. Inventory is slowly improving as more sellers who delayed listing during rate uncertainty finally come to market. Buyers who are looking for value should look at <a href="/areas/west-london/">West London</a>, <a href="/areas/westmount/">Westmount</a>, and Medway as strong candidates for appreciation that hasn't yet been fully priced in.</p>
+      <h2>Are Some Homes Holding Their Value Better Than Others?</h2>
+      <p>Yes. Detached homes are holding up better than condos. Detached homes have about 5 months of inventory and still draw competition when they're priced well, with 12% selling over asking in September. Condos have about 6.5 months of inventory, only 7% sold over asking, and a quarter of active condo listings have already had a price reduction.</p>
+      <p>Location matters too. West London neighbourhoods like <a href="/areas/oakridge/">Oakridge</a>, with about 3 months of inventory, stay tighter than the city as a whole, while <a href="/areas/lambeth/">Lambeth</a>, with over 11 months of inventory, gives buyers far more choice.</p>
 
-      <h2>The Honest Answer</h2>
-      <p>No one can reliably predict home prices with precision. What I can tell you with confidence: the London Ontario market has strong long-term fundamentals, West London is a perennially desirable destination for buyers, and the buyers who consistently win are those who buy when they are financially ready — not when they think the market will be perfect. See our <a href="/blog/interest-rates-london-ontario-home-prices/">interest rates analysis</a> for context on how rate movements affect this picture.</p>
-      <p>Want to know what your home is worth right now? <a href="/services/home-evaluation/">Get a complimentary home evaluation</a>. Thinking about buying? <a href="/services/buying/">Learn about Justin's buyer process</a>.</p>
+      <h2>What Could Push London Prices Back Up?</h2>
+      <p>The long-term drivers of London's housing demand haven't gone away. The city keeps growing, with <a href="https://www.statcan.gc.ca/en/subjects-start/population_and_demography" target="_blank" rel="noopener noreferrer">population growth driven largely by immigration</a>, and it remains far more affordable than the Greater Toronto Area. Western University and London Health Sciences Centre anchor a steady local economy.</p>
+      <p>In the shorter term, prices would most likely firm up if mortgage rates ease again or if the number of homes for sale falls back toward 3 to 4 months of inventory. Neither is happening yet as of October 2026, so I'd expect prices to stay close to flat, with some softening in condos and in areas with a lot of supply, over the next few months.</p>
+
+      <h2>Should You Wait for Prices to Drop Before Buying?</h2>
+      <p>Usually not. Nobody can reliably time the bottom of a market. Today's market gives prepared buyers real advantages: more choice, less competition, and room to negotiate, especially on condos and on homes that have been listed for a few weeks.</p>
+      <p>The buyers who do best are the ones who buy when they're financially ready, with a rate hold in place, rather than waiting for a perfect market. See our <a href="/blog/interest-rates-london-ontario-home-prices/">interest rates analysis</a> for how rate changes affect what you can afford.</p>
+
+      <h2>What Should Sellers Do in This Market?</h2>
+      <p>Price for today's market from the first day. Homes that start at the right price sell close to asking. Homes that start high usually end up selling for less after sitting and taking a reduction or two. Want to know what your home would realistically sell for right now? <a href="/services/home-evaluation/">Get a complimentary home evaluation</a>. Thinking about buying? <a href="/services/buying/">Learn about my buyer process</a>.</p>
     `,
     faqs: [
       {
         question: 'Will house prices go up in London Ontario in 2026?',
-        answer: 'Modest price appreciation in 2026–2027 is supported by population growth, constrained housing supply, and an improving rate environment. However, stretched affordability and slowly rising inventory are counterweights. The consensus among market observers is modest growth rather than dramatic swings in either direction.',
+        answer: 'Probably not by much in the near term. As of October 2026, London has about 5.5 months of inventory and fixed mortgage rates rose in late September, so prices are more likely to stay close to flat, with some softening in condos, than to rise over the next few months.',
       },
       {
-        question: 'Is London Ontario real estate a good long-term investment?',
-        answer: 'London Ontario has demonstrated strong long-term price appreciation anchored by a diversified economy — Western University, London Health Sciences Centre, and a growing tech sector — along with sustained population growth and structural housing demand. Like any real estate investment, outcomes depend on neighbourhood selection, timing, and property condition.',
+        question: 'Are house prices dropping in London Ontario?',
+        answer: 'Prices have eased gently. The median sale price in London was $540,000 in September 2026, about 6.6% lower than a year earlier, and July and August were 9.2% and 5.2% lower than in 2025. Month to month, prices have held fairly steady between about $540,000 and $550,000.',
       },
       {
         question: 'What is the average home price in London Ontario right now?',
-        answer: 'The London Ontario average home price is approximately $620,000–$660,000 as of mid-2026. Premium west-end neighbourhoods like Oakridge and Byron trade 10–20% above the city average, while East London and South London offer more affordable entry points below the average.',
+        answer: 'The median sale price in London, Ontario was $540,000 in September 2026. Detached homes had a median of about $610,000 and condos about $437,000.',
       },
       {
-        question: 'Why are London Ontario home prices rising?',
-        answer: 'Key drivers include sustained population growth driven by immigration, constrained housing supply relative to demand across Ontario, London\'s diversified and growing economic base, and the city\'s continued attractiveness as an affordable alternative to GTA markets. These structural factors support a floor under London Ontario values.',
+        question: 'Is London Ontario real estate a good long-term investment?',
+        answer: 'London has strong long-term fundamentals, including steady population growth, a diversified economy anchored by Western University and London Health Sciences Centre, and lower prices than the Greater Toronto Area. Short-term prices can soften, as they have in 2026, so results depend on buying when you are financially ready and choosing the right neighbourhood and property.',
       },
       {
-        question: 'When will London Ontario home prices drop significantly?',
-        answer: 'No credible market analyst is forecasting a significant price drop in London Ontario. Prices may moderate in a sustained high-rate or elevated-inventory environment, but the fundamental demand drivers — population growth, supply constraints, and relative GTA affordability — support long-term stability. Buyers who are financially ready are generally better served buying when right for them than timing the market.',
+        question: 'Should I wait for prices to drop before buying in London Ontario?',
+        answer: 'Usually not. Nobody can reliably time the bottom, and the current market already gives buyers more choice and room to negotiate. Buying when you are financially ready, with a mortgage rate hold in place, tends to work out better than waiting for a perfect moment.',
       },
     ],
   },
   {
     slug: 'london-ontario-neighbourhood-guide-2026',
     title: 'London Ontario Neighbourhood Guide 2026: Which Area Should You Live In?',
-    description: "A complete breakdown of London Ontario's best neighbourhoods for buyers — prices, schools, lifestyle, and which community fits you best.",
+    seoTitle: 'Best Areas to Live in London Ontario: 2026 Neighbourhood Guide',
+    description: 'Compare London, Ontario neighbourhoods, from Oakridge and Byron in the west to Old North, Masonville and Lambeth, with prices, schools and lifestyle for each.',
     date: '2026-04-20',
     dateDisplay: 'April 20, 2026',
     category: 'Neighbourhood Guides',
@@ -2281,7 +2309,7 @@ export const BLOG_POSTS: BlogPost[] = [
   {
     slug: 'best-high-schools-london-ontario',
     title: 'High Schools in London Ontario, Ranked 2025 (All 19)',
-    description: 'Fraser Institute ratings for all 19 London, Ontario high schools, plus school board, address, and which neighbourhood each one serves — so you know where to live for the school you want.',
+    description: "London, Ontario has 19 high schools. See every school's 2025 Fraser Institute rating and rank, its board, and which neighbourhoods it serves.",
     date: '2026-08-02',
     dateDisplay: 'August 2, 2026',
     category: 'Neighbourhood Guides',
