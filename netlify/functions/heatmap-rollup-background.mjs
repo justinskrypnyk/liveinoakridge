@@ -10,6 +10,7 @@
 // label, seconds on screen per 100px band (attention), how far each view
 // got (scroll depth), and a sample of real-world speed readings (perf).
 
+import areaBoundaries from '../../src/data/area-boundaries.json' with { type: 'json' };
 import { getStore } from '@netlify/blobs';
 
 const MAX_RAW_PER_RUN = 20000;
@@ -48,6 +49,10 @@ function priceBand(q) {
   return null;
 }
 const titleCase = (s) => String(s).replace(/[-_]+/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+// Area slugs -> proper names from the boundary file ("londonnorth" -> "Old
+// North", "westminister" -> "Westminster"); titleCase alone mangled those.
+const AREA_NAMES = Object.fromEntries(areaBoundaries.features.map((f) => [f.properties.slug, f.properties.name]));
+const areaName = (slug) => AREA_NAMES[slug] || titleCase(slug);
 
 function emptySite() {
   return {
@@ -134,7 +139,7 @@ export default async () => {
     if (r.q) {
       const q = r.q;
       site.searches += 1;
-      const area = q.area ? titleCase(q.area) : 'All areas';
+      const area = q.area ? areaName(q.area) : 'All areas';
       const price = priceBand(q);
       const beds = q.minBeds ? `${q.minBeds}+ bed` : null;
       site.areas[area] = (site.areas[area] || 0) + 1;

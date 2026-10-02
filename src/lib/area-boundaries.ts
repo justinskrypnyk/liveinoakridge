@@ -26,6 +26,15 @@ function pointInRing(lat: number, lng: number, ring: Ring): boolean {
   return inside;
 }
 
+const names: Record<string, string> = Object.fromEntries(
+  (boundaries as any).features.map((f: any) => [f.properties.slug, f.properties.name])
+);
+
+/** Display name for an area slug ("westminister" -> "Westminster"); never shows the raw slug. */
+export function areaNameForSlug(slug: string): string {
+  return names[slug] ?? slug.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
 /** Returns the area slug whose boundary contains the given point, or null if none match. */
 export function findAreaForPoint(lat: number, lng: number): string | null {
   for (const { slug, rings } of polygons) {

@@ -7,6 +7,7 @@
 // window still get their note. Contacts tagged "No site tracking" in GHL
 // (people who asked us to stop, per the privacy policy) are skipped.
 
+import areaBoundaries from '../../src/data/area-boundaries.json' with { type: 'json' };
 import { getStore } from '@netlify/blobs';
 
 const GHL = 'https://services.leadconnectorhq.com';
@@ -28,6 +29,10 @@ const ghlHeaders = () => ({
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 const when = (iso) => new Date(iso).toLocaleString('en-CA', { timeZone: TZ, weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
 const titleCase = (s) => String(s).replace(/[-_]+/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+// Area slugs -> proper names from the boundary file ("londonnorth" -> "Old
+// North", "westminister" -> "Westminster"); titleCase alone mangled those.
+const AREA_NAMES = Object.fromEntries(areaBoundaries.features.map((f) => [f.properties.slug, f.properties.name]));
+const areaName = (slug) => AREA_NAMES[slug] || titleCase(slug);
 
 // "32 HUNTER WOODS Crescent, London South, ON N6J 2B1 | $659,900 | Justin..." -> address + price
 function listingOf(v) {
@@ -36,7 +41,7 @@ function listingOf(v) {
 }
 function searchOf(q) {
   const k = (n) => `$${Math.round(Number(n) / 1000)}K`;
-  const bits = [q.area ? titleCase(q.area) : 'All areas'];
+  const bits = [q.area ? areaName(q.area) : 'All areas'];
   if (q.minBeds) bits.push(`${q.minBeds}+ bed`);
   if (q.minPrice && q.maxPrice) bits.push(`${k(q.minPrice)}–${k(q.maxPrice)}`);
   else if (q.maxPrice) bits.push(`under ${k(q.maxPrice)}`);

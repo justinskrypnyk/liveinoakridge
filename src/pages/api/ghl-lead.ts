@@ -17,7 +17,7 @@ import type { APIRoute } from 'astro';
 import { createHmac, createHash, timingSafeEqual } from 'node:crypto';
 import { getMarketListingByKey, getAreaMarketListings, type RawListing } from '@/lib/ddf';
 import { findSimilarActiveListings } from '@/lib/similar-listings';
-import { findAreaForPoint } from '@/lib/area-boundaries';
+import { findAreaForPoint, areaNameForSlug } from '@/lib/area-boundaries';
 import { getServiceRoleClient } from '@/lib/supabase';
 import { pushRecommendationToGhl, addGhlTags } from '@/lib/ghl-recommend';
 import { assignOwnerIfUnowned } from '@/lib/ghl-owner.mjs';
@@ -290,7 +290,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
     mlsNumber && `MLS®: ${mlsNumber}`,
     data['school'] && `School wanted: ${data['school']}`,
     submission.form_name === 'blog-signup' && `Signed up for the London Letter from the blog post: ${data.post || 'unknown'}`,
-    submission.form_name === 'blog-signup' && data['area-listings'] === 'yes' && data.area && `Also wants new ${data.area} listings (Mon/Wed/Fri alerts)`,
+    submission.form_name === 'blog-signup' && data['area-listings'] === 'yes' && data.area && `Also wants new ${areaNameForSlug(String(data.area))} listings (Mon/Wed/Fri alerts)`,
     data['rough-estimate-range'] && `Estimated range: ${data['rough-estimate-range']}`,
     data['neighbourhood'] && `Neighbourhood: ${data['neighbourhood']}`,
     data['property-type'] && `Property type: ${data['property-type']}`,
