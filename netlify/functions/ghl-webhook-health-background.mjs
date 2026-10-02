@@ -23,7 +23,7 @@ async function sendAlert(subject, text) {
     method: 'POST',
     headers: { Authorization: `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      from: 'Live In Oakridge Alerts <onboarding@resend.dev>',
+      from: 'Live In Oakridge Alerts <reports@mail.liveinoakridge.ca>',
       to: [ALERT_TO],
       subject,
       text,
@@ -38,11 +38,20 @@ export default async () => {
     return new Response('Missing NETLIFY_API_TOKEN', { status: 500 });
   }
 
-  const res = await fetch(`https://api.netlify.com/api/v1/sites/${SITE_ID}/hooks`, {
+  // The list endpoint is /hooks?site_id=, not /sites/:id/hooks (that one 404s,
+  // which left this check blind from launch until 2026-10-02).
+  const res = await fetch(`https://api.netlify.com/api/v1/hooks?site_id=${SITE_ID}`, {
     headers: { Authorization: `Bearer ${NETLIFY_API_TOKEN}` },
   });
   if (!res.ok) {
-    console.error('ghl-webhook-health: Netlify hooks API failed:', res.status, await res.text().catch(() => ''));
+    const body = await res.text().catch(() => '');
+    console.error('ghl-webhook-health: Netlify hooks API failed:', res.status, body);
+    // A check that can't look is as bad as no check -- say so instead of failing quietly.
+    await sendAlert(
+      'GHL lead webhook check could not run',
+      `The daily check couldn't ask Netlify whether the form -> GHL webhook (${GHL_HOOK_URL}) is still enabled (HTTP ${res.status}). ` +
+      `Leads are probably still flowing, but nothing is confirming it. Ask Claude to look at ghl-webhook-health-background.`
+    );
     return new Response('Netlify API call failed', { status: 502 });
   }
 
