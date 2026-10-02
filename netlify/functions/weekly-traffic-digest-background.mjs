@@ -183,6 +183,74 @@ async function sendFailureAlert(message) {
 // week (heatmap-weeks, written by heatmap-rollup-background): what people
 // read and clicked, where they were from, what buyers searched for, and
 // which forms got abandoned. Best-effort: returns '' if there's no data.
+// ---- Email: which GHL emails bring people to the site, and who came back ----
+// Email links carry utm_medium=email + utm_campaign=<email> (listing-card.mjs
+// withUtm) and lid=<GHL contact id>. GA4 gives visits per email; the
+// lead-back-log blob (written by lead-back-alerts-background.mjs) names the
+// people who came back. GHL's own open/click stats stay in GHL.
+function emailLabel(campaign) {
+  const m = String(campaign).match(/^london-letter-(\d{4})-(\d{2})$/);
+  if (m) return `London Letter (${new Date(Date.UTC(+m[1], +m[2] - 1, 1)).toLocaleDateString('en-CA', { month: 'long', year: 'numeric', timeZone: 'UTC' })})`;
+  if (!campaign || campaign === '(not set)') return 'Other email links';
+  const t = String(campaign).replace(/[-_]+/g, ' ').trim();
+  return t.charAt(0).toUpperCase() + t.slice(1);
+}
+
+async function emailSection(accessToken, weekStartStr, weekEndStr, priorWeekStartStr, priorWeekEndStr) {
+  let rowsHtml = '';
+  try {
+    const resp = await ga4Report(accessToken, {
+      dateRanges: [
+        { startDate: weekStartStr, endDate: weekEndStr },
+        { startDate: priorWeekStartStr, endDate: priorWeekEndStr },
+      ],
+      dimensions: [{ name: 'sessionCampaignName' }],
+      metrics: [{ name: 'sessions' }, { name: 'totalUsers' }, { name: 'keyEvents' }],
+      dimensionFilter: { filter: { fieldName: 'sessionMedium', stringFilter: { matchType: 'EXACT', value: 'email' } } },
+    });
+    const { current, prior } = splitGa4ByDateRange(resp, 1, ['sessions', 'totalUsers', 'keyEvents']);
+    const names = [...new Set([...current.keys(), ...prior.keys()])]
+      .sort((a, b) => (current.get(b)?.metrics.sessions || 0) - (current.get(a)?.metrics.sessions || 0));
+    rowsHtml = names.map((n) => {
+      const c = current.get(n)?.metrics || {};
+      const pr = prior.get(n)?.metrics || {};
+      return `<tr><td style="padding:4px 10px;">${esc(emailLabel(n))}</td><td style="padding:4px 10px;">${fmtNum(c.totalUsers || 0)}</td><td style="padding:4px 10px;">${fmtNum(c.sessions || 0)}</td><td style="padding:4px 10px;">${fmtNum(c.keyEvents || 0)}</td><td style="padding:4px 10px;">${fmtNum(pr.sessions || 0)}</td></tr>`;
+    }).join('');
+  } catch (err) {
+    console.error('weekly-traffic-digest: email GA4 call failed (non-fatal)', err);
+    rowsHtml = '<tr><td style="padding:4px 10px;" colspan="5">Couldn\'t load email traffic this week.</td></tr>';
+  }
+
+  // Who came back (named), Monday-Sunday by Toronto date.
+  const people = [];
+  try {
+    const log = getStore('lead-back-log');
+    for (let d = new Date(`${weekStartStr}T12:00:00Z`); d <= new Date(`${weekEndStr}T12:00:00Z`); d.setUTCDate(d.getUTCDate() + 1)) {
+      const { blobs } = await log.list({ prefix: `${d.toISOString().slice(0, 10)}/` });
+      for (const b of blobs) {
+        const v = await log.get(b.key, { type: 'json' }).catch(() => null);
+        if (v) people.push(v);
+      }
+    }
+  } catch (err) {
+    console.error('weekly-traffic-digest: lead-back log read failed (non-fatal)', err);
+  }
+  people.sort((a, b) => String(a.at).localeCompare(String(b.at)));
+  const peopleHtml = people.length
+    ? `<ul style="font-size:13px;padding-left:18px;margin:4px 0;">${people.map((p) => `<li style="margin:3px 0;"><b>${esc(p.name)}</b>: ${p.via === 'email' ? 'clicked through from an email' : 'came back on their own'}, ${p.pages} page${p.pages === 1 ? '' : 's'}${p.listings?.length ? `; looked at ${esc(p.listings.join(', '))}` : ''} (${esc(new Date(p.at).toLocaleDateString('en-CA', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'America/Toronto' }))})</li>`).join('')}</ul>`
+    : '<p style="font-size:13px;color:#666;margin:4px 0;">No past leads came back to the site this week.</p>';
+
+  return `
+      <h3>Email: Who Clicked Through to the Site</h3>
+      <table style="border-collapse:collapse;font-size:13px;">
+        <tr style="font-weight:bold;border-bottom:1px solid #ccc;"><td style="padding:4px 10px;">Email</td><td style="padding:4px 10px;">People</td><td style="padding:4px 10px;">Visits</td><td style="padding:4px 10px;">Sign-ups</td><td style="padding:4px 10px;">Visits last week</td></tr>
+        ${rowsHtml || '<tr><td style="padding:4px 10px;" colspan="5">No visits from email links this week.</td></tr>'}
+      </table>
+      <p style="font-size:13px;margin:12px 0 2px;"><strong>Past leads who came back</strong> (you also got a "lead is back" email for each)</p>
+      ${peopleHtml}
+      <p style="font-size:12px;color:#888;margin-top:6px;">Open and click rates for each email are in GHL (Marketing &gt; Emails for campaigns, or the email step inside each workflow). Opens are inflated by Apple Mail, so clicks and the visits above are the better signal.</p>`;
+}
+
 async function onSiteSection(weekStartStr) {
   const store = getStore('heatmap-weeks');
   const [d, m, s] = await Promise.all(['d', 'm', 'site'].map((k) => store.get(`${weekStartStr}/${k}`, { type: 'json' }).catch(() => null)));
@@ -462,6 +530,8 @@ export default async () => {
       <td style="padding:4px 10px;">${fmtPos(q.position)}</td>
     </tr>`).join('');
 
+    const emailHtml = await emailSection(accessToken, weekStartStr, weekEndStr, priorWeekStartStr, priorWeekEndStr);
+
     const html = `
       <h2>Weekly Traffic Report — ${weekStartStr} to ${weekEndStr}</h2>
 
@@ -489,6 +559,7 @@ export default async () => {
         <tr style="font-weight:bold;border-bottom:1px solid #ccc;"><td style="padding:4px 10px;">Channel</td><td style="padding:4px 10px;">This Week</td><td style="padding:4px 10px;">Last Week</td><td style="padding:4px 10px;">Change</td></tr>
         ${channelRowsHtml}
       </table>
+${emailHtml}
 
       <h3>What's Working: Top Content This Week</h3>
       <table style="border-collapse:collapse;font-size:13px;">

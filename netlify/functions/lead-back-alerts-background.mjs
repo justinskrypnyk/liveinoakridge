@@ -119,6 +119,21 @@ export default async () => {
     const { listings, solds, searches, other } = summarize(views);
     const started = views[0].at;
 
+    // Kept for the Monday traffic report's Email section (the activity
+    // blobs themselves are deleted below once the visit is handled).
+    try {
+      const day = new Date(started).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' });
+      await getStore('lead-back-log').setJSON(`${day}/${contactId}-${new Date(started).getTime()}`, {
+        name,
+        via: views.some((v) => v.via === 'email') ? 'email' : 'returned',
+        pages: views.length,
+        listings: listings.slice(0, 3).map((l) => l.address),
+        at: started,
+      });
+    } catch (err) {
+      console.error('lead-back-alerts: weekly log failed', err);
+    }
+
     // GHL note (every visit).
     const noteLines = [
       `Back on the website ${when(started)}${place ? ` (from ${place})` : ''}, ${via}. ${views.length} page${views.length === 1 ? '' : 's'}.`,
