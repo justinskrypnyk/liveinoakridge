@@ -196,9 +196,19 @@ const isProd = import.meta.env.PROD;
             function loadDeferredTags() {
               if (loaded) return;
               loaded = true;
-              var gtagScript = document.createElement('script');
-              gtagScript.src = 'https://www.googletagmanager.com/gtag/js?id=G-Z2M94KRVTT';
-              document.head.appendChild(gtagScript);
+              // Justin's team in the Philippines (Smile) tests forms and email
+              // links on the live site; their visits filled September's GA4
+              // with test leads (41 of 54). Their computers run on Manila time,
+              // and the site has no real audience there, so GA4 never loads for
+              // them -- queued gtag() calls just stay in dataLayer, unsent.
+              // Same rule as the heatmap (api/hm.ts). ?ga=on overrides it.
+              var teamTz = false;
+              try { teamTz = Intl.DateTimeFormat().resolvedOptions().timeZone === 'Asia/Manila'; } catch (e) {}
+              if (!teamTz || /[?&]ga=on\b/.test(location.search)) {
+                var gtagScript = document.createElement('script');
+                gtagScript.src = 'https://www.googletagmanager.com/gtag/js?id=G-Z2M94KRVTT';
+                document.head.appendChild(gtagScript);
+              }
 
               var fbScript = document.createElement('script');
               fbScript.async = true;

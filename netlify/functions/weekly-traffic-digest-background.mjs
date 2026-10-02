@@ -96,7 +96,15 @@ async function getAccessToken() {
 }
 
 // ---- GA4 Data API ----
+// Every query leaves out visits from the Philippines: Justin's team (Smile)
+// tests forms and email links on the live site, which filled September 2026
+// with test leads (41 of 54), and the site has no real audience there. The
+// site itself stopped loading GA4 for Manila-time visitors on 2026-10-01
+// (Base.astro); this also cleans the older weeks a report compares against.
+const EXCLUDE_TEAM = { notExpression: { filter: { fieldName: 'country', stringFilter: { matchType: 'EXACT', value: 'Philippines' } } } };
+
 async function ga4Report(accessToken, body) {
+  body = { ...body, dimensionFilter: body.dimensionFilter ? { andGroup: { expressions: [body.dimensionFilter, EXCLUDE_TEAM] } } : EXCLUDE_TEAM };
   const res = await fetch(`https://analyticsdata.googleapis.com/v1beta/properties/${GA4_PROPERTY_ID}:runReport`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
