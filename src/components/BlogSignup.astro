@@ -7,7 +7,10 @@
 // post about one of the 7 served areas with the box left ticked, adds a
 // saved search for that area so the existing Mon/Wed/Fri search-area-alert
 // emails start. Every field the script sends (incl. attribution-client's
-// utm_* etc.) must be a real input here or Netlify drops it.
+// utm_* etc.) must be a real input here or Netlify drops it -- and Netlify
+// builds ONE field list per form name from whichever page it reads, so
+// area-listings is rendered (hidden) on general posts too, or the checkbox
+// on area posts gets silently dropped (caught 2026-10-01).
 interface Props {
   postTitle: string;
   area?: { slug: string; name: string };
@@ -54,6 +57,7 @@ const listingsLabel = area ? `See homes for sale in ${area.name}` : 'Browse all 
         <input type="email" id="blog-signup-email" name="email" required autocomplete="email" placeholder="you@example.com"
           class="w-full px-4 py-3 rounded-lg border border-white/20 bg-white/10 text-white placeholder-white/40 text-sm outline-none focus:border-gold focus:ring-2 focus:ring-gold/20" />
       </div>
+      {!area && <input type="hidden" name="area-listings" value="" />}
       {area && (
         <label for="blog-signup-listings" class="sm:col-span-2 flex items-start gap-2 text-sm text-white/80 cursor-pointer">
           <input type="checkbox" id="blog-signup-listings" name="area-listings" value="yes" checked class="mt-1 accent-gold" />
