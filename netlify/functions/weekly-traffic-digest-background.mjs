@@ -251,6 +251,46 @@ async function emailSection(accessToken, weekStartStr, weekEndStr, priorWeekStar
       <p style="font-size:12px;color:#888;margin-top:6px;">Open and click rates for each email are in GHL (Marketing &gt; Emails for campaigns, or the email step inside each workflow). Opens are inflated by Apple Mail, so clicks and the visits above are the better signal.</p>`;
 }
 
+// ---- QR codes: printed codes on gifts/signs, scans counted by campaign ----
+// Each printed code links with utm_medium=qr + its own utm_campaign (first:
+// pumpkin-2026, the Oct 2026 client pumpkins). GA4 counts visits, not
+// people, and can't say who scanned. Shown only once a code has scans.
+const QR_SINCE = '2026-10-01';
+function qrLabel(campaign) {
+  if (campaign === 'pumpkin-2026') return 'Client pumpkins (Oct 2026)';
+  const t = String(campaign || 'Other QR code').replace(/[-_]+/g, ' ').trim();
+  return t.charAt(0).toUpperCase() + t.slice(1);
+}
+
+async function qrSection(accessToken, weekStartStr, weekEndStr) {
+  try {
+    const resp = await ga4Report(accessToken, {
+      dateRanges: [
+        { startDate: weekStartStr, endDate: weekEndStr },
+        { startDate: QR_SINCE, endDate: weekEndStr },
+      ],
+      dimensions: [{ name: 'sessionCampaignName' }],
+      metrics: [{ name: 'sessions' }],
+      dimensionFilter: { filter: { fieldName: 'sessionMedium', stringFilter: { matchType: 'EXACT', value: 'qr' } } },
+    });
+    // date_range_1 here is the running total, not "last week".
+    const { current: week, prior: total } = splitGa4ByDateRange(resp, 1, ['sessions']);
+    const names = [...total.keys()].sort((a, b) => (total.get(b)?.metrics.sessions || 0) - (total.get(a)?.metrics.sessions || 0));
+    if (!names.length) return '';
+    const rows = names.map((n) => `<tr><td style="padding:4px 10px;">${esc(qrLabel(n))}</td><td style="padding:4px 10px;">${fmtNum(week.get(n)?.metrics.sessions || 0)}</td><td style="padding:4px 10px;">${fmtNum(total.get(n)?.metrics.sessions || 0)}</td></tr>`).join('');
+    return `
+      <h3>QR Code Scans</h3>
+      <table style="border-collapse:collapse;font-size:13px;">
+        <tr style="font-weight:bold;border-bottom:1px solid #ccc;"><td style="padding:4px 10px;">Code</td><td style="padding:4px 10px;">Scans this week</td><td style="padding:4px 10px;">Scans so far</td></tr>
+        ${rows}
+      </table>
+      <p style="font-size:12px;color:#888;margin-top:6px;">Each scan that opens the site counts once (scanning twice counts twice). It can't show who scanned, and a few scans from phones with ad blockers won't appear.</p>`;
+  } catch (err) {
+    console.error('weekly-traffic-digest: QR GA4 call failed (non-fatal)', err);
+    return '';
+  }
+}
+
 async function onSiteSection(weekStartStr) {
   const store = getStore('heatmap-weeks');
   const [d, m, s] = await Promise.all(['d', 'm', 'site'].map((k) => store.get(`${weekStartStr}/${k}`, { type: 'json' }).catch(() => null)));
@@ -531,6 +571,7 @@ export default async () => {
     </tr>`).join('');
 
     const emailHtml = await emailSection(accessToken, weekStartStr, weekEndStr, priorWeekStartStr, priorWeekEndStr);
+    const qrHtml = await qrSection(accessToken, weekStartStr, weekEndStr);
 
     const html = `
       <h2>Weekly Traffic Report — ${weekStartStr} to ${weekEndStr}</h2>
@@ -560,6 +601,7 @@ export default async () => {
         ${channelRowsHtml}
       </table>
 ${emailHtml}
+${qrHtml}
 
       <h3>What's Working: Top Content This Week</h3>
       <table style="border-collapse:collapse;font-size:13px;">
