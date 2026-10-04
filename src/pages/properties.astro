@@ -369,6 +369,7 @@ const processedListings: ListingCard[] = listings.map((l) => {
             >
               <!-- Photo -->
               <div class="aspect-[4/3] bg-cream relative overflow-hidden">
+<a href={l.detailHref} tabindex="-1" aria-hidden="true" class="block w-full h-full">
                 {l.photoUrl ? (
                   i < 3
                     ? <img src={l.photoUrl} alt={l.photoAlt} class="w-full h-full object-cover" loading="eager" fetchpriority={i === 0 ? 'high' : undefined} />
@@ -378,6 +379,7 @@ const processedListings: ListingCard[] = listings.map((l) => {
                     <span class="text-5xl">🏡</span>
                   </div>
                 )}
+                </a>
                 <div class="absolute top-2 left-2">
                   <span class="bg-gold text-navy text-xs font-bold px-2.5 py-0.5 rounded-full">Active</span>
                 </div>

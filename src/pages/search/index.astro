@@ -444,6 +444,7 @@ const allAreasBoundsForClient = getAllAreasBounds();
               {textCards.map((l, i) => (
                 <article class="listing-card bg-white rounded-2xl shadow-card overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all border border-gray-100" data-mls={l.mls}>
                   <div class="aspect-[4/3] bg-cream relative overflow-hidden">
+                    <a href={l.detailHref} tabindex="-1" aria-hidden="true" class="block w-full h-full">
                     {l.photoUrl ? (
                       i < 3
                         ? <img src={l.photoUrl} alt={l.photoAlt} class="w-full h-full object-contain" loading="eager" fetchpriority={i === 0 ? 'high' : undefined} />
@@ -451,6 +452,7 @@ const allAreasBoundsForClient = getAllAreasBounds();
                     ) : (
                       <div class="flex items-center justify-center h-full"><span class="text-5xl">🏡</span></div>
                     )}
+                    </a>
                     {l.isOwn && (
                       <div class="absolute top-2 left-2">
                         <span class="bg-gold text-navy text-xs font-bold px-2 py-0.5 rounded-full">In-House Listing</span>
@@ -509,6 +511,7 @@ const allAreasBoundsForClient = getAllAreasBounds();
               {browseCards.map((l, i) => (
                 <article class="listing-card bg-white rounded-2xl shadow-card overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all border border-gray-100" data-mls={l.mls}>
                   <div class="aspect-[4/3] bg-cream relative overflow-hidden">
+                    <a href={l.href} tabindex="-1" aria-hidden="true" class="block w-full h-full">
                     {l.photoUrl ? (
                       i < 2
                         ? <img src={l.photoUrl} alt={l.photoAlt} class="w-full h-full object-contain" loading="eager" fetchpriority={i === 0 ? 'high' : undefined} />
@@ -516,6 +519,7 @@ const allAreasBoundsForClient = getAllAreasBounds();
                     ) : (
                       <div class="flex items-center justify-center h-full"><span class="text-5xl">🏡</span></div>
                     )}
+                    </a>
                     {l.isOwn && (
                       <div class="absolute top-2 left-2">
                         <span class="bg-gold text-navy text-xs font-bold px-2 py-0.5 rounded-full">In-House Listing</span>
@@ -702,9 +706,9 @@ const allAreasBoundsForClient = getAllAreasBounds();
       return `
         <article class="listing-card bg-white rounded-2xl shadow-card overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all border border-gray-100" data-mls="${esc(l.mls)}">
           <div class="aspect-[4/3] bg-cream relative overflow-hidden">
-            ${l.photoUrl
+            <a href="${l.href}" tabindex="-1" aria-hidden="true" class="block w-full h-full">${l.photoUrl
               ? `<img src="${esc(l.photoUrl)}" alt="${esc(l.photoAlt)}" class="w-full h-full object-contain" loading="lazy" />`
-              : `<div class="flex items-center justify-center h-full"><span class="text-5xl">🏡</span></div>`}
+              : `<div class="flex items-center justify-center h-full"><span class="text-5xl">🏡</span></div>`}</a>
             ${l.isOwn ? `<div class="absolute top-2 left-2"><span class="bg-gold text-navy text-xs font-bold px-2 py-0.5 rounded-full">In-House Listing</span></div>` : ''}
             ${l.type ? `<div class="absolute top-2 right-2"><span class="bg-navy/80 text-white text-xs font-medium px-2 py-0.5 rounded-full">${esc(l.type)}</span></div>` : ''}
             ${heartHtml(l.mls, address, 'absolute bottom-2 right-2')}
