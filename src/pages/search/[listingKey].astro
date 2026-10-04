@@ -3,6 +3,9 @@ export const prerender = false; // live Ontario-wide DDF lookup — see src/lib/
 import Base from '@/layouts/Base.astro';
 import GoogleMap from '@/components/GoogleMap.astro';
 import ContactForm from '@/components/ContactForm.astro';
+import CallRequest from '@/components/CallRequest.astro';
+import SimilarHomesNudge from '@/components/SimilarHomesNudge.astro';
+import { findAreaForPoint } from '@/lib/area-boundaries';
 import Schema from '@/components/Schema.astro';
 import { SITE } from '@/data/site';
 import { getMarketListingByKey, getNationalPoolListingByListingId, getActiveListingKeys } from '@/lib/ddf';
@@ -66,6 +69,7 @@ const photoUrls = photos(listing);
 const mapQuery = address;
 const geo = listing._geo as { lat: number; lng: number } | null;
 const neighbourhood = neighbourhoodForPoint(geo);
+const areaSlug = geo ? findAreaForPoint(geo.lat, geo.lng) : null;
 const photoAltCtx = { address: streetAddress, city, neighbourhood, beds, propertyType };
 const photoAlts = photoUrls.map((_, i) => listingPhotoAlt(photoAltCtx, i));
 
@@ -232,6 +236,7 @@ const facts: [string, string][] = [
       <div class="flex flex-wrap gap-3 mt-6">
         <a href="#request-showing" class="btn-primary">Request a Showing</a>
         <a href="#request-info" class="btn-secondary">Request Info</a>
+        <a href="#book-call" class="btn-secondary">Book a 15-Minute Call</a>
         <a href={`tel:${SITE.phone}`} class="btn-secondary">Call {SITE.phoneDisplay}</a>
         <a href={realtorUrl(listing)} target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 text-navy/60 hover:text-gold text-sm font-medium px-4 py-3.5 transition-colors">
           View on REALTOR.ca
@@ -250,6 +255,10 @@ const facts: [string, string][] = [
               <h2 class="font-serif text-2xl text-navy mb-4">About This Home</h2>
               <p class="text-slate leading-relaxed whitespace-pre-line">{remarks}</p>
             </div>
+          )}
+
+          {/^London/i.test(city) && (
+            <SimilarHomesNudge listing={address} mls={mlsNumber} areaSlug={areaSlug} price={rawPrice || null} propertyType={propertyType || null} />
           )}
 
           <div>
@@ -350,6 +359,12 @@ const facts: [string, string][] = [
             <h3 class="font-serif text-xl text-navy mb-1">Request More Info</h3>
             <p class="text-sm text-slate mb-5">Have a question about this listing? Ask Justin directly.</p>
             <ContactForm subject={`Listing Inquiry: ${address}`} ctaLabel="Send Inquiry" formType="listing-inquiry" neighbourhood={neighbourhood} />
+          </div>
+
+          <div id="book-call" class="bg-white rounded-2xl shadow-card p-6 scroll-mt-24">
+            <h3 class="font-serif text-xl text-navy mb-1">Book a 15-Minute Call</h3>
+            <p class="text-sm text-slate mb-5">Not ready to call? Leave your number and a good time, and Justin will call you.</p>
+            <CallRequest listing={address} neighbourhood={neighbourhood} />
           </div>
         </div>
       </div>

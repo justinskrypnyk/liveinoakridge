@@ -51,6 +51,8 @@ export function scoreLead(input: {
   else if (input.subjectTag === 'listing-inquiry') add(3, 'asked about a specific listing');
   else if (input.formName === 'home-value-lead') add(3, 'asked what their home is worth');
   else if (input.formName === 'save-listing') add(1, 'saved a listing');
+  else if (input.formName === 'call-request') add(4, 'asked Justin to call them');
+  else if (input.formName === 'similar-homes') add(1, 'asked for new homes like ones they viewed');
   if (input.chatIntent === 'Buyer' || input.chatIntent === 'Seller') add(1, `told the chat assistant they're a ${input.chatIntent.toLowerCase()}`);
 
   // How much real looking they've done.

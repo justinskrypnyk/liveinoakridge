@@ -1,0 +1,144 @@
+---
+// "Want new homes like these by email?" (Justin, 2026-10-04). Shown under a
+// listing only once this browser has opened 3+ different listings -- a
+// visitor from Singapore clicked through 80 photos across 4 homes the week
+// of 09-28 and had no easy way to raise a hand. No pop-up: it just appears
+// in the page, and "No thanks" hides it for good on this browser. Netlify
+// form `similar-homes` (registered by a hidden twin in Base.astro, since
+// listing pages aren't static) -> /api/ghl-lead, which tags "Similar Homes
+// Signup" and adds a Mon/Wed/Fri saved search: this home's area, its type,
+// and its price +/-15%.
+interface Props {
+  listing: string;
+  mls: string;
+  areaSlug?: string | null;
+  price?: number | null;
+  propertyType?: string | null;
+}
+
+const { listing, mls, areaSlug = null, price = null, propertyType = null } = Astro.props;
+const minPrice = price ? Math.round((price * 0.85) / 1000) * 1000 : '';
+const maxPrice = price ? Math.round((price * 1.15) / 1000) * 1000 : '';
+const inputClass = 'w-full px-4 py-3 rounded-lg border border-white/20 bg-white/10 text-white placeholder-white/40 text-sm outline-none focus:border-gold focus:ring-2 focus:ring-gold/20';
+---
+
+<div id="similar-homes" class="hidden bg-navy rounded-2xl p-6 sm:p-8" data-mls={mls}>
+  <div id="similar-homes-body">
+    <h2 class="font-serif text-2xl text-white font-bold mb-2">Want new homes like these by email?</h2>
+    <p class="text-white/70 text-sm mb-5 leading-relaxed">
+      You've been looking at a few homes. Justin can send you new listings like this one as they come on the market, Monday, Wednesday and Friday. Unsubscribe any time.
+    </p>
+    <form id="similar-homes-form" name="similar-homes" data-netlify="true" netlify-honeypot="bot-field" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <input type="hidden" name="form-name" value="similar-homes" />
+      <p class="hidden"><label>Leave this empty <input name="bot-field" /></label></p>
+      <input type="hidden" name="listing" value={listing} />
+      <input type="hidden" name="mls-number" value={mls} />
+      <input type="hidden" name="area" value={areaSlug ?? ''} />
+      <input type="hidden" name="min-price" value={String(minPrice)} />
+      <input type="hidden" name="max-price" value={String(maxPrice)} />
+      <input type="hidden" name="property-type" value={propertyType ?? ''} />
+      <input type="hidden" name="utm_source" />
+      <input type="hidden" name="utm_medium" />
+      <input type="hidden" name="utm_campaign" />
+      <input type="hidden" name="utm_term" />
+      <input type="hidden" name="utm_content" />
+      <input type="hidden" name="gclid" />
+      <input type="hidden" name="first_referrer" />
+      <input type="hidden" name="first_page" />
+      <input type="hidden" name="first_seen" />
+      <input type="hidden" name="visits" />
+      <input type="hidden" name="signals" />
+      <input type="hidden" name="browser_id" />
+      <input type="hidden" name="lead_page" />
+      <div>
+        <label for="similar-first" class="block text-xs font-semibold text-white/70 mb-1">First name</label>
+        <input id="similar-first" name="first-name" required autocomplete="given-name" class={inputClass} />
+      </div>
+      <div>
+        <label for="similar-last" class="block text-xs font-semibold text-white/70 mb-1">Last name</label>
+        <input id="similar-last" name="last-name" required autocomplete="family-name" class={inputClass} />
+      </div>
+      <div class="sm:col-span-2">
+        <label for="similar-email" class="block text-xs font-semibold text-white/70 mb-1">Email</label>
+        <input id="similar-email" name="email" type="email" required autocomplete="email" placeholder="you@example.com" class={inputClass} />
+      </div>
+      <button type="submit" id="similar-homes-submit" class="btn-primary justify-center sm:col-span-2">Send Me Homes Like These</button>
+    </form>
+    <p id="similar-homes-error" class="hidden text-xs text-red-300 mt-3"></p>
+    <div class="flex flex-wrap items-center justify-between gap-2 mt-4">
+      <p class="text-xs text-white/50">By signing up, you agree to our <a href="/privacy-policy/" class="underline hover:text-gold">Privacy Policy</a>.</p>
+      <button type="button" id="similar-homes-dismiss" class="text-xs text-white/60 underline hover:text-white">No thanks</button>
+    </div>
+  </div>
+  <div id="similar-homes-success" class="hidden py-2">
+    <p class="font-serif text-lg text-white font-bold mb-1">You're on the list.</p>
+    <p class="text-sm text-white/70">New homes like this one will start arriving in your inbox. Justin may also reach out personally.</p>
+  </div>
+</div>
+
+<script>
+  import { getStoredAttribution } from '@/lib/attribution-client';
+
+  declare global {
+    interface Window {
+      fbq?: (...args: unknown[]) => void;
+      gtag?: (...args: unknown[]) => void;
+    }
+  }
+
+  const box = document.getElementById('similar-homes');
+  const KEY = 'lio-viewed-listings';
+  const DONE = 'lio-similar-homes';
+  const read = (k: string) => { try { return localStorage.getItem(k); } catch { return null; } };
+  const write = (k: string, v: string) => { try { localStorage.setItem(k, v); } catch { /* private mode etc. */ } };
+
+  if (box) {
+    let viewed: string[] = [];
+    try { viewed = JSON.parse(read(KEY) || '[]'); } catch { viewed = []; }
+    const mls = box.dataset.mls || '';
+    if (mls && !viewed.includes(mls)) viewed = [...viewed, mls].slice(-30);
+    write(KEY, JSON.stringify(viewed));
+    if (viewed.length >= 3 && !read(DONE)) box.classList.remove('hidden');
+
+    document.getElementById('similar-homes-dismiss')?.addEventListener('click', () => {
+      write(DONE, 'dismissed');
+      box.classList.add('hidden');
+    });
+
+    const form = document.getElementById('similar-homes-form') as HTMLFormElement | null;
+    const btn = document.getElementById('similar-homes-submit') as HTMLButtonElement | null;
+    const errorEl = document.getElementById('similar-homes-error');
+    form?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!btn) return;
+      btn.disabled = true;
+      btn.textContent = 'Signing you up...';
+      errorEl?.classList.add('hidden');
+      try {
+        const data = new FormData(form);
+        Object.entries(getStoredAttribution()).forEach(([key, value]) => data.set(key, value));
+        const body = new URLSearchParams();
+        data.forEach((value, key) => body.append(key, String(value)));
+        const res = await fetch('/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: body.toString(),
+        });
+        if (!res.ok) throw new Error(`${res.status}`);
+        write(DONE, 'signed-up');
+        document.getElementById('similar-homes-body')?.classList.add('hidden');
+        document.getElementById('similar-homes-success')?.classList.remove('hidden');
+        window.fbq?.('track', 'Lead');
+        window.gtag?.('event', 'generate_lead', { form_type: 'similar-homes' });
+      } catch {
+        if (errorEl) {
+          errorEl.textContent = 'Something went wrong signing you up. Please try again.';
+          errorEl.classList.remove('hidden');
+        }
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Send Me Homes Like These';
+      }
+    });
+  }
+</script>

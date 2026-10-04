@@ -26,7 +26,7 @@ const hasStats = !!stats && (stats.medianListPrice != null || stats.activeCount 
 {hasStats && stats && (
   <div class="bg-cream/60 border border-gray-100 rounded-xl px-5 py-4 text-sm text-slate leading-relaxed">
     <p>
-      As of {new Date().toLocaleDateString('en-CA', { year: 'numeric', month: 'long', day: 'numeric' })},
+      As of {new Date().toLocaleDateString('en-CA', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'America/Toronto' })},
       {' '}{areaName} has
       {stats.medianListPrice != null && <> a median list price of <strong class="text-navy">{fmtPrice(stats.medianListPrice)}</strong>,</>}
       {' '}<strong class="text-navy">{stats.activeCount}</strong> active listing{stats.activeCount !== 1 ? 's' : ''}

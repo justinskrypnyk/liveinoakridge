@@ -1,0 +1,126 @@
+---
+// "Book a 15-minute call" (Justin, 2026-10-04). A visitor on 10-03 tapped
+// Call, then Book, then the chat late at night and left without reaching
+// out: plenty of people won't phone a stranger but will leave a number and a
+// good time. No calendar -- Justin follows up himself. Netlify form
+// `call-request` -> outgoing webhook -> /api/ghl-lead (tag "Call Request",
+// scored as a strong lead, best time in the note). Registered by the static
+// contact page; listing pages reuse it with the home's address and area.
+// Same fetch()/attribution pattern as BlogSignup.astro: every field the
+// script sends must be a real input here or Netlify drops it.
+interface Props {
+  listing?: string;
+  neighbourhood?: string | null;
+}
+
+const { listing = '', neighbourhood = null } = Astro.props;
+const uid = crypto.randomUUID().slice(0, 8);
+const id = (name: string) => `call-${name}-${uid}`;
+const inputClass = 'w-full px-4 py-3 rounded-lg border border-gray-200 bg-white text-navy placeholder-slate/60 text-sm outline-none focus:border-gold focus:ring-2 focus:ring-gold/20';
+---
+
+<div data-call-request>
+  <div data-call-body>
+    <form name="call-request" data-netlify="true" netlify-honeypot="bot-field" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <input type="hidden" name="form-name" value="call-request" />
+      <p class="hidden"><label>Leave this empty <input name="bot-field" /></label></p>
+      <input type="hidden" name="property-address" value={listing} />
+      <input type="hidden" name="neighbourhood" value={neighbourhood ?? ''} />
+      <input type="hidden" name="utm_source" />
+      <input type="hidden" name="utm_medium" />
+      <input type="hidden" name="utm_campaign" />
+      <input type="hidden" name="utm_term" />
+      <input type="hidden" name="utm_content" />
+      <input type="hidden" name="gclid" />
+      <input type="hidden" name="first_referrer" />
+      <input type="hidden" name="first_page" />
+      <input type="hidden" name="first_seen" />
+      <input type="hidden" name="visits" />
+      <input type="hidden" name="signals" />
+      <input type="hidden" name="browser_id" />
+      <input type="hidden" name="lead_page" />
+
+      <div>
+        <label for={id('first')} class="block text-xs font-semibold text-navy/70 mb-1">First name</label>
+        <input id={id('first')} name="first-name" required autocomplete="given-name" class={inputClass} />
+      </div>
+      <div>
+        <label for={id('last')} class="block text-xs font-semibold text-navy/70 mb-1">Last name</label>
+        <input id={id('last')} name="last-name" required autocomplete="family-name" class={inputClass} />
+      </div>
+      <div>
+        <label for={id('phone')} class="block text-xs font-semibold text-navy/70 mb-1">Phone</label>
+        <input id={id('phone')} name="phone" type="tel" required autocomplete="tel" placeholder="519-555-0100" class={inputClass} />
+      </div>
+      <div>
+        <label for={id('email')} class="block text-xs font-semibold text-navy/70 mb-1">Email</label>
+        <input id={id('email')} name="email" type="email" required autocomplete="email" placeholder="you@example.com" class={inputClass} />
+      </div>
+      <div class="sm:col-span-2">
+        <label for={id('time')} class="block text-xs font-semibold text-navy/70 mb-1">Best time to call</label>
+        <select id={id('time')} name="best-time" class={inputClass}>
+          <option>Anytime</option>
+          <option>Morning</option>
+          <option>Afternoon</option>
+          <option>Evening</option>
+        </select>
+      </div>
+      <button type="submit" data-call-submit class="btn-primary justify-center sm:col-span-2">Book My 15-Minute Call</button>
+    </form>
+    <p data-call-error class="hidden text-xs text-red-600 mt-3"></p>
+    <p class="text-xs text-slate mt-3">No pressure and no obligation. By submitting, you agree to our <a href="/privacy-policy/" class="underline hover:text-gold">Privacy Policy</a>.</p>
+  </div>
+  <div data-call-success class="hidden py-2">
+    <p class="font-serif text-lg text-navy font-bold mb-1">Thanks! You're all set.</p>
+    <p class="text-sm text-slate">Justin will be in touch shortly to set up your 15-minute call.</p>
+  </div>
+</div>
+
+<script>
+  import { getStoredAttribution } from '@/lib/attribution-client';
+
+  declare global {
+    interface Window {
+      fbq?: (...args: unknown[]) => void;
+      gtag?: (...args: unknown[]) => void;
+    }
+  }
+
+  document.querySelectorAll<HTMLElement>('[data-call-request]').forEach((wrap) => {
+    const form = wrap.querySelector('form');
+    const btn = wrap.querySelector<HTMLButtonElement>('[data-call-submit]');
+    const errorEl = wrap.querySelector('[data-call-error]');
+    form?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!btn) return;
+      btn.disabled = true;
+      btn.textContent = 'Sending...';
+      errorEl?.classList.add('hidden');
+      try {
+        const data = new FormData(form);
+        Object.entries(getStoredAttribution()).forEach(([key, value]) => data.set(key, value));
+        const body = new URLSearchParams();
+        data.forEach((value, key) => body.append(key, String(value)));
+        const res = await fetch('/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: body.toString(),
+        });
+        if (!res.ok) throw new Error(`${res.status}`);
+        wrap.querySelector('[data-call-body]')?.classList.add('hidden');
+        wrap.querySelector('[data-call-success]')?.classList.remove('hidden');
+        window.fbq?.('track', 'Lead');
+        window.gtag?.('event', 'generate_lead', { form_type: 'call-request' });
+        form.reset();
+      } catch {
+        if (errorEl) {
+          errorEl.textContent = 'Something went wrong sending that. Please try again, or call 519-639-5176.';
+          errorEl.classList.remove('hidden');
+        }
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Book My 15-Minute Call';
+      }
+    });
+  });
+</script>

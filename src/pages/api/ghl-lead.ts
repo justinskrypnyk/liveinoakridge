@@ -115,6 +115,10 @@ export const POST: APIRoute = async ({ request, locals }) => {
     // Smile's newsletter send can target it.
     'blog-signup': 'London Letter Subscriber',
     'newsletter': 'London Letter Subscriber',
+    // "Book a 15-minute call" (CallRequest.astro) and the "homes like these"
+    // card under listings (SimilarHomesNudge.astro), 2026-10-04.
+    'call-request': 'Call Request',
+    'similar-homes': 'Similar Homes Signup',
   };
 
   // "Request a Showing" and "Request More Info" on /search/[listingKey]/ are
@@ -239,7 +243,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
     // chatbot's / home-value form's / listing page's neighbourhood, and an
     // /areas/<slug>/ page the form was filled in on. Unknown names are dropped.
     ...[
-      submission.form_name === 'blog-signup' ? data.area : null,
+      ['blog-signup', 'similar-homes'].includes(submission.form_name) ? data.area : null,
       ...(school?.servesAreas ?? []).map((a) => a.slug),
       data['chat-neighbourhood'],
       data['neighbourhood'],
@@ -302,6 +306,8 @@ export const POST: APIRoute = async ({ request, locals }) => {
     mlsNumber && `MLS®: ${mlsNumber}`,
     data['school'] && `School wanted: ${data['school']}`,
     submission.form_name === 'blog-signup' && `Signed up for the London Letter from the blog post: ${data.post || 'unknown'}`,
+    submission.form_name === 'call-request' && `Wants a 15-minute call. Best time: ${data['best-time'] || 'Anytime'}`,
+    submission.form_name === 'similar-homes' && `Wants new homes like ${data.listing || 'a listing they viewed'} by email (Mon/Wed/Fri)${data.area ? ` in ${areaNameForSlug(String(data.area))}` : ''}${Number(data['min-price']) && Number(data['max-price']) ? `, $${Number(data['min-price']).toLocaleString('en-CA')} to $${Number(data['max-price']).toLocaleString('en-CA')}` : ''}`,
     submission.form_name === 'blog-signup' && data['area-listings'] === 'yes' && data.area && `Also wants new ${areaNameForSlug(String(data.area))} listings (Mon/Wed/Fri alerts)`,
     data['rough-estimate-range'] && `Estimated range: ${data['rough-estimate-range']}`,
     data['neighbourhood'] && `Neighbourhood: ${data['neighbourhood']}`,
@@ -477,6 +483,42 @@ export const POST: APIRoute = async ({ request, locals }) => {
       }
     } catch (err) {
       console.error('Blog sign-up saved-search insert failed:', err);
+    }
+  }
+
+  // "Homes like these" card under a listing: one saved_searches row with that
+  // home's area, type and price +/-15% (worked out on the page), so the
+  // Mon/Wed/Fri search-area-alert emails start. Not deduplicated beyond the
+  // exact same search for the same email. Own try/catch: the lead is saved.
+  if (submission.form_name === 'similar-homes') {
+    try {
+      const supabase = getServiceRoleClient();
+      if (supabase) {
+        const area = /^[a-z0-9-]{2,40}$/.test(String(data.area || '')) ? String(data.area) : null;
+        const minPrice = Number(data['min-price']) || null;
+        const maxPrice = Number(data['max-price']) || null;
+        const type = String(data['property-type'] || '').trim().slice(0, 60) || null;
+        let existing = supabase.from('saved_searches').select('id').eq('email', email).limit(1);
+        existing = area ? existing.eq('area_slug', area) : existing.is('area_slug', null);
+        existing = minPrice ? existing.eq('min_price', minPrice) : existing.is('min_price', null);
+        const { data: found } = await existing;
+        if (!found?.length) {
+          const { error } = await supabase.from('saved_searches').insert({
+            email,
+            first_name: firstName || null,
+            last_name: lastName || null,
+            phone: data.phone || null,
+            area_slug: area,
+            min_price: minPrice,
+            max_price: maxPrice,
+            property_types: type ? [type] : null,
+            frequency: 'mwf',
+          });
+          if (error) console.error('Similar-homes saved-search insert failed:', error.message);
+        }
+      }
+    } catch (err) {
+      console.error('Similar-homes saved-search insert failed:', err);
     }
   }
 

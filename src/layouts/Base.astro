@@ -383,6 +383,35 @@ const isProd = import.meta.env.PROD;
          chat-*/utm_*/gclid registration for "contact" is instead handled by
          declaring those fields as real static hidden inputs directly inside
          ContactForm.astro's own template -- see that file. -->
+    <!-- similar-homes (SimilarHomesNudge.astro) only renders on listing pages,
+         which aren't static, so Netlify would never see it: this twin
+         registers its fields (Justin, 2026-10-04). -->
+    <form name="similar-homes" data-netlify="true" netlify-honeypot="bot-field" hidden>
+      <input type="hidden" name="form-name" value="similar-homes" />
+      <input name="bot-field" />
+      <input name="first-name" />
+      <input name="last-name" />
+      <input name="email" />
+      <input name="listing" />
+      <input name="mls-number" />
+      <input name="area" />
+      <input name="min-price" />
+      <input name="max-price" />
+      <input name="property-type" />
+      <input name="utm_source" />
+      <input name="utm_medium" />
+      <input name="utm_campaign" />
+      <input name="utm_term" />
+      <input name="utm_content" />
+      <input name="gclid" />
+      <input name="first_referrer" />
+      <input name="first_page" />
+      <input name="first_seen" />
+      <input name="visits" />
+      <input name="signals" />
+      <input name="browser_id" />
+      <input name="lead_page" />
+    </form>
     <form name="home-value-lead" data-netlify="true" netlify-honeypot="bot-field" hidden>
       <input type="hidden" name="form-name" value="home-value-lead" />
       <input name="bot-field" />

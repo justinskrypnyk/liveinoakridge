@@ -291,6 +291,56 @@ async function qrSection(accessToken, weekStartStr, weekEndStr) {
   }
 }
 
+// ---- Most viewed listings: from our own visitor sessions (heatmap) ----
+// heatmap-sessions keeps every page view with its real URL for 60 days
+// (Sept 28, 2026 on), already without Justin's team (?hm=off, Manila).
+// Cloud-server towns are skipped: a "visitor" from there is a bot.
+const SITE_URL = 'https://www.liveinoakridge.ca';
+const BOT_PLACES = /^(Ashburn|Dulles|Boardman|Council Bluffs|The Dalles|Quincy|Moncks Corner|Santa Clara|San Jose|Mountain View), /;
+
+async function listingsSection(weekStartStr) {
+  const store = getStore('heatmap-sessions');
+  const rows = new Map();
+  for (let i = 0; i < 7; i++) {
+    const day = new Date(Date.parse(`${weekStartStr}T12:00:00Z`) + i * 86400000).toISOString().slice(0, 10);
+    const doc = await store.get(day, { type: 'json' }).catch(() => null);
+    for (const [sid, sess] of Object.entries(doc?.sessions || {})) {
+      if (BOT_PLACES.test(sess.place || '')) continue;
+      for (const v of sess.views || []) {
+        const path = String(v.p || '').replace(/\/?$/, '/');
+        if (!/^\/search\/[A-Za-z0-9]{5,20}\/$/.test(path)) continue;
+        const [title = '', price = ''] = String(v.ti || '').split(' | ');
+        const row = rows.get(path) || { path, title: '', price: '', people: new Set(), views: 0, secs: 0, photos: 0, places: {} };
+        // A translated page (Google Translate) has a translated title; keep an English one when there is one.
+        if (title && (!row.title || /^[\x20-\x7E]+$/.test(title))) { row.title = title; if (price.startsWith('$')) row.price = price; }
+        row.people.add(sid);
+        row.views += 1;
+        row.secs += v.secs || 0;
+        row.photos += (v.clicks || []).filter((c) => /photo/i.test(String(c[0]))).length;
+        if (sess.place) row.places[sess.place] = (row.places[sess.place] || 0) + 1;
+        rows.set(path, row);
+      }
+    }
+  }
+  if (!rows.size) return '';
+  const top = [...rows.values()].sort((a, b) => b.people.size - a.people.size || b.secs - a.secs).slice(0, 5);
+  const time = (n) => (n >= 60 ? `${Math.floor(n / 60)}m ${Math.round(n % 60)}s` : `${Math.round(n)}s`);
+  const body = top.map((r) => `<tr>
+        <td style="padding:4px 10px;"><a href="${SITE_URL}${r.path}?hm=off">${esc(/^[\x20-\x7E]+$/.test(r.title) ? r.title : `Listing ${r.path.split('/')[2].toUpperCase()} (read in another language)`)}</a>${r.price ? ` <span style="color:#666;">${esc(r.price)}</span>` : ''}</td>
+        <td style="padding:4px 10px;">${r.people.size}</td>
+        <td style="padding:4px 10px;">${time(r.secs)}</td>
+        <td style="padding:4px 10px;">${r.photos}</td>
+        <td style="padding:4px 10px;">${esc(Object.keys(r.places).join('; '))}</td>
+      </tr>`).join('');
+  return `
+      <h3>Most Viewed Listings</h3>
+      <table style="border-collapse:collapse;font-size:13px;">
+        <tr style="font-weight:bold;border-bottom:1px solid #ccc;"><td style="padding:4px 10px;">Listing</td><td style="padding:4px 10px;">People</td><td style="padding:4px 10px;">Time on page</td><td style="padding:4px 10px;">Photo clicks</td><td style="padding:4px 10px;">From</td></tr>
+        ${body}
+      </table>
+      <p style="font-size:12px;color:#888;margin-top:6px;">Top 5 of ${rows.size} listings viewed on the site this week, by number of people, then time. Your team and likely bots are left out.</p>`;
+}
+
 async function onSiteSection(weekStartStr) {
   const store = getStore('heatmap-weeks');
   const [d, m, s] = await Promise.all(['d', 'm', 'site'].map((k) => store.get(`${weekStartStr}/${k}`, { type: 'json' }).catch(() => null)));
@@ -572,6 +622,7 @@ export default async () => {
 
     const emailHtml = await emailSection(accessToken, weekStartStr, weekEndStr, priorWeekStartStr, priorWeekEndStr);
     const qrHtml = await qrSection(accessToken, weekStartStr, weekEndStr);
+    const listingsHtml = await listingsSection(weekStartStr).catch((err) => { console.error('weekly-traffic-digest: listings section failed (non-fatal)', err); return ''; });
 
     const html = `
       <h2>Weekly Traffic Report — ${weekStartStr} to ${weekEndStr}</h2>
@@ -602,6 +653,7 @@ export default async () => {
       </table>
 ${emailHtml}
 ${qrHtml}
+${listingsHtml}
 
       <h3>What's Working: Top Content This Week</h3>
       <table style="border-collapse:collapse;font-size:13px;">
