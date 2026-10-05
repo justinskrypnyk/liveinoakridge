@@ -277,7 +277,12 @@ export const POST: APIRoute = async ({ request, locals }) => {
   if (!res.ok) {
     const errText = await res.text().catch(() => '');
     console.error('GHL upsert failed:', res.status, errText);
-    return new Response('GHL upsert failed', { status: 502 });
+    // A 4xx (bad key, bad field) won't fix itself on retry, and repeated
+    // failures make Netlify silently disable this webhook -- which on
+    // 2026-10-05 nearly took londonontariohomes.ca's lead flow down. Answer
+    // 200 so the hook stays on; site-health's "GHL access" check flags the
+    // bad key. A GHL 5xx is temporary, so 502 lets Netlify retry.
+    return new Response('GHL upsert failed', { status: res.status >= 500 ? 502 : 200 });
   }
 
   const upserted = await res.json().catch(() => null);
