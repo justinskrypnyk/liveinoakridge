@@ -212,6 +212,51 @@ export default async (req) => {
     return { ok: h < 14 * 24, detail: `Last form submission ${ageText(h)}` };
   }, 'warn');
 
+  // ---- 6. A real lead stuck in Netlify's spam folder ----
+  // Spam never reaches the GHL webhook. On 2026-10-05 the contact form had 41
+  // spam submissions in 60 days, every one a pitch, scam or bot, so a plain
+  // "anything in spam" alert would fire almost daily. This only flags held
+  // submissions that look like a real person: a London-area phone number
+  // (519/226/548), no links in the message, and not the bots' doubled
+  // "Robertvaste Robertvaste" name pattern. Forms that never ask for a phone
+  // (newsletter, blog sign-up, similar homes...) skip the phone test, an idea
+  // from londonontariohomes.ca. Last 48 hours, every form.
+  await check('Real-looking leads caught as spam', async () => {
+    if (!env.NETLIFY_API_TOKEN) return { ok: true, detail: 'Skipped (no Netlify API token)' };
+    const headers = { Authorization: `Bearer ${env.NETLIFY_API_TOKEN}` };
+    const formsRes = await fetchWithTimeout(`https://api.netlify.com/api/v1/sites/${SITE_ID}/forms`, { headers });
+    if (!formsRes.ok) return { ok: false, detail: `Netlify API HTTP ${formsRes.status}` };
+    const since = Date.now() - 48 * 3600 * 1000;
+    const suspects = [];
+    let held = 0;
+    for (const form of await formsRes.json()) {
+      const asksPhone = (form.fields || []).some((f) => f.name === 'phone');
+      const res = await fetchWithTimeout(`https://api.netlify.com/api/v1/forms/${form.id}/submissions?state=spam&per_page=50`, { headers });
+      if (!res.ok) continue;
+      for (const sub of await res.json()) {
+        if (Date.parse(sub.created_at) < since) continue;
+        held++;
+        const d = sub.data || {};
+        const first = String(d['first-name'] || d.name || '').trim();
+        const last = String(d['last-name'] || '').trim();
+        const phone = String(d.phone || '').replace(/\D/g, '').replace(/^1(?=\d{10}$)/, '');
+        const text = `${d.message || ''} ${d.comment || ''}`;
+        const localPhone = /^(519|226|548)\d{7}$/.test(phone);
+        const hasLink = /https?:\/\/|www\.|\.(com|net|org|ru|ph|io)\b/i.test(text);
+        const botName = first && last && first.toLowerCase() === last.toLowerCase();
+        if ((asksPhone ? localPhone : Boolean(d.email)) && !hasLink && !botName) {
+          const when = new Date(sub.created_at).toLocaleString('en-CA', { timeZone: 'America/Toronto', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+          suspects.push(`${[first, last].filter(Boolean).join(' ') || 'No name'} (${d.email || 'no email'}, ${d.phone}) on the ${form.name} form, ${when}`);
+        }
+      }
+    }
+    if (!suspects.length) return { ok: true, detail: `${held} held as spam in the last 48 hours, none look like a real person` };
+    return {
+      ok: false,
+      detail: `Possibly real, held as spam so it never reached GHL: ${suspects.join('; ')}. Check Netlify → Forms → Spam submissions and mark it "Not spam" if it's real.`,
+    };
+  }, 'warn');
+
   // ---- Report ----
   const failures = results.filter((r) => r.level === 'fail');
   const warnings = results.filter((r) => r.level === 'warn');
