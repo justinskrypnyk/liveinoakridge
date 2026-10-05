@@ -242,7 +242,7 @@ async function fetchNationalPage(token: string, skip: number): Promise<any[]> {
 let nationalGeoCache: { data: Map<string, { lat: number; lng: number }>; fetchedAt: number } | null = null;
 const NATIONAL_GEO_CACHE_TTL_MS = 60 * 60 * 1000;
 
-async function getNationalGeoMap(): Promise<Map<string, { lat: number; lng: number }>> {
+const getNationalGeoMap = singleFlight(async (): Promise<Map<string, { lat: number; lng: number }>> => {
   if (nationalGeoCache && Date.now() - nationalGeoCache.fetchedAt < NATIONAL_GEO_CACHE_TTL_MS) {
     return nationalGeoCache.data;
   }
@@ -287,7 +287,7 @@ async function getNationalGeoMap(): Promise<Map<string, { lat: number; lng: numb
 
   nationalGeoCache = { data: map, fetchedAt: Date.now() };
   return map;
-}
+});
 
 // Ontario-wide viewport map search — the /search/ default browse view is
 // backed by National Pool, not AMPRE. AMPRE can't do this: it rejects any
@@ -697,10 +697,21 @@ export async function geocodeFreeformAddress(address: string): Promise<{ lat: nu
 
 // Short in-memory cache so concurrent requests hitting the same warm
 // function instance don't each re-fetch from AMPRE independently.
+/**
+ * Concurrent callers share one in-flight refresh instead of each starting
+ * their own (Justin's sister site hit EMFILE on 2026-10-05: a crawl burst on
+ * a cold cache fired ~2,200 blob reads per request in parallel). Warm-cache
+ * calls still return straight from the module cache inside fn.
+ */
+function singleFlight<T>(fn: () => Promise<T>): () => Promise<T> {
+  let inFlight: Promise<T> | null = null;
+  return () => (inFlight ??= fn().finally(() => { inFlight = null; }));
+}
+
 let listingsCache: { data: RawListing[]; fetchedAt: number } | null = null;
 const LISTINGS_CACHE_TTL_MS = 2 * 60 * 1000;
 
-export async function getActiveListings(): Promise<RawListing[]> {
+export const getActiveListings = singleFlight(async (): Promise<RawListing[]> => {
   if (listingsCache && Date.now() - listingsCache.fetchedAt < LISTINGS_CACHE_TTL_MS) {
     return listingsCache.data;
   }
@@ -740,7 +751,7 @@ export async function getActiveListings(): Promise<RawListing[]> {
     // Serve last-known-good data rather than a broken page if AMPRE hiccups.
     return listingsCache?.data ?? [];
   }
-}
+});
 
 // Lightweight in-memory cache, separate from listingsCache above — this
 // answers one question ("is this MLS# ours?") for the "In-House Listing"
@@ -755,7 +766,7 @@ export async function getActiveListings(): Promise<RawListing[]> {
 let activeKeysCache: { data: Set<string>; fetchedAt: number } | null = null;
 const ACTIVE_KEYS_CACHE_TTL_MS = 2 * 60 * 1000;
 
-export async function getActiveListingKeys(): Promise<Set<string>> {
+export const getActiveListingKeys = singleFlight(async (): Promise<Set<string>> => {
   if (activeKeysCache && Date.now() - activeKeysCache.fetchedAt < ACTIVE_KEYS_CACHE_TTL_MS) {
     return activeKeysCache.data;
   }
@@ -778,7 +789,7 @@ export async function getActiveListingKeys(): Promise<Set<string>> {
     console.error('DDF active-keys fetch failed:', err instanceof Error ? err.message : err);
     return activeKeysCache?.data ?? new Set();
   }
-}
+});
 
 export async function getListingByKey(key: string): Promise<RawListing | null> {
   const listings = await getActiveListings();
@@ -947,7 +958,7 @@ async function getCachedPhotoUrl(listingKey: string): Promise<string | null> {
   }
 }
 
-async function getLondonCandidates(): Promise<RawListing[]> {
+const getLondonCandidates = singleFlight(async (): Promise<RawListing[]> => {
   if (londonCandidatesCache && Date.now() - londonCandidatesCache.fetchedAt < LONDON_CANDIDATES_CACHE_TTL_MS) {
     return londonCandidatesCache.data;
   }
@@ -968,7 +979,7 @@ async function getLondonCandidates(): Promise<RawListing[]> {
     console.error('London candidates fetch failed:', err instanceof Error ? err.message : err);
     return londonCandidatesCache?.data ?? [];
   }
-}
+});
 
 // Every area page independently needs "all London candidates with their
 // cached geo" — cache the resolved (post-Blobs-lookup) result in memory so
@@ -979,7 +990,7 @@ let geocodedLondonCache: { data: (RawListing & { _geo: { lat: number; lng: numbe
 const GEOCODED_LONDON_CACHE_TTL_MS = 10 * 60 * 1000;
 const GEOCODE_LOOKUP_CONCURRENCY = 40;
 
-async function getGeocodedLondonListings(): Promise<(RawListing & { _geo: { lat: number; lng: number } })[]> {
+const getGeocodedLondonListings = singleFlight(async (): Promise<(RawListing & { _geo: { lat: number; lng: number } })[]> => {
   if (geocodedLondonCache && Date.now() - geocodedLondonCache.fetchedAt < GEOCODED_LONDON_CACHE_TTL_MS) {
     return geocodedLondonCache.data;
   }
@@ -1002,7 +1013,7 @@ async function getGeocodedLondonListings(): Promise<(RawListing & { _geo: { lat:
 
   geocodedLondonCache = { data: results, fetchedAt: Date.now() };
   return results;
-}
+});
 
 export async function getAreaMarketListings(areaSlug: string): Promise<RawListing[]> {
   const geocoded = await getGeocodedLondonListings();
