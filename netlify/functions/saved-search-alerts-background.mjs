@@ -37,6 +37,7 @@ import { getStore } from '@netlify/blobs';
 import { createClient } from '@supabase/supabase-js';
 import { listingCardHtml, listingCardFields, saveLeadIdLinks, withUtm } from '../../src/lib/listing-card.mjs';
 import { assignOwnerIfUnowned } from '../../src/lib/ghl-owner.mjs';
+import { SITE_TAG, lastListingEmailField, otherSiteEmailedToday } from '../../src/lib/ghl-dedupe.mjs';
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -169,7 +170,14 @@ async function pushToGhl({ email, firstName, lastName, phone, intro, lines, card
   const customFields = [
     ...[0, 1, 2].map((i) => ({ key: `recommended_listing_${i + 1}`, fieldValue: lines[i] ?? '' })),
     ...listingCardFields(cards), // photo cards, see src/lib/listing-card.mjs
+    lastListingEmailField(),
   ];
+  // londonontariohomes.ca already sent them listings today: hold these for the
+  // next run instead (the caller leaves last_notified_at alone).
+  if (await otherSiteEmailedToday(email, authHeaders, GHL_LOCATION_ID)) {
+    console.log('saved-search-alerts: other site emailed today, holding for next run:', email);
+    return 'skipped';
+  }
 
   // No tags/source in the upsert -- GHL would replace the contact's tags and
   // overwrite its original source. See the header comment.
@@ -227,7 +235,7 @@ async function pushToGhl({ email, firstName, lastName, phone, intro, lines, card
     const tagRes = await fetch(`https://services.leadconnectorhq.com/contacts/${contactId}/tags`, {
       method: 'POST',
       headers: authHeaders,
-      body: JSON.stringify({ tags: ['search-area-alert', ...areaTags] }),
+      body: JSON.stringify({ tags: ['search-area-alert', SITE_TAG, ...areaTags] }),
     });
     if (!tagRes.ok) console.error('GHL add-tags failed:', tagRes.status, await tagRes.text().catch(() => ''));
   } catch (err) {
@@ -301,7 +309,7 @@ export default async () => {
 
     if (top.length > 0) {
       const first = subs[0];
-      await pushToGhl({
+      const pushed = await pushToGhl({
         email: first.email,
         firstName: first.first_name,
         lastName: first.last_name,
@@ -317,6 +325,7 @@ export default async () => {
           beds: l.BedroomsTotal, baths: l.BathroomsTotalInteger,
         })),
       });
+      if (pushed === 'skipped') continue;
       sent++;
     }
 

@@ -36,6 +36,7 @@
 // Fixed here and in ghl-lead.ts, home-watch-alerts-background.mjs,
 // saved-search-alerts-background.mjs, and market-update-mailout-background.mjs.
 import { listingCardHtml, listingCardFields, saveLeadIdLinks, withUtm } from '@/lib/listing-card.mjs';
+import { SITE_TAG } from './ghl-dedupe.mjs';
 import { assignOwnerIfUnowned } from '@/lib/ghl-owner.mjs';
 
 const GHL_API_TOKEN = import.meta.env.GHL_API_TOKEN;
@@ -196,5 +197,5 @@ export async function pushRecommendationToGhl(input: PushRecommendationInput): P
   // Website Lead is re-asserted so every contact this pipeline touches stays
   // filterable; both merge, so nothing else on the contact is lost.
   await removeGhlTags(contactId, [input.tag]);
-  await addGhlTags(contactId, ['Website Lead', input.tag]);
+  await addGhlTags(contactId, ['Website Lead', SITE_TAG, input.tag]);
 }

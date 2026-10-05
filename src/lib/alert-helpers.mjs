@@ -8,6 +8,7 @@
 import { getStore } from '@netlify/blobs';
 import { assignOwnerIfUnowned } from './ghl-owner.mjs';
 import { saveLeadIdLinks } from './listing-card.mjs';
+import { SITE_TAG, lastListingEmailField, otherSiteEmailedToday } from './ghl-dedupe.mjs';
 // Imported (not read from disk) so the bundler inlines it into each function
 // that uses this file -- a path relative to this module wouldn't survive bundling.
 import areaBoundaries from '../data/area-boundaries.json' with { type: 'json' };
@@ -135,6 +136,12 @@ export async function pushListingAlert({ email, firstName, lastName, phone, intr
     Authorization: `Bearer ${token}`,
     Version: '2021-07-28',
   };
+  // londonontariohomes.ca already sent them listings today (src/lib/ghl-dedupe.mjs).
+  if (await otherSiteEmailedToday(email, headers, locationId)) {
+    console.log('Skipping listing alert, other site emailed today:', email);
+    return false;
+  }
+  customFields = [...customFields, lastListingEmailField()];
   const res = await fetch('https://services.leadconnectorhq.com/contacts/upsert', {
     method: 'POST',
     headers,
@@ -171,7 +178,7 @@ export async function pushListingAlert({ email, firstName, lastName, phone, intr
     const tagRes = await fetch(`https://services.leadconnectorhq.com/contacts/${contactId}/tags`, {
       method: 'POST',
       headers,
-      body: JSON.stringify({ tags: [tag] }),
+      body: JSON.stringify({ tags: [tag, SITE_TAG] }),
     });
     if (!tagRes.ok) console.error('GHL add-tags failed:', tagRes.status, await tagRes.text().catch(() => ''));
     return tagRes.ok;

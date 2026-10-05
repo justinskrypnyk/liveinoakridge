@@ -71,7 +71,7 @@ export const SERVICES: Service[] = [
       },
       {
         q: 'How much do I need for a down payment to buy a home in London Ontario?',
-        a: 'In Canada, the minimum down payment is 5% on homes up to $500,000, and 5% on the first $500,000 plus 10% on the portion above $500,000 up to $999,999. For homes $1 million and above, the minimum is 20%. In London Ontario, where average home prices are in the $625,000 to $660,000 range, most buyers need at least 5–10% down plus closing costs.',
+        a: 'In Canada, the minimum down payment is 5% on homes up to $500,000, and 5% on the first $500,000 plus 10% on the portion from $500,000 up to $1.5 million. For homes $1.5 million and above, the minimum is 20%. In London Ontario, where average home prices are in the $625,000 to $660,000 range, most buyers need at least 5–10% down plus closing costs.',
       },
     ],
   },
@@ -206,7 +206,7 @@ export const SERVICES: Service[] = [
     faqs: [
       {
         q: 'What programs are available for first-time home buyers in London Ontario?',
-        a: 'First-time buyers in Ontario can access the First Home Savings Account (FHSA) — up to $8,000/year, $40,000 lifetime, tax-free; the RRSP Home Buyers\' Plan — up to $35,000 ($70,000 per couple) withdrawn tax-free; the First-Time Home Buyers\' Tax Credit — up to $1,500 tax reduction; and the Land Transfer Tax Refund for first-time buyers in Ontario. Justin walks every first-time buyer through which programs apply to their situation.',
+        a: 'First-time buyers in Ontario can access the First Home Savings Account (FHSA) — up to $8,000/year, $40,000 lifetime, tax-free; the RRSP Home Buyers\' Plan — up to $60,000 ($120,000 per couple) withdrawn tax-free; the First-Time Home Buyers\' Tax Credit — up to $1,500 tax reduction; and the Land Transfer Tax Refund for first-time buyers in Ontario. Justin walks every first-time buyer through which programs apply to their situation.',
       },
       {
         q: 'What is the minimum down payment for a first-time buyer in London Ontario?',

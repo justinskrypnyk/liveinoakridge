@@ -668,7 +668,7 @@ export const BLOG_POSTS: BlogPost[] = [
       <h2>Step 1: Understand Your True Budget</h2>
       <p>Before you look at a single listing, you need to know what you can actually afford. Go beyond the mortgage payment to account for all costs of homeownership in London Ontario:</p>
       <ul>
-        <li><strong>Down payment</strong> — Minimum 5% on homes up to $500,000, scaling to 10% on the portion between $500,000 and $999,999</li>
+        <li><strong>Down payment</strong> — Minimum 5% on the first $500,000 and 10% on the portion between $500,000 and $1.5 million; homes $1.5 million and up need 20%</li>
         <li><strong>Ontario Land Transfer Tax</strong> — Payable on closing; use our <a href="/mortgages/calculator/">mortgage calculator</a> to estimate your total costs</li>
         <li><strong><a href="https://www.cmhc-schl.gc.ca/consumers/home-buying/mortgage-loan-insurance-for-consumers" target="_blank" rel="noopener noreferrer">CMHC mortgage insurance</a></strong> — Required if your down payment is under 20%; typically 2.8%–4% of the mortgage added to your loan</li>
         <li><strong>Home inspection</strong> — $450 to $600 in London Ontario</li>
@@ -681,7 +681,7 @@ export const BLOG_POSTS: BlogPost[] = [
       <p>First-time buyers in Canada have access to several programs that meaningfully improve affordability:</p>
       <ul>
         <li><strong>First Home Savings Account (FHSA)</strong> — A registered account allowing contributions up to $8,000 per year ($40,000 lifetime) tax-free toward your first home purchase. Qualifying withdrawals are also tax-free. Learn more from the <a href="https://www.canada.ca/en/revenue-agency/services/tax/individuals/topics/first-home-savings-account.html" target="_blank" rel="noopener noreferrer">Canada Revenue Agency FHSA page</a>.</li>
-        <li><strong>Home Buyers' Plan (RRSP)</strong> — Withdraw up to $35,000 from your RRSP ($70,000 per couple) tax-free for a qualifying first home purchase. Must be repaid over 15 years. See the <a href="https://www.canada.ca/en/revenue-agency/services/tax/individuals/topics/rrsps-related-plans/what-home-buyers-plan.html" target="_blank" rel="noopener noreferrer">Home Buyers' Plan on Canada.ca</a>.</li>
+        <li><strong>Home Buyers' Plan (RRSP)</strong> — Withdraw up to $60,000 from your RRSP ($120,000 per couple) tax-free for a qualifying first home purchase. Must be repaid over 15 years. See the <a href="https://www.canada.ca/en/revenue-agency/services/tax/individuals/topics/rrsps-related-plans/what-home-buyers-plan.html" target="_blank" rel="noopener noreferrer">Home Buyers' Plan on Canada.ca</a>.</li>
         <li><strong>First-Time Home Buyers' Tax Credit</strong> — A $10,000 federal non-refundable tax credit that reduces your taxes owing by up to $1,500.</li>
         <li><strong>GST/HST New Housing Rebate</strong> — If you are buying new construction in London Ontario, you may qualify for a partial rebate of HST paid. Learn more through <a href="https://www.canada.ca/en/revenue-agency/services/forms-publications/publications/rc4028/gst-hst-new-housing-rebate.html" target="_blank" rel="noopener noreferrer">Canada Revenue Agency</a>.</li>
       </ul>
@@ -717,11 +717,11 @@ export const BLOG_POSTS: BlogPost[] = [
     faqs: [
       {
         question: 'What is the minimum down payment to buy a house in Ontario in 2026?',
-        answer: 'The minimum down payment in Ontario is 5% on homes priced up to $500,000. For the portion between $500,000 and $999,999, the minimum is 10%. Homes priced at $1,000,000 or more require a minimum 20% down payment. If your down payment is less than 20%, you must also pay CMHC mortgage insurance, typically 2.8%–4% of the mortgage amount.',
+        answer: 'The minimum down payment in Ontario is 5% on homes priced up to $500,000. For the portion between $500,000 and $1.5 million, the minimum is 10%. Homes priced at $1.5 million or more require a minimum 20% down payment. If your down payment is less than 20%, you must also pay CMHC mortgage insurance, typically 2.8%–4% of the mortgage amount.',
       },
       {
         question: 'What government programs are available for first-time home buyers in Canada?',
-        answer: 'Key federal programs include the First Home Savings Account (FHSA — contribute up to $8,000/year tax-free, $40,000 lifetime maximum, with tax-free qualifying withdrawals), the Home Buyers\' Plan (withdraw up to $35,000 from your RRSP tax-free, $70,000 per couple), and the First-Time Home Buyers\' Tax Credit (up to $1,500 in federal tax savings). New construction buyers may also qualify for the GST/HST New Housing Rebate.',
+        answer: 'Key federal programs include the First Home Savings Account (FHSA — contribute up to $8,000/year tax-free, $40,000 lifetime maximum, with tax-free qualifying withdrawals), the Home Buyers\' Plan (withdraw up to $60,000 from your RRSP tax-free, $120,000 per couple), and the First-Time Home Buyers\' Tax Credit (up to $1,500 in federal tax savings). New construction buyers may also qualify for the GST/HST New Housing Rebate.',
       },
       {
         question: 'How much does it cost to close on a house in Ontario?',

@@ -108,7 +108,7 @@ async function pushMarketUpdate({ email, firstName, lastName, phone, summary }) 
       const tagRes = await fetch(`https://services.leadconnectorhq.com/contacts/${contactId}/tags`, {
         method: 'POST',
         headers: authHeaders,
-        body: JSON.stringify({ tags: ['market-update'] }),
+        body: JSON.stringify({ tags: ['market-update', 'Site: liveinoakridge.ca'] }),
       });
       if (!tagRes.ok) console.error('GHL add-tags failed:', tagRes.status, await tagRes.text().catch(() => ''));
     }

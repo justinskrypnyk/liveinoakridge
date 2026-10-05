@@ -108,7 +108,7 @@ async function pushToGhl({ email, firstName, lastName, phone, intro, lines, card
       const tagRes = await fetch(`https://services.leadconnectorhq.com/contacts/${contactId}/tags`, {
         method: 'POST',
         headers: authHeaders,
-        body: JSON.stringify({ tags: ['nosy-neighbour-alert'] }),
+        body: JSON.stringify({ tags: ['nosy-neighbour-alert', 'Site: liveinoakridge.ca'] }),
       });
       if (!tagRes.ok) console.error('GHL add-tags failed:', tagRes.status, await tagRes.text().catch(() => ''));
     }

@@ -20,6 +20,7 @@ import { findSimilarActiveListings } from '@/lib/similar-listings';
 import { findAreaForPoint, areaNameForSlug, knownAreaName } from '@/lib/area-boundaries';
 import { getServiceRoleClient } from '@/lib/supabase';
 import { pushRecommendationToGhl, addGhlTags } from '@/lib/ghl-recommend';
+import { SITE_TAG } from '@/lib/ghl-dedupe.mjs';
 import { assignOwnerIfUnowned } from '@/lib/ghl-owner.mjs';
 import { HIGH_SCHOOLS } from '@/data/high-schools';
 import { getStore } from '@netlify/blobs';
@@ -224,6 +225,9 @@ export const POST: APIRoute = async ({ request, locals }) => {
   // returning lead's existing tags (e.g. an earlier showing-request).
   const tags = [
     'Website Lead',
+    // Which site it came from: londonontariohomes.ca shares this GHL location
+    // and tags its own leads "Site: londonontariohomes.ca" (2026-10-04).
+    SITE_TAG,
     submission.form_name,
     FORM_TAG_LABELS[submission.form_name],
     subjectTag,
