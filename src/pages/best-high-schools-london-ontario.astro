@@ -27,6 +27,20 @@ function fraserStars(rating: number): string {
   return '★'.repeat(full) + '☆'.repeat(10 - full);
 }
 
+// Same TL;DR box as the blog posts (see BlogPost.tldr in src/data/blog.ts).
+// Built from HIGH_SCHOOLS so the numbers can't drift from the table below.
+const school = (name: string) => HIGH_SCHOOLS.find((s) => s.name === name)!;
+const central = school('London Central Secondary School');
+const oakridge = school('Oakridge Secondary School');
+const aquinas = school('St. Thomas Aquinas Catholic Secondary School');
+const saunders = school('Saunders Secondary School');
+const tldr = [
+  `London Central Secondary is London's top-rated high school at ${central.fraserRating.toFixed(1)}/10, ranked ${central.provincialRank} of ${PROVINCIAL_TOTAL} in Ontario in the Fraser Institute's ${FRASER_REPORT_YEAR} report card.`,
+  `Oakridge Secondary is second at ${oakridge.fraserRating.toFixed(1)}/10 (${oakridge.provincialRank} of ${PROVINCIAL_TOTAL}), and St. Thomas Aquinas is the top Catholic high school at ${aquinas.fraserRating.toFixed(1)}/10.`,
+  `Byron, Westmount, Riverbend and Lambeth are served by Saunders Secondary, the largest high school in the Thames Valley District School Board, rated ${saunders.fraserRating.toFixed(1)}/10.`,
+  `Fraser ratings only measure provincial test results, so confirm an address with the school board's lookup tool and visit the school before you buy.`,
+];
+
 const faqs = [
   {
     question: 'What are the best high schools in London, Ontario?',
@@ -121,6 +135,13 @@ const faqs = [
   <!-- Ranked Table -->
   <section class="py-16 bg-cream">
     <div class="container-site">
+      <section class="post-tldr mb-12 max-w-3xl bg-white rounded-2xl p-5 sm:p-8 shadow-sm border-l-4 border-gold" aria-labelledby="tldr-heading">
+        <h2 id="tldr-heading" class="font-serif text-xl text-navy mb-3">TL;DR</h2>
+        <ul class="list-disc pl-5 space-y-2 text-slate leading-relaxed marker:text-gold-deep">
+          {tldr.map((point) => <li>{point}</li>)}
+        </ul>
+      </section>
+
       <div class="mb-10">
         <h2 class="section-heading">How Do London's 19 High Schools Rank?</h2>
         <div class="gold-divider mb-4"></div>

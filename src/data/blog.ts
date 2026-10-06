@@ -22,6 +22,10 @@ export interface BlogPost {
   imageAlt?: string;
   content?: string;
   charts?: BlogChart[];
+  /** 3-4 one-sentence takeaways shown in the TL;DR box at the top of the post.
+   *  Answer-first and self-contained, so AI search tools can quote any line on
+   *  its own. Keep every number identical to what the post body says. */
+  tldr?: string[];
   faqs?: Array<{ question: string; answer: string }>;
   /** Set for standalone pages (not rendered via /blog/[slug]/) that should still
    *  appear as a card on /blog/ — e.g. reference pages like the high schools
@@ -42,6 +46,12 @@ export const BLOG_POSTS: BlogPost[] = [
     readTime: '7 min read',
     image: '/images/september-2026-london-ontario-housing-market.webp',
     imageAlt: 'September 2026 London Ontario housing market update: detached homes moving, condos waiting',
+    tldr: [
+      `London sold 371 homes in September 2026, up 10.1% from August, at a $540,000 median sale price, down 6.6% from a year ago.`,
+      `Detached homes are in balanced territory at 5.0 months of inventory, while condos sit at 6.5 months, which favours buyers.`,
+      `Homes sold for 95% of their original asking price on average, so pricing right from day one matters more than staging or timing.`,
+      `Oakridge had 11 sales at a $730,000 median with about 3.1 months of inventory, one of the tighter markets in London's west end.`,
+    ],
     content: `
       <p>London sold 371 homes in September 2026, up 10.1% from August's 337 and 3.6% more than September 2025. The median sale price was $540,000, down 1.8% from August and 6.6% from a year ago. Homes are selling, but at about 95% of their original asking price, which makes pricing the single biggest factor in how a sale goes right now.</p>
 
@@ -137,6 +147,12 @@ export const BLOG_POSTS: BlogPost[] = [
     readTime: '5 min read',
     image: '/images/august-2026-london-ontario-market-update-auto.webp',
     imageAlt: 'August 2026 London Ontario Real Estate Market Update',
+    tldr: [
+      `337 homes sold in London in August 2026, down 24.4% from July, while the median price held steady at $550,000.`,
+      `Homes sold for 97.2% of list price on average, about the same as July, which points to a seasonal pause rather than falling prices.`,
+      `Oakridge had 19 sales at a $779,900 median, and 21.1% sold over asking compared with 13.4% citywide.`,
+      `Buyers faced less competition, but well-priced homes still sold close to asking.`,
+    ],
     content: `
       <p>337 homes sold across London Ontario in August 2026, counted by firm date, down 24.4% from July and 15.3% from August 2025. The median sale price held steady at $550,000. Late summer is usually one of the quieter stretches of the year in London, and this August was quiet on sales while prices barely moved.</p>
 
@@ -195,6 +211,12 @@ export const BLOG_POSTS: BlogPost[] = [
     readTime: '7 min read',
     image: '/images/areas/sifton-bog-sunset-oakridge.webp',
     imageAlt: 'Sunset aerial view over Sifton Bog and the surrounding West London Ontario neighbourhood',
+    tldr: [
+      `London's average home price was $594,008 in June 2026, roughly half the GTA's typical price of over $1.1 million.`,
+      `London is about 190 km from Toronto, around 2 hours by Highway 401 or Via Rail, which works for hybrid workers but is hard as a daily commute.`,
+      `London has no municipal land transfer tax, so a $700,000 home costs $10,475 less in land transfer tax than the same price in Toronto.`,
+      `Oakridge is the usual pick for families, Byron for outdoor lovers, Lambeth and Hyde Park for newer builds, and Westmount for the widest price range.`,
+    ],
     content: `
       <p>A lot of people leaving Toronto right now aren't leaving because they want to — they're leaving because the math stopped working. London Ontario has quietly become one of the top landing spots for that exact group: close enough to stay connected to the GTA, far enough that your money actually buys a house. Here's what the move really looks like, without the sales pitch.</p>
 
@@ -299,6 +321,12 @@ export const BLOG_POSTS: BlogPost[] = [
     readTime: '6 min read',
     image: '/images/closing-costs-real-estate-london-ontario.webp',
     imageAlt: 'A SOLD sign in front of a London Ontario home, representing closing day on a real estate transaction',
+    tldr: [
+      `On a $650,000 home in London, buyers should expect closing costs of roughly $10,000 to $16,000 on top of the down payment.`,
+      `Ontario land transfer tax is the biggest cost, about $9,725 on a $650,000 home, and London adds no municipal land transfer tax.`,
+      `First-time buyers can get up to $4,000 of land transfer tax back, but their lawyer has to claim it at closing.`,
+      `Sellers pay no land transfer tax, but commission (commonly 4% to 5% with HST), legal fees and any mortgage discharge fee come off their proceeds.`,
+    ],
     content: `
       <p>Ask most buyers what a home is going to cost them, and they'll tell you the purchase price. Maybe the down payment too. Almost nobody mentions closing costs — the pile of smaller fees and taxes due on closing day that sit on top of everything else. It's not a small oversight either. On a $650,000 home, that pile can easily run $10,000 to $16,000. Sellers have their own version of this surprise: watching commission, legal fees, and a few other deductions come off the top before they see their actual proceeds. Here's what's really involved, in plain English.</p>
 
@@ -415,6 +443,12 @@ export const BLOG_POSTS: BlogPost[] = [
     readTime: '5 min read',
     image: '/images/june-2026-london-ontario-market-update.webp',
     imageAlt: 'June 2026 London Ontario real estate market update — Oakridge summer market conditions',
+    tldr: [
+      `London's average sale price fell to $594,008 in June 2026, down 7.1% from May and 8.2% from a year earlier, on 501 sales.`,
+      `Oakridge held firm with 35 sales, an average price of $715,753 (up 5.9% year over year) and a 19-day median time on market.`,
+      `22.9% of Oakridge homes sold over asking in June, compared with 18.6% citywide.`,
+      `Terminated listings rose 30.6% citywide, a sign that overpriced homes were being pulled instead of sold.`,
+    ],
     content: `
       <p>London's market cooled off in June while Oakridge held firm. Here's the full breakdown, and what it means if you're thinking about buying or selling this summer.</p>
 
@@ -493,6 +527,12 @@ export const BLOG_POSTS: BlogPost[] = [
     readTime: '5 min read',
     image: '/images/may-2026-london-ontario-market-update.webp',
     imageAlt: 'May 2026 London Ontario real estate market update — West London spring market conditions',
+    tldr: [
+      `543 homes sold in London in May 2026, up 26% from April and 11.3% from May 2025, the strongest month of the year so far.`,
+      `The average sale price was $638,813 and the median was $580,000, both up from April but slightly below May 2025.`,
+      `74.2% of homes sold below asking, so most buyers had room to negotiate.`,
+      `The $500,000 to $599,999 range had the most homes for sale, with 410 active listings.`,
+    ],
     content: `
       <p>Spring is doing what spring does in London, Ontario — bringing more buyers out, more homes to market, and a little more confidence back into the numbers. May 2026 was a solid month for London real estate. Sales climbed, prices firmed up from April, and the overall picture looks like a market that has found a healthier rhythm after a year of adjustment. Here is a full breakdown of what happened — and what it means if you are thinking about buying or selling this summer.</p>
 
@@ -601,6 +641,12 @@ export const BLOG_POSTS: BlogPost[] = [
     readTime: '7 min read',
     image: '/images/oakridge-aerial-drone-2026-thumb.webp',
     imageAlt: 'Aerial drone view of tree-lined streets in Oakridge, West London Ontario',
+    tldr: [
+      `Oakridge detached homes typically sell for $650,000 to $850,000, while Byron runs a bit higher at $700,000 to $950,000.`,
+      `Oakridge Secondary is rated 8.0/10 by the Fraser Institute, well ahead of Byron's Saunders Secondary at 5.6/10.`,
+      `Byron wins on outdoor space, with Springbank Park (London's largest park) and the Thames River trails.`,
+      `Oakridge is more walkable to daily shopping, centred on the Oxford Street and Hyde Park Road intersection.`,
+    ],
     content: `
       <p>Oakridge and Byron are West London's two most established, desirable neighbourhoods — and choosing between them is one of the most common decisions buyers face. Both offer mature streets, strong schools, and genuine community character. But they are meaningfully different places to live. This comparison covers the factors that actually matter: price, schools, outdoor lifestyle, daily convenience, and fit. If you already know Oakridge is the one, skip ahead to the <a href="/areas/oakridge/">full Oakridge guide</a> for current listings, prices, and sub-neighbourhood detail.</p>
 
@@ -662,6 +708,12 @@ export const BLOG_POSTS: BlogPost[] = [
     readTime: '10 min read',
     image: '/images/services/first-time-home-buyers-london-ontario.webp',
     imageAlt: 'Bright, welcoming living room in a London Ontario home, representing the first-time buyer journey',
+    tldr: [
+      `The minimum down payment in Canada is 5% of the first $500,000 and 10% of the portion from $500,000 to $1.5 million.`,
+      `First-time buyers can use the FHSA ($8,000 a year, $40,000 lifetime), the RRSP Home Buyers' Plan (up to $60,000) and a $10,000 federal tax credit.`,
+      `Get a mortgage pre-approval before you start looking; it holds a rate for 90 to 120 days.`,
+      `Buyers in Ontario don't pay their agent directly, because the seller's brokerage covers the buyer's agent.`,
+    ],
     content: `
       <p>Buying your first home in London Ontario involves government programs worth thousands of dollars, closing costs most buyers underestimate, and neighbourhood decisions that will shape your daily life for years. This guide walks you through every step — from calculating your true budget to getting the keys — so you know exactly what to expect.</p>
 
@@ -748,6 +800,12 @@ export const BLOG_POSTS: BlogPost[] = [
     readTime: '8 min read',
     image: '/images/services/selling-home-london-ontario.webp',
     imageAlt: 'A charming London Ontario home being prepared for sale, with fresh flowers by the front porch',
+    tldr: [
+      `Start with a home evaluation from a local agent, since online estimates can't see your home's updates or condition.`,
+      `List price is the most important decision: homes priced accurately from day one usually net more than homes that sit and get reduced.`,
+      `Spring (March to May) is London's busiest selling season, and fall (September and October) is the second-best window.`,
+      `Before photos, declutter, deep clean, fix small repairs and tidy the front of the house.`,
+    ],
     content: `
       <p>Selling your home in London Ontario is one of the largest financial transactions of your life — and the difference between a well-executed sale and a poorly managed one can be tens of thousands of dollars. This guide covers everything you need to know, from timing your listing to negotiating the best possible price, based on how the London Ontario market actually works in 2026.</p>
 
@@ -816,6 +874,12 @@ export const BLOG_POSTS: BlogPost[] = [
     readTime: '5 min read',
     image: '/images/real-estate-broker-vs-agent-ontario.webp',
     imageAlt: 'Justin Skrypnyk, a licensed Real Estate Broker serving London Ontario',
+    tldr: [
+      `In Ontario, "agent" usually means a licensed real estate salesperson, and a broker holds a higher licence.`,
+      `Becoming a broker takes at least two years as a salesperson, extra Humber College coursework and separate licensing exams.`,
+      `Every salesperson, broker and brokerage in Ontario is regulated by RECO, and you can check anyone's licence on RECO's public registry.`,
+      `Buyers in Ontario don't pay their agent directly, because the seller's brokerage covers it.`,
+    ],
     content: `
       <p>In Ontario, the terms "real estate agent," "salesperson," and "broker" are often used interchangeably — but they are not the same credential. Understanding the difference helps you make a more informed decision about who you trust with the largest financial transaction of your life.</p>
 
@@ -873,6 +937,12 @@ export const BLOG_POSTS: BlogPost[] = [
     readTime: '7 min read',
     image: '/images/services/buying-home-london-ontario.webp',
     imageAlt: 'A brick two-storey home in London Ontario on a sunny day, representing home financing decisions',
+    tldr: [
+      `Waiting for interest rates to drop often backfires, because lower rates bring more buyers and push prices up.`,
+      `Each 0.25% rate cut lowers payments by roughly $12 to $15 a month per $100,000 borrowed on a 25-year amortization.`,
+      `On a $600,000 London home with 20% down, that works out to about $60 to $72 a month per cut.`,
+      `The best time to buy is when you can comfortably afford it and demand is moderate, not when everyone rushes in at once.`,
+    ],
     content: `
       <p>Interest rates are the single biggest lever on housing affordability — and the question every London Ontario buyer and seller is asking in 2026 is: should I wait for rates to drop? The short answer is that waiting for rates is a strategy that frequently backfires. Here is the full picture.</p>
 
@@ -924,6 +994,12 @@ export const BLOG_POSTS: BlogPost[] = [
     readTime: '6 min read',
     image: '/images/services/free-home-evaluation-london-ontario.webp',
     imageAlt: 'A street of affordable starter bungalows in a London Ontario subdivision',
+    tldr: [
+      `East London has the city's cheapest detached homes, starting around $400,000 to $550,000.`,
+      `In the west end, West London near Commissioners Road offers the best value, with semis and bungalows from about $520,000.`,
+      `White Oaks and South London offer townhomes, semis and post-war homes from the mid-$400,000s to the high $600,000s.`,
+      `Westmount has the widest price range, from condos under $350,000 to detached homes around $650,000 to $750,000.`,
+    ],
     content: `
       <p>East London offers London's most affordable detached home prices, starting in the $400,000–$550,000 range. In the west end, West London near Commissioners Road delivers the best balance of price and established neighbourhood quality. Here is a frank neighbourhood-by-neighbourhood breakdown of where you can buy a house in London Ontario at the lowest price points — without sacrificing liveability. For live numbers ranked cheapest to priciest across every one of London's 39 neighbourhoods, see the <a href="/market-map/">interactive Neighbourhood Heat Map</a>.</p>
 
@@ -981,6 +1057,12 @@ export const BLOG_POSTS: BlogPost[] = [
     readTime: '7 min read',
     image: '/images/areas/sifton-bog-sunrise-skyline-oakridge.webp',
     imageAlt: 'Aerial sunset view over Sifton Bog with the London Ontario skyline on the horizon',
+    tldr: [
+      `London house prices are not rising right now: the September 2026 median was $540,000, about 6.6% lower than a year earlier.`,
+      `About 2,100 homes were for sale on October 1, 2026, roughly 5.5 months of inventory, which gives buyers room to negotiate.`,
+      `Fixed mortgage rates rose in late September 2026, which also keeps a lid on prices.`,
+      `Expect prices to stay close to flat over the next few months, with condos and high-inventory areas like Lambeth the softest.`,
+    ],
     content: `
       <p>House prices in London, Ontario are not rising right now. The median sale price was $540,000 in September 2026, about 6.6% lower than a year earlier, and every month this summer came in 5% to 9% below the same month in 2025. Prices have eased gently rather than fallen sharply, and how a home is priced matters more than ever.</p>
 
@@ -1054,6 +1136,12 @@ export const BLOG_POSTS: BlogPost[] = [
     readTime: '12 min read',
     image: '/images/services/relocation-london-ontario.webp',
     imageAlt: 'A leafy, tree-lined residential street in a London Ontario neighbourhood',
+    tldr: [
+      `Oakridge suits established families who want mature streets and strong schools, with detached homes around $650,000 to $850,000.`,
+      `Byron suits outdoor lovers near Springbank Park, while Lambeth, Hyde Park and Sunningdale suit buyers who want newer construction.`,
+      `East London, White Oaks and South London are the most affordable areas, with homes from about $400,000 to $700,000.`,
+      `Old North and Downtown suit buyers who want walkability, heritage homes or condo living.`,
+    ],
     content: `
       <p>London Ontario spans over a dozen distinct communities, each with its own character, price range, and lifestyle. The right neighbourhood depends on your budget, school priorities, commute, and what daily life should feel like. This guide gives you a frank, neighbourhood-by-neighbourhood breakdown — written by someone who actually lives and works here.</p>
       <p>Want live numbers instead of ballpark ranges? The <a href="/market-map/">interactive Neighbourhood Heat Map</a> covers all 39 of London's neighbourhoods with current median list price, days on market, and more, updated twice a month.</p>
@@ -1158,6 +1246,12 @@ export const BLOG_POSTS: BlogPost[] = [
     readTime: '6 min read',
     image: '/images/areas/riverbend-neighbourhood-london-ontario.webp',
     imageAlt: 'Riverbend Golf Community homes in southwest London Ontario',
+    tldr: [
+      `Riverbend is a newer Sifton golf community, while Byron is an established village-style neighbourhood beside Springbank Park.`,
+      `Prices overlap: Riverbend runs about $730,000 to $900,000+, and Byron about $700,000 to $950,000.`,
+      `Both share Saunders Secondary; Riverbend's new elementary school opens in September 2027, while Byron has the established Byron Northview Public School.`,
+      `Choose Riverbend for move-in-ready new construction and golf, or Byron for mature character and park access.`,
+    ],
     content: `
       <p>Riverbend and Byron sit next to each other in southwest London, both wrapped around the Thames River, and both attract buyers who want more green space than a typical subdivision offers. But they are built for different buyers — one is a new-build golf community still under construction, the other is a fully established village neighbourhood with decades of character. Here's how they actually compare. Already know which one you want? Jump straight to the <a href="/areas/riverbend/">Riverbend guide</a> or the <a href="/areas/byron/">Byron guide</a> for current listings and prices.</p>
 
@@ -1215,6 +1309,12 @@ export const BLOG_POSTS: BlogPost[] = [
     readTime: '6 min read',
     image: '/images/areas/lambeth-neighbourhood-london-ontario.webp',
     imageAlt: 'New homes in Lambeth, London Ontario',
+    tldr: [
+      `Lambeth is a former village in southwest London, now ringed by newer estate subdivisions like Heathwoods and Privé.`,
+      `Homes typically range from $700,000 to $1.1 million, mostly newer executive detached homes on larger lots.`,
+      `It has some of the best highway access in London, right next to Highways 401 and 402.`,
+      `Local schools include Lambeth Public School, St. Nicholas Catholic Elementary and Saunders Secondary.`,
+    ],
     content: `
       <p>Lambeth doesn't get talked about as often as Oakridge or Byron, but it quietly solves a problem a lot of buyers have: newer, larger homes, genuine small-town character, and some of the fastest highway access in the entire city. If you need Highway 401 or 402 for work, or just want more house for your money without leaving London, Lambeth deserves a look.</p>
 
@@ -1271,6 +1371,12 @@ export const BLOG_POSTS: BlogPost[] = [
     readTime: '6 min read',
     image: '/images/areas/westmount-neighbourhood-london-ontario.webp',
     imageAlt: 'Residential street in Westmount, London Ontario',
+    tldr: [
+      `Westmount homes typically range from $550,000 to $750,000, and West London is slightly cheaper at $520,000 to $720,000.`,
+      `Both cost well below Oakridge and Byron, which makes them the west end's value options.`,
+      `Westmount is closer to Western University and University Hospital and has more condos and apartments, which suits investors.`,
+      `West London is quieter and more purely residential, centred on Cherry Hill Mall and Commissioners Road West.`,
+    ],
     content: `
       <p>Not every west-end buyer needs or wants Oakridge or Byron pricing. Westmount and West London are the two neighbourhoods we point value-focused buyers toward most often — both established, both centrally located, and both offering meaningfully more accessible entry points than the west end's premium communities. Here's how they compare. Already know which one you want? Jump straight to the <a href="/areas/westmount/">Westmount guide</a> or the <a href="/areas/west-london/">West London guide</a> for current listings and prices.</p>
 
@@ -1287,7 +1393,7 @@ export const BLOG_POSTS: BlogPost[] = [
       <p>Westmount's diversity of housing types — including apartments and condos alongside detached homes — gives it more investment and rental flexibility than most west-end neighbourhoods. West London's housing stock is more uniformly single-family, which suits owner-occupiers looking for a straightforward detached home rather than investors comparing unit types.</p>
 
       <h2>Amenities and Daily Convenience</h2>
-      <p><a href="/areas/westmount/">Westmount</a> is anchored by White Oaks Mall and the extensive Wonderland Road retail corridor, offering some of the widest day-to-day shopping and dining options in the west end. <a href="/areas/west-london/">West London</a> is anchored by Cherry Hill Mall and is a short drive to downtown London and the Thames River trail system, favouring buyers who want quick highway and downtown access over retail density.</p>
+      <p><a href="/areas/westmount/">Westmount</a> is anchored by the extensive Wonderland Road retail corridor, offering some of the widest day-to-day shopping and dining options in the west end. <a href="/areas/west-london/">West London</a> is anchored by Cherry Hill Mall and is a short drive to downtown London and the Thames River trail system, favouring buyers who want quick highway and downtown access over retail density.</p>
 
       <h2>Who Should Choose Each Neighbourhood?</h2>
       <p><strong>Choose <a href="/areas/westmount/">Westmount</a> if:</strong> You want proximity to Western University or University Hospital, more housing-type variety, or investment/rental flexibility.</p>
@@ -1328,6 +1434,12 @@ export const BLOG_POSTS: BlogPost[] = [
     readTime: '6 min read',
     image: '/images/june-2026-london-ontario-market-update.webp',
     imageAlt: 'For sale sign being removed from a front lawn, representing a terminated real estate listing in London Ontario',
+    tldr: [
+      `A terminated listing is a home taken off the market without selling, usually to relist later at a different price.`,
+      `Terminations jumped 30.6% citywide and 42.1% in Oakridge in June 2026.`,
+      `Overpricing is the number one cause; well-priced Oakridge homes sold in a median of 19 days that same month.`,
+      `Buyers' agents can see a relisted home's price history, so it pays to price right the first time.`,
+    ],
     content: `
       <p>If you've noticed more "for sale" signs disappearing without a "sold" sticker on them lately, you're not imagining it. Terminations — listings pulled from the market instead of sold — jumped 30.6% citywide and 42.1% in Oakridge in June 2026 alone. If you're planning to sell, understanding why this happens is the difference between a fast sale and joining that statistic.</p>
 
@@ -1380,6 +1492,12 @@ export const BLOG_POSTS: BlogPost[] = [
     readTime: '5 min read',
     image: '/images/may-2026-london-ontario-market-update.webp',
     imageAlt: 'Spring homes for sale sign in a London Ontario neighbourhood, representing seasonal real estate market timing',
+    tldr: [
+      `Spring 2026 was London's strongest market, with 543 sales in May and a 33-day average time on market.`,
+      `June cooled, with sales down 7.7%, the average price down 7.1% and terminations up 30.6%.`,
+      `After spring, late summer to early fall is usually the next-best window to sell.`,
+      `If you sell outside spring, accurate pricing matters even more because buyers have more homes to choose from.`,
+    ],
     content: `
       <p>"When should I list?" is one of the most common questions sellers ask, and the honest answer is usually "it depends." But 2026's numbers actually give a clear, specific answer for this year: London's spring market outperformed its early summer market by a wide margin, and the data shows exactly why.</p>
 
@@ -1456,6 +1574,12 @@ export const BLOG_POSTS: BlogPost[] = [
         values: [27, 28, 29, 30, 43, 40, 29, 27, 24, 22, 25, 28],
         valueSuffix: 'd',
       },
+    ],
+    tldr: [
+      `London's months of supply jumped from 2.5 in June 2026 to 7.3 in July 2026, moving from a seller's market to a buyer's market.`,
+      `Under 4 months of supply favours sellers, 4 to 6 is balanced, and over 6 favours buyers.`,
+      `Median days to sell barely moved (25 to 28 days), which points to a wave of new listings rather than buyers disappearing.`,
+      `Buyers gained the most negotiating room in a year, and sellers need to price to today's market, not May's.`,
     ],
     content: `
       <p>One number changed more than any other in London's housing market this summer, and it's not one most buyers or sellers watch closely: months of supply. It sat in a tight 2.3-to-2.9 range for most of the past year — then jumped to 7.3 in July 2026. That's the difference between a seller's market and a buyer's market, and it happened in a single month.</p>
@@ -1541,6 +1665,12 @@ export const BLOG_POSTS: BlogPost[] = [
     readTime: '6 min read',
     image: '/images/justin-skrypnyk-realtor-banner.webp',
     imageAlt: 'Justin Skrypnyk, London Ontario realtor, standing in a West London neighbourhood',
+    tldr: [
+      `A realtor's title matters less than their track record in your specific neighbourhood.`,
+      `Look for neighbourhood-level data, honest pricing advice, quick responses and a clear negotiation record.`,
+      `Before hiring, ask how many homes they've sold in your area, their list-to-sale ratio and how they'll market beyond the MLS® listing.`,
+      `A realtor who specializes in your area usually beats the busiest one in the city.`,
+    ],
     content: `
       <p>"Find a good realtor" is easy advice and hard to act on. Every listing has an agent's name on it, every agent's website says they know the market, and from the outside it's genuinely difficult to tell who's actually going to fight for your price versus who's going to list your home and hope. Here's what actually separates the two, and what to ask before you hire anyone in London Ontario.</p>
 
@@ -1612,6 +1742,12 @@ export const BLOG_POSTS: BlogPost[] = [
     readTime: '6 min read',
     image: '/images/areas/westmount-neighbourhood-london-ontario.webp',
     imageAlt: 'Residential street in Westmount, London Ontario',
+    tldr: [
+      `Westmount is broadly safe, though no official neighbourhood-level crime stats exist because police and Statistics Canada report citywide only.`,
+      `London's Crime Severity Index was 61.2 in 2024, down 6% from the year before and about 21% below the national average.`,
+      `Most online concern traces back to four isolated incidents near Westmount Mall between 2018 and 2024, each ending in an arrest or charge.`,
+      `To check a specific street, use the London Police Service's online Crime Map.`,
+    ],
     content: `
       <p>If you've searched "is Westmount safe" before looking at a house there, you're not the only one — it's one of the more common questions we get about this neighbourhood, usually tied to a Reddit thread or an old news story about Westmount Mall. Rather than wave that away, here's what the actual data says, what those incidents actually were, and how to check any specific street yourself.</p>
 
@@ -1673,6 +1809,12 @@ export const BLOG_POSTS: BlogPost[] = [
         values: [33, 35, 35, 37, 51, 65, 71, 71, 72, 89],
         valueSuffix: 'd',
       },
+    ],
+    tldr: [
+      `As of July 18, 2026, Uplands was London's fastest-moving neighbourhood at 33 average days on market.`,
+      `Stoneybrook and London North followed at 35 days, with Oakridge at 37 days across 55 active listings.`,
+      `Woodhull (89 days), Jackson (72 days), Lambeth and Sunningdale (71 days each) were the slowest.`,
+      `Only neighbourhoods with enough active listings were ranked, so one unusual listing can't skew the results.`,
     ],
     content: `
       <p>Some London Ontario neighbourhoods are moving noticeably faster than others right now. Using live data from our <a href="/market-map/">Neighbourhood Heat Map</a> — snapshotted July 18, 2026 — here's a genuine, data-backed ranking of where listings are sitting the least time, and where they're sitting the longest, filtered down to neighbourhoods with enough active listings for the numbers to actually mean something.</p>
@@ -1748,6 +1890,12 @@ export const BLOG_POSTS: BlogPost[] = [
     readTime: '5 min read',
     image: '/images/market-map-og.webp',
     imageAlt: 'London Ontario neighbourhood heat map showing price data by area',
+    tldr: [
+      `A neighbourhood statistic is only as reliable as the number of listings behind it.`,
+      `Bradley shows a $9.5 million median only because it has one active listing, a single estate.`,
+      `Treat any area with fewer than about 15 active listings as a snapshot of a few homes, not a market trend.`,
+      `Always check the listing count before trusting a neighbourhood's price or days-on-market figure.`,
+    ],
     content: `
       <p>Pull up the live data behind our <a href="/market-map/">Neighbourhood Heat Map</a> and you'll find Bradley, a small pocket of London, showing a median home price of $9.5 million. That number is completely real. It's also almost meaningless on its own — and knowing why is exactly what separates a useful neighbourhood statistic from a misleading one.</p>
 
@@ -1795,6 +1943,12 @@ export const BLOG_POSTS: BlogPost[] = [
     readTime: '6 min read',
     image: '/images/oakridge-aerial-drone-2026-thumb.webp',
     imageAlt: 'Aerial drone view of tree-lined streets in Oakridge, West London Ontario',
+    tldr: [
+      `Oakridge has four named pockets, Hazelden, Oakridge Acres, Hunt Club and Oakridge Park, each built around its own park.`,
+      `Oakridge Acres is the social core, anchored by Oakridge Optimist Community Park.`,
+      `Deer Ridge and Oakridge Crossing are new Sifton construction on the north edge, with condos and townhomes from $480,000 to $680,000.`,
+      `The pockets differ in lifestyle, but MLS® tracks Oakridge as one area for pricing.`,
+    ],
     content: `
       <p>Ask someone which part of Oakridge they live in, and you'll rarely just hear "Oakridge." You'll hear Hazelden, or Oakridge Acres, or Hunt Club. Oakridge was built in phases from the 1950s through the 1980s, and each phase settled into its own identity — its own park, its own streets, its own feel. If you're house-hunting in Oakridge, knowing which pocket you're actually looking at matters more than the neighbourhood name on the listing.</p>
 
@@ -1855,6 +2009,12 @@ export const BLOG_POSTS: BlogPost[] = [
     readTime: '7 min read',
     image: '/images/history/oakridge-acres-aerial-1942.webp',
     imageAlt: 'Aerial photograph of the Oakridge area in 1942, showing open farmland and the Sifton Bog before development',
+    tldr: [
+      `Oakridge was open farmland until the 1950s and was built in phases through the 1980s.`,
+      `Sanatorium Road is named after a tuberculosis sanatorium that once stood near Oakridge's western edge.`,
+      `Thames Valley Golf Course opened in 1924, and the army took it over as a training camp from 1940 until 1946.`,
+      `Sifton Bog was called Byron Bog until 1967, when Sifton Properties donated the land to the city.`,
+    ],
     content: `
       <p>Drive down Sanatorium Road or Hazelden Lane in Oakridge today and there's nothing to suggest either name means anything at all — just quiet, tree-lined streets in one of West London's most established neighbourhoods. But every one of those names is a leftover clue from a very different piece of land, decades before Oakridge existed. Here's the story underneath the suburb.</p>
 
@@ -1910,6 +2070,12 @@ export const BLOG_POSTS: BlogPost[] = [
     readTime: '4 min read',
     image: '/images/fred-wulff-realtor-san-antonio.webp',
     imageAlt: 'Fred Wulff, REALTOR with RE/MAX Corridor and San Antonio Homes Connection, wearing a Texas star jacket',
+    tldr: [
+      `For moves to San Antonio, Texas, we refer clients to Fred Wulff of San Antonio Homes Connection.`,
+      `Fred is a 21-year U.S. Air Force veteran who specializes in military relocations and VA home buyers.`,
+      `He covers greater San Antonio, including New Braunfels, Boerne, Schertz and Cibolo.`,
+      `You can reach Fred's office at 210-659-6700.`,
+    ],
     content: `
       <p>If you or someone in your circle is relocating from Oakridge to the San Antonio, Texas area, we have a referral partner we're happy to put our name behind: Fred Wulff of <a href="https://www.sanantoniohomesconnection.com/" target="_blank" rel="noopener noreferrer">San Antonio Homes Connection</a>.</p>
       <p>Real estate works best when it's built on relationships, not transactions. Whether it's a military family with a PCS order, a first-time buyer, or someone chasing warmer weather, having the right boots-on-the-ground agent in a new city makes all the difference. Fred is that person for the San Antonio area, and we wanted to share why.</p>
@@ -1970,6 +2136,12 @@ export const BLOG_POSTS: BlogPost[] = [
     readTime: '4 min read',
     image: '/images/mellissa-king-realtor-woodstock-ontario.webp',
     imageAlt: 'Mellissa King, Sales Representative with Century 21 Heritage House Ltd., Brokerage, serving Woodstock and Oxford County',
+    tldr: [
+      `For moves to Woodstock, Ingersoll, Tillsonburg or elsewhere in Oxford County, we refer clients to Mellissa King of Century 21 Heritage House.`,
+      `Woodstock is about 56 km east of London, roughly 40 minutes on Highway 401.`,
+      `Oxford County often offers more home for the money than London.`,
+      `You can reach Mellissa at 519-320-0203.`,
+    ],
     content: `
       <p>Not every move out of Oakridge is a long-distance one. We get plenty of questions from people looking just down the 401 — Woodstock, Ingersoll, Tillsonburg, and the smaller communities across Oxford County. When that comes up, we point people to Mellissa King of <a href="https://www.kingsellsrealestate.com/" target="_blank" rel="noopener noreferrer">Century 21 Heritage House Ltd., Brokerage</a>.</p>
       <p>A referral only means something if the agent on the other end actually knows the ground they're standing on. Oxford County isn't London — different pricing, different inventory, different pace — and Mellissa works that market every day.</p>
@@ -2031,6 +2203,12 @@ export const BLOG_POSTS: BlogPost[] = [
     readTime: '4 min read',
     image: '/images/donald-porter-realtor-hamilton-ontario.webp',
     imageAlt: 'Donald Porter, CEO and REALTOR with Porter & Associates at RE/MAX Escarpment Realty, serving the Hamilton and Niagara Region',
+    tldr: [
+      `For moves to Hamilton, Burlington, Brantford or the Niagara Region, we refer clients to Donald Porter of Porter & Associates, RE/MAX Escarpment Realty.`,
+      `Porter & Associates is a full team that has helped more than 500 families in the area.`,
+      `Hamilton is about 130 km east of London, roughly 90 minutes via Highways 401 and 403.`,
+      `You can reach Donald at 905-730-6872.`,
+    ],
     content: `
       <p>Not every referral we send is a cross-border move. Every so often we hear from clients with family or work pulling them toward Hamilton, Burlington, Brantford, or the Niagara Region — about an hour and a half east of us down the 401 and 403. For that part of the province, we point people to Donald Porter of <a href="https://porterassoc.com/" target="_blank" rel="noopener noreferrer">Porter &amp; Associates</a>, RE/MAX Escarpment Realty Inc., Brokerage.</p>
       <p>A good referral isn't about knowing an agent's name — it's about knowing they'll treat your client the way you would. Donald runs a real team in a market we don't work day to day, which is exactly why we trust him with it.</p>
@@ -2093,6 +2271,12 @@ export const BLOG_POSTS: BlogPost[] = [
     readTime: '4 min read',
     image: '/images/market-map-og.webp',
     imageAlt: 'London Ontario neighbourhood market data map, representing this week\'s real estate digest across Oakridge and West London',
+    tldr: [
+      `120 resale homes sold in London from July 20 to 26, 2026, at a $526,250 median sold price.`,
+      `Homes sold for 97.8% of list price on average, with 1,917 active listings citywide.`,
+      `Oakridge and Byron each had 6 sales against about 55 active listings, a healthier pace than the city average.`,
+      `Condos and apartments were the most affordable option at a $359,000 median.`,
+    ],
     content: `
       <p>Here's a fast, numbers-first look at what happened in London Ontario real estate this past week — citywide, and specifically across the 7 areas we work in every day: Oakridge, Byron, Westmount, Riverbend, Lambeth, Whitehills, and West London.</p>
 
@@ -2172,6 +2356,12 @@ export const BLOG_POSTS: BlogPost[] = [
     readTime: '6 min read',
     image: '/images/areas/whitehills-neighbourhood-london-ontario.webp',
     imageAlt: 'Residential street in Whitehills, northwest London Ontario',
+    tldr: [
+      `Whitehills is an established northwest London neighbourhood, built mostly in the 1970s and 1980s.`,
+      `It has three elementary schools inside its boundaries: Emily Carr, Wilfrid Jury and St. Marguerite d'Youville.`,
+      `The Canada Games Aquatic Centre, London's largest indoor pool, sits in the middle of the neighbourhood.`,
+      `Trails connect directly to the Medway Valley Heritage Forest without leaving the neighbourhood.`,
+    ],
     content: `
       <p>Search for Whitehills online and you'll mostly find listing aggregators and a single old Reddit thread. That's a strange gap for a neighbourhood that has three elementary schools inside its own boundaries, London's largest indoor pool a short walk from most front doors, and a real story behind the road that runs through it. Here's the guide that's actually been missing.</p>
 
@@ -2229,6 +2419,12 @@ export const BLOG_POSTS: BlogPost[] = [
     readTime: '6 min read',
     image: '/images/london-ontario-months-of-supply-july-2026.webp',
     imageAlt: 'July 2026 London Ontario real estate market update: resale home prices and sales volume by neighbourhood',
+    tldr: [
+      `446 homes sold in London in July 2026, down 11.5% from June, while the median held near steady at $549,450.`,
+      `Only 12.3% of homes sold over asking, down from 19.0% in June, so buyers had more room to negotiate.`,
+      `Oakridge was the busiest west-end area, with 27 sales at a $720,000 median.`,
+      `Compared with July 2025, sales were down 7.3% and the median price was down 9.2%.`,
+    ],
     content: `
       <p>July is usually a quieter month in London real estate, and 2026 followed that pattern. 446 homes sold by firm date, down from 504 in June, while the median price held close to steady at $549,450. Buyers had more room to negotiate than they did in the spring, and fewer homes went over asking. Here's the full breakdown, and what it means heading into fall.</p>
 
@@ -2330,6 +2526,12 @@ export const BLOG_POSTS: BlogPost[] = [
     readTime: '7 min read',
     image: '/images/areas/lambeth-neighbourhood-london-ontario.webp',
     imageAlt: 'New estate homes on a Lambeth street in southwest London, Ontario',
+    tldr: [
+      `Lambeth homes typically range from $700,000 to $1.1 million, and Byron detached homes run $700,000 to $950,000.`,
+      `Lambeth has more new construction and the best highway access, while Byron has mature streets and Springbank Park.`,
+      `Both feed into the same high school, Saunders Secondary.`,
+      `Choose Lambeth for a newer, bigger home and an easy commute, or Byron for outdoor lifestyle and established character.`,
+    ],
     content: `
       <p>Lambeth and Byron sit at opposite ends of southwest London, and they solve different problems for different buyers. Lambeth is the newer, bigger-house-for-your-money option with direct highway access. Byron is the established, tree-canopy, Springbank Park option. Both are excellent — but they are not interchangeable, and buyers who assume "southwest London" is one market often end up disappointed when the home doesn't match the lifestyle they actually wanted. If you already know Byron is the one, jump straight to the <a href="/areas/byron/">full Byron guide</a> for current listings and pricing.</p>
 
@@ -2389,6 +2591,12 @@ export const BLOG_POSTS: BlogPost[] = [
     readTime: '6 min read',
     image: '/images/areas/oakridge-neighbourhood-london-ontario.webp',
     imageAlt: 'Street view of homes for sale in Oakridge, West London Ontario',
+    tldr: [
+      `Oakridge detached homes typically sell for $650,000 to $850,000, and original bungalows in Hazelden and Oakridge Acres are the more affordable way in.`,
+      `Well-priced Oakridge listings often draw multiple showings in the first week, so buyers should be ready to move quickly.`,
+      `Oakridge Secondary is rated 8.0/10 by the Fraser Institute, 86th of 747 Ontario secondary schools.`,
+      `Live MLS® listings from every brokerage are on the Oakridge area page.`,
+    ],
     content: `
       <p>If you're actively looking at homes for sale in Oakridge, you've already done the hard part — deciding on the neighbourhood. Oakridge is West London's most central, established community, and it's also this site's namesake, so this guide focuses on what buyers actually need to know before making an offer here: price bands by home type, what the school catchment looks like, and where to find current listings. For the neighbourhood's history and internal pockets, see <a href="/blog/pockets-of-oakridge-london-ontario/">The Pockets of Oakridge</a> and <a href="/blog/hidden-history-of-oakridge-london-ontario/">The Hidden History of Oakridge</a> — this post sticks to the buying side.</p>
 
