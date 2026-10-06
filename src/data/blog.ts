@@ -928,58 +928,113 @@ export const BLOG_POSTS: BlogPost[] = [
   },
   {
     slug: 'interest-rates-london-ontario-home-prices',
-    title: 'Will Interest Rates Affect London Ontario Home Prices in 2025-2026?',
-    description: 'Bank of Canada rate changes, mortgage implications, and how London Ontario market is weathering the uncertainty for buyers and sellers.',
-    date: '2026-05-15',
-    dateDisplay: 'May 15, 2026',
+    title: 'Interest Rates and London Ontario Home Prices: What Rising Rates Mean for You',
+    seoTitle: 'Mortgage Rates in London Ontario: What Rising Rates Mean',
+    description: `Fixed mortgage rates are rising this fall even with the Bank of Canada on hold. What it costs on a typical London Ontario home, why rate holds matter, and what renewals look like.`,
+    date: '2026-10-05',
+    dateDisplay: 'October 5, 2026',
     category: 'Mortgage & Rates',
     author: 'Justin Skrypnyk',
-    readTime: '7 min read',
+    readTime: '6 min read',
     image: '/images/services/buying-home-london-ontario.webp',
     imageAlt: 'A brick two-storey home in London Ontario on a sunny day, representing home financing decisions',
     tldr: [
-      `Waiting for interest rates to drop often backfires, because lower rates bring more buyers and push prices up.`,
-      `Each 0.25% rate cut lowers payments by roughly $12 to $15 a month per $100,000 borrowed on a 25-year amortization.`,
-      `On a $600,000 London home with 20% down, that works out to about $60 to $72 a month per cut.`,
-      `The best time to buy is when you can comfortably afford it and demand is moderate, not when everyone rushes in at once.`,
+      `Fixed mortgage rates are rising this fall, even though the Bank of Canada has held its rate at 2.25% for seven straight decisions.`,
+      `As of October 5, 2026, the best 5-year fixed rates are about 4.34% (insured) and 4.59% (uninsured), and the lowest 5-year variable is about 3.40%.`,
+      `On a $540,000 London home with 20% down, every 0.25% rise in rates adds about $61 a month to the mortgage payment.`,
+      `If you plan to buy in the next few months, get pre-approved with a rate hold now; most lenders hold your rate for 120 days.`,
     ],
     content: `
-      <p>Interest rates are the single biggest lever on housing affordability — and the question every London Ontario buyer and seller is asking in 2026 is: should I wait for rates to drop? The short answer is that waiting for rates is a strategy that frequently backfires. Here is the full picture.</p>
+      <p>Mortgage rates in London, Ontario are going up this fall, even though the Bank of Canada hasn't changed its rate since last October. As of October 5, 2026, the best 5-year fixed rate for a buyer with 20% down is about 4.59%, and every one of Canada's big banks has raised its fixed rates in the last few weeks. Here's what's driving it, what it costs on a typical London home, and what I'm telling buyers and homeowners to do about it.</p>
 
-      <h2>Where Are Rates Right Now?</h2>
-      <p>As of mid-2026, the <a href="https://www.bankofcanada.ca/core-functions/monetary-policy/key-interest-rate/" target="_blank" rel="noopener noreferrer">Bank of Canada overnight lending rate</a> is creating a 5-year fixed mortgage rate environment in the 4.50% to 5.25% range for well-qualified buyers. Variable rates are close to or slightly below fixed rates depending on the lender. Learn more about getting pre-approved through our <a href="/mortgages/pre-approval/">mortgage pre-approval page</a>.</p>
+      <h2>Where Are Mortgage Rates Right Now?</h2>
+      <p>Fixed rates have been climbing all fall, while variable rates are lower but tied to whatever the Bank of Canada does next. Mortgage rates in London are the same as everywhere else in Ontario, since they're set by national lenders.</p>
+      <table>
+        <thead>
+          <tr><th>Rate</th><th>As of October 5, 2026</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Bank of Canada policy rate</td><td>2.25%</td></tr>
+          <tr><td>Prime rate</td><td>4.45%</td></tr>
+          <tr><td>Best 5-year fixed, insured (under 20% down)</td><td>4.34%</td></tr>
+          <tr><td>Best 5-year fixed, uninsured (20% or more down)</td><td>4.59%</td></tr>
+          <tr><td>Best 5-year variable</td><td>3.40% (prime minus 1.05%)</td></tr>
+        </tbody>
+      </table>
+      <p>Sources: <a href="https://www.bankofcanada.ca/2026/09/fad-press-release-2026-09-02/" target="_blank" rel="noopener noreferrer">Bank of Canada</a> and <a href="https://www.ratehub.ca/best-mortgage-rates" target="_blank" rel="noopener noreferrer">Ratehub.ca</a>. These are the lowest advertised rates. The rate you're offered depends on your credit, down payment and the property, and rates can change daily.</p>
 
-      <h2>What Rate Cuts Mean for London Ontario Home Prices</h2>
-      <p>Every 0.25% reduction in the Bank of Canada overnight rate typically translates to roughly $12 to $15 per month lower payment per $100,000 borrowed on a 25-year amortization. For a $600,000 London Ontario home with 20% down, that is about $60 to $72 per month per rate cut.</p>
+      <h2>Why Are Fixed Rates Rising When the Bank of Canada Hasn't Moved?</h2>
+      <p>Fixed mortgage rates follow the 5-year Government of Canada bond yield, and the Bank of Canada's rate only moves variable mortgages. That's the part most people find confusing, and it explains this whole fall.</p>
+      <p>The 5-year bond yield climbed from about 2.6% in late February to over 3.7% at the end of September, according to <a href="https://www.canadianmortgagetrends.com/2026/10/fixed-mortgage-rates-climb-again-as-borrowers-weigh-the-variable-discount/" target="_blank" rel="noopener noreferrer">Canadian Mortgage Trends</a>. Investors expect inflation to stay higher for longer, and the Bank of Canada itself says inflation has been <a href="https://www.bankofcanada.ca/2026/09/fad-press-release-2026-09-02/" target="_blank" rel="noopener noreferrer">hovering around 3%</a>, mostly because of gas prices. Lenders price fixed mortgages off that yield, so when it rises, fixed rates follow. On September 29, CIBC and TD raised select fixed rates by 0.20 percentage points, completing a sweep of increases across all six big banks (<a href="https://ca.finance.yahoo.com/news/cibc-td-raise-fixed-mortgage-100000891.html" target="_blank" rel="noopener noreferrer">Yahoo Finance</a>).</p>
+      <p>Variable rates are priced off prime, and prime only moves when the Bank of Canada moves. That's why variable rates haven't budged yet.</p>
 
-      <h2>The "Wait for Rates" Trap</h2>
-      <p>Here is the math problem with waiting: if rates drop, buyer demand typically surges as affordability improves, which drives prices up. You might pay less each month but more for the home itself. The best time to buy is when demand is moderate and you can afford the purchase — not when everyone else decides to enter the market simultaneously. Read our <a href="/blog/house-prices-expected-to-rise-london-ontario/">price outlook analysis</a> for more context.</p>
+      <h2>Will the Bank of Canada Raise Rates on October 28?</h2>
+      <p>It's possible, and the experts don't agree. At its September 2 decision, the Bank said that "<a href="https://www.bankofcanada.ca/2026/09/fad-press-release-2026-09-02/" target="_blank" rel="noopener noreferrer">the upside risks to inflation have increased</a>," which is central-bank language for "we're watching closely."</p>
+      <p>Scotiabank and National Bank have both forecast a hike to 2.50%, while RBC expects a hold (<a href="https://www.techtimes.com/articles/326070/20260831/bank-canada-holds-wednesday-two-banks-forecast-october-hike-lock-wait.htm" target="_blank" rel="noopener noreferrer">TechTimes</a>). TD's Derek Burleton says the case for a hike is "not that compelling" (<a href="https://www.canadianmortgagetrends.com/2026/10/fixed-mortgage-rates-climb-again-as-borrowers-weigh-the-variable-discount/" target="_blank" rel="noopener noreferrer">Canadian Mortgage Trends</a>).</p>
+      <p>If the Bank does raise its rate, prime goes up the same day, and so do variable mortgages and lines of credit. Fixed rates have already risen ahead of any decision, so a hike on its own wouldn't necessarily move them much further.</p>
 
-      <h2>The London Ontario Advantage</h2>
-      <p>London Ontario home prices are still significantly more accessible than Toronto or the GTA, which means the rate impact here is proportionally lower. A West London home at $650,000 versus a comparable Toronto property at $1.2M has very different interest cost dynamics. Neighbourhoods like <a href="/areas/west-london/">West London</a>, <a href="/areas/westmount/">Westmount</a>, and East London offer accessible entry points even in a higher-rate environment.</p>
+      <h2>How Much Does a Rate Increase Cost on a Typical London Home?</h2>
+      <p>About $61 a month for every 0.25%. Here's the math on a home at London's September median price of $540,000 (from our <a href="/blog/september-2026-london-ontario-housing-market/">September market update</a>) with 20% down, which works out to a $432,000 mortgage on a 25-year amortization.</p>
+      <table>
+        <thead>
+          <tr><th>5-year fixed rate</th><th>Monthly payment</th><th>Compared with today</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>4.59% (today's best uninsured)</td><td>$2,413</td><td>None</td></tr>
+          <tr><td>4.84%</td><td>$2,473</td><td>+$61</td></tr>
+          <tr><td>5.09%</td><td>$2,535</td><td>+$122</td></tr>
+          <tr><td>5.59%</td><td>$2,660</td><td>+$247</td></tr>
+        </tbody>
+      </table>
+      <p>A full point higher costs about $247 more a month, or close to $3,000 a year. Higher rates also shrink how much a lender will approve you for, which is the bigger issue for most buyers. You can run your own numbers in our <a href="/mortgages/calculator/">mortgage calculator</a>.</p>
 
-      <p>Questions about how rates affect what you can buy? <a href="/mortgages/calculator/">Use our mortgage calculator</a> to model different rate scenarios, or <a href="/contact/">reach out to Justin</a> to discuss your specific situation.</p>
+      <h2>Will Rising Rates Push London Home Prices Down?</h2>
+      <p>So far, rising rates are holding London prices flat, with the most pressure on condos. The median sale price was $540,000 in September 2026, about 6.6% lower than a year earlier, and London had roughly 5.5 months of inventory, which gives buyers time to shop and room to negotiate.</p>
+      <p>When rates climb, some buyers' budgets shrink, and they shift to lower price points or wait. That shows up first in the parts of the market with the most supply. Condos sat at about 6.5 months of inventory in September, with a quarter of active condo listings already reduced. Detached homes in tighter areas held up better. Oakridge, for example, had about 3.1 months of inventory. Our <a href="/blog/house-prices-expected-to-rise-london-ontario/">London price outlook</a> goes deeper on where prices are likely headed.</p>
+
+      <h2>Should You Wait, Lock In a Rate Hold, or Go Variable?</h2>
+      <p>If you're planning to buy in the next few months, get pre-approved with a rate hold now. Most of the lenders my clients work with offer a 120-day rate hold with a pre-approval, and right now I'm encouraging every buyer I talk to to get one done.</p>
+      <p>A rate hold locks in today's rate for those 120 days while you shop. If rates keep rising, you keep the lower rate. If rates drop, many lenders will give you the lower one at closing, so ask yours how they handle it. For a buyer, it's one of the simplest ways to protect your budget in a market like this. Our <a href="/mortgages/pre-approval/">pre-approval guide</a> walks through the process.</p>
+      <p>Fixed or variable is the question I get asked most, and my answer is always the same: talk to a trusted mortgage advisor or broker, because it comes down to your risk tolerance. Variable rates are lower today, but your costs move with the Bank of Canada. A fixed rate costs more today, but your payment is set for the full term. Neither one is right for everybody, and a good advisor will walk you through both against your own budget.</p>
+      <p>As for waiting for rates to fall, that's hard to plan around right now. Bond markets are currently pricing in rate increases over the next year, according to <a href="https://www.canadianmortgagetrends.com/2026/10/fixed-mortgage-rates-climb-again-as-borrowers-weigh-the-variable-discount/" target="_blank" rel="noopener noreferrer">Canadian Mortgage Trends</a>. The buyers who do best are the ones who buy when they're financially ready, with a rate hold in place.</p>
+
+      <h2>What If Your Mortgage Is Up for Renewal?</h2>
+      <p>Expect a noticeably bigger payment. Most people renewing this year locked in a 5-year term back in 2021, when fixed rates were around 2%. Compared with where rates were five years ago, renewal payments are way up, and I'm hearing it from homeowners all the time.</p>
+      <p>The Bank of Canada estimated in July 2025 that people renewing a 5-year fixed mortgage in 2026 would see their payments rise by <a href="https://www.bankofcanada.ca/2025/07/staff-analytical-note-2025-21/" target="_blank" rel="noopener noreferrer">20% on average</a>, and fixed rates have climbed since then. Here's a simple example:</p>
+      <table>
+        <thead>
+          <tr><th></th><th>Fall 2021</th><th>Renewal, fall 2026</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Rate</td><td>2.00%</td><td>4.59%</td></tr>
+          <tr><td>Mortgage balance</td><td>$400,000</td><td>$335,081</td></tr>
+          <tr><td>Years left to pay</td><td>25</td><td>20</td></tr>
+          <tr><td>Monthly payment</td><td>$1,694</td><td>$2,128</td></tr>
+        </tbody>
+      </table>
+      <p>That's $435 more a month, about 26% higher, even though the balance is smaller. If your renewal is coming up, start the conversation with your lender or a mortgage broker a few months early, compare offers instead of signing the first renewal letter, and ask what options you have if the new payment is tight.</p>
+      <p>If a higher renewal payment has you wondering whether your current home still fits, a <a href="/services/home-evaluation/">complimentary home evaluation</a> will tell you what it would realistically sell for in today's market. And if you have questions about any of this, buying, selling or renewing, <a href="/contact/">reach out to me</a>. I'm always happy to talk it through.</p>
     `,
     faqs: [
       {
-        question: 'How do interest rate changes affect London Ontario home prices?',
-        answer: 'Rate cuts improve buyer affordability, typically increasing demand and pushing prices upward. Rate increases reduce borrowing power, which can moderate price growth. The relationship is real but not immediate — local supply, population growth, and employment levels also drive prices. In London Ontario, the city\'s relative affordability compared to Toronto means rate impacts are proportionally lower.',
+        question: 'What are mortgage rates in London, Ontario right now?',
+        answer: `As of October 5, 2026, the best advertised 5-year fixed rates in Ontario were about 4.34% for insured mortgages (under 20% down) and 4.59% for uninsured mortgages (20% or more down). The lowest 5-year variable rate was about 3.40%, and the prime rate was 4.45%. London rates are the same as the rest of Ontario because they're set by national lenders, and they can change daily.`,
       },
       {
-        question: 'Should I wait for interest rates to drop before buying a house in London Ontario?',
-        answer: 'Waiting for rates to drop is a strategy that frequently backfires. When rates fall, buyer demand typically surges as affordability improves, driving prices higher — you may save on monthly payments but pay more for the home itself. The best time to buy is when you are financially ready, pre-approved, and have found the right property in your target neighbourhood.',
+        question: 'Why are fixed mortgage rates going up if the Bank of Canada has not raised rates?',
+        answer: `Fixed mortgage rates follow the 5-year Government of Canada bond yield. That yield rose from about 2.6% in late February 2026 to over 3.7% by the end of September as investors priced in higher inflation, and lenders raised their fixed rates in response. The Bank of Canada's rate mainly affects variable mortgages and lines of credit through the prime rate.`,
       },
       {
-        question: 'What is the current 5-year fixed mortgage rate in Ontario?',
-        answer: 'As of mid-2026, 5-year fixed mortgage rates are generally available in the 4.50%–5.25% range for well-qualified buyers in Ontario. Variable rates are comparable or slightly lower depending on the lender. Rates vary based on your credit profile, down payment, and which lender or mortgage broker you use.',
+        question: 'How much does a 0.25% rate increase add to a mortgage payment?',
+        answer: `About $14 a month per $100,000 borrowed on a 25-year amortization at today's rates. On a $432,000 mortgage, which is 20% down on London's September 2026 median price of $540,000, a 0.25% increase adds about $61 a month, and a full 1% increase adds about $247 a month.`,
       },
       {
-        question: 'How much does a 0.25% Bank of Canada rate cut save per month?',
-        answer: 'A 0.25% reduction in the Bank of Canada overnight rate saves approximately $12–$15 per month per $100,000 borrowed on a 25-year amortization. On a $480,000 mortgage (20% down on a $600,000 London Ontario home), that is roughly $60–$72 per month per rate cut.',
+        question: 'How long does a mortgage rate hold last?',
+        answer: `Most lenders offer a rate hold of 90 to 120 days with a mortgage pre-approval, and many of the lenders London buyers use offer 120 days. A rate hold locks in today's rate while you shop for a home, so you're protected if rates rise before you buy.`,
       },
       {
-        question: 'What is the Bank of Canada overnight rate and how does it affect mortgages?',
-        answer: 'The Bank of Canada overnight rate is the benchmark interest rate that influences the prime rate charged by Canadian banks. Variable mortgage rates and home equity lines of credit are typically priced at prime plus or minus a margin. Fixed mortgage rates are influenced by bond yields, which respond to Bank of Canada policy direction and broader economic conditions.',
+        question: 'Should I choose a fixed or variable mortgage right now?',
+        answer: `It depends on your risk tolerance. A variable rate is lower today but moves with the Bank of Canada, so your costs can go up if it raises rates. A fixed rate costs more today but keeps your payment the same for the whole term. The best way to decide is to talk to a trusted mortgage advisor or broker who can compare both against your budget.`,
       },
     ],
   },
