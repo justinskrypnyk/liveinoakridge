@@ -13,6 +13,7 @@ import { getLatestMarketMapSnapshots, getLatestNotableChanges } from '@/lib/supa
 import { summarizeArea } from '@/lib/market-map-summary';
 import HeatMap from '@/components/HeatMap.astro';
 import MarketMapNotifyForm from '@/components/MarketMapNotifyForm.astro';
+import { cachePublicPage } from '@/lib/cdn-cache';
 
 const snapshots = await getLatestMarketMapSnapshots();
 const notableChanges = await getLatestNotableChanges(3);
@@ -44,6 +45,9 @@ const FAQS = [
     a: 'Yes -- all 39 neighbourhoods in the city are shown, mapped to their real boundaries rather than approximate pins. Only 7 (Oakridge, West London, Whitehills, Byron, Westmount, Riverbend, and Lambeth) have a dedicated area page on this site, but every neighbourhood\'s live stats are shown here.',
   },
 ];
+
+// After any early redirect, so only real pages are cached.
+cachePublicPage(Astro.response.headers);
 ---
 
 <Base

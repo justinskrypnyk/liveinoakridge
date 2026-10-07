@@ -11,6 +11,7 @@ import { SITE } from '@/data/site';
 import { getAreaMarketListings } from '@/lib/ddf';
 import { fmtPrice, field, buildAddress, buildStreetAddress, listingPhotoAlt } from '@/lib/listings';
 import { getMarketStatsSnapshot, getAreaStats } from '@/lib/market-stats';
+import { cachePublicPage } from '@/lib/cdn-cache';
 
 const DEPRECATED_SLUGS = new Set([
   'masonville', 'old-north', 'sunningdale', 'fox-hollow',
@@ -57,6 +58,9 @@ const areaServices = [
   { label: 'Sell in ' + area.shortName, href: `/areas/${area.slug}/sell/`, icon: '📈' },
   { label: 'Home Evaluation', href: `/areas/${area.slug}/home-evaluation/`, icon: '📋' },
 ];
+
+// After any early redirect, so only real pages are cached.
+cachePublicPage(Astro.response.headers);
 ---
 
 <Base title={area.metaTitle} description={area.metaDescription} noindex={isDeprecated}>

@@ -10,6 +10,7 @@ import { findAreaForPoint, areaNameForSlug } from '@/lib/area-boundaries';
 import ListingsMap from '@/components/ListingsMap.astro';
 import SaveHeartButton from '@/components/SaveHeartButton.astro';
 import SaveListingModal from '@/components/SaveListingModal.astro';
+import { cachePublicPage } from '@/lib/cdn-cache';
 
 const listings = await getActiveListings();
 const browseAreas = AREAS.filter((a) => a.avgPrice);
@@ -88,6 +89,9 @@ const processedListings: ListingCard[] = listings.map((l) => {
     remarks: field(L, 'PublicRemarks'),
   };
 });
+
+// After any early redirect, so only real pages are cached.
+cachePublicPage(Astro.response.headers);
 ---
 
 <Base

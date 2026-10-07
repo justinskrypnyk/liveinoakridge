@@ -11,6 +11,7 @@ import { SITE } from '@/data/site';
 import { getAreaMarketListings } from '@/lib/ddf';
 import { fmtPrice, field, buildAddress, buildStreetAddress, listingPhotoAlt } from '@/lib/listings';
 import { getMarketStatsSnapshot, getAreaStats } from '@/lib/market-stats';
+import { cachePublicPage } from '@/lib/cdn-cache';
 
 const area = getArea('oakridge')!;
 
@@ -68,6 +69,9 @@ const subNeighbourhoods = [
     name: 'Oakridge Park',
   },
 ];
+
+// After any early redirect, so only real pages are cached.
+cachePublicPage(Astro.response.headers);
 ---
 
 <Base title={area.metaTitle} description={area.metaDescription}>

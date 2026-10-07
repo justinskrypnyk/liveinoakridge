@@ -75,7 +75,13 @@
       new PerformanceObserver(function (list) { list.getEntries().forEach(fn); }).observe(Object.assign({ type: type, buffered: true }, opts || {}));
     } catch (e) { /* not supported in this browser */ }
   }
-  observe('largest-contentful-paint', function (e) { perf.lcp = Math.round(e.startTime); });
+  // A page opened in a background tab paints its main content only once it's
+  // looked at, so its LCP measured the time it sat unseen (listing pages read
+  // 28-30s on 2026-10-06). Same rule as Google's web-vitals: ignore anything
+  // after the page was first hidden.
+  var firstHidden = document.visibilityState === 'hidden' ? 0 : Infinity;
+  document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'hidden') firstHidden = Math.min(firstHidden, performance.now()); }, true);
+  observe('largest-contentful-paint', function (e) { if (e.startTime < firstHidden) perf.lcp = Math.round(e.startTime); });
   observe('event', function (e) { if (e.interactionId && e.duration > perf.inp) perf.inp = Math.round(e.duration); }, { durationThreshold: 40 });
   observe('layout-shift', function (e) { if (!e.hadRecentInput) perf.cls += e.value; });
 

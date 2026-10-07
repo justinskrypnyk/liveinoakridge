@@ -9,6 +9,7 @@ import Base from '@/layouts/Base.astro';
 import Schema from '@/components/Schema.astro';
 import { SITE } from '@/data/site';
 import { getMarketStatsSnapshot, buildMarketFaqs } from '@/lib/market-stats';
+import { cachePublicPage } from '@/lib/cdn-cache';
 
 const snapshot = await getMarketStatsSnapshot();
 const faqGroups = buildMarketFaqs(snapshot);
@@ -16,6 +17,9 @@ const allFaqs = faqGroups.flatMap((g) => g.items);
 const lastUpdated = snapshot
   ? new Date(snapshot.updatedAt).toLocaleDateString('en-CA', { year: 'numeric', month: 'long', day: 'numeric' })
   : null;
+
+// After any early redirect, so only real pages are cached.
+cachePublicPage(Astro.response.headers);
 ---
 
 <Base

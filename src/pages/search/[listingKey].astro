@@ -10,6 +10,7 @@ import Schema from '@/components/Schema.astro';
 import { SITE } from '@/data/site';
 import { getMarketListingByKey, getNationalPoolListingByListingId, getActiveListingKeys } from '@/lib/ddf';
 import { fmtPrice, field, buildAddress, realtorUrl, photos, listingPhotoAlt, neighbourhoodForPoint } from '@/lib/listings';
+import { cachePublicPage } from '@/lib/cdn-cache';
 
 // AMPRE first (richer fields for listings it has — e.g. a real
 // ListOfficeName instead of just the originating board), falling back to
@@ -89,6 +90,9 @@ const facts: [string, string][] = [
   ['City', city],
   ['Listing Brokerage', listOfficeName],
 ].filter(([, v]) => v);
+
+// After any early redirect, so only real pages are cached.
+cachePublicPage(Astro.response.headers);
 ---
 
 <Base
