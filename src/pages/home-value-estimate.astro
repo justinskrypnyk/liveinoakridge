@@ -94,6 +94,7 @@ const propertyTypes = [
           <p class="text-sm text-slate/60 mb-2">Rough estimated range</p>
           <p class="font-serif text-4xl text-navy mb-1" id="estimate-range"></p>
           <p class="text-xs text-slate/50">Based on <span id="estimate-area-name"></span> neighbourhood averages — not your specific property</p>
+          <a id="estimate-sold-link" href="/sold-map/" class="inline-block mt-4 text-sm text-gold-deep underline font-medium">See what homes in <span id="estimate-sold-area"></span> actually sold for →</a>
         </div>
 
         <div class="bg-white rounded-2xl p-8 shadow-card">
@@ -171,6 +172,8 @@ const propertyTypes = [
 
     document.getElementById('estimate-range').textContent = rangeText;
     document.getElementById('estimate-area-name').textContent = areaOpt.textContent;
+    document.getElementById('estimate-sold-area').textContent = areaOpt.textContent;
+    document.getElementById('estimate-sold-link').href = `/sold-map/?area=${encodeURIComponent(areaOpt.value)}`;
     document.getElementById('hidden-estimate-range').value = rangeText;
     document.getElementById('hidden-area').value = areaOpt.textContent;
     document.getElementById('hidden-type').value = typeOpt.textContent;

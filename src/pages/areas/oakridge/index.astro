@@ -6,6 +6,7 @@ import GoogleMap from '@/components/GoogleMap.astro';
 import AreaMap from '@/components/AreaMap.astro';
 import ContactForm from '@/components/ContactForm.astro';
 import AreaMarketStatsBlock from '@/components/AreaMarketStatsBlock.astro';
+import SoldPricesCta from '@/components/SoldPricesCta.astro';
 import { getArea, AREAS } from '@/data/areas';
 import { SITE } from '@/data/site';
 import { getAreaMarketListings } from '@/lib/ddf';
@@ -217,6 +218,17 @@ cachePublicPage(Astro.response.headers);
       </div>
     </section>
   )}
+
+  <!-- Sold prices -- into /sold-map/ zoomed to Oakridge -->
+  <section class="py-10 bg-white">
+    <div class="container-site">
+      <SoldPricesCta
+        heading="What did homes in Oakridge actually sell for?"
+        body="List prices only tell half the story. See real sold prices and sale dates on a map of Oakridge, from every brokerage. Free sign-in."
+        href="/sold-map/?area=oakridge"
+      />
+    </div>
+  </section>
 
   <!-- About + Map -->
   <section class="py-20 bg-cream">

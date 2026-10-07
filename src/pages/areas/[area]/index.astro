@@ -6,6 +6,7 @@ import GoogleMap from '@/components/GoogleMap.astro';
 import AreaMap from '@/components/AreaMap.astro';
 import ContactForm from '@/components/ContactForm.astro';
 import AreaMarketStatsBlock from '@/components/AreaMarketStatsBlock.astro';
+import SoldPricesCta from '@/components/SoldPricesCta.astro';
 import { AREAS, getArea } from '@/data/areas';
 import { SITE } from '@/data/site';
 import { getAreaMarketListings } from '@/lib/ddf';
@@ -191,6 +192,17 @@ cachePublicPage(Astro.response.headers);
       </div>
     </section>
   )}
+
+  <!-- Sold prices -- into /sold-map/ zoomed to this area -->
+  <section class="py-10 bg-white">
+    <div class="container-site">
+      <SoldPricesCta
+        heading={`What did homes in ${area.name} actually sell for?`}
+        body={`List prices only tell half the story. See real sold prices and sale dates on a map of ${area.name}, from every brokerage. Free sign-in.`}
+        href={`/sold-map/?area=${area.slug}`}
+      />
+    </div>
+  </section>
 
   <!-- About + Map -->
   <section class="py-20 bg-cream">

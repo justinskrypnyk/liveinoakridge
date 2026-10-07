@@ -12,13 +12,30 @@
 export const prerender = false;
 import Base from '@/layouts/Base.astro';
 import { SITE } from '@/data/site';
-import { getAllAreasBounds } from '@/lib/area-boundaries';
+import { getAllAreasBounds, getAreaBounds, areaNameForSlug } from '@/lib/area-boundaries';
 import { getVowSession } from '@/lib/vow-session';
 import { PROPERTY_TYPE_OPTIONS } from '@/lib/vow-property-types';
 
 const session = getVowSession(Astro.cookies);
 const authenticated = session !== null;
-const initialBounds = getAllAreasBounds();
+
+// Deep links from area pages / the home value tool (?area=oakridge) and
+// listing pages (?lat=&lng=) open the map already zoomed to that spot
+// instead of all of London. See SoldPricesCta.astro.
+const allBounds = getAllAreasBounds();
+const areaParam = Astro.url.searchParams.get('area') ?? '';
+const areaBounds = areaParam ? getAreaBounds(areaParam) : null;
+const focusName = areaBounds ? areaNameForSlug(areaParam) : null;
+const lat = Number(Astro.url.searchParams.get('lat'));
+const lng = Number(Astro.url.searchParams.get('lng'));
+const pointInLondon =
+  Number.isFinite(lat) && Number.isFinite(lng) &&
+  lat > allBounds.south && lat < allBounds.north && lng > allBounds.west && lng < allBounds.east;
+// ~700m either way -- a few streets around the listing.
+const pointBounds = pointInLondon
+  ? { north: lat + 0.0065, south: lat - 0.0065, east: lng + 0.009, west: lng - 0.009 }
+  : null;
+const initialBounds = areaBounds ?? pointBounds ?? allBounds;
 
 const priceSteps = Array.from({ length: 40 }, (_, i) => (i + 1) * 50000);
 function shortPriceLabel(n: number): string {
@@ -54,7 +71,11 @@ const DATE_RANGE_OPTIONS = [
       <h1 class="font-serif text-5xl font-bold mb-4">London Ontario Sold Prices Map</h1>
       <div class="gold-divider mb-6"></div>
       <p class="text-xl text-white/70 max-w-2xl">
-        See what homes actually sold for across London, Ontario. Pan and zoom to any neighbourhood.
+        {focusName
+          ? `See what homes actually sold for in ${focusName}. Zoom out to see the rest of London.`
+          : pointBounds
+            ? 'See what homes near this one actually sold for. Zoom out to see the rest of London.'
+            : 'See what homes actually sold for across London, Ontario. Pan and zoom to any neighbourhood.'}
         {!authenticated && ' Sign in with a free magic link to unlock exact prices.'}
       </p>
     </div>
@@ -223,6 +244,13 @@ const DATE_RANGE_OPTIONS = [
 </Base>
 
 <script define:vars={{ initialBounds, authenticated, siteUrl: SITE.url }}>
+  // Remember a zoomed-in deep link (?area= / ?lat=&lng=) so vow/callback
+  // can send the visitor back to the same view after the magic link,
+  // instead of all of London. Same-browser only; otherwise plain /sold-map/.
+  if (!authenticated && location.search) {
+    try { localStorage.setItem('soldMapReturn', location.pathname + location.search); } catch {}
+  }
+
   function esc(s) {
     const d = document.createElement('div');
     d.textContent = s ?? '';

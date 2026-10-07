@@ -47,7 +47,13 @@ import Base from '@/layouts/Base.astro';
         setMessage(json.error || 'Sign-in failed. Please request a new link.');
         return;
       }
-      window.location.replace('/sold-map/');
+      let returnTo = '/sold-map/';
+      try {
+        const saved = localStorage.getItem('soldMapReturn');
+        localStorage.removeItem('soldMapReturn');
+        if (saved && /^\/sold-map\/\?[\w=&.%-]+$/.test(saved)) returnTo = saved;
+      } catch {}
+      window.location.replace(returnTo);
     } catch {
       setMessage('Sign-in failed. Please try again.');
     }

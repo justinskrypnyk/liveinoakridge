@@ -1,0 +1,24 @@
+---
+// "See what homes sold for" card, placed where buyers and sellers already are
+// (area pages, listing pages) -- as of 2026-10-07 the sold map had zero real
+// sign-ups, since the only ways in were the header menu and a small link on
+// /market-map/. Links straight into /sold-map/ zoomed to the right spot
+// (?area= or ?lat=&lng=), where blurred prices + "Sign In to Unlock" do the
+// asking.
+interface Props {
+  heading: string;
+  body: string;
+  href: string;
+}
+
+const { heading, body, href } = Astro.props;
+---
+
+<div class="bg-white rounded-2xl shadow-card p-6 md:p-8 flex flex-col md:flex-row md:items-center gap-5 border-l-4 border-gold">
+  <div class="flex-1">
+    <div class="text-gold-deep text-xs font-semibold tracking-wider uppercase mb-2">Real Sold Prices · Free</div>
+    <h2 class="font-serif text-2xl text-navy font-bold mb-2">{heading}</h2>
+    <p class="text-sm text-slate leading-relaxed">{body}</p>
+  </div>
+  <a href={href} class="btn-primary whitespace-nowrap shrink-0 justify-center">See Sold Prices</a>
+</div>

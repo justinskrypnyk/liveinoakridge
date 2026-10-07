@@ -5,6 +5,7 @@ import GoogleMap from '@/components/GoogleMap.astro';
 import ContactForm from '@/components/ContactForm.astro';
 import CallRequest from '@/components/CallRequest.astro';
 import SimilarHomesNudge from '@/components/SimilarHomesNudge.astro';
+import SoldPricesCta from '@/components/SoldPricesCta.astro';
 import { findAreaForPoint } from '@/lib/area-boundaries';
 import Schema from '@/components/Schema.astro';
 import { SITE } from '@/data/site';
@@ -281,6 +282,14 @@ cachePublicPage(Astro.response.headers);
             <h2 class="font-serif text-2xl text-navy mb-4">Location</h2>
             <GoogleMap query={mapQuery} title={address} height="360px" />
           </div>
+
+          {geo && /^London/i.test(city) && (
+            <SoldPricesCta
+              heading="What did homes near here sell for?"
+              body="Compare this list price to what nearby homes actually sold for. See real sold prices and sale dates on the map, from every brokerage. Free sign-in."
+              href={`/sold-map/?lat=${geo.lat.toFixed(5)}&lng=${geo.lng.toFixed(5)}`}
+            />
+          )}
 
           <div class="bg-white rounded-2xl shadow-card p-6 md:p-8">
             <h2 class="font-serif text-2xl text-navy mb-1">Estimate Your Payment</h2>
