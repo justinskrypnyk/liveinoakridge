@@ -22,8 +22,9 @@ export type AdminStats = {
 const DAY = 86400000;
 // Team and Claude test submissions, not leads (see the 2026-10-01 lead count:
 // all 54 September "leads" turned out to be tests).
-const TEST_LEAD = /smile@|padasas|^info(\+[^@]*)?@homeswithjustin\.ca$|claude-test|^test20/i;
-const TEST_NAME = /^test\b/i;
+// Any @homeswithjustin.ca address is the team (e.g. fch-pipeline-test@).
+const TEST_LEAD = /smile@|padasas|@homeswithjustin\.ca$|claude-test|^test20/i;
+const TEST_NAME = /^(fch )?test\b/i;
 
 const torontoDay = (ms: number) => new Date(ms).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' });
 function mondayOf(day: string) {
