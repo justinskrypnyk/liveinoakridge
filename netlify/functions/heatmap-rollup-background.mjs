@@ -72,6 +72,9 @@ export default async () => {
   const raw = getStore('heatmap-raw');
   const weeks = getStore('heatmap-weeks');
   const sessionStore = getStore('heatmap-sessions');
+  // Stamped on every run, even an empty one, so the admin page can show the
+  // job is still checking hourly when there's simply been no new traffic.
+  await getStore('heatmap-meta').setJSON('last-run', { at: new Date().toISOString() }).catch(() => {});
 
   const { blobs } = await raw.list();
   const keys = blobs.map((b) => b.key).sort().slice(0, MAX_RAW_PER_RUN);

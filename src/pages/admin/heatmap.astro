@@ -41,10 +41,12 @@ let pages: Record<string, PageSummary> = {};
 let otherPages: Record<string, PageSummary> = {}; // the other device, for site-wide visitor places
 let site: SiteSummary | null = null;
 let updatedAt = '';
+let checkedAt = ''; // last hourly rollup run, new data or not
 let loadError = '';
 if (authorized) {
   try {
     const store = adminStore('heatmap-weeks', viewSite);
+    checkedAt = ((await adminStore('heatmap-meta', viewSite).get('last-run', { type: 'json' }).catch(() => null)) as { at?: string } | null)?.at || '';
     const { blobs } = await store.list();
     weekList = [...new Set(blobs.map((b) => b.key.slice(0, 10)))].sort().reverse();
     week = weekList.includes(url.searchParams.get('week') || '') ? url.searchParams.get('week')! : weekList[0] || '';
@@ -61,6 +63,8 @@ if (authorized) {
     loadError = err instanceof Error ? err.message : String(err);
   }
 }
+
+const fmtStamp = (iso: string) => new Date(iso).toLocaleString('en-CA', { timeZone: 'America/Toronto', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
 
 const pageList = Object.entries(pages)
   .map(([path, p]) => ({ path, views: p.views, avgSecs: p.views ? Math.round(p.secs / p.views) : 0, clicks: p.clicks.length }))
@@ -205,7 +209,7 @@ const data = sel ? { clicks: sel.clicks, bands: sel.bands, depth: sel.depth, fra
     <header>
       <div>
         <h1>Site heatmap · {viewSite.label}</h1>
-        <div class="sub">{week ? `Week of ${fmtWeek(week)}` : 'No data yet'}{updatedAt && ` · updated ${new Date(updatedAt).toLocaleString('en-CA', { timeZone: 'America/Toronto', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}`}</div>
+        <div class="sub">{week ? `Week of ${fmtWeek(week)}` : 'No data yet'}{updatedAt && ` · updated ${fmtStamp(updatedAt)}`}{checkedAt && ` · last checked ${fmtStamp(checkedAt)}`}</div>
       </div>
       <nav class="sites" aria-label="Which site">
         {ADMIN_SITES.map((s) => <a href={`?key=${encodeURIComponent(key)}&site=${s.id}&device=${device}`} class={s.id === viewSite.id ? 'on' : ''}>{s.label}</a>)}
