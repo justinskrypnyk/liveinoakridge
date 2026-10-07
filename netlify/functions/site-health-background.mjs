@@ -31,19 +31,30 @@ const results = [];
 function record(name, ok, detail, level = 'fail') {
   results.push({ name, ok, detail, level: ok ? 'ok' : level });
 }
+// A failed check is re-run up to 3 times, 20s apart, before it counts -- a
+// cold Netlify instance can blow a single timeout and send a false alarm
+// (the sister site's MLS check did exactly that on 2026-10-07).
+const CHECK_ATTEMPTS = 3;
+const CHECK_RETRY_DELAY_MS = 20000;
 async function check(name, fn, level = 'fail') {
-  try {
-    const res = await fn();
-    record(name, res.ok, res.detail, res.level || level);
-  } catch (err) {
-    record(name, false, `Check itself errored: ${err.message}`, level);
+  let last;
+  for (let attempt = 1; attempt <= CHECK_ATTEMPTS; attempt++) {
+    try {
+      last = await fn();
+    } catch (err) {
+      last = { ok: false, detail: `Check itself errored: ${err.message}` };
+    }
+    if (last.ok) break;
+    if (attempt < CHECK_ATTEMPTS) await new Promise((r) => setTimeout(r, CHECK_RETRY_DELAY_MS));
   }
+  const tries = last.ok ? '' : ` (failed ${CHECK_ATTEMPTS} tries in a row)`;
+  record(name, last.ok, `${last.detail}${tries}`, last.level || level);
 }
 const hoursAgo = (iso) => (iso ? (Date.now() - new Date(iso).getTime()) / HOUR : Infinity);
 const ageText = (h) => (h === Infinity ? 'never' : h < 48 ? `${Math.round(h)} hours ago` : `${Math.round(h / 24)} days ago`);
 const torontoDate = (offsetDays = 0) => new Date(Date.now() + offsetDays * 86400000).toLocaleDateString('en-CA', { timeZone: TZ });
 
-async function fetchWithTimeout(url, opts = {}, ms = 20000) {
+async function fetchWithTimeout(url, opts = {}, ms = 30000) {
   return fetch(url, { ...opts, signal: AbortSignal.timeout(ms), headers: { 'User-Agent': 'LiveInOakridge-SiteHealth/1.0', ...(opts.headers || {}) } });
 }
 
@@ -113,7 +124,10 @@ export default async (req) => {
   // ---- 2. Outside services still accept our keys ----
   const ddfCheck = (name, token) => check(name, async () => {
     const res = await fetchWithTimeout(`${env.DDF_API_BASE_URL}Property?$top=1&$select=ListingKey`, { headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' } });
-    return res.ok ? { ok: true, detail: 'OK' } : { ok: false, detail: `HTTP ${res.status} -- the access token may have expired` };
+    if (!res.ok) return { ok: false, detail: `HTTP ${res.status} -- the access token may have expired` };
+    // A 200 with no rows means the key still works but the feed is handing back nothing.
+    const rows = (await res.json().catch(() => ({})))?.value?.length || 0;
+    return rows > 0 ? { ok: true, detail: 'OK' } : { ok: false, detail: 'Feed accepted the key but returned 0 listings' };
   });
   await Promise.all([
     ddfCheck('Listing feed (DDF) access', env.DDF_ACCESS_TOKEN),
@@ -152,6 +166,14 @@ export default async (req) => {
   await Promise.all([
     blobFresh('Newest-listings snapshot (school welcome emails)', 'area-newest-listings', 'latest', 'builtAt', 36),
     blobFresh('Price history (price-drop alerts)', 'listing-price-history', 'latest', 'updatedAt', 36),
+    // The listing code swallows feed errors and serves an empty list, so a fresh
+    // snapshot timestamp alone can hide a feed that's quietly returning nothing.
+    check('Area listings actually showing', async () => {
+      const snap = await getStore('area-newest-listings').get('latest', { type: 'json' });
+      const areas = Object.values(snap?.areas || {});
+      const count = areas.flat().length;
+      return { ok: count > 0, detail: count ? `${count} listings across ${areas.length} areas` : 'Latest snapshot has 0 listings -- area pages and alert emails may be empty' };
+    }),
   ]);
   await check('"Your lead is back" alerts running', async () => {
     // lead-back-alerts runs every 20 minutes and clears finished visits.
