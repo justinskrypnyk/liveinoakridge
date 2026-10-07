@@ -1,0 +1,531 @@
+---
+// Comparable homes finder (Justin, 2026-10-07): type an address or MLS#,
+// get the closest sold / conditional / active homes scored out of 100, with
+// photos, to pick comps for a CMA. Everything about the subject and how much
+// each factor matters is adjustable; results re-sort as you change them.
+// Data: nightly VOW index (netlify/functions/comps-index-background.mjs),
+// scored by src/lib/comps-score.ts through /api/admin/comps.json.
+//
+// Gated by ?key=HEATMAP_KEY like the other admin pages, and a plain page
+// with no site layout so GA4/the heatmap don't count visits.
+import { FACTORS } from '@/lib/comps-score';
+
+export const prerender = false;
+
+const url = new URL(Astro.request.url);
+const key = url.searchParams.get('key') || '';
+const expected = import.meta.env.HEATMAP_KEY;
+Astro.response.headers.set('X-Robots-Tag', 'noindex, nofollow');
+Astro.response.headers.set('Cache-Control', 'no-store');
+const authorized = Boolean(expected) && key === expected;
+if (!authorized) Astro.response.status = 404;
+
+const SUBTYPES = ['Detached', 'Semi-Detached', 'Att/Row/Townhouse', 'Condo Townhouse', 'Condo Apartment', 'Detached Condo', 'Vacant Land Condo', 'Link', 'Duplex', 'Triplex', 'Fourplex', 'Multiplex', 'Rural Residential', 'Farm', 'Modular Home', 'MobileTrailer', 'Common Element Condo', 'Semi-Detached Condo'];
+const STYLES = ['2-Storey', 'Bungalow', 'Bungalow-Raised', 'Bungaloft', '1 1/2 Storey', '2 1/2 Storey', '3-Storey', 'Backsplit 3', 'Backsplit 4', 'Backsplit 5', 'Sidesplit', 'Sidesplit 3', 'Sidesplit 4', 'Sidesplit 5', 'Multi-Level', 'Apartment', '1 Storey/Apt', 'Stacked Townhouse', 'Other'];
+const k = encodeURIComponent(key);
+---
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Comparable Homes</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style is:global>
+  :root { --ink:#16283a; --muted:#5a7185; --line:#dbe4ea; --bg:#f4f6f8; --card:#fff; --accent:#047857; --navy:#0c2340; --warn:#b45309; --bad:#b91c1c; --sold:#0c2340; --cond:#d97706; --act:#047857; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: Inter, Helvetica, Arial, sans-serif; color:var(--ink); background:var(--bg); font-size:14px; }
+  header { background:var(--navy); color:#fff; padding:16px 24px; display:flex; flex-wrap:wrap; gap:8px 24px; align-items:center; }
+  header h1 { font-size:18px; margin:0; font-weight:600; }
+  header nav { margin-left:auto; display:flex; gap:16px; font-size:13px; }
+  header nav a { color:#b8c7d6; }
+  main { max-width:1200px; margin:0 auto; padding:20px 16px 60px; }
+  h2 { font-size:15px; margin:24px 0 10px; display:flex; align-items:baseline; gap:8px; }
+  h2 .count { font-size:12px; color:var(--muted); font-weight:500; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:16px; }
+  .search { display:flex; gap:8px; }
+  .search input { flex:1; font-size:16px; padding:10px 12px; border:1px solid var(--line); border-radius:6px; min-width:0; }
+  button, .btn { font:inherit; font-weight:600; padding:9px 14px; border-radius:6px; border:1px solid var(--line); background:#fff; color:var(--ink); cursor:pointer; white-space:nowrap; }
+  button.primary { background:var(--accent); color:#fff; border-color:var(--accent); }
+  button:disabled { opacity:.5; cursor:default; }
+  .source { margin-top:10px; font-size:13px; color:var(--muted); }
+  .meta { font-size:12px; color:var(--muted); margin-top:6px; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:10px 14px; }
+  label.f { display:flex; flex-direction:column; gap:4px; font-size:12px; color:var(--muted); font-weight:600; }
+  label.f input, label.f select { font:inherit; font-size:14px; color:var(--ink); padding:7px 8px; border:1px solid var(--line); border-radius:6px; background:#fff; width:100%; }
+  label.chk { display:flex; align-items:center; gap:6px; font-size:13px; font-weight:600; padding-top:18px; }
+  .row2 { display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin-top:16px; }
+  @media (max-width: 860px) { .row2 { grid-template-columns:1fr; } }
+  details summary { cursor:pointer; font-weight:600; font-size:13px; }
+  .weights { display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:6px 18px; margin-top:10px; }
+  .weights label { display:grid; grid-template-columns: 110px 1fr 28px; align-items:center; gap:8px; font-size:13px; }
+  .weights output { font-variant-numeric:tabular-nums; text-align:right; color:var(--muted); }
+  #map { height:360px; border-radius:8px; border:1px solid var(--line); }
+  .hint { background:#fffbeb; border:1px solid #fde68a; border-radius:8px; padding:10px 12px; font-size:13px; margin-top:12px; display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+  .hint button { padding:5px 10px; font-size:12px; }
+  .comps { display:grid; grid-template-columns:minmax(0, 1fr); gap:10px; }
+  .comp { background:var(--card); border:1px solid var(--line); border-radius:8px; display:grid; grid-template-columns: 64px 120px minmax(0, 1fr) auto; gap:12px; padding:10px; align-items:start; }
+  .comp.picked { border-color:var(--accent); box-shadow:0 0 0 2px #04785733; }
+  @media (max-width: 700px) { .comp { grid-template-columns: 56px minmax(0, 1fr); } .comp .thumb { display:none; } .comp .actions { grid-column: 1 / -1; flex-direction:row !important; } }
+  .score { width:56px; height:56px; border-radius:50%; display:flex; flex-direction:column; align-items:center; justify-content:center; font-weight:800; font-size:20px; color:#fff; }
+  .score small { font-size:9px; font-weight:600; opacity:.85; }
+  .thumb { width:120px; height:84px; border-radius:6px; object-fit:cover; background:#e5ecf1; cursor:pointer; }
+  .addr { font-weight:700; font-size:15px; overflow-wrap:anywhere; }
+  .num { font-size:12px; color:#fff; border-radius:10px; padding:1px 7px; margin-right:6px; font-weight:700; }
+  .price { font-weight:700; font-size:15px; margin:2px 0; }
+  .price .sub { font-weight:500; color:var(--muted); font-size:13px; }
+  .facts { display:flex; flex-wrap:wrap; gap:4px 12px; font-size:13px; color:var(--muted); }
+  .facts b { color:var(--ink); font-weight:600; }
+  .actions { display:flex; flex-direction:column; gap:6px; }
+  .actions button { padding:6px 10px; font-size:12px; }
+  .why { grid-column: 1 / -1; display:none; }
+  .why.open { display:grid; grid-template-columns:repeat(auto-fill, minmax(230px, 1fr)); gap:4px 18px; padding-top:6px; border-top:1px dashed var(--line); }
+  .bar { display:grid; grid-template-columns: 96px 1fr 44px; gap:8px; align-items:center; font-size:12px; }
+  .bar .track { height:6px; background:#e5ecf1; border-radius:3px; overflow:hidden; }
+  .bar .fill { height:100%; background:var(--accent); }
+  .bar .note { grid-column: 2 / -1; color:var(--muted); margin-top:-3px; margin-bottom:3px; }
+  .bar span:last-child { text-align:right; font-variant-numeric:tabular-nums; color:var(--muted); }
+  .empty { padding:60px 24px; text-align:center; color:var(--muted); }
+  .none { color:var(--muted); font-size:13px; padding:8px 0; }
+  .more { margin-top:8px; }
+  #shortlist { position:sticky; bottom:0; background:var(--navy); color:#fff; padding:10px 16px; display:none; gap:10px; align-items:center; flex-wrap:wrap; z-index:500; }
+  #shortlist button { padding:6px 12px; font-size:13px; }
+  .gallery { position:fixed; inset:0; background:rgba(8,16,28,.92); z-index:1000; display:none; flex-direction:column; }
+  .gallery.open { display:flex; }
+  .gallery .top { display:flex; justify-content:space-between; align-items:center; padding:10px 16px; color:#fff; gap:12px; }
+  .gallery .stage { flex:1; display:flex; align-items:center; justify-content:center; position:relative; min-height:0; }
+  .gallery .stage img { max-width:100%; max-height:100%; object-fit:contain; }
+  .gallery .nav { position:absolute; top:50%; transform:translateY(-50%); font-size:28px; background:rgba(255,255,255,.15); color:#fff; border:none; width:48px; height:64px; }
+  .gallery .prev { left:8px; } .gallery .next { right:8px; }
+  .gallery .strip { display:flex; gap:6px; overflow-x:auto; padding:8px 16px 14px; }
+  .gallery .strip img { height:64px; border-radius:4px; opacity:.55; cursor:pointer; flex:none; }
+  .gallery .strip img.on { opacity:1; outline:2px solid #fff; }
+  .muted { color:var(--muted); }
+</style>
+</head>
+<body>
+{!authorized ? (
+  <div class="empty">Not found.</div>
+) : (
+  <>
+    <header>
+      <h1>Comparable Homes</h1>
+      <nav>
+        <a href={`/admin/?key=${k}`}>Admin</a>
+        <a href={`/admin/heatmap/?key=${k}`}>Heatmap</a>
+        <a href={`/admin/sessions/?key=${k}`}>Visitor sessions</a>
+      </nav>
+    </header>
+    <main data-key={key}>
+      <div class="card">
+        <form class="search" id="search">
+          <input id="q" placeholder="Address (e.g. 520 Oakridge Dr) or MLS® number" autocomplete="off" />
+          <button class="primary" id="find">Find comps</button>
+        </form>
+        <div class="source" id="source"></div>
+        <div class="meta" id="meta"></div>
+      </div>
+
+      <div id="work" hidden>
+        <div class="row2">
+          <div class="card">
+            <h2 style="margin-top:0">The home <span class="count" id="subj-addr"></span></h2>
+            <div class="grid">
+              <label class="f">Type<select id="s-subType">{SUBTYPES.map((t) => <option>{t}</option>)}</select></label>
+              <label class="f">Style<select id="s-style"><option value="">Any</option>{STYLES.map((t) => <option>{t}</option>)}</select></label>
+              <label class="f">Bedrooms (above grade)<input id="s-beds" type="number" min="0" max="12" /></label>
+              <label class="f">Bedrooms (basement)<input id="s-bedsBelow" type="number" min="0" max="6" /></label>
+              <label class="f">Bathrooms<input id="s-baths" type="number" min="0" max="12" /></label>
+              <label class="f">Square feet<input id="s-sqft" type="number" min="0" step="50" /></label>
+              <label class="f">Age (years)<input id="s-age" type="number" min="0" max="200" /></label>
+              <label class="f">Lot (sq ft)<input id="s-lot" type="number" min="0" step="100" title="Frontage x depth, e.g. 50 x 110 = 5500" /></label>
+              <label class="f">Basement<select id="s-basement"><option value="">Any</option><option value="finished">Finished</option><option value="partial">Partly finished</option><option value="unfinished">Unfinished</option><option value="none">None</option></select></label>
+              <label class="f">Garage<select id="s-garage"><option value="">Any</option><option value="attached">Attached</option><option value="detached">Detached</option><option value="none">None</option></select></label>
+              <label class="chk"><input id="s-rural" type="checkbox" /> Rural (septic / well / big lot)</label>
+            </div>
+          </div>
+          <div class="card">
+            <h2 style="margin-top:0">Search</h2>
+            <div class="grid">
+              <label class="f">Within
+                <select id="f-maxKm">
+                  <option value="0.5">500 m</option><option value="1">1 km</option><option value="2">2 km</option><option value="3" selected>3 km</option>
+                  <option value="5">5 km</option><option value="10">10 km</option><option value="25">25 km</option><option value="60">All of London + towns</option>
+                </select>
+              </label>
+              <label class="f">Sold in the last
+                <select id="f-soldMonths">
+                  <option value="3">3 months</option><option value="6" selected>6 months</option><option value="12">12 months</option><option value="24">24 months</option>
+                </select>
+              </label>
+              <label class="f">Min bedrooms<input id="f-minBeds" type="number" min="0" max="12" /></label>
+              <label class="f">Max bedrooms<input id="f-maxBeds" type="number" min="0" max="12" /></label>
+              <label class="chk"><input id="f-sameTypeOnly" type="checkbox" checked /> Same kind of home only</label>
+            </div>
+            <details style="margin-top:14px">
+              <summary>What matters most (adjust the scoring)</summary>
+              <div class="weights" id="weights">
+                {FACTORS.map((f) => (
+                  <label>{f.label}<input type="range" min="0" max="30" value={f.weight} data-w={f.id} /><output>{f.weight}</output></label>
+                ))}
+              </div>
+              <button type="button" id="reset-weights" style="margin-top:10px;font-size:12px;padding:5px 10px">Reset to defaults</button>
+            </details>
+          </div>
+        </div>
+
+        <div id="hint"></div>
+        <div style="margin-top:16px"><div id="map"></div></div>
+
+        <h2>Sold <span class="count" id="count-S"></span></h2>
+        <div class="comps" id="list-S"></div>
+        <h2>Conditionally sold <span class="count" id="count-C"></span></h2>
+        <div class="comps" id="list-C"></div>
+        <h2>Active <span class="count" id="count-A"></span></h2>
+        <div class="comps" id="list-A"></div>
+        <p class="meta" style="margin-top:24px">
+          Scores compare each home to the one above: 100 is a perfect match. Sale date uses the firm date, not closing. "Approx." locations are placed by postal code.
+          Internal use only: VOW data, not for sharing outside the brokerage.
+        </p>
+      </div>
+    </main>
+
+    <div id="shortlist">
+      <span id="shortlist-count"></span>
+      <button type="button" id="copy-cma">Copy for /cma</button>
+      <button type="button" id="download-csv">Download CSV</button>
+      <button type="button" id="clear-picks">Clear</button>
+    </div>
+
+    <div class="gallery" id="gallery">
+      <div class="top"><span id="g-title"></span><button type="button" id="g-close">Close ✕</button></div>
+      <div class="stage"><button class="nav prev" type="button" id="g-prev">‹</button><img id="g-img" alt="" /><button class="nav next" type="button" id="g-next">›</button></div>
+      <div class="strip" id="g-strip"></div>
+    </div>
+  </>
+)}
+
+<script>
+  import { FACTORS, DEFAULT_WEIGHTS, type Subject, type Scored, type CompRow } from '@/lib/comps-score';
+
+  const main = document.querySelector('main');
+  if (!main) throw new Error('not authorized'); // 404 page: nothing to wire up
+  const KEY = main?.dataset.key || '';
+  const api = (qs = '') => `/api/admin/comps.json?key=${encodeURIComponent(KEY)}${qs}`;
+  const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
+
+  let subject: Subject | null = null;
+  let mlsKey: string | null = null;
+  let last: Record<'S' | 'C' | 'A', Scored[]> = { S: [], C: [], A: [] };
+  const picked = new Map<string, Scored>();
+  const shown = { S: 10, C: 6, A: 8 };
+  const STATUS = { S: { label: 'Sold', color: 'var(--sold)', hex: '#0c2340' }, C: { label: 'Conditional', color: 'var(--cond)', hex: '#d97706' }, A: { label: 'Active', color: 'var(--act)', hex: '#047857' } } as const;
+
+  const money = (n: number | null) => (n == null ? 'n/a' : `$${Math.round(n).toLocaleString('en-CA')}`);
+  const esc = (s: unknown) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
+  const scoreColor = (n: number) => (n >= 85 ? '#047857' : n >= 70 ? '#65a30d' : n >= 55 ? '#d97706' : '#94a3b8');
+  const date = (d: string | null) => (d ? new Date(d + 'T12:00:00').toLocaleDateString('en-CA', { month: 'short', day: 'numeric', year: 'numeric' }) : 'n/a');
+
+  // ---- index meta on load ----
+  fetch(api()).then((r) => r.json()).then((d) => {
+    if (!d.index) { $('meta').textContent = 'The comps list hasn\'t been built yet (it builds nightly).'; return; }
+    const c = d.index.counts;
+    $('meta').textContent = `${(c.S || 0).toLocaleString()} sales since ${date(d.index.soldSince)}, ${c.C || 0} conditional, ${(c.A || 0).toLocaleString()} active · updated ${new Date(d.index.builtAt).toLocaleString('en-CA', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}`;
+  }).catch(() => {});
+
+  // ---- find subject ----
+  $('search').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const q = $<HTMLInputElement>('q').value.trim();
+    if (!q) return;
+    $<HTMLButtonElement>('find').disabled = true;
+    $('source').textContent = 'Looking it up...';
+    try {
+      const d = await (await fetch(api(`&q=${encodeURIComponent(q)}`))).json();
+      subject = d.subject;
+      mlsKey = d.mlsRow?.k || null;
+      $('source').textContent = d.source || '';
+      if (!subject) return;
+      fillSubject(subject);
+      $('work').hidden = false;
+      history.replaceState(null, '', `?key=${encodeURIComponent(KEY)}&q=${encodeURIComponent(q)}`);
+      await run();
+    } catch {
+      $('source').textContent = 'Something went wrong looking that up. Try again.';
+    } finally {
+      $<HTMLButtonElement>('find').disabled = false;
+    }
+  });
+
+  const SUBJ_FIELDS = ['subType', 'style', 'beds', 'bedsBelow', 'baths', 'sqft', 'age', 'lot', 'basement', 'garage'] as const;
+  function fillSubject(s: Subject) {
+    $('subj-addr').textContent = s.address + (s.arn ? ` · ${s.arn}` : '');
+    for (const f of SUBJ_FIELDS) {
+      const el = $<HTMLInputElement | HTMLSelectElement>(`s-${f}`);
+      const v = (s as any)[f];
+      if (el instanceof HTMLSelectElement && v && ![...el.options].some((o) => o.value === v)) el.add(new Option(v, v));
+      el.value = v == null ? '' : String(v);
+    }
+    $<HTMLInputElement>('s-rural').checked = !!s.rural;
+    // Rural homes need a wider net by default.
+    $<HTMLSelectElement>('f-maxKm').value = s.rural ? '25' : '3';
+  }
+  function readSubject(): Subject {
+    const s = { ...subject! } as any;
+    for (const f of SUBJ_FIELDS) {
+      const v = $<HTMLInputElement>(`s-${f}`).value;
+      s[f] = v === '' ? null : ['beds', 'bedsBelow', 'baths', 'sqft', 'age', 'lot'].includes(f) ? Number(v) : v;
+    }
+    s.rural = $<HTMLInputElement>('s-rural').checked;
+    return s;
+  }
+  function readFilters() {
+    const n = (id: string) => ($<HTMLInputElement>(id).value === '' ? null : Number($<HTMLInputElement>(id).value));
+    return { maxKm: Number($<HTMLSelectElement>('f-maxKm').value), soldMonths: Number($<HTMLSelectElement>('f-soldMonths').value), sameTypeOnly: $<HTMLInputElement>('f-sameTypeOnly').checked, minBeds: n('f-minBeds'), maxBeds: n('f-maxBeds') };
+  }
+  function readWeights() {
+    const w: Record<string, number> = {};
+    document.querySelectorAll<HTMLInputElement>('[data-w]').forEach((el) => { w[el.dataset.w!] = Number(el.value); });
+    return w;
+  }
+
+  // ---- run scoring (debounced on every change) ----
+  let token = 0;
+  async function run() {
+    if (!subject) return;
+    const my = ++token;
+    const res = await fetch(api(), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ subject: readSubject(), weights: readWeights(), filters: readFilters(), exclude: mlsKey }) });
+    const d = await res.json();
+    if (my !== token) return;
+    if (d.error) { $('hint').innerHTML = `<div class="hint">${esc(d.error)}</div>`; return; }
+    last = { S: d.S, C: d.C, A: d.A };
+    for (const st of ['S', 'C', 'A'] as const) $(`count-${st}`).textContent = `${d.totals[st]} found${d.totals[st] > d[st].length ? `, best ${d[st].length} shown` : ''}`;
+    render();
+    renderHint(d.totals);
+  }
+  let timer: number | undefined;
+  const rerun = () => { clearTimeout(timer); timer = window.setTimeout(run, 250); };
+  document.querySelectorAll('#work input, #work select').forEach((el) => el.addEventListener(el.matches('[type=range]') ? 'input' : 'change', rerun));
+  document.querySelectorAll<HTMLInputElement>('[data-w]').forEach((el) => el.addEventListener('input', () => { (el.nextElementSibling as HTMLOutputElement).value = el.value; }));
+  $('reset-weights').addEventListener('click', () => {
+    document.querySelectorAll<HTMLInputElement>('[data-w]').forEach((el) => { el.value = String((DEFAULT_WEIGHTS as any)[el.dataset.w!]); (el.nextElementSibling as HTMLOutputElement).value = el.value; });
+    rerun();
+  });
+
+  function renderHint(totals: Record<string, number>) {
+    const strong = last.S.filter((c) => c.score >= 75).length;
+    const f = readFilters();
+    if (strong >= 3) { $('hint').innerHTML = ''; return; }
+    $('hint').innerHTML = `<div class="hint">Only ${strong} sold home${strong === 1 ? '' : 's'} scoring 75+ within ${f.maxKm >= 60 ? 'the whole area' : `${f.maxKm} km`} in the last ${f.soldMonths} months.
+      ${f.maxKm < 10 ? '<button data-act="wider">Search 10 km</button>' : ''}
+      ${f.soldMonths < 12 ? '<button data-act="longer">Go back 12 months</button>' : ''}
+      <button data-act="anywhere">Same age & style anywhere in London</button></div>`;
+    $('hint').querySelectorAll<HTMLButtonElement>('button').forEach((b) => b.addEventListener('click', () => {
+      if (b.dataset.act === 'wider') $<HTMLSelectElement>('f-maxKm').value = '10';
+      if (b.dataset.act === 'longer') $<HTMLSelectElement>('f-soldMonths').value = '12';
+      if (b.dataset.act === 'anywhere') {
+        // Homes built around the same time in other parts of London: location
+        // stops dominating, age and style carry more weight.
+        $<HTMLSelectElement>('f-maxKm').value = '60';
+        const set = (id: string, v: number) => { const el = document.querySelector<HTMLInputElement>(`[data-w="${id}"]`)!; el.value = String(v); (el.nextElementSibling as HTMLOutputElement).value = String(v); };
+        set('location', 6); set('age', 16); set('style', 14);
+        (document.querySelector('details') as HTMLDetailsElement).open = true;
+      }
+      run();
+    }));
+  }
+
+  // ---- results ----
+  const LABEL = Object.fromEntries(FACTORS.map((f) => [f.id, f.label]));
+  function compCard(c: Scored, n: number, st: 'S' | 'C' | 'A') {
+    const r = c.row;
+    const pct = r.sp && r.lp ? Math.round((r.sp / r.lp) * 100) : null;
+    const price = st === 'S'
+      ? `${money(r.sp)} <span class="sub">sold · list ${money(r.lp)}${pct ? ` (${pct}%)` : ''}</span>`
+      : `${money(r.lp)} <span class="sub">list${r.olp && r.olp !== r.lp ? ` · was ${money(r.olp)}` : ''}</span>`;
+    const when = st === 'S' ? `Firm ${date(r.d)}${r.cd ? ` · ${r.cd > new Date().toISOString().slice(0, 10) ? 'closing' : 'closed'} ${date(r.cd)}` : ''}` : st === 'C' ? `Conditional ${date(r.d)}` : `Listed ${date(r.ld)}`;
+    const dist = c.km == null ? '' : c.km < 1 ? `${Math.round(c.km * 1000)} m` : `${c.km.toFixed(1)} km`;
+    const facts = [
+      r.s, r.sty, `${r.b ?? '?'}${r.bb ? `+${r.bb}` : ''} bd`, `${r.ba ?? '?'} ba`, r.sqTxt ? `${r.sqTxt} sf` : null,
+      r.ageTxt ? `${r.ageTxt} yrs` : null, r.lotTxt, r.bsmt.length ? `Bsmt: ${r.bsmt.join(', ')}` : null,
+      r.gar ? `Garage: ${r.gar}` : null, r.pool ? 'Pool' : null, r.dom != null ? `${r.dom} DOM` : null, r.rural ? 'Rural' : null,
+    ].filter(Boolean).map((x) => `<span>${esc(x)}</span>`).join('');
+    const why = c.parts.map((p) => `<div class="bar"><span>${esc(LABEL[p.id])}</span><div class="track"><div class="fill" style="width:${(p.pts / p.max) * 100}%"></div></div><span>${p.pts.toFixed(1)}/${p.max.toFixed(0)}</span><span class="note">${esc(p.note)}</span></div>`).join('');
+    return `<div class="comp${picked.has(r.k) ? ' picked' : ''}" data-k="${esc(r.k)}">
+      <div class="score" style="background:${scoreColor(c.score)}">${c.score}<small>/100</small></div>
+      <img class="thumb" data-photos="${esc(r.k)}" alt="" loading="lazy" />
+      <div>
+        <div class="addr"><span class="num" style="background:${STATUS[st].hex}">${n}</span>${esc(r.a.replace(/, ON .*$/, ''))}</div>
+        <div class="price">${price}</div>
+        <div class="facts"><b>${esc(when)}</b>${dist ? `<b>${esc(dist)}${r.gp && r.gp !== 'exact' ? ' (approx.)' : ''}</b>` : ''}${r.arn ? `<span>${esc(r.arn)}</span>` : ''}${facts}</div>
+        <div class="facts" style="margin-top:2px"><span>MLS® ${esc(r.k)}${r.off ? ` · ${esc(r.off)}` : ''}</span></div>
+      </div>
+      <div class="actions">
+        <button type="button" data-act="photos">Photos</button>
+        <button type="button" data-act="why">Why ${c.score}?</button>
+        <button type="button" data-act="pick">${picked.has(r.k) ? '✓ Picked' : 'Pick'}</button>
+      </div>
+      <div class="why">${why}</div>
+    </div>`;
+  }
+
+  function render() {
+    for (const st of ['S', 'C', 'A'] as const) {
+      const list = last[st];
+      const box = $(`list-${st}`);
+      if (!list.length) { box.innerHTML = '<div class="none">None match. Try widening the search.</div>'; continue; }
+      box.innerHTML = list.slice(0, shown[st]).map((c, i) => compCard(c, i + 1, st)).join('')
+        + (list.length > shown[st] ? `<button type="button" class="more" data-more="${st}">Show more (${list.length - shown[st]})</button>` : '');
+    }
+    loadThumbs();
+    renderMap();
+  }
+
+  document.addEventListener('click', async (e) => {
+    const t = e.target as HTMLElement;
+    const more = t.closest<HTMLElement>('[data-more]');
+    if (more) { const st = more.dataset.more as 'S' | 'C' | 'A'; shown[st] += 10; render(); return; }
+    const card = t.closest<HTMLElement>('.comp');
+    if (!card) return;
+    const k = card.dataset.k!;
+    const c = [...last.S, ...last.C, ...last.A].find((x) => x.row.k === k)!;
+    const act = t.closest<HTMLElement>('[data-act]')?.dataset.act || (t.classList.contains('thumb') ? 'photos' : '');
+    if (act === 'why') card.querySelector('.why')!.classList.toggle('open');
+    if (act === 'photos') openGallery(c.row);
+    if (act === 'pick') {
+      if (picked.has(k)) picked.delete(k); else picked.set(k, c);
+      card.classList.toggle('picked', picked.has(k));
+      (t.closest('[data-act]') as HTMLElement).textContent = picked.has(k) ? '✓ Picked' : 'Pick';
+      renderShortlist();
+    }
+  });
+
+  // ---- photos ----
+  const photoCache = new Map<string, Promise<string[]>>();
+  const photos = (k: string) => {
+    if (!photoCache.has(k)) photoCache.set(k, fetch(api(`&photos=${encodeURIComponent(k)}`)).then((r) => r.json()).then((d) => d.photos || []).catch(() => []));
+    return photoCache.get(k)!;
+  };
+  const thumbObserver = new IntersectionObserver((entries) => {
+    for (const en of entries) {
+      if (!en.isIntersecting) continue;
+      const img = en.target as HTMLImageElement;
+      thumbObserver.unobserve(img);
+      photos(img.dataset.photos!).then((p) => { if (p[0]) img.src = p[0]; });
+    }
+  }, { rootMargin: '200px' });
+  function loadThumbs() { document.querySelectorAll<HTMLImageElement>('img[data-photos]').forEach((img) => thumbObserver.observe(img)); }
+
+  let gal: string[] = [], gi = 0;
+  async function openGallery(r: CompRow) {
+    $('g-title').textContent = `${r.a.replace(/, ON .*$/, '')} · ${r.st === 'S' ? `sold ${money(r.sp)}` : `list ${money(r.lp)}`}`;
+    $('gallery').classList.add('open');
+    $<HTMLImageElement>('g-img').src = '';
+    $('g-strip').innerHTML = '<span class="muted" style="color:#cbd5e1">Loading photos...</span>';
+    gal = await photos(r.k);
+    gi = 0;
+    if (!gal.length) { $('g-strip').innerHTML = '<span style="color:#cbd5e1">No photos for this listing.</span>'; return; }
+    $('g-strip').innerHTML = gal.map((u, i) => `<img src="${esc(u)}" data-i="${i}" loading="lazy" alt="" />`).join('');
+    show(0);
+  }
+  function show(i: number) {
+    gi = (i + gal.length) % gal.length;
+    $<HTMLImageElement>('g-img').src = gal[gi];
+    $('g-strip').querySelectorAll('img').forEach((im, j) => im.classList.toggle('on', j === gi));
+    $('g-strip').querySelector('img.on')?.scrollIntoView({ inline: 'center', block: 'nearest' });
+  }
+  $('g-prev').addEventListener('click', () => show(gi - 1));
+  $('g-next').addEventListener('click', () => show(gi + 1));
+  $('g-strip').addEventListener('click', (e) => { const i = (e.target as HTMLElement).dataset.i; if (i) show(Number(i)); });
+  const closeGallery = () => $('gallery').classList.remove('open');
+  $('g-close').addEventListener('click', closeGallery);
+  document.addEventListener('keydown', (e) => {
+    if (!$('gallery').classList.contains('open')) return;
+    if (e.key === 'Escape') closeGallery();
+    if (e.key === 'ArrowLeft') show(gi - 1);
+    if (e.key === 'ArrowRight') show(gi + 1);
+  });
+
+  // ---- map ----
+  let map: any = null, layer: any = null;
+  async function loadLeaflet() {
+    if ((window as any).L) return;
+    await new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js'; s.onload = res; s.onerror = rej; document.head.appendChild(s); });
+  }
+  async function renderMap() {
+    if (!subject?.lat) return;
+    await loadLeaflet();
+    const L = (window as any).L;
+    if (!map) {
+      map = L.map('map');
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors', maxZoom: 19 }).addTo(map);
+    }
+    layer?.remove();
+    layer = L.layerGroup().addTo(map);
+    const pts: [number, number][] = [[subject.lat, subject.lng!]];
+    L.marker([subject.lat, subject.lng], { icon: L.divIcon({ className: '', html: '<div style="background:#b91c1c;color:#fff;font:700 11px Inter,sans-serif;padding:4px 8px;border-radius:12px;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4);white-space:nowrap">★ This home</div>', iconAnchor: [40, 12] }) }).addTo(layer);
+    for (const st of ['A', 'C', 'S'] as const) {
+      last[st].slice(0, shown[st]).forEach((c, i) => {
+        if (c.row.lat == null) return;
+        pts.push([c.row.lat, c.row.lng!]);
+        L.marker([c.row.lat, c.row.lng], { icon: L.divIcon({ className: '', html: `<div style="background:${STATUS[st].hex};color:#fff;font:700 11px Inter,sans-serif;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4)">${i + 1}</div>`, iconAnchor: [11, 11] }) })
+          .bindTooltip(`${STATUS[st].label} #${i + 1} · ${c.score}/100 · ${esc(c.row.a.replace(/, ON .*$/, ''))}`)
+          .on('click', () => document.querySelector(`.comp[data-k="${CSS.escape(c.row.k)}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'center' }))
+          .addTo(layer);
+      });
+    }
+    map.fitBounds(pts, { padding: [30, 30], maxZoom: 16 });
+  }
+
+  // ---- shortlist -> /cma ----
+  function renderShortlist() {
+    $('shortlist').style.display = picked.size ? 'flex' : 'none';
+    $('shortlist-count').textContent = `${picked.size} comp${picked.size === 1 ? '' : 's'} picked`;
+  }
+  const rowsForExport = () => [...picked.values()].map((c) => {
+    const r = c.row;
+    return {
+      Status: STATUS[r.st].label, Score: c.score, Address: r.a, 'MLS#': r.k,
+      'Sale price': r.sp ?? '', 'List price': r.lp ?? '', 'Original list': r.olp ?? '',
+      'Firm/conditional date': r.st === 'A' ? '' : r.d ?? '', 'Closing date': r.cd ?? '', 'Listed': r.ld ?? '', DOM: r.dom ?? '',
+      Type: r.s ?? '', Style: r.sty ?? '', Beds: `${r.b ?? ''}${r.bb ? `+${r.bb}` : ''}`, Baths: r.ba ?? '', 'Sq ft': r.sqTxt ?? '',
+      Age: r.ageTxt ?? '', Lot: r.lotTxt ?? '', Basement: r.bsmt.join(', '), Garage: r.gar ?? '', 'Distance km': c.km == null ? '' : c.km.toFixed(2), Area: r.arn ?? '',
+    };
+  });
+  $('copy-cma').addEventListener('click', async () => {
+    const s = readSubject();
+    const lines = [
+      `Subject: ${s.address} · ${s.subType || ''} ${s.style || ''} · ${s.beds ?? '?'}${s.bedsBelow ? `+${s.bedsBelow}` : ''} bed · ${s.baths ?? '?'} bath · ${s.sqft ?? '?'} sf · age ~${s.age ?? '?'} · lot ${s.lot ?? '?'} sf · basement ${s.basement || '?'} · garage ${s.garage || '?'}${s.rural ? ' · rural' : ''}`,
+      '',
+      'Comparables (from MLS®, firm dates):',
+      ...rowsForExport().map((r, i) => `${i + 1}. [${r.Status}, score ${r.Score}] ${r.Address} (MLS® ${r['MLS#']})${r['Sale price'] ? ` sold ${money(Number(r['Sale price']))}` : ''} · list ${money(Number(r['List price']) || null)}${r['Firm/conditional date'] ? ` · ${r.Status === 'Sold' ? 'firm' : 'conditional'} ${r['Firm/conditional date']}` : ''}${r.DOM !== '' ? ` · ${r.DOM} DOM` : ''} · ${r.Type} ${r.Style} · ${r.Beds} bed · ${r.Baths} bath · ${r['Sq ft']} sf · age ${r.Age || '?'} · lot ${r.Lot || '?'} · bsmt ${r.Basement || '?'} · garage ${r.Garage || '?'} · ${r['Distance km']} km away`),
+    ];
+    const text = lines.join('\n');
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      const ta = Object.assign(document.createElement('textarea'), { value: text });
+      document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove();
+    }
+    $('copy-cma').textContent = 'Copied ✓';
+    setTimeout(() => { $('copy-cma').textContent = 'Copy for /cma'; }, 1800);
+  });
+  $('download-csv').addEventListener('click', () => {
+    const rows = rowsForExport();
+    const head = Object.keys(rows[0]);
+    const csv = [head, ...rows.map((r) => head.map((h) => (r as any)[h]))].map((line) => line.map((v: unknown) => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+    a.download = `comps-${readSubject().address.replace(/[^a-z0-9]+/gi, '-').toLowerCase()}.csv`;
+    a.click();
+  });
+  $('clear-picks').addEventListener('click', () => { picked.clear(); renderShortlist(); render(); });
+
+  // Reopening a saved link (?q=...) runs the search straight away.
+  const q0 = new URLSearchParams(location.search).get('q');
+  if (q0) { $<HTMLInputElement>('q').value = q0; $('search').dispatchEvent(new Event('submit', { cancelable: true })); }
+</script>
+</body>
+</html>

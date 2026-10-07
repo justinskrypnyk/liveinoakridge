@@ -54,7 +54,7 @@ export interface VowSoldListing {
 // confirmed empirically 2026-08-12. Not currently hit (listingKey/
 // ResourceRecordKey filters here are never multi-word), but future-proofing
 // against the same silent-failure mode.
-async function odataGet(resource: string, params: Record<string, string>) {
+export async function odataGet(resource: string, params: Record<string, string>) {
   const query = Object.entries(params)
     .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
     .join('&');

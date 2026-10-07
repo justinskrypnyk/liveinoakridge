@@ -123,6 +123,7 @@ const formName = (f: string) => FORM_NAMES[f] || f.replace(/[-_]/g, ' ');
       <h1>Admin Panel</h1>
       <span style="color:#b8c7d6;font-size:13px">Both sites · {when(new Date().toISOString())}</span>
       <nav>
+        <a href={`/admin/comps/?key=${encodeURIComponent(key)}`}>Comps</a>
         <a href={`/admin/heatmap/?key=${encodeURIComponent(key)}`}>Heatmap</a>
         <a href={`/admin/sessions/?key=${encodeURIComponent(key)}`}>Visitor sessions</a>
       </nav>

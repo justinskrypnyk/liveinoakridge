@@ -54,7 +54,7 @@ export async function fetchVowCityListings({ baseUrl, token, select, city }) {
   return fetchVow({ baseUrl, token, select, filter: `contains(City,'${term.replace(/'/g, "''")}')`, keep });
 }
 
-async function fetchVow({ baseUrl, token, select, filter, keep }) {
+export async function fetchVow({ baseUrl, token, select, filter, keep }) {
   const fields = [...new Set([...select, 'City', 'PropertyType', 'PropertySubType', 'TransactionType', 'StandardStatus'])].join(',');
   const first = new URL(`${baseUrl}Property`);
   first.searchParams.set('$filter', filter);
