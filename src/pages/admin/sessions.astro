@@ -6,6 +6,7 @@
 // searches. Not a recording, and never who the visitor is.
 //
 // Same ?key=HEATMAP_KEY gate and plain (untracked) page as admin/heatmap.
+import AdminTabs from '@/components/AdminTabs.astro';
 import { ADMIN_SITES, pickAdminSite, adminStore, siteHref } from '@/lib/admin-sites.mjs';
 import { isLocal, isDataCentre, FORM_NAMES, prettyField } from '@/lib/heatmap-shared.mjs';
 
@@ -164,6 +165,7 @@ const qs = (over: Record<string, string>) => {
   <div class="empty">Not found.</div>
 ) : (
   <>
+    <AdminTabs active="sessions" adminKey={key} />
     <header>
       <div>
         <h1>Visitor sessions · {viewSite.label}</h1>

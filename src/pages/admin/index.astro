@@ -8,6 +8,7 @@
 //
 // Gated by ?key=HEATMAP_KEY like the other admin pages, and a plain page with
 // no site layout, so GA4, the Meta Pixel and the heatmap don't count visits.
+import AdminTabs from '@/components/AdminTabs.astro';
 import { buildAdminStats, type AdminStats } from '@/lib/admin-stats';
 import { ADMIN_SITES } from '@/lib/admin-sites.mjs';
 import { FORM_NAMES } from '@/lib/heatmap-shared.mjs';
@@ -119,14 +120,10 @@ const formName = (f: string) => FORM_NAMES[f] || f.replace(/[-_]/g, ' ');
   <div class="empty">Not found.</div>
 ) : (
   <>
+    <AdminTabs active="overview" adminKey={key} />
     <header>
       <h1>Admin Panel</h1>
       <span style="color:#b8c7d6;font-size:13px">Both sites · {when(new Date().toISOString())}</span>
-      <nav>
-        <a href={`/admin/comps/?key=${encodeURIComponent(key)}`}>Comps</a>
-        <a href={`/admin/heatmap/?key=${encodeURIComponent(key)}`}>Heatmap</a>
-        <a href={`/admin/sessions/?key=${encodeURIComponent(key)}`}>Visitor sessions</a>
-      </nav>
     </header>
     <main>
       <div class="kpis">

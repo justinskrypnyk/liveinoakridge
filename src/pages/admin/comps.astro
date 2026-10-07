@@ -8,6 +8,7 @@
 //
 // Gated by ?key=HEATMAP_KEY like the other admin pages, and a plain page
 // with no site layout so GA4/the heatmap don't count visits.
+import AdminTabs from '@/components/AdminTabs.astro';
 import { FACTORS } from '@/lib/comps-score';
 
 export const prerender = false;
@@ -22,7 +23,6 @@ if (!authorized) Astro.response.status = 404;
 
 const SUBTYPES = ['Detached', 'Semi-Detached', 'Att/Row/Townhouse', 'Condo Townhouse', 'Condo Apartment', 'Detached Condo', 'Vacant Land Condo', 'Link', 'Duplex', 'Triplex', 'Fourplex', 'Multiplex', 'Rural Residential', 'Farm', 'Modular Home', 'MobileTrailer', 'Common Element Condo', 'Semi-Detached Condo'];
 const STYLES = ['2-Storey', 'Bungalow', 'Bungalow-Raised', 'Bungaloft', '1 1/2 Storey', '2 1/2 Storey', '3-Storey', 'Backsplit 3', 'Backsplit 4', 'Backsplit 5', 'Sidesplit', 'Sidesplit 3', 'Sidesplit 4', 'Sidesplit 5', 'Multi-Level', 'Apartment', '1 Storey/Apt', 'Stacked Townhouse', 'Other'];
-const k = encodeURIComponent(key);
 ---
 <!doctype html>
 <html lang="en">
@@ -110,13 +110,9 @@ const k = encodeURIComponent(key);
   <div class="empty">Not found.</div>
 ) : (
   <>
+    <AdminTabs active="comps" adminKey={key} />
     <header>
       <h1>Comparable Homes</h1>
-      <nav>
-        <a href={`/admin/?key=${k}`}>Admin</a>
-        <a href={`/admin/heatmap/?key=${k}`}>Heatmap</a>
-        <a href={`/admin/sessions/?key=${k}`}>Visitor sessions</a>
-      </nav>
     </header>
     <main data-key={key}>
       <div class="card">

@@ -8,6 +8,7 @@
 // Gated by ?key=HEATMAP_KEY (same idea as api/market-report.csv.ts). A
 // plain page on purpose -- not the site layout, so neither GA4, the Meta
 // Pixel nor the heatmap tracker itself counts Justin's own visits here.
+import AdminTabs from '@/components/AdminTabs.astro';
 import { ADMIN_SITES, pickAdminSite, adminStore, siteHref } from '@/lib/admin-sites.mjs';
 import { isLocal, FORM_NAMES, prettyField } from '@/lib/heatmap-shared.mjs';
 
@@ -206,6 +207,7 @@ const data = sel ? { clicks: sel.clicks, bands: sel.bands, depth: sel.depth, fra
   <div class="empty">Not found.</div>
 ) : (
   <>
+    <AdminTabs active="heatmap" adminKey={key} />
     <header>
       <div>
         <h1>Site heatmap · {viewSite.label}</h1>

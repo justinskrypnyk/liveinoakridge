@@ -1,0 +1,32 @@
+---
+// One tab bar across every admin page (Justin, 2026-10-07: "make the comps a
+// tab like we did with the two web pages"), styled like the heatmap's site
+// switch. Keeps ?key= so moving between tabs never asks for it again.
+interface Props {
+  active: 'overview' | 'comps' | 'heatmap' | 'sessions';
+  adminKey: string;
+}
+
+const { active, adminKey } = Astro.props;
+const k = encodeURIComponent(adminKey);
+const tabs = [
+  { id: 'overview', label: 'Overview', href: `/admin/?key=${k}` },
+  { id: 'comps', label: 'Comps', href: `/admin/comps/?key=${k}` },
+  { id: 'heatmap', label: 'Heatmap', href: `/admin/heatmap/?key=${k}` },
+  { id: 'sessions', label: 'Visitor sessions', href: `/admin/sessions/?key=${k}` },
+];
+---
+
+<nav class="admin-tabs" aria-label="Admin sections">
+  {tabs.map((t) => <a href={t.href} class={t.id === active ? 'on' : ''} aria-current={t.id === active ? 'page' : undefined}>{t.label}</a>)}
+</nav>
+
+<style>
+  .admin-tabs { display:flex; gap:0; background:#081a30; padding:8px 16px 0; overflow-x:auto; font-family: Inter, Helvetica, Arial, sans-serif; }
+  .admin-tabs a { padding:8px 16px; color:#b8c7d6; text-decoration:none; font-size:14px; font-weight:500; border-radius:6px 6px 0 0; white-space:nowrap; }
+  .admin-tabs a:hover { color:#fff; }
+  .admin-tabs a.on { background:#0c2340; color:#fff; font-weight:600; box-shadow: inset 0 2px 0 #10b981; }
+  .admin-tabs { scrollbar-width:none; }
+  .admin-tabs::-webkit-scrollbar { display:none; }
+  @media (max-width: 480px) { .admin-tabs { padding:6px 6px 0; } .admin-tabs a { padding:8px 9px; font-size:13px; } }
+</style>
