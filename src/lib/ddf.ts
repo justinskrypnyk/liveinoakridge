@@ -915,8 +915,14 @@ export async function getMarketListingByKey(key: string): Promise<RawListing | n
     const all: RawListing[] = data.value || [];
     const match = all.find((l) => String(l.ListingKey || l.ListingId).toLowerCase() === key.toLowerCase());
     if (!match) return null;
-    const { full, thumb } = await fetchPhotos(key);
-    return { ...match, _photoUrls: full, _photoUrl: thumb[0] || null };
+    // _geo from the same warmed geocode cache area pages read (one Blobs
+    // read, never a live geocode) -- the listing page needs it for its
+    // neighbourhood tag and "what did homes near here sell for" link.
+    const [{ full, thumb }, geo] = await Promise.all([
+      fetchPhotos(key),
+      match.UnparsedAddress ? getCachedGeo(String(match.UnparsedAddress)) : Promise.resolve(null),
+    ]);
+    return { ...match, _photoUrls: full, _photoUrl: thumb[0] || null, _geo: geo };
   } catch (err) {
     console.error('Market listing lookup failed:', err instanceof Error ? err.message : err);
     return null;
