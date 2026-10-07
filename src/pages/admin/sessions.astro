@@ -6,7 +6,7 @@
 // searches. Not a recording, and never who the visitor is.
 //
 // Same ?key=HEATMAP_KEY gate and plain (untracked) page as admin/heatmap.
-import { getStore } from '@netlify/blobs';
+import { ADMIN_SITES, pickAdminSite, adminStore, siteHref } from '@/lib/admin-sites.mjs';
 import { isLocal, isDataCentre, FORM_NAMES, prettyField } from '@/lib/heatmap-shared.mjs';
 
 export const prerender = false;
@@ -18,6 +18,7 @@ Astro.response.headers.set('X-Robots-Tag', 'noindex, nofollow');
 Astro.response.headers.set('Cache-Control', 'no-store');
 const authorized = Boolean(expected) && key === expected;
 if (!authorized) Astro.response.status = 404;
+const viewSite = pickAdminSite(url.searchParams.get('site'));
 
 type View = {
   id: string; at: string; p: string; ti: string; secs: number; depth: number; h: number;
@@ -30,9 +31,10 @@ let days: string[] = [];
 let day = '';
 let sessions: [string, Session][] = [];
 let updatedAt = '';
+let loadError = '';
 if (authorized) {
   try {
-    const store = getStore('heatmap-sessions');
+    const store = adminStore('heatmap-sessions', viewSite);
     const { blobs } = await store.list();
     days = blobs.map((b) => b.key).sort().reverse();
     day = days.includes(url.searchParams.get('day') || '') ? url.searchParams.get('day')! : days[0] || '';
@@ -43,6 +45,7 @@ if (authorized) {
     }
   } catch (err) {
     console.error('admin/sessions: load failed', err);
+    loadError = err instanceof Error ? err.message : String(err);
   }
 }
 
@@ -100,7 +103,7 @@ const lengthOf = (s: Session) => {
 const sentForm = (s: Session) => s.views.some((v) => Object.values(v.forms).some((f) => f.s));
 
 const qs = (over: Record<string, string>) => {
-  const q = new URLSearchParams({ key, day, place, scope, ...over });
+  const q = new URLSearchParams({ key, site: viewSite.id, day, place, scope, ...over });
   for (const [k, v] of [...q.entries()]) if (!v) q.delete(k);
   return `?${q.toString()}`;
 };
@@ -120,6 +123,9 @@ const qs = (over: Record<string, string>) => {
   header h1 { font-size:18px; margin:0; font-weight:600; }
   header .sub { color:#b8c7d6; font-size:13px; }
   header a.back { color:#b8c7d6; font-size:13px; }
+  .sites { display:inline-flex; border:1px solid #2a4661; border-radius:6px; overflow:hidden; }
+  .sites a { padding:6px 12px; color:#b8c7d6; text-decoration:none; font-size:13px; }
+  .sites .on { background:#fff; color:var(--navy); font-weight:600; }
   .controls { display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-left:auto; }
   select { font:inherit; font-size:14px; padding:7px 10px; border-radius:6px; border:1px solid #2a4661; background:#fff; color:var(--ink); max-width:260px; }
   .seg { display:inline-flex; border:1px solid var(--line); border-radius:6px; overflow:hidden; background:#fff; }
@@ -160,11 +166,15 @@ const qs = (over: Record<string, string>) => {
   <>
     <header>
       <div>
-        <h1>Visitor sessions</h1>
-        <div class="sub">{day ? fmtDay(day) : 'No data yet'}{updatedAt && ` · updated ${new Date(updatedAt).toLocaleString('en-CA', { timeZone: TZ, month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}`} · <a class="back" href={`/admin/heatmap/?key=${encodeURIComponent(key)}`}>Back to heatmap</a></div>
+        <h1>Visitor sessions · {viewSite.label}</h1>
+        <div class="sub">{day ? fmtDay(day) : 'No data yet'}{updatedAt && ` · updated ${new Date(updatedAt).toLocaleString('en-CA', { timeZone: TZ, month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}`} · <a class="back" href={`/admin/heatmap/?key=${encodeURIComponent(key)}&site=${viewSite.id}`}>Back to heatmap</a></div>
       </div>
+      <nav class="sites" aria-label="Which site">
+        {ADMIN_SITES.map((s) => <a href={`?key=${encodeURIComponent(key)}&site=${s.id}`} class={s.id === viewSite.id ? 'on' : ''}>{s.label}</a>)}
+      </nav>
       <form class="controls" method="get">
         <input type="hidden" name="key" value={key}>
+        <input type="hidden" name="site" value={viewSite.id}>
         <input type="hidden" name="scope" value={scope}>
         <label for="day" style="position:absolute;left:-9999px">Day</label>
         <select id="day" name="day" onchange="this.form.submit()">
@@ -185,7 +195,9 @@ const qs = (over: Record<string, string>) => {
     </header>
 
     <main>
-      {!day ? (
+      {loadError ? (
+        <div class="empty">Couldn't load {viewSite.label}'s visits: {loadError}</div>
+      ) : !day ? (
         <div class="empty">No visits recorded yet. Visits show up here within an hour.</div>
       ) : (
         <>
@@ -210,7 +222,7 @@ const qs = (over: Record<string, string>) => {
                     return (
                       <li>
                         <span class="t">{time(v.at)}</span>
-                        <div class="pg"><a href={v.p} target="_blank" rel="noopener">{pageName(v)}</a></div>
+                        <div class="pg"><a href={siteHref(viewSite, v.p)} target="_blank" rel="noopener">{pageName(v)}</a></div>
                         <div class="path">{v.p}</div>
                         <div class="facts">{fmtSecs(v.secs)} actively on the page{read != null && ` · scrolled ${read}% of the way down`}</div>
                         {(v.clicks.length > 0 || v.q || Object.keys(v.forms).length > 0) && (

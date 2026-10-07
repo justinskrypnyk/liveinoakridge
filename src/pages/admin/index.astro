@@ -1,0 +1,229 @@
+---
+// One admin panel for both of Justin's sites (Justin, 2026-10-07: "so i
+// don't need to change websites to see the stats"). Both sites' numbers come
+// from the same Blobs stores, this site's directly and londonontariohomes.ca's
+// through the Blobs API (src/lib/admin-sites.mjs, shared with that repo). A
+// site that can't be read shows as a grey card with the reason, never as
+// zeros.
+//
+// Gated by ?key=HEATMAP_KEY like the other admin pages, and a plain page with
+// no site layout, so GA4, the Meta Pixel and the heatmap don't count visits.
+import { buildAdminStats, type AdminStats } from '@/lib/admin-stats';
+import { ADMIN_SITES } from '@/lib/admin-sites.mjs';
+import { FORM_NAMES } from '@/lib/heatmap-shared.mjs';
+
+export const prerender = false;
+
+const url = new URL(Astro.request.url);
+const key = url.searchParams.get('key') || '';
+const expected = import.meta.env.HEATMAP_KEY;
+Astro.response.headers.set('X-Robots-Tag', 'noindex, nofollow');
+Astro.response.headers.set('Cache-Control', 'no-store');
+const authorized = Boolean(expected) && key === expected;
+if (!authorized) Astro.response.status = 404;
+
+const SITE_URLS: Record<string, string> = Object.fromEntries(ADMIN_SITES.map((s) => [s.label, s.origin]));
+
+type Loaded = { label: string; stats: AdminStats | null; error?: string };
+let sites: Loaded[] = [];
+if (authorized) {
+  sites = await Promise.all(ADMIN_SITES.map((site) => buildAdminStats(site).then(
+    (stats): Loaded => ({ label: site.label, stats }),
+    (err): Loaded => ({ label: site.label, stats: null, error: (err as Error).message }),
+  )));
+}
+
+const TZ = 'America/Toronto';
+const n = (v: number | null | undefined) => (v == null ? 'n/a' : v.toLocaleString('en-CA'));
+const when = (iso?: string | null) => (iso ? new Date(iso).toLocaleString('en-CA', { timeZone: TZ, month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : 'n/a');
+const today = new Date().toLocaleDateString('en-CA', { timeZone: TZ });
+const lastDays = (days: number) => Array.from({ length: days }, (_, i) => new Date(Date.now() - (days - 1 - i) * 86400000).toLocaleDateString('en-CA', { timeZone: TZ }));
+const days30 = lastDays(30);
+const sumDays = (s: AdminStats | null, days: string[]) => (s?.visits ? days.reduce((t, d) => t + (s.visits!.daily[d] || 0), 0) : null);
+const total = (vals: (number | null)[]) => (vals.every((v) => v == null) ? null : vals.reduce<number>((t, v) => t + (v || 0), 0));
+
+const loaded = sites.map((s) => s.stats);
+const combined = {
+  visitsToday: total(loaded.map((s) => (s?.visits ? s.visits.daily[today] || 0 : null))),
+  visits7: total(loaded.map((s) => sumDays(s, days30.slice(-7)))),
+  leads7: total(loaded.map((s) => s?.leads?.last7 ?? null)),
+  leads30: total(loaded.map((s) => s?.leads?.last30 ?? null)),
+  problems: total(loaded.map((s) => (s?.health ? s.health.failures : null))),
+};
+const allLeads = sites
+  .flatMap((s) => (s.stats?.leads?.recent || []).map((l) => ({ ...l, site: s.label })))
+  .sort((a, b) => b.at.localeCompare(a.at))
+  .slice(0, 12);
+
+function bars(s: AdminStats) {
+  const vals = days30.map((d) => s.visits?.daily[d] || 0);
+  const max = Math.max(1, ...vals);
+  const w = 300, h = 60, bw = w / vals.length;
+  return { vals, max, w, h, bw };
+}
+const formName = (f: string) => FORM_NAMES[f] || f.replace(/[-_]/g, ' ');
+---
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Admin Panel</title>
+<style>
+  :root { --ink:#16283a; --muted:#5a7185; --line:#dbe4ea; --bg:#f4f6f8; --card:#fff; --accent:#047857; --navy:#0c2340; --warn:#b45309; --bad:#b91c1c; --site2:#2563eb; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: Inter, Helvetica, Arial, sans-serif; color:var(--ink); background:var(--bg); }
+  header { background:var(--navy); color:#fff; padding:16px 24px; display:flex; flex-wrap:wrap; gap:8px 24px; align-items:center; }
+  header h1 { font-size:18px; margin:0; font-weight:600; }
+  header nav { margin-left:auto; display:flex; gap:16px; font-size:13px; }
+  header nav a { color:#b8c7d6; }
+  main { max-width:1100px; margin:0 auto; padding:20px 16px 40px; }
+  h2 { font-size:15px; margin:28px 0 10px; }
+  .kpis { display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:12px; }
+  .kpi { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:12px 14px; }
+  .kpi .v { font-size:26px; font-weight:700; }
+  .kpi .l { font-size:12px; color:var(--muted); }
+  .kpi.bad .v { color:var(--bad); }
+  .cols { display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:16px; }
+  .site { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:16px; border-top:4px solid var(--accent); min-width:0; }
+  .site.s2 { border-top-color:var(--site2); }
+  .site.down { opacity:.75; border-top-color:var(--muted); }
+  .site h3 { margin:0 0 2px; font-size:16px; }
+  .site h3 a { color:var(--ink); }
+  .site .sub { color:var(--muted); font-size:12px; margin-bottom:12px; }
+  .site h4 { font-size:12px; text-transform:uppercase; letter-spacing:.5px; color:var(--muted); margin:16px 0 6px; }
+  .row { display:flex; justify-content:space-between; gap:12px; font-size:14px; padding:3px 0; }
+  .row span:last-child { font-variant-numeric:tabular-nums; white-space:nowrap; }
+  .row .p { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .health-ok { color:#166534; font-weight:600; font-size:14px; }
+  .prob { font-size:13px; padding:6px 8px; border-radius:6px; background:#fef2f2; margin:4px 0; }
+  .prob.warn { background:#fffbeb; }
+  .prob b { display:block; }
+  .muted { color:var(--muted); font-size:13px; }
+  svg { display:block; width:100%; height:auto; }
+  svg rect { fill:var(--accent); }
+  .s2 svg rect { fill:var(--site2); }
+  table { width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--line); border-radius:8px; overflow:hidden; font-size:14px; }
+  th, td { text-align:left; padding:8px 12px; border-bottom:1px solid var(--line); }
+  th { font-size:12px; color:var(--muted); font-weight:600; }
+  .pill { font-size:11px; font-weight:700; padding:2px 7px; border-radius:10px; background:#dcfce7; color:#166534; white-space:nowrap; }
+  .pill.s2 { background:#dbeafe; color:#1e40af; }
+  .tablewrap { overflow-x:auto; }
+  .empty { padding:60px 24px; text-align:center; color:var(--muted); }
+  .note { font-size:12px; color:var(--muted); line-height:1.5; margin-top:24px; }
+</style>
+</head>
+<body>
+{!authorized ? (
+  <div class="empty">Not found.</div>
+) : (
+  <>
+    <header>
+      <h1>Admin Panel</h1>
+      <span style="color:#b8c7d6;font-size:13px">Both sites · {when(new Date().toISOString())}</span>
+      <nav>
+        <a href={`/admin/heatmap/?key=${encodeURIComponent(key)}`}>Heatmap</a>
+        <a href={`/admin/sessions/?key=${encodeURIComponent(key)}`}>Visitor sessions</a>
+      </nav>
+    </header>
+    <main>
+      <div class="kpis">
+        <div class="kpi"><div class="v">{n(combined.visitsToday)}</div><div class="l">Visits today (both sites)</div></div>
+        <div class="kpi"><div class="v">{n(combined.visits7)}</div><div class="l">Visits, last 7 days</div></div>
+        <div class="kpi"><div class="v">{n(combined.leads7)}</div><div class="l">Real leads, last 7 days</div></div>
+        <div class="kpi"><div class="v">{n(combined.leads30)}</div><div class="l">Real leads, last 30 days</div></div>
+        <div class={`kpi${combined.problems ? ' bad' : ''}`}><div class="v">{n(combined.problems)}</div><div class="l">Problems in this morning's checks</div></div>
+      </div>
+
+      <h2>Latest leads</h2>
+      {allLeads.length ? (
+        <div class="tablewrap"><table>
+          <thead><tr><th>When</th><th>Site</th><th>Who</th><th>Form</th><th>From page</th></tr></thead>
+          <tbody>
+            {allLeads.map((l) => (
+              <tr>
+                <td style="white-space:nowrap">{when(l.at)}</td>
+                <td><span class={`pill${l.site === 'liveinoakridge.ca' ? '' : ' s2'}`}>{l.site.replace('.ca', '')}</span></td>
+                <td>{l.name}</td>
+                <td>{formName(l.form)}</td>
+                <td class="muted">{l.page || ''}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table></div>
+      ) : <p class="muted">No real leads in the last 30 days (team and test submissions are left out).</p>}
+
+      <h2>Each site</h2>
+      <div class="cols">
+        {sites.map((site, i) => {
+          const s = site.stats;
+          const cls = `site${i ? ' s2' : ''}${s ? '' : ' down'}`;
+          if (!s) return (
+            <section class={cls}>
+              <h3>{site.label}</h3>
+              <p class="muted">Couldn't load this site's numbers: {site.error}</p>
+            </section>
+          );
+          const b = s.visits ? bars(s) : null;
+          return (
+            <section class={cls}>
+              <h3><a href={SITE_URLS[s.site] || `https://${s.site}`} target="_blank" rel="noopener">{s.site}</a></h3>
+              <div class="sub">Numbers as of {when(s.generatedAt)}</div>
+
+              <h4>Visits, last 30 days</h4>
+              {b ? (
+                <>
+                  <svg viewBox={`0 0 ${b.w} ${b.h}`} role="img" aria-label={`Daily visits, last 30 days, peak ${b.max}`}>
+                    {b.vals.map((v, j) => <rect x={j * b.bw + 1} y={b.h - (v / b.max) * b.h} width={b.bw - 2} height={(v / b.max) * b.h}><title>{days30[j]}: {v}</title></rect>)}
+                  </svg>
+                  <div class="row"><span>Today</span><span>{n(s.visits!.daily[today] || 0)}</span></div>
+                  <div class="row"><span>Last 7 days</span><span>{n(sumDays(s, days30.slice(-7)))}</span></div>
+                  <div class="row"><span>Last 30 days</span><span>{n(sumDays(s, days30))}</span></div>
+                </>
+              ) : <p class="muted">n/a</p>}
+
+              <h4>Leads</h4>
+              {s.leads ? (
+                <>
+                  <div class="row"><span>Last 7 days</span><span>{n(s.leads.last7)}</span></div>
+                  <div class="row"><span>Last 30 days</span><span>{n(s.leads.last30)}</span></div>
+                </>
+              ) : <p class="muted">n/a</p>}
+
+              <h4>This morning's website check</h4>
+              {s.health ? (
+                s.health.problems.length ? s.health.problems.map((p) => (
+                  <div class="prob"><b>{p.name}</b>{p.detail}</div>
+                )) : <div class="health-ok">All checks passed ({when(s.health.checkedAt)})</div>
+              ) : <p class="muted">n/a</p>}
+
+              <h4>Listings</h4>
+              {s.listings ? <div class="row"><span>Active London listings in the feed</span><span>{n(s.listings.active)}</span></div> : <p class="muted">n/a</p>}
+
+              <h4>Top pages this week</h4>
+              {s.topPages?.length ? s.topPages.map((p) => <div class="row"><span class="p">{p.path}</span><span>{n(p.views)}</span></div>) : <p class="muted">n/a</p>}
+
+              <h4>Home searches this week</h4>
+              {s.searches ? (
+                <>
+                  <div class="row"><span>Searches</span><span>{n(s.searches.total)}</span></div>
+                  {s.searches.topAreas.map(([a, c]) => <div class="row"><span class="p">{a}</span><span>{n(c)}</span></div>)}
+                </>
+              ) : <p class="muted">n/a</p>}
+
+              <h4>Forms this week (started → sent)</h4>
+              {s.forms && Object.keys(s.forms).length ? Object.entries(s.forms).sort((a, b) => b[1].started - a[1].started).map(([f, v]) => (
+                <div class="row"><span class="p">{formName(f)}</span><span>{v.started} → {v.sent}</span></div>
+              )) : <p class="muted">n/a</p>}
+            </section>
+          );
+        })}
+      </div>
+
+      <p class="note">Visits come from each site's own built-in tracker, which leaves out the team in the Philippines, Justin's own visits on this page, and data-centre bots. Daily visit counts only go back to Sept 29, 2026. "Real leads" are form submissions minus team and test emails; check GHL for the full contact. "This week" starts Monday. "n/a" means that site doesn't collect that number yet.</p>
+    </main>
+  </>
+)}
+</body>
+</html>

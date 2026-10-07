@@ -8,7 +8,7 @@
 // Gated by ?key=HEATMAP_KEY (same idea as api/market-report.csv.ts). A
 // plain page on purpose -- not the site layout, so neither GA4, the Meta
 // Pixel nor the heatmap tracker itself counts Justin's own visits here.
-import { getStore } from '@netlify/blobs';
+import { ADMIN_SITES, pickAdminSite, adminStore, siteHref } from '@/lib/admin-sites.mjs';
 import { isLocal, FORM_NAMES, prettyField } from '@/lib/heatmap-shared.mjs';
 
 export const prerender = false;
@@ -20,6 +20,8 @@ Astro.response.headers.set('X-Robots-Tag', 'noindex, nofollow');
 Astro.response.headers.set('Cache-Control', 'no-store');
 const authorized = Boolean(expected) && key === expected;
 if (!authorized) Astro.response.status = 404;
+const viewSite = pickAdminSite(url.searchParams.get('site'));
+const sessionsHref = (extra = '') => `/admin/sessions/?key=${encodeURIComponent(key)}&site=${viewSite.id}${extra}`;
 
 type PageSummary = {
   views: number; secs: number; clicks: [number, number, number][]; labels: Record<string, number>;
@@ -39,9 +41,10 @@ let pages: Record<string, PageSummary> = {};
 let otherPages: Record<string, PageSummary> = {}; // the other device, for site-wide visitor places
 let site: SiteSummary | null = null;
 let updatedAt = '';
+let loadError = '';
 if (authorized) {
   try {
-    const store = getStore('heatmap-weeks');
+    const store = adminStore('heatmap-weeks', viewSite);
     const { blobs } = await store.list();
     weekList = [...new Set(blobs.map((b) => b.key.slice(0, 10)))].sort().reverse();
     week = weekList.includes(url.searchParams.get('week') || '') ? url.searchParams.get('week')! : weekList[0] || '';
@@ -55,6 +58,7 @@ if (authorized) {
     }
   } catch (err) {
     console.error('admin/heatmap: load failed', err);
+    loadError = err instanceof Error ? err.message : String(err);
   }
 }
 
@@ -63,7 +67,7 @@ const pageList = Object.entries(pages)
   .sort((a, b) => b.views - a.views);
 const selected = pages[url.searchParams.get('page') || ''] ? url.searchParams.get('page')! : pageList[0]?.path || '';
 const sel = pages[selected];
-const frameSrc = sel ? (selected.includes('[listing]') ? sel.example || '/' : selected) : '/';
+const frameSrc = siteHref(viewSite, sel ? (selected.includes('[listing]') ? sel.example || '/' : selected) : '/');
 // Which listings a grouped [listing] row is made of (Justin, 2026-09-29).
 // The week summary keeps only one example URL, but the visitor-sessions
 // docs keep every view's real URL, so read the week's seven days from there.
@@ -72,7 +76,7 @@ type ListingRow = { path: string; title: string; price: string; views: number; s
 let listingRows: ListingRow[] = [];
 if (authorized && week && selected.includes('[listing]')) {
   const prefix = selected.replace('[listing]/', '');
-  const store = getStore('heatmap-sessions');
+  const store = adminStore('heatmap-sessions', viewSite);
   const days = Array.from({ length: 7 }, (_, i) => new Date(Date.parse(`${week}T12:00:00Z`) + i * 86400000).toISOString().slice(0, 10));
   const byPath = new Map<string, ListingRow>();
   for (const day of days) {
@@ -114,7 +118,7 @@ const pageVisitsWithPlace = sumOf(sel?.places);
 const pct = (n: number, d: number) => (d ? `${Math.round((n / d) * 100)}%` : '0%');
 
 const qs = (over: Record<string, string>) => {
-  const q = new URLSearchParams({ key, week, device, page: selected, ...over });
+  const q = new URLSearchParams({ key, site: viewSite.id, week, device, page: selected, ...over });
   return `?${q.toString()}`;
 };
 const fmtWeek = (w: string) => {
@@ -158,6 +162,9 @@ const data = sel ? { clicks: sel.clicks, bands: sel.bands, depth: sel.depth, fra
   header { background:var(--navy); color:#fff; padding:16px 24px; display:flex; flex-wrap:wrap; gap:12px 24px; align-items:center; }
   header h1 { font-size:18px; margin:0; font-weight:600; }
   header .sub { color:#b8c7d6; font-size:13px; }
+  .sites { display:inline-flex; border:1px solid #2a4661; border-radius:6px; overflow:hidden; }
+  .sites a { padding:6px 12px; color:#b8c7d6; text-decoration:none; font-size:13px; }
+  .sites .on { background:#fff; color:var(--navy); font-weight:600; }
   .controls { display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-left:auto; }
   select, .seg a, .seg button { font:inherit; font-size:14px; }
   select { padding:7px 10px; border-radius:6px; border:1px solid #2a4661; background:#fff; color:var(--ink); max-width:280px; }
@@ -197,11 +204,15 @@ const data = sel ? { clicks: sel.clicks, bands: sel.bands, depth: sel.depth, fra
   <>
     <header>
       <div>
-        <h1>Site heatmap</h1>
+        <h1>Site heatmap · {viewSite.label}</h1>
         <div class="sub">{week ? `Week of ${fmtWeek(week)}` : 'No data yet'}{updatedAt && ` · updated ${new Date(updatedAt).toLocaleString('en-CA', { timeZone: 'America/Toronto', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}`}</div>
       </div>
+      <nav class="sites" aria-label="Which site">
+        {ADMIN_SITES.map((s) => <a href={`?key=${encodeURIComponent(key)}&site=${s.id}&device=${device}`} class={s.id === viewSite.id ? 'on' : ''}>{s.label}</a>)}
+      </nav>
       <form class="controls" method="get">
         <input type="hidden" name="key" value={key}>
+        <input type="hidden" name="site" value={viewSite.id}>
         <input type="hidden" name="device" value={device}>
         <label class="sr" for="week" style="position:absolute;left:-9999px">Week</label>
         <select id="week" name="week" onchange="this.form.submit()">
@@ -211,7 +222,7 @@ const data = sel ? { clicks: sel.clicks, bands: sel.bands, depth: sel.depth, fra
         <select id="page" name="page" onchange="this.form.submit()">
           {pageList.map((p) => <option value={p.path} selected={p.path === selected}>{p.path} ({p.views})</option>)}
         </select>
-        <a href={`/admin/sessions/?key=${encodeURIComponent(key)}`} style="color:#fff;font-size:14px">Visitor sessions →</a>
+        <a href={sessionsHref()} style="color:#fff;font-size:14px">Visitor sessions →</a>
         <div class="seg" role="group" aria-label="Device">
           <a href={qs({ device: 'd' })} class={device === 'd' ? 'on' : ''}>Desktop</a>
           <a href={qs({ device: 'm' })} class={device === 'm' ? 'on' : ''}>Mobile</a>
@@ -219,7 +230,9 @@ const data = sel ? { clicks: sel.clicks, bands: sel.bands, depth: sel.depth, fra
       </form>
     </header>
 
-    {!sel ? (
+    {loadError ? (
+      <div class="empty">Couldn't load {viewSite.label}'s heatmap: {loadError}</div>
+    ) : !sel ? (
       <div class="empty">No {device === 'm' ? 'mobile' : 'desktop'} visits recorded {week ? 'this week' : 'yet'}. Data shows up within an hour of the first visits.</div>
     ) : (
       <main>
@@ -275,11 +288,11 @@ const data = sel ? { clicks: sel.clicks, bands: sel.bands, depth: sel.depth, fra
                   {listingRows.map((l) => (
                     <tr>
                       <td>
-                        <a href={l.path} target="_blank" rel="noopener" style="color:inherit">{l.title || l.path}</a>
+                        <a href={siteHref(viewSite, l.path)} target="_blank" rel="noopener" style="color:inherit">{l.title || l.path}</a>
                         <div style="font-size:12px;color:var(--muted)">
                           {l.price && `${l.price} · `}
                           {Object.entries(l.places).map(([p, n]) => `${p}${isLocal(p) ? '' : ' ✈'}${n > 1 ? ` ×${n}` : ''}`).join(', ')}
-                          {' · '}<a href={`/admin/sessions/?key=${encodeURIComponent(key)}&day=${l.day}`} style="color:inherit">visit</a>
+                          {' · '}<a href={sessionsHref(`&day=${l.day}`)} style="color:inherit">visit</a>
                         </div>
                       </td>
                       <td class="n">{l.views}</td><td class="n">{fmtSecs(l.secs)}</td><td class="n">{l.photos}</td>
@@ -304,7 +317,7 @@ const data = sel ? { clicks: sel.clicks, bands: sel.bands, depth: sel.depth, fra
             <p class="note" style="margin:14px 0 8px">Whole site this week (phones and computers): <b>{pct(localVisits, siteVisits)} local</b> (London area), <b>{pct(siteVisits - localVisits, siteVisits)} out of town</b>.</p>
             <table>
               <tbody>
-                {topOf(sitePlaces, 10).map(([place, n]) => <tr><td><a href={`/admin/sessions/?key=${encodeURIComponent(key)}&place=${encodeURIComponent(place)}`} style="color:inherit">{place}</a>{isLocal(place) ? '' : ' ✈'}</td><td class="n">{n} <span style="color:var(--muted)">({pct(n, siteVisits)})</span></td></tr>)}
+                {topOf(sitePlaces, 10).map(([place, n]) => <tr><td><a href={sessionsHref(`&place=${encodeURIComponent(place)}`)} style="color:inherit">{place}</a>{isLocal(place) ? '' : ' ✈'}</td><td class="n">{n} <span style="color:var(--muted)">({pct(n, siteVisits)})</span></td></tr>)}
               </tbody>
             </table>
             <p class="note">Click a place to see what each of those visitors did, step by step (visits from Sept 28, 2026 on). ✈ = outside the London area. Locations are the visitor's internet provider's best guess: reliable for the city or region, not exact. Phones on cell data often show up as Toronto even when they're in London.</p>
@@ -329,7 +342,7 @@ const data = sel ? { clicks: sel.clicks, bands: sel.bands, depth: sel.depth, fra
       <section style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px;padding:0 24px 28px">
         <div class="card">
           <h2>What buyers are searching for ({site.searches} searches)</h2>
-          <p class="note" style="margin:0 0 8px">Filters people used on the /search page this week.</p>
+          <p class="note" style="margin:0 0 8px">Filters people used on the {viewSite.searchPath} search page this week.</p>
           <table>
             <thead><tr><th>Most searched combinations</th><th class="n">Searches</th></tr></thead>
             <tbody>{topOf(site.combos, 8).map(([k, n]) => <tr><td>{k}</td><td class="n">{n}</td></tr>)}</tbody>
