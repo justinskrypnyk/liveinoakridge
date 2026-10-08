@@ -14,9 +14,15 @@
 // AMPRE never populates Latitude/Longitude, so coordinates come from the
 // shared ddf-geocode-cache (warmed by warm-geocode-cache + vow-sold-sync),
 // then the same postal code, then the postal area's (FSA) centre. Each row
-// carries how precise its location is. A few Google geocodes per run (most
-// recent misses first) slowly improve that without touching the shared
-// ~330/day cap (see reference-google-geocoding-billing).
+// carries how precise its location is.
+//
+// Cache misses (mostly the towns, ~4,800 homes nothing else geocodes) get a
+// free lookup first: the Government of Canada geolocator (NRCan road
+// network + OpenStreetMap), one request at a time -- it 500s on parallel
+// requests -- and only accepted on an exact house-number match within 80 km.
+// It finds ~57% of town homes (tested 2026-10-07 on 150). Addresses it can't
+// find are remembered for 60 days, and only those go to Google, a few per
+// run, inside the shared ~330/day cap (see reference-google-geocoding-billing).
 import { getStore } from '@netlify/blobs';
 import { fetchVow } from '../../src/lib/vow-listings.mjs';
 import { COMPS_SELECT, isSale, statusOf, slim, placeOf } from '../../src/lib/comps-shared.mjs';
@@ -27,6 +33,11 @@ const GOOGLE_GEOCODING_API_KEY = process.env.GOOGLE_GEOCODING_API_KEY;
 
 const SOLD_WINDOW_DAYS = 730;
 const MAX_GOOGLE_GEOCODES_PER_RUN = 40;
+// Time box for the free lookups; the rest wait for the next run. Overridable
+// for a one-off backfill run outside Netlify.
+const FREE_GEOCODE_BUDGET_MS = Number(process.env.COMPS_FREE_GEOCODE_BUDGET_MS) || 8 * 60 * 1000;
+const FREE_MISS_RETRY_DAYS = 60;
+const LONDON = { lat: 42.9849, lng: -81.2453 };
 const BLOB_CONCURRENCY = 40;
 
 // London itself via the address filter (same as every other VOW job), then
@@ -61,6 +72,40 @@ async function geocodeGoogle(address) {
   }
 }
 
+function km(aLat, aLng, bLat, bLng) {
+  const R = 6371, t = Math.PI / 180;
+  const h = Math.sin(((bLat - aLat) * t) / 2) ** 2 + Math.cos(aLat * t) * Math.cos(bLat * t) * Math.sin(((bLng - aLng) * t) / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+const norm = (s) => s.toLowerCase().replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
+const STREET_WORDS = /^(st|rd|dr|ave|street|road|drive|avenue|crescent|cres|court|crt|lane|line|way|place|blvd|boulevard|trail|north|south|east|west|terrace|gate|circle)$/;
+
+// Free geocode. Returns {lat, lng} only for an exact house-number match on
+// the right street in Ontario near London; anything vaguer returns null.
+async function geocodeFree(address) {
+  // "41 Earlscourt Terrace 24, Middlesex Centre, ON N0L 1R0" -> 41 / Earlscourt Terrace / Middlesex Centre
+  const m = address.match(/^(?:[\w-]+-)?(\d+[A-Za-z]?)\s+([^,]+?)(?:\s+(?:unit\s*)?#?\d+[A-Za-z]?)?\s*,\s*([^,]+)/i);
+  if (!m) return null;
+  const [, num, street, town] = m;
+  const words = norm(street).split(' ');
+  const word = words.find((w) => w.length > 2 && !STREET_WORDS.test(w)) || words[0];
+  const q = `${num} ${street}, ${town}, Ontario`;
+  for (let tries = 0; tries < 2; tries++) {
+    try {
+      const res = await fetch(`https://geolocator.api.geo.ca/?q=${encodeURIComponent(q)}`, { signal: AbortSignal.timeout(15000) });
+      if (!res.ok) throw new Error(String(res.status));
+      const hits = await res.json();
+      if (!Array.isArray(hits)) return null;
+      const hit = hits.find((x) => x.province === 'Ontario' && `${norm(x.name)} `.startsWith(`${norm(num)} `) && norm(x.name).includes(word));
+      if (!hit || !Number.isFinite(hit.lat) || km(hit.lat, hit.lng, LONDON.lat, LONDON.lng) > 80) return null;
+      return { lat: hit.lat, lng: hit.lng };
+    } catch {
+      await new Promise((r) => setTimeout(r, 1500));
+    }
+  }
+  return null;
+}
+
 export default async () => {
   if (!VOW_ACCESS_TOKEN || !DDF_API_BASE_URL) return new Response('VOW env missing', { status: 500 });
   const started = Date.now();
@@ -93,14 +138,45 @@ export default async () => {
     if (g && Number.isFinite(g.lat)) { r.lat = g.lat; r.lng = g.lng; r.gp = 'exact'; }
   });
 
+  // Free lookups, newest first, one at a time; remember what they can't find.
+  const missStore = getStore('comps-geo-misses');
+  const freeMisses = (await missStore.get('free', { type: 'json' }).catch(() => null)) || {};
+  const retryBefore = new Date(Date.now() - FREE_MISS_RETRY_DAYS * 86400000).toISOString();
+  const uncached = [...new Map(rows.filter((r) => r.gp !== 'exact').sort((x, y) => (y.d || '').localeCompare(x.d || '')).map((r) => [r.a, r])).values()];
+  const found = new Map();
+  let freeFound = 0, freeTried = 0;
+  const freeStop = Date.now() + FREE_GEOCODE_BUDGET_MS;
+  for (const r of uncached) {
+    if (Date.now() > freeStop) break;
+    if (freeMisses[r.a] && freeMisses[r.a] > retryBefore) continue;
+    freeTried++;
+    const g = await geocodeFree(r.a);
+    if (g) {
+      freeFound++;
+      found.set(r.a, g);
+      delete freeMisses[r.a];
+      await geoStore.setJSON(r.a, { ...g, src: 'geo.ca' }).catch(() => {});
+    } else {
+      freeMisses[r.a] = new Date().toISOString();
+    }
+    await new Promise((res) => setTimeout(res, 200));
+  }
+  await missStore.setJSON('free', freeMisses).catch(() => {});
+
+  // Google only for what the free lookup couldn't find, newest first.
   let googled = 0;
-  const misses = rows.filter((r) => r.gp !== 'exact').sort((x, y) => (y.d || '').localeCompare(x.d || ''));
-  for (const r of misses.slice(0, MAX_GOOGLE_GEOCODES_PER_RUN)) {
+  for (const r of uncached.filter((x) => freeMisses[x.a]).slice(0, MAX_GOOGLE_GEOCODES_PER_RUN)) {
     const g = await geocodeGoogle(r.a);
     if (!g) continue;
     googled++;
-    r.lat = g.lat; r.lng = g.lng; r.gp = 'exact';
+    delete freeMisses[r.a];
+    found.set(r.a, g);
     await geoStore.setJSON(r.a, g).catch(() => {});
+  }
+  if (googled) await missStore.setJSON('free', freeMisses).catch(() => {});
+  for (const r of rows) {
+    const g = r.gp !== 'exact' && found.get(r.a);
+    if (g) { r.lat = g.lat; r.lng = g.lng; r.gp = 'exact'; }
   }
 
   const centre = (key) => {
@@ -140,7 +216,7 @@ export default async () => {
   const builtAt = new Date().toISOString();
   await getStore('comps-index').setJSON('latest', { builtAt, soldSince: cutoffIso, counts, rows });
 
-  const summary = `comps-index: ${rows.length} rows (${counts.A} active, ${counts.C} conditional, ${counts.S} sold since ${cutoffIso}); location exact ${counts.exact}, approx ${counts.approx}, none ${counts.noLocation}; ${googled} new Google geocodes; ${Math.round((Date.now() - started) / 1000)}s`;
+  const summary = `comps-index: ${rows.length} rows (${counts.A} active, ${counts.C} conditional, ${counts.S} sold since ${cutoffIso}); location exact ${counts.exact}, approx ${counts.approx}, none ${counts.noLocation}; free lookups ${freeFound}/${freeTried} found; ${googled} new Google geocodes; ${Math.round((Date.now() - started) / 1000)}s`;
   console.log(summary);
   return new Response(summary);
 };
