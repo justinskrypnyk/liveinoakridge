@@ -59,8 +59,9 @@ const STYLES = ['2-Storey', 'Bungalow', 'Bungalow-Raised', 'Bungaloft', '1 1/2 S
   .row2 { display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin-top:16px; }
   @media (max-width: 860px) { .row2 { grid-template-columns:1fr; } }
   details summary { cursor:pointer; font-weight:600; font-size:13px; }
-  .weights { display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:6px 18px; margin-top:10px; }
-  .weights label { display:grid; grid-template-columns: 110px 1fr 28px; align-items:center; gap:8px; font-size:13px; }
+  .weights { display:grid; grid-template-columns:repeat(auto-fill, minmax(230px, 1fr)); gap:6px 28px; margin-top:10px; }
+  .weights label { display:grid; grid-template-columns: 105px minmax(0, 1fr) 24px; align-items:center; gap:8px; font-size:13px; min-width:0; }
+  .weights input[type=range] { width:100%; min-width:0; margin:0; }
   .weights output { font-variant-numeric:tabular-nums; text-align:right; color:var(--muted); }
   #map { height:360px; border-radius:8px; border:1px solid var(--line); }
   .hint { background:#fffbeb; border:1px solid #fde68a; border-radius:8px; padding:10px 12px; font-size:13px; margin-top:12px; display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
