@@ -80,8 +80,11 @@ function km(aLat, aLng, bLat, bLng) {
 const norm = (s) => s.toLowerCase().replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
 const STREET_WORDS = /^(st|rd|dr|ave|street|road|drive|avenue|crescent|cres|court|crt|lane|line|way|place|blvd|boulevard|trail|north|south|east|west|terrace|gate|circle)$/;
 
-// Free geocode. Returns {lat, lng} only for an exact house-number match on
-// the right street in Ontario near London; anything vaguer returns null.
+// Free geocode. {lat, lng, exact: true} for an exact house-number match on
+// the right street in Ontario near London; {lat, lng, exact: false} when only
+// the street itself is found in the right town (new subdivisions, rural
+// routes -- within a few hundred metres, far better than the postal area);
+// null otherwise.
 async function geocodeFree(address) {
   // "41 Earlscourt Terrace 24, Middlesex Centre, ON N0L 1R0" -> 41 / Earlscourt Terrace / Middlesex Centre
   const m = address.match(/^(?:[\w-]+-)?(\d+[A-Za-z]?)\s+([^,]+?)(?:\s+(?:unit\s*)?#?\d+[A-Za-z]?)?\s*,\s*([^,]+)/i);
@@ -89,6 +92,7 @@ async function geocodeFree(address) {
   const [, num, street, town] = m;
   const words = norm(street).split(' ');
   const word = words.find((w) => w.length > 2 && !STREET_WORDS.test(w)) || words[0];
+  const townWord = norm(town).split(' ').filter((w) => !/^(on|ontario|centre|center|township|municipality|of)$/.test(w)).sort((a, b) => b.length - a.length)[0] || '';
   const q = `${num} ${street}, ${town}, Ontario`;
   for (let tries = 0; tries < 2; tries++) {
     try {
@@ -96,9 +100,12 @@ async function geocodeFree(address) {
       if (!res.ok) throw new Error(String(res.status));
       const hits = await res.json();
       if (!Array.isArray(hits)) return null;
-      const hit = hits.find((x) => x.province === 'Ontario' && `${norm(x.name)} `.startsWith(`${norm(num)} `) && norm(x.name).includes(word));
-      if (!hit || !Number.isFinite(hit.lat) || km(hit.lat, hit.lng, LONDON.lat, LONDON.lng) > 80) return null;
-      return { lat: hit.lat, lng: hit.lng };
+      const near = (x) => x.province === 'Ontario' && Number.isFinite(x.lat) && km(x.lat, x.lng, LONDON.lat, LONDON.lng) <= 80;
+      const house = hits.find((x) => near(x) && `${norm(x.name)} `.startsWith(`${norm(num)} `) && norm(x.name).includes(word));
+      if (house) return { lat: house.lat, lng: house.lng, exact: true };
+      const road = hits.find((x) => near(x) && /^(Street|Highway)$/.test(x.category) && !/^\d/.test(norm(x.name))
+        && norm(String(x.name).split(/,|&/)[0]).includes(word) && (!townWord || norm(x.name).includes(townWord)));
+      return road ? { lat: road.lat, lng: road.lng, exact: false } : null;
     } catch {
       await new Promise((r) => setTimeout(r, 1500));
     }
@@ -140,28 +147,35 @@ export default async () => {
 
   // Free lookups, newest first, one at a time; remember what they can't find.
   const missStore = getStore('comps-geo-misses');
-  const freeMisses = (await missStore.get('free', { type: 'json' }).catch(() => null)) || {};
+  const freeMisses = (await missStore.get('free-v2', { type: 'json' }).catch(() => null)) || {};
+  // Street-level spots for those misses -- kept out of ddf-geocode-cache,
+  // which the sold map and listing pages read as exact house locations.
+  const streetStore = getStore('comps-geo-street');
+  const streets = (await streetStore.get('all', { type: 'json' }).catch(() => null)) || {};
   const retryBefore = new Date(Date.now() - FREE_MISS_RETRY_DAYS * 86400000).toISOString();
   const uncached = [...new Map(rows.filter((r) => r.gp !== 'exact').sort((x, y) => (y.d || '').localeCompare(x.d || '')).map((r) => [r.a, r])).values()];
   const found = new Map();
-  let freeFound = 0, freeTried = 0;
+  let freeFound = 0, freeTried = 0, streetFound = 0;
   const freeStop = Date.now() + FREE_GEOCODE_BUDGET_MS;
   for (const r of uncached) {
     if (Date.now() > freeStop) break;
     if (freeMisses[r.a] && freeMisses[r.a] > retryBefore) continue;
     freeTried++;
     const g = await geocodeFree(r.a);
-    if (g) {
+    if (g?.exact) {
       freeFound++;
       found.set(r.a, g);
       delete freeMisses[r.a];
-      await geoStore.setJSON(r.a, { ...g, src: 'geo.ca' }).catch(() => {});
+      delete streets[r.a];
+      await geoStore.setJSON(r.a, { lat: g.lat, lng: g.lng, src: 'geo.ca' }).catch(() => {});
     } else {
+      if (g) { streetFound++; streets[r.a] = { lat: g.lat, lng: g.lng }; }
       freeMisses[r.a] = new Date().toISOString();
     }
     await new Promise((res) => setTimeout(res, 200));
   }
-  await missStore.setJSON('free', freeMisses).catch(() => {});
+  await missStore.setJSON('free-v2', freeMisses).catch(() => {});
+  await streetStore.setJSON('all', streets).catch(() => {});
 
   // Google only for what the free lookup couldn't find, newest first.
   let googled = 0;
@@ -170,13 +184,20 @@ export default async () => {
     if (!g) continue;
     googled++;
     delete freeMisses[r.a];
+    delete streets[r.a];
     found.set(r.a, g);
     await geoStore.setJSON(r.a, g).catch(() => {});
   }
-  if (googled) await missStore.setJSON('free', freeMisses).catch(() => {});
+  if (googled) {
+    await missStore.setJSON('free-v2', freeMisses).catch(() => {});
+    await streetStore.setJSON('all', streets).catch(() => {});
+  }
   for (const r of rows) {
-    const g = r.gp !== 'exact' && found.get(r.a);
-    if (g) { r.lat = g.lat; r.lng = g.lng; r.gp = 'exact'; }
+    if (r.gp === 'exact') continue;
+    const g = found.get(r.a);
+    if (g) { r.lat = g.lat; r.lng = g.lng; r.gp = 'exact'; continue; }
+    const st = streets[r.a];
+    if (st) { r.lat = st.lat; r.lng = st.lng; r.gp = 'street'; }
   }
 
   const centre = (key) => {
@@ -193,7 +214,7 @@ export default async () => {
   const byPostal = centre((pc) => pc);
   const byFsa = centre((pc) => pc.slice(0, 3));
   for (const r of rows) {
-    if (r.gp === 'exact' || !r.pc) continue;
+    if (r.gp === 'exact' || r.gp === 'street' || !r.pc) continue;
     const e = byPostal.get(r.pc) || byFsa.get(r.pc.slice(0, 3));
     if (!e) continue;
     r.lat = e.lat / e.n; r.lng = e.lng / e.n;
@@ -205,10 +226,11 @@ export default async () => {
     Object.assign(r, placeOf(r.lat, r.lng));
   }
 
-  const counts = { A: 0, C: 0, S: 0, exact: 0, approx: 0, noLocation: 0 };
+  const counts = { A: 0, C: 0, S: 0, exact: 0, street: 0, approx: 0, noLocation: 0 };
   for (const r of rows) {
     counts[r.st]++;
     if (r.gp === 'exact') counts.exact++;
+    else if (r.gp === 'street') counts.street++;
     else if (r.lat != null) counts.approx++;
     else counts.noLocation++;
   }
@@ -216,7 +238,7 @@ export default async () => {
   const builtAt = new Date().toISOString();
   await getStore('comps-index').setJSON('latest', { builtAt, soldSince: cutoffIso, counts, rows });
 
-  const summary = `comps-index: ${rows.length} rows (${counts.A} active, ${counts.C} conditional, ${counts.S} sold since ${cutoffIso}); location exact ${counts.exact}, approx ${counts.approx}, none ${counts.noLocation}; free lookups ${freeFound}/${freeTried} found; ${googled} new Google geocodes; ${Math.round((Date.now() - started) / 1000)}s`;
+  const summary = `comps-index: ${rows.length} rows (${counts.A} active, ${counts.C} conditional, ${counts.S} sold since ${cutoffIso}); location exact ${counts.exact}, street ${counts.street}, approx ${counts.approx}, none ${counts.noLocation}; free lookups ${freeFound}/${freeTried} exact + ${streetFound} street; ${googled} new Google geocodes; ${Math.round((Date.now() - started) / 1000)}s`;
   console.log(summary);
   return new Response(summary);
 };

@@ -20,7 +20,7 @@ export interface CompRow {
   lot: number | null; lotTxt: string | null;
   bsmt: string[]; gar: string | null; gs: number | null; pool: boolean; rural: boolean;
   tax: number | null; off: string | null;
-  lat?: number; lng?: number; gp?: 'exact' | 'postal' | 'area'; ar?: string | null; arn?: string | null;
+  lat?: number; lng?: number; gp?: 'exact' | 'street' | 'postal' | 'area'; ar?: string | null; arn?: string | null;
 }
 
 export interface Subject {
@@ -130,7 +130,7 @@ const FN: Record<FactorId, Fn> = {
     const near = 0.3; // within ~3 blocks counts as next door
     const dist = d <= near ? 1 : clamp01(1 - (d - near) / Math.max(0.5, maxKm - near));
     const same = s.ar && r.ar === s.ar;
-    const approx = r.gp && r.gp !== 'exact' ? ' (approx.)' : '';
+    const approx = r.gp === 'street' ? ' (street-level)' : r.gp && r.gp !== 'exact' ? ' (approx.)' : '';
     return [0.75 * dist + (same ? 0.25 : 0), `${d < 1 ? `${Math.round(d * 1000)} m` : `${d.toFixed(1)} km`}${approx}${same ? ', same area' : r.arn ? `, ${r.arn}` : ''}`];
   },
   recency(_s, r) {

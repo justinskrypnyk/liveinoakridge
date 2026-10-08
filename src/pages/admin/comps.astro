@@ -182,7 +182,7 @@ const STYLES = ['2-Storey', 'Bungalow', 'Bungalow-Raised', 'Bungaloft', '1 1/2 S
         <h2>Active <span class="count" id="count-A"></span></h2>
         <div class="comps" id="list-A"></div>
         <p class="meta" style="margin-top:24px">
-          Scores compare each home to the one above: 100 is a perfect match. Sale date uses the firm date, not closing. "Approx." locations are placed by postal code.
+          Scores compare each home to the one above: 100 is a perfect match. Sale date uses the firm date, not closing. "Street-level" homes are placed on the right street but not the exact house; "approx." ones by postal area (some town homes, improving nightly).
           Internal use only: VOW data, not for sharing outside the brokerage.
         </p>
       </div>
@@ -355,7 +355,7 @@ const STYLES = ['2-Storey', 'Bungalow', 'Bungalow-Raised', 'Bungaloft', '1 1/2 S
       <div>
         <div class="addr"><span class="num" style="background:${STATUS[st].hex}">${n}</span>${esc(r.a.replace(/, ON .*$/, ''))}</div>
         <div class="price">${price}</div>
-        <div class="facts"><b>${esc(when)}</b>${dist ? `<b>${esc(dist)}${r.gp && r.gp !== 'exact' ? ' (approx.)' : ''}</b>` : ''}${r.arn ? `<span>${esc(r.arn)}</span>` : ''}${facts}</div>
+        <div class="facts"><b>${esc(when)}</b>${dist ? `<b>${esc(dist)}${r.gp === 'street' ? ' (street-level)' : r.gp && r.gp !== 'exact' ? ' (approx.)' : ''}</b>` : ''}${r.arn ? `<span>${esc(r.arn)}</span>` : ''}${facts}</div>
         <div class="facts" style="margin-top:2px"><span>MLS® ${esc(r.k)}${r.off ? ` · ${esc(r.off)}` : ''}</span></div>
       </div>
       <div class="actions">
