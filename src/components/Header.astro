@@ -82,8 +82,10 @@ const pathname = Astro.url.pathname;
               )}
             </a>
             {item.children && (
-              <div class="absolute top-full left-0 mt-1 w-56 bg-navy-dark border border-white/10 rounded-xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none group-hover:pointer-events-auto">
-                <ul class="py-2" role="list">
+              <!-- pt-1 (not mt-1) so the gap under the label is part of the menu, and
+                   the delayed hide gives a diagonal mouse path time to reach it -->
+              <div class="absolute top-full left-0 pt-1 w-56 opacity-0 invisible transition-[opacity,visibility] duration-200 delay-200 group-hover:opacity-100 group-hover:visible group-hover:delay-0">
+                <ul class="py-2 bg-navy-dark border border-white/10 rounded-xl shadow-2xl" role="list">
                   {item.children.map((child) => (
                     <li>
                       <a
