@@ -392,6 +392,31 @@ cachePublicPage(Astro.response.headers);
           </p>
         </div>
 
+        <!-- Sifton Bog from Justin's drone (DJI_0412, Oct 2024): 15s muted loop, 2.6 MB.
+             Loads and plays only once scrolled into view; the poster stays for
+             reduced-motion and Save-Data visitors. -->
+        <figure class="mb-12 grid grid-cols-1 md:grid-cols-2 gap-8 items-center bg-cream rounded-2xl overflow-hidden border border-gray-100 p-6 md:p-10">
+          <video
+            id="sifton-bog-video"
+            class="w-full max-w-sm mx-auto aspect-[9/16] max-h-[70vh] object-cover rounded-xl shadow-lg bg-navy"
+            poster="/images/areas/sifton-bog-aerial-fall-oakridge-poster.webp"
+            muted
+            loop
+            playsinline
+            preload="none"
+            aria-label="Drone video gliding over Sifton Bog in fall colour toward Redmond's Pond and its boardwalk, Oakridge, London Ontario"
+          >
+            <source src="/videos/sifton-bog-aerial-fall-oakridge.mp4" type="video/mp4" />
+          </video>
+          <figcaption>
+            <h3 class="font-serif text-2xl text-navy mb-3">Sifton Bog From Above</h3>
+            <p class="text-slate leading-relaxed mb-4">
+              Sifton Bog sits on the south side of Oxford Street, west of Hyde Park Road. From the air you can see Redmond's Pond at its centre, the boardwalk that leads out to its viewing platform, and the dark ring of spruce around it, set against the reds and oranges the surrounding trees turn every October.
+            </p>
+            <p class="text-sm text-slate/80">Filmed by Justin Skrypnyk, October 2024.</p>
+          </figcaption>
+        </figure>
+
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           {area.parksData.parks.map((park) => (
             <div class="bg-cream rounded-2xl overflow-hidden border border-gray-100">
@@ -842,4 +867,19 @@ cachePublicPage(Astro.response.headers);
       </div>
     </div>
   </section>
+
+  <script>
+    const video = document.getElementById('sifton-bog-video') as HTMLVideoElement | null;
+    const calm = matchMedia('(prefers-reduced-motion: reduce)').matches || (navigator as any).connection?.saveData;
+    if (video && calm) {
+      video.controls = true;
+    } else if (video && 'IntersectionObserver' in window) {
+      new IntersectionObserver((entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting) video.play().catch(() => { video.controls = true; });
+          else video.pause();
+        }
+      }, { threshold: 0.35 }).observe(video);
+    }
+  </script>
 </Base>
