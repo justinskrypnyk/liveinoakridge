@@ -143,6 +143,7 @@
       ti: firstSend ? document.title.slice(0, 100) : '',
       r: firstSend ? ref : '',
       u: firstSend ? campaign.slice(0, 80) : '',
+      wd: navigator.webdriver ? 1 : 0, // browser says it's driven by automation software
       pf: firstSend && perf.lcp ? { l: perf.lcp, i: perf.inp, c: Math.round(perf.cls * 1000) / 1000 } : null,
     };
     touchSession();

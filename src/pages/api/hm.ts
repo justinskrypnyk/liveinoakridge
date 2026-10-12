@@ -8,6 +8,7 @@
 // reads the response anyway).
 import type { APIRoute } from 'astro';
 import { getStore } from '@netlify/blobs';
+import { reverse } from 'node:dns/promises';
 
 export const prerender = false;
 
@@ -40,6 +41,57 @@ function geoOf(request: Request, locals: any): Geo {
   };
 }
 
+// What kind of internet connection the visit came from (2026-10-12): the
+// provider's domain from a reverse-DNS lookup ("rogers.com", "amazonaws.com"),
+// and whether that's a cloud server. Only the provider's domain is kept,
+// never the IP. Added after 45 "(somewhere in) US" views on Forest City Homes on Oct 11 that never
+// scrolled and looped Hyde Park -> Sunningdale: likely automated, maybe an AI
+// assistant browsing for someone, and we had no way to tell.
+const CLOUD_DOMAINS = new Set([
+  'amazonaws.com', 'googleusercontent.com', '1e100.net', 'cloudapp.net', 'azure.com', 'linode.com',
+  'akamaitechnologies.com', 'digitalocean.com', 'vultrusercontent.com', 'choopa.net', 'your-server.de',
+  'hetzner.com', 'ovh.net', 'ovh.ca', 'contaboserver.net', 'oraclecloud.com', 'scaleway.com',
+  'leaseweb.com', 'leaseweb.net', 'm247.com', 'colocrossing.com', 'hostwindsdns.com', 'servers.com',
+]);
+type Net = { k: 'cloud' | 'isp' | 'none'; dom: string };
+const netCache = new Map<string, Net>();
+async function netOf(ip: string): Promise<Net> {
+  if (!ip) return { k: 'none', dom: '' };
+  const hit = netCache.get(ip);
+  if (hit) return hit;
+  let host = '';
+  try {
+    const names = await Promise.race([reverse(ip), new Promise<string[]>((r) => setTimeout(() => r([]), 500))]);
+    host = String(names[0] || '').toLowerCase().replace(/\.$/, '');
+  } catch {
+    host = '';
+  }
+  const parts = host.split('.').filter(Boolean);
+  // "cpe-1-2.rogers.com" -> "rogers.com"; keep 3 labels for "x.co.uk"-style endings.
+  const n = parts.length > 2 && /^(co|com|net|ne|or|org)$/.test(parts[parts.length - 2]) && parts[parts.length - 1].length === 2 ? 3 : 2;
+  const dom = parts.slice(-n).join('.').slice(0, 60);
+  const net: Net = { k: !dom ? 'none' : CLOUD_DOMAINS.has(dom) ? 'cloud' : 'isp', dom };
+  if (netCache.size > 1000) netCache.clear();
+  netCache.set(ip, net);
+  return net;
+}
+
+// "Chrome 129 · Windows" -- enough to spot a pattern, not a fingerprint.
+function browserOf(ua: string): string {
+  const v = (re: RegExp) => ua.match(re)?.[1] || '';
+  const name = /Edg\//.test(ua) ? `Edge ${v(/Edg\/(\d+)/)}`
+    : /OPR\//.test(ua) ? `Opera ${v(/OPR\/(\d+)/)}`
+    : /Firefox\//.test(ua) ? `Firefox ${v(/Firefox\/(\d+)/)}`
+    : /CriOS\//.test(ua) ? `Chrome ${v(/CriOS\/(\d+)/)}`
+    : /Chrome\//.test(ua) ? `Chrome ${v(/Chrome\/(\d+)/)}`
+    : /Safari\//.test(ua) ? `Safari ${v(/Version\/(\d+)/)}`
+    : 'Other';
+  const os = /iPhone/.test(ua) ? 'iPhone' : /iPad/.test(ua) ? 'iPad' : /Android/.test(ua) ? 'Android'
+    : /Windows/.test(ua) ? 'Windows' : /CrOS/.test(ua) ? 'Chromebook' : /Macintosh/.test(ua) ? 'Mac'
+    : /Linux/.test(ua) ? 'Linux' : 'Other';
+  return `${name.trim()} · ${os}`;
+}
+
 // Listing detail pages are one layout with thousands of URLs; grouping them
 // makes their heatmap readable instead of 1 view per URL.
 function normalizePath(p: string): string {
@@ -50,7 +102,7 @@ function normalizePath(p: string): string {
 
 const clampInt = (n: unknown, lo: number, hi: number) => Math.min(hi, Math.max(lo, Math.round(Number(n) || 0)));
 
-export const POST: APIRoute = async ({ request, locals }) => {
+export const POST: APIRoute = async ({ request, locals, clientAddress }) => {
   const ok = new Response(null, { status: 204 });
   if (BOT_UA.test(request.headers.get('user-agent') || '')) return ok;
   const geo = geoOf(request, locals);
@@ -109,6 +161,24 @@ export const POST: APIRoute = async ({ request, locals }) => {
       ? { l: clampInt(b.pf.l, 1, 60000), i: clampInt(b.pf.i, 0, 10000), c: Math.min(10, Math.max(0, Number(b.pf.c) || 0)) }
       : null,
   };
+  // Who's on the other end (2026-10-12): connection type, browser, and the
+  // two signals automation gives away -- the browser's own "I'm being driven
+  // by software" flag, and the Signature-Agent header AI agents like
+  // ChatGPT's send. `auto` holds the reason when any of them fire.
+  let ip = '';
+  try {
+    ip = String(locals?.netlify?.context?.ip || clientAddress || '');
+  } catch {
+    ip = '';
+  }
+  const net = await netOf(ip);
+  const agent = String(request.headers.get('signature-agent') || '').replace(/["<>]/g, '').replace(/^https?:\/\//, '').slice(0, 60);
+  const extra = {
+    net,
+    br: browserOf(request.headers.get('user-agent') || ''),
+    auto: agent ? `AI agent (${agent})` : b.wd === 1 ? 'Automated browser' : net.k === 'cloud' ? `Cloud server (${net.dom})` : '',
+  };
+  Object.assign(record, extra);
   const openedAgo = Number(b.n) - Number(b.st);
   if (Number.isFinite(openedAgo) && openedAgo >= 0 && openedAgo < 86400000) {
     record.opened = new Date(Date.parse(record.at) - openedAgo).toISOString();

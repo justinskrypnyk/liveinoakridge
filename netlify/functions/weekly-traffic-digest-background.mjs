@@ -301,11 +301,21 @@ const BOT_PLACES = /^(Ashburn|Dulles|Boardman|Council Bluffs|The Dalles|Quincy|M
 async function listingsSection(weekStartStr) {
   const store = getStore('heatmap-sessions');
   const rows = new Map();
+  // Automated visits (api/hm.ts flags them from 2026-10-12): kept out of the
+  // table, summed up underneath so Justin can see what they were.
+  const autos = { visits: 0, views: 0, why: {}, listings: new Set() };
   for (let i = 0; i < 7; i++) {
     const day = new Date(Date.parse(`${weekStartStr}T12:00:00Z`) + i * 86400000).toISOString().slice(0, 10);
     const doc = await store.get(day, { type: 'json' }).catch(() => null);
     for (const [sid, sess] of Object.entries(doc?.sessions || {})) {
       if (BOT_PLACES.test(sess.place || '')) continue;
+      if (sess.auto) {
+        autos.visits += 1;
+        autos.views += (sess.views || []).length;
+        autos.why[sess.auto] = (autos.why[sess.auto] || 0) + 1;
+        for (const v of sess.views || []) if (/^\/search\/[A-Za-z0-9]{5,20}\/?$/.test(String(v.p || ''))) autos.listings.add(v.p);
+        continue;
+      }
       for (const v of sess.views || []) {
         const path = String(v.p || '').replace(/\/?$/, '/');
         if (!/^\/search\/[A-Za-z0-9]{5,20}\/$/.test(path)) continue;
@@ -322,7 +332,10 @@ async function listingsSection(weekStartStr) {
       }
     }
   }
-  if (!rows.size) return '';
+  const autoHtml = autos.visits
+    ? `<p style="font-size:12px;color:#888;margin-top:6px;">Also ${autos.visits} automated ${autos.visits === 1 ? 'visit' : 'visits'} (${autos.views} page views, ${autos.listings.size} listings) left out: ${Object.entries(autos.why).sort((a, b) => b[1] - a[1]).map(([k, n]) => `${esc(k)} x${n}`).join(', ')}. An AI agent can be a real buyer using ChatGPT or similar to shop for them; a plain cloud server is usually a scraper.</p>`
+    : '';
+  if (!rows.size) return autoHtml ? `<h3>Most Viewed Listings</h3>${autoHtml}` : '';
   const top = [...rows.values()].sort((a, b) => b.people.size - a.people.size || b.secs - a.secs).slice(0, 5);
   const time = (n) => (n >= 60 ? `${Math.floor(n / 60)}m ${Math.round(n % 60)}s` : `${Math.round(n)}s`);
   const body = top.map((r) => `<tr>
@@ -338,7 +351,7 @@ async function listingsSection(weekStartStr) {
         <tr style="font-weight:bold;border-bottom:1px solid #ccc;"><td style="padding:4px 10px;">Listing</td><td style="padding:4px 10px;">People</td><td style="padding:4px 10px;">Time on page</td><td style="padding:4px 10px;">Photo clicks</td><td style="padding:4px 10px;">From</td></tr>
         ${body}
       </table>
-      <p style="font-size:12px;color:#888;margin-top:6px;">Top 5 of ${rows.size} listings viewed on the site this week, by number of people, then time. Your team and likely bots are left out.</p>`;
+      <p style="font-size:12px;color:#888;margin-top:6px;">Top 5 of ${rows.size} listings viewed on the site this week, by number of people, then time. Your team and likely bots are left out.</p>${autoHtml}`;
 }
 
 async function onSiteSection(weekStartStr) {
@@ -405,7 +418,7 @@ async function onSiteSection(weekStartStr) {
       ${topDead.length ? `<p style="font-size:13px;margin:8px 0 0;">Most clicks on things that aren't links (people may expect them to do something): ${topDead.map(([path, n]) => `${esc(path)} (${fmtNum(n)})`).join(', ')}.</p>` : ''}
 
       <p style="font-size:13px;margin:12px 0 4px;"><strong>Where visitors were from</strong></p>
-      <p style="font-size:13px;margin:0;">${visits ? `${pct(local / visits)} London area, ${pct((visits - local) / visits)} out of town.` : 'No location data yet.'}${awayTop.length ? ` Top out-of-town: ${awayTop.map(([k, n]) => `${esc(k)} (${fmtNum(n)})`).join(', ')}.` : ''} <span style="color:#888;">(Internet-provider estimate: good for city/region, not exact.)</span></p>
+      <p style="font-size:13px;margin:0;">${visits ? `${pct(local / visits)} London area, ${pct((visits - local) / visits)} out of town.` : 'No location data yet.'}${awayTop.length ? ` Top out-of-town: ${awayTop.map(([k, n]) => `${esc(k)} (${fmtNum(n)})`).join(', ')}.` : ''} <span style="color:#888;">(Internet-provider estimate: good for city/region, not exact.)</span>${site && site.auto ? ` <span style="color:#888;">${fmtNum(site.auto)} automated page views (cloud servers, AI agents) are left out of this section.</span>` : ''}</p>
       ${site && site.searches ? `
       <p style="font-size:13px;margin:12px 0 4px;"><strong>What buyers searched for (${fmtNum(site.searches)} searches)</strong></p>
       <table style="border-collapse:collapse;font-size:13px;">

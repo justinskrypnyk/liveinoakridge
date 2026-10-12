@@ -26,7 +26,12 @@ type View = {
   clicks: [string, number | null][]; forms: Record<string, { s: number; l: string }>;
   q: Record<string, string> | null;
 };
-type Session = { place: string; d: 'd' | 'm'; ref: string; camp: string; views: View[] };
+// net/br/auto from 2026-10-12 on: connection (provider domain, cloud or not),
+// browser, and why api/hm.ts thinks the visit was automated.
+type Session = {
+  place: string; d: 'd' | 'm'; ref: string; camp: string; views: View[];
+  net?: { k: 'cloud' | 'isp' | 'none'; dom: string }; br?: string; auto?: string;
+};
 
 let days: string[] = [];
 let day = '';
@@ -205,16 +210,16 @@ const qs = (over: Record<string, string>) => {
         <>
           <p class="count">{shown.length} {shown.length === 1 ? 'visit' : 'visits'}{place && ` from ${place}`}. Newest first. Click a visit to see each step.</p>
           {shown.map(([, s]) => {
-            const bot = isDataCentre(s.place);
+            const bot = isDataCentre(s.place) || !!s.auto;
             return (
               <details class="sess" open={shown.length <= 8 && !bot}>
                 <summary>
                   <div>
                     <span class="who">{time(s.views[0].at)} · {s.place}</span>
                     {sentForm(s) && <span class="tag sent">Sent a form</span>}
-                    {bot && <span class="tag bot">Likely a bot (data centre)</span>}
+                    {bot && <span class="tag bot">{s.auto || 'Likely a bot (data centre)'}</span>}
                     {!bot && !isLocal(s.place) && <span class="tag away">Out of town</span>}
-                    <div class="meta">{s.d === 'm' ? 'Phone' : 'Computer'} · {sourceOf(s)}</div>
+                    <div class="meta">{s.d === 'm' ? 'Phone' : 'Computer'} · {sourceOf(s)}{s.br && ` · ${s.br}`}{s.net && ` · ${s.net.k === 'cloud' ? 'Cloud server' : s.net.k === 'isp' ? 'Internet provider' : 'Provider unknown'}${s.net.dom ? ` (${s.net.dom})` : ''}`}</div>
                   </div>
                   <div class="right">{s.views.length} {s.views.length === 1 ? 'page' : 'pages'}<br>{fmtSecs(lengthOf(s))}</div>
                 </summary>

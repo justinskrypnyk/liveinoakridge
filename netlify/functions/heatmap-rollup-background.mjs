@@ -102,7 +102,10 @@ export default async () => {
     used.push(key);
     if (!r || !r.p || !r.d) continue;
     const doc = await docFor(`${weekOf(r.at)}/${r.d}`);
-    const page = (doc.pages[r.p] ||= emptyPage());
+    // Automated visits (cloud servers, AI agents; api/hm.ts sets r.auto) still
+    // show in the visitor sessions, but stay out of the page heatmaps, places,
+    // searches and form stats: they land on a throwaway page here.
+    const page = r.auto ? emptyPage() : (doc.pages[r.p] ||= emptyPage());
 
     if (r.ex) page.example = r.ex;
     page.views += r.v === 1 ? 1 : 0;
@@ -138,8 +141,9 @@ export default async () => {
       const day = new Date(r.at).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' });
       site.daily ||= {};
       site.daily[day] = (site.daily[day] || 0) + 1;
+      if (r.auto) site.auto = (site.auto || 0) + 1;
     }
-    if (r.q) {
+    if (r.q && !r.auto) {
       const q = r.q;
       site.searches += 1;
       const area = q.area ? areaName(q.area) : 'All areas';
@@ -152,7 +156,7 @@ export default async () => {
       const combo = [area, beds, price].filter(Boolean).join(' · ');
       site.combos[combo] = (site.combos[combo] || 0) + 1;
     }
-    if (r.f && Object.keys(r.f).length) {
+    if (r.f && Object.keys(r.f).length && !r.auto) {
       const prevForms = formsByView.get(viewKey)?.forms || {};
       for (const [name, st] of Object.entries(r.f)) {
         const p = prevForms[name] || { s: 0, l: '' };
@@ -174,6 +178,9 @@ export default async () => {
       sess = day.sessions[sid] = { place: placeOf(r.g), d: r.d, ref: '', camp: '', views: [] };
     }
     if (!sess.ref && r.r) sess.ref = r.r;
+    if (!sess.net && r.net) sess.net = r.net;
+    if (!sess.br && r.br) sess.br = r.br;
+    if (!sess.auto && r.auto) sess.auto = r.auto;
     if (!sess.camp && r.u) sess.camp = r.u;
     const viewId = r.id || key;
     let v = sess.views.find((x) => x.id === viewId);
