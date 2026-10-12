@@ -3,7 +3,7 @@
 // tab like we did with the two web pages"), styled like the heatmap's site
 // switch. Keeps ?key= so moving between tabs never asks for it again.
 interface Props {
-  active: 'overview' | 'comps' | 'heatmap' | 'sessions';
+  active: 'overview' | 'comps' | 'listings' | 'heatmap' | 'sessions';
   adminKey: string;
 }
 
@@ -12,6 +12,7 @@ const k = encodeURIComponent(adminKey);
 const tabs = [
   { id: 'overview', label: 'Overview', href: `/admin/?key=${k}` },
   { id: 'comps', label: 'Comps', href: `/admin/comps/?key=${k}` },
+  { id: 'listings', label: 'My Listings', href: `/admin/my-listings/?key=${k}` },
   { id: 'heatmap', label: 'Heatmap', href: `/admin/heatmap/?key=${k}` },
   { id: 'sessions', label: 'Visitor sessions', href: `/admin/sessions/?key=${k}` },
 ];

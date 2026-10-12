@@ -1,0 +1,178 @@
+---
+// My Listings (Justin, 2026-10-12): tick your own listings to get a weekly
+// "your competition" email for each, Tuesday mornings, to forward to the
+// seller. The feed can't tell which Chapman listings are Justin's, so this
+// list is the source of truth. Data and sending: /api/admin/listing-watch.json
+// -> src/lib/listing-watch.mjs.
+//
+// Gated by ?key=HEATMAP_KEY like the other admin pages, and a plain page
+// with no site layout so GA4/the heatmap don't count visits.
+import AdminTabs from '@/components/AdminTabs.astro';
+
+export const prerender = false;
+
+const url = new URL(Astro.request.url);
+const key = url.searchParams.get('key') || '';
+const expected = import.meta.env.HEATMAP_KEY;
+Astro.response.headers.set('X-Robots-Tag', 'noindex, nofollow');
+Astro.response.headers.set('Cache-Control', 'no-store');
+const authorized = Boolean(expected) && key === expected;
+if (!authorized) Astro.response.status = 404;
+---
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>My Listings</title>
+<style is:global>
+  :root { --ink:#16283a; --muted:#5a7185; --line:#dbe4ea; --bg:#f4f6f8; --card:#fff; --accent:#047857; --navy:#0c2340; --bad:#b91c1c; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: Inter, Helvetica, Arial, sans-serif; color:var(--ink); background:var(--bg); font-size:14px; }
+  header { background:var(--navy); color:#fff; padding:16px 24px; }
+  header h1 { font-size:18px; margin:0; font-weight:600; }
+  main { max-width:1000px; margin:0 auto; padding:20px 16px 60px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:16px; margin-bottom:16px; }
+  p.lead { margin:0 0 6px; line-height:1.5; }
+  .muted { color:var(--muted); font-size:13px; }
+  table { width:100%; border-collapse:collapse; }
+  th { text-align:left; font-size:12px; color:var(--muted); font-weight:600; padding:8px; border-bottom:2px solid var(--line); }
+  td { padding:10px 8px; border-bottom:1px solid var(--line); vertical-align:middle; }
+  td.addr strong { display:block; }
+  input[type=text] { font:inherit; padding:7px 8px; border:1px solid var(--line); border-radius:6px; width:140px; }
+  input[type=checkbox] { width:18px; height:18px; accent-color:var(--accent); }
+  button { font:inherit; font-weight:600; padding:7px 12px; border-radius:6px; border:1px solid var(--line); background:#fff; color:var(--ink); cursor:pointer; white-space:nowrap; }
+  button.primary { background:var(--accent); color:#fff; border-color:var(--accent); }
+  button:disabled { opacity:.5; cursor:default; }
+  .actions { display:flex; gap:6px; flex-wrap:wrap; }
+  .bar { display:flex; gap:10px; align-items:center; margin-top:14px; flex-wrap:wrap; }
+  #msg { font-size:13px; }
+  #msg.err { color:var(--bad); }
+  .tag { font-size:11px; font-weight:600; padding:2px 7px; border-radius:99px; background:#fef3c7; color:#92400e; margin-left:6px; }
+  dialog { width:min(720px, 96vw); max-height:90vh; border:0; border-radius:10px; padding:0; }
+  dialog header { display:flex; align-items:center; gap:10px; padding:10px 14px; }
+  dialog header span { flex:1; font-size:14px; }
+  dialog iframe { width:100%; height:75vh; border:0; background:#fff; }
+  @media (max-width: 700px) {
+    thead { display:none; }
+    tr { display:grid; grid-template-columns: 28px 1fr; gap:6px 10px; padding:10px 0; border-bottom:1px solid var(--line); }
+    td { border:0; padding:0; }
+    td.seller, td.btns { grid-column: 2; }
+  }
+</style>
+</head>
+<body>
+{authorized ? (
+  <>
+    <AdminTabs active="listings" adminKey={key} />
+    <header><h1>My Listings: weekly competition reports</h1></header>
+    <main>
+      <div class="card">
+        <p class="lead">Tick your own listings. Every Tuesday morning you'll get one email per ticked listing showing the homes competing with it: new listings, price changes, homes that went conditional, sold prices, and homes that came off the market. Each email is written to the seller, so you can just forward it.</p>
+        <p class="muted">Seller first name is optional (it fills in "Hi Sarah," otherwise "Hi there,"). Only Chapman listings show here, because the MLS feed doesn't say which agent a listing belongs to. Each Tuesday you'll also get a short reminder about any new Chapman listings, in case one is yours.</p>
+      </div>
+      <div class="card">
+        <table>
+          <thead><tr><th></th><th>Listing</th><th>Seller first name</th><th></th></tr></thead>
+          <tbody id="rows"><tr><td colspan="4" class="muted">Loading…</td></tr></tbody>
+        </table>
+        <div class="bar">
+          <button id="save" class="primary">Save</button>
+          <span id="msg"></span>
+        </div>
+      </div>
+    </main>
+    <dialog id="preview">
+      <header><span id="preview-title">Preview</span><button id="preview-close">Close</button></header>
+      <iframe id="preview-frame" title="Report preview"></iframe>
+    </dialog>
+    <script is:inline define:vars={{ adminKey: key }}>
+      const api = `/api/admin/listing-watch.json?key=${encodeURIComponent(adminKey)}`;
+      const rowsEl = document.getElementById('rows');
+      const msg = document.getElementById('msg');
+      const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+      const money = (n) => (n ? `$${Math.round(n).toLocaleString('en-CA')}` : '');
+      const say = (text, err = false) => { msg.textContent = text; msg.className = err ? 'err' : ''; };
+
+      async function post(body) {
+        const res = await fetch(api, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+        const out = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(out.error || `HTTP ${res.status}`);
+        return out;
+      }
+
+      function render(data) {
+        const watched = new Map(data.listings.map((w) => [w.k, w]));
+        const rows = [...data.chapman];
+        for (const w of data.listings) if (!rows.some((r) => r.k === w.k)) rows.push({ k: w.k, a: w.a, lp: null, st: 'gone' });
+        if (!rows.length) { rowsEl.innerHTML = '<tr><td colspan="4" class="muted">No active Chapman listings in the feed right now.</td></tr>'; return; }
+        rowsEl.innerHTML = rows.map((r) => {
+          const w = watched.get(r.k);
+          const tag = r.st === 'C' ? '<span class="tag">Conditional</span>' : r.st === 'gone' ? '<span class="tag">No longer active</span>' : '';
+          return `<tr data-k="${esc(r.k)}">
+            <td><input type="checkbox" ${w ? 'checked' : ''} aria-label="Watch ${esc(r.a)}"></td>
+            <td class="addr"><strong>${esc(String(r.a).split(',')[0])}${tag}</strong><span class="muted">${esc(r.k)} ${money(r.lp)}${r.ld ? ` · listed ${esc(r.ld)}` : ''}</span></td>
+            <td class="seller"><input type="text" placeholder="e.g. Sarah" value="${esc(w?.seller || '')}" aria-label="Seller first name"></td>
+            <td class="btns"><div class="actions"><button data-act="preview">Preview</button>${w ? '<button data-act="send">Email me now</button>' : ''}</div></td>
+          </tr>`;
+        }).join('');
+      }
+
+      async function load() {
+        const res = await fetch(api);
+        if (!res.ok) { say('Could not load listings.', true); return; }
+        render(await res.json());
+      }
+
+      document.getElementById('save').addEventListener('click', async (e) => {
+        const btn = e.currentTarget;
+        const listings = [...rowsEl.querySelectorAll('tr[data-k]')]
+          .filter((tr) => tr.querySelector('input[type=checkbox]').checked)
+          .map((tr) => ({ k: tr.dataset.k, seller: tr.querySelector('input[type=text]').value }));
+        btn.disabled = true; say('Saving…');
+        try {
+          const out = await post({ action: 'save', listings });
+          say(`Saved. ${out.listings.length} listing${out.listings.length === 1 ? '' : 's'} will get a report every Tuesday.`);
+          await load();
+        } catch (err) { say(`Save failed: ${err.message}`, true); }
+        btn.disabled = false;
+      });
+
+      rowsEl.addEventListener('click', async (e) => {
+        const btn = e.target.closest('button[data-act]');
+        if (!btn) return;
+        const k = btn.closest('tr').dataset.k;
+        btn.disabled = true;
+        try {
+          if (btn.dataset.act === 'preview') {
+            say('Building preview…');
+            const out = await post({ action: 'preview', k });
+            const r = out.results.find((x) => x.k === k);
+            if (!r?.html) { say(r?.skipped ? `This listing ${r.skipped}.` : 'Nothing to preview.', true); }
+            else {
+              document.getElementById('preview-title').textContent = r.subject;
+              document.getElementById('preview-frame').srcdoc = r.html;
+              document.getElementById('preview').showModal();
+              say('');
+            }
+          } else {
+            if (!confirm('Email this report to you now? Next Tuesday\'s report will then cover changes since today.')) { btn.disabled = false; return; }
+            say('Sending…');
+            const out = await post({ action: 'send', k });
+            const r = out.results.find((x) => x.k === k);
+            say(r?.subject ? `Sent: ${r.subject}` : r?.skipped ? `Not sent: this listing ${r.skipped}.` : 'Sent.');
+          }
+        } catch (err) { say(err.message, true); }
+        btn.disabled = false;
+      });
+      document.getElementById('preview-close').addEventListener('click', () => document.getElementById('preview').close());
+      load();
+    </script>
+  </>
+) : (
+  <p style="padding:24px">Not found.</p>
+)}
+</body>
+</html>
