@@ -45,8 +45,8 @@ const inputClass = 'w-full px-4 py-3 rounded-lg border border-gray-200 bg-white 
         <input id={id('first')} name="first-name" required autocomplete="given-name" class={inputClass} />
       </div>
       <div>
-        <label for={id('last')} class="block text-xs font-semibold text-navy/70 mb-1">Last name</label>
-        <input id={id('last')} name="last-name" required autocomplete="family-name" class={inputClass} />
+        <label for={id('last')} class="block text-xs font-semibold text-navy/70 mb-1">Last name <span class="font-normal text-slate/60">(optional)</span></label>
+        <input id={id('last')} name="last-name" autocomplete="family-name" class={inputClass} />
       </div>
       <div>
         <label for={id('phone')} class="block text-xs font-semibold text-navy/70 mb-1">Phone</label>

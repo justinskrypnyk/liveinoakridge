@@ -176,6 +176,10 @@ cachePublicPage(Astro.response.headers);
     <div id="gallery-modal" class="hidden fixed inset-0 z-[100] bg-black/95 flex-col">
       <div class="flex items-center justify-between px-4 py-3 text-white shrink-0">
         <span id="gallery-modal-count" class="text-sm">1 / {photoUrls.length}</span>
+        <!-- Visitors spend more time in this gallery than anywhere else on the
+             page (225 next-photo clicks on desktop the week of 2026-10-05)
+             and most never scroll down to the forms, so the ask lives here too. -->
+        <a href="#request-showing" data-gallery-showing class="ml-auto mr-3 btn-primary !py-2 !px-4 text-sm whitespace-nowrap">Request a Showing</a>
         <button id="gallery-close" type="button" aria-label="Close gallery" class="w-9 h-9 rounded-full hover:bg-white/10 flex items-center justify-center transition-colors">
           <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
         </button>
@@ -191,7 +195,7 @@ cachePublicPage(Astro.response.headers);
       </div>
       <div class="flex gap-2 overflow-x-auto px-4 py-3 no-scrollbar shrink-0">
         {photoUrls.map((url, i) => (
-          <button type="button" class="gallery-modal-thumb shrink-0 w-16 h-12 rounded-md overflow-hidden border-2 border-transparent data-[active=true]:border-gold opacity-60 data-[active=true]:opacity-100 transition-opacity" data-index={i}>
+          <button type="button" aria-label={`Photo ${i + 1}`} class="gallery-modal-thumb shrink-0 w-16 h-12 rounded-md overflow-hidden border-2 border-transparent data-[active=true]:border-gold opacity-60 data-[active=true]:opacity-100 transition-opacity" data-index={i}>
             <img src={url} alt={photoAlts[i]} class="w-full h-full object-cover" loading="lazy" />
           </button>
         ))}
@@ -476,6 +480,8 @@ cachePublicPage(Astro.response.headers);
     el.addEventListener('click', () => openGalleryModal(Number(el.dataset.index) || 0));
   });
   document.getElementById('gallery-close')?.addEventListener('click', closeGalleryModal);
+  // Close first so the page can scroll to the form behind the gallery.
+  modal?.querySelector('[data-gallery-showing]')?.addEventListener('click', closeGalleryModal);
   document.getElementById('gallery-modal-prev')?.addEventListener('click', () => showModalPhoto(current - 1));
   document.getElementById('gallery-modal-next')?.addEventListener('click', () => showModalPhoto(current + 1));
   modalThumbs.forEach((t) => t.addEventListener('click', () => showModalPhoto(Number(t.dataset.index))));

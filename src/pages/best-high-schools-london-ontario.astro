@@ -164,7 +164,7 @@ const faqs = [
           </thead>
           <tbody>
             {HIGH_SCHOOLS.map((school, i) => (
-              <tr data-school-pick={school.name} class:list={['border-b border-gray-100 last:border-0 cursor-pointer hover:bg-gold/10 transition-colors', school.servesAreas ? 'bg-gold/5' : '']}>
+              <tr class:list={['border-b border-gray-100 last:border-0', school.servesAreas ? 'bg-gold/5' : '']}>
                 <td class="px-4 py-3 text-navy/50 font-medium">{i + 1}</td>
                 <td class="px-4 py-3">
                   <div class="font-semibold text-navy">{school.name}</div>
@@ -221,6 +221,24 @@ const faqs = [
     </div>
   </section>
 
+  <!-- CTA. Sits right after the ranking table (moved up 2026-10-12): on
+       phones 81% of visitors reach the table but only 23% get past it. -->
+  <section class="py-16 bg-white">
+    <div class="container-site">
+      <div class="bg-cream rounded-2xl p-10 text-center">
+        <h2 class="font-serif text-3xl text-navy mb-3">Buying a Home Near a Specific School?</h2>
+        <div class="gold-divider mx-auto mb-4"></div>
+        <p class="text-slate max-w-xl mx-auto mb-8 leading-relaxed">
+          As a local Real Estate Broker, I've personally helped dozens of London-area families — especially in Oakridge — find a home in the right school catchment, not just the right neighbourhood. Across our brokerage, that number climbs into the hundreds.
+        </p>
+        <SchoolListingsForm schools={SERVING_SCHOOLS.map((s) => s.name)} otherSchools={HIGH_SCHOOLS.filter((s) => !s.servesAreas?.length).map((s) => s.name)} />
+        <p class="text-sm text-slate mt-6">
+          Rather talk it through? <a href="/contact/" class="text-gold-deep font-semibold underline">Ask Justin a question</a> or <a href="/areas/" class="text-gold-deep font-semibold underline">explore the areas we serve</a>.
+        </p>
+      </div>
+    </div>
+  </section>
+
   <!-- Homes Near These Schools -->
   <section id="homes-near-schools" class="py-16 bg-navy-dark text-white scroll-mt-20">
     <div class="container-site">
@@ -262,23 +280,6 @@ const faqs = [
       <div class="max-w-5xl mx-auto mt-8 p-5 rounded-xl border border-gold/30 bg-gold/10 text-sm text-white/80 leading-relaxed">
         <strong class="text-gold">Check the exact address before you buy.</strong>
         School boundaries don't always follow neighbourhood lines, and the boards redraw them from time to time. Confirm any home with the <a href={BOARD_LOCATORS.public} target="_blank" rel="noopener noreferrer" class="text-gold underline hover:text-gold-light">TVDSB school locator</a> (public) or the <a href={BOARD_LOCATORS.catholic} target="_blank" rel="noopener noreferrer" class="text-gold underline hover:text-gold-light">LDCSB home school finder</a> (Catholic). I'll run that check for you on any home you're serious about.
-      </div>
-    </div>
-  </section>
-
-  <!-- CTA -->
-  <section class="py-16 bg-white">
-    <div class="container-site">
-      <div class="bg-cream rounded-2xl p-10 text-center">
-        <h2 class="font-serif text-3xl text-navy mb-3">Buying a Home Near a Specific School?</h2>
-        <div class="gold-divider mx-auto mb-4"></div>
-        <p class="text-slate max-w-xl mx-auto mb-8 leading-relaxed">
-          As a local Real Estate Broker, I've personally helped dozens of London-area families — especially in Oakridge — find a home in the right school catchment, not just the right neighbourhood. Across our brokerage, that number climbs into the hundreds.
-        </p>
-        <SchoolListingsForm schools={SERVING_SCHOOLS.map((s) => s.name)} otherSchools={HIGH_SCHOOLS.filter((s) => !s.servesAreas?.length).map((s) => s.name)} />
-        <p class="text-sm text-slate mt-6">
-          Rather talk it through? <a href="/contact/" class="text-gold-deep font-semibold underline">Ask Justin a question</a> or <a href="/areas/" class="text-gold-deep font-semibold underline">explore the areas we serve</a>.
-        </p>
       </div>
     </div>
   </section>

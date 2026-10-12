@@ -5,6 +5,7 @@ import TrendLineChart from '@/components/TrendLineChart.astro';
 import { SITE } from '@/data/site';
 import { BLOG_POSTS } from '@/data/blog';
 import BlogSignup from '@/components/BlogSignup.astro';
+import MidPostOffer from '@/components/MidPostOffer.astro';
 
 export function getStaticPaths() {
   // Entries with `href` (e.g. best-high-schools-london-ontario) are standalone
@@ -33,6 +34,17 @@ const postArea = SERVED_AREAS
   .map((a) => ({ ...a, at: post.slug.indexOf(a.slug) }))
   .filter((a) => a.at !== -1)
   .sort((a, b) => a.at - b.at)[0];
+
+// Split the body at the <h2> nearest its middle so MidPostOffer sits where
+// readers actually get to. Posts with under 3 sections, and referral-partner
+// spotlights, stay whole.
+const h2At = [...post.content.matchAll(/<h2[\s>]/g)].map((m) => m.index!);
+const splitAt = post.category !== 'Referral Partners' && h2At.length >= 3
+  ? h2At.slice(1).reduce((best, i) => (Math.abs(i - post.content.length / 2) < Math.abs(best - post.content.length / 2) ? i : best))
+  : -1;
+const [contentTop, contentBottom] = splitAt > 0
+  ? [post.content.slice(0, splitAt), post.content.slice(splitAt)]
+  : [post.content, ''];
 
 // "Share this article" links. Each network reads the post's og:title/og:image
 // itself, so only the URL (plus a title for X) needs to go along.
@@ -215,7 +227,11 @@ const shareBtn = 'inline-flex items-center gap-2 rounded-full border border-navy
             </div>
           )}
 
-          <div class="bg-white rounded-2xl p-5 sm:p-8 lg:p-10 shadow-sm prose prose-slate prose-headings:font-serif prose-headings:text-navy prose-a:text-gold-deep prose-strong:text-navy max-w-none" set:html={post.content} />
+          <div class="bg-white rounded-2xl p-5 sm:p-8 lg:p-10 shadow-sm prose prose-slate prose-headings:font-serif prose-headings:text-navy prose-a:text-gold-deep prose-strong:text-navy max-w-none">
+            <Fragment set:html={contentTop} />
+            {contentBottom && <MidPostOffer category={post.category} area={postArea ? { slug: postArea.slug, name: postArea.name } : undefined} />}
+            {contentBottom && <Fragment set:html={contentBottom} />}
+          </div>
 
           {post.faqs && post.faqs.length > 0 && (
             <div class="mt-8 bg-white rounded-2xl p-5 sm:p-8 lg:p-10 shadow-sm">

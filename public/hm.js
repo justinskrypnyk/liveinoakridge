@@ -180,6 +180,9 @@
   document.addEventListener('focusin', function (e) {
     var el = e.target, f = el && el.form;
     if (!f || !el.name || el.type === 'hidden' || el.name === 'bot-field') return;
+    // Base.astro's hidden Netlify "twin" forms can't be seen; only bots and
+    // extensions reach their fields, so they aren't real starts.
+    if (f.closest('[hidden]')) return;
     var k = formName(f);
     forms[k] = forms[k] || { s: 0 };
     forms[k].l = el.name.slice(0, 40);
