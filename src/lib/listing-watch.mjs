@@ -164,7 +164,9 @@ export function reportHtml(rep, { seller = '', now }) {
       ? `<p style="font-size:15px">Here's what changed this week among the homes competing with <strong>${esc(street(r.a))}</strong>.</p>`
       : `<p style="font-size:15px">A quiet week around <strong>${esc(street(r.a))}</strong>: no new competing listings, price changes or sales nearby since last week.</p>`);
 
-  const where = s.activeCount
+  const where = s.activeCount === 1
+    ? `1 similar home is for sale within ${rep.comps.km} km, at ${money(s.low)}${r.lp ? `, ${s.low < r.lp ? 'below' : s.low > r.lp ? 'above' : 'the same as'} ${esc(street(r.a))} at ${money(r.lp)}` : ''}.`
+    : s.activeCount
     ? `${s.activeCount} similar home${s.activeCount === 1 ? ' is' : 's are'} for sale within ${rep.comps.km} km, priced ${money(s.low)} to ${money(s.high)} (middle price ${money(s.median)}). ${s.cheaperCount} of them ${s.cheaperCount === 1 ? 'is' : 'are'} priced below ${esc(street(r.a))} at ${money(r.lp)}.`
     : `No closely similar homes are for sale within ${rep.comps.km} km right now.`;
   const sold90 = s.soldCount90
