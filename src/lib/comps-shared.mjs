@@ -20,6 +20,12 @@ export const COMPS_SELECT = [
   'PropertyType', 'PropertySubType', 'TransactionType', 'StandardStatus',
 ];
 
+// The towns around London the index covers, one word each (the feed
+// 0-results any contains() value with a space).
+export const TOWN_TERMS = ['Middlesex', 'Strathroy', 'Thames', 'Thomas', 'Elgin', 'Southwold', 'Lucan'];
+/** London or one of the TOWN_TERMS towns -- the area the comps index covers. */
+export const inCompsArea = (city) => /^London\b/.test(city || '') || TOWN_TERMS.some((t) => (city || '').includes(t));
+
 export const isSale = (l) => l.PropertyType !== 'Commercial' && l.TransactionType === 'For Sale';
 
 function polygonsOf(fc, nameKey) {

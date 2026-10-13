@@ -7,7 +7,7 @@
 import type { APIRoute } from 'astro';
 import { getStore } from '@netlify/blobs';
 import { odataGet, getSoldListingPhotos } from '@/lib/vow-listing';
-import { COMPS_SELECT, statusOf, slim, placeOf } from '@/lib/comps-shared.mjs';
+import { COMPS_SELECT, statusOf, slim, placeOf, inCompsArea } from '@/lib/comps-shared.mjs';
 import { geocodeFreeformAddress } from '@/lib/ddf';
 import {
   rankComps, subjectFromRow, km, DEFAULT_WEIGHTS,
@@ -58,9 +58,12 @@ function parseAddress(q: string) {
   const street = m[2].split(' ').filter((w) => !/^(london|on|ontario|n\d\w)$/.test(w))[0];
   return street ? { num: m[1], street } : null;
 }
+// The house number must lead the address (optionally after a "12-" unit):
+// MLS puts unit numbers after the street, so "Southgate Road 62, Hunt Club"
+// must not match "62 Hunt Club Dr".
 function addressMatches(address: string, p: { num: string; street: string }) {
-  const a = address.toLowerCase().replace(/[#,.]/g, ' ').replace(/\s+/g, ' ');
-  return new RegExp(`(^|\\s|-)${p.num}\\s+${p.street}\\b`).test(a);
+  const a = address.toLowerCase().replace(/[#,.]/g, ' ').replace(/\s+/g, ' ').trim();
+  return new RegExp(`^(\\S+-)?${p.num}\\s+${p.street}\\b`).test(a);
 }
 const newest = (rows: CompRow[]) => [...rows].sort((x, y) => (y.d || '').localeCompare(x.d || ''))[0];
 
@@ -93,7 +96,8 @@ async function findSubject(q: string, index: Index | null) {
       const hits = rows.filter((r) => addressMatches(r.a, p));
       row = hits.length ? newest(hits) : null;
       // Not listed in the last 2 years -- the feed still has its older history.
-      if (!row) row = await liveLookup(`contains(UnparsedAddress,'${p.street.replace(/'/g, "''")}')`, (l) => addressMatches(String(l.UnparsedAddress || ''), p));
+      // It covers all of Ontario, so keep to the index's area.
+      if (!row) row = await liveLookup(`contains(UnparsedAddress,'${p.street.replace(/'/g, "''")}')`, (l) => inCompsArea(String(l.City || '')) && addressMatches(String(l.UnparsedAddress || ''), p));
       if (row) source = `Found in MLS®: ${row.mls || row.st} ${row.d || ''} (MLS® ${row.k}). Check the details; the home may have changed since.`;
     }
   }

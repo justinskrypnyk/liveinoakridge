@@ -25,7 +25,7 @@
 // run, inside the shared ~330/day cap (see reference-google-geocoding-billing).
 import { getStore } from '@netlify/blobs';
 import { fetchVow } from '../../src/lib/vow-listings.mjs';
-import { COMPS_SELECT, isSale, statusOf, slim, placeOf } from '../../src/lib/comps-shared.mjs';
+import { COMPS_SELECT, TOWN_TERMS, isSale, statusOf, slim, placeOf } from '../../src/lib/comps-shared.mjs';
 
 const VOW_ACCESS_TOKEN = process.env.VOW_ACCESS_TOKEN;
 const DDF_API_BASE_URL = process.env.DDF_API_BASE_URL;
@@ -41,9 +41,7 @@ const LONDON = { lat: 42.9849, lng: -81.2453 };
 const BLOB_CONCURRENCY = 40;
 
 // London itself via the address filter (same as every other VOW job), then
-// the towns around it so rural/edge-of-city subjects have comps too. The
-// feed 0-results any contains() value with a space, so one word per town.
-const TOWN_TERMS = ['Middlesex', 'Strathroy', 'Thames', 'Thomas', 'Elgin', 'Southwold', 'Lucan'];
+// the towns around it (TOWN_TERMS) so rural/edge-of-city subjects have comps too.
 
 async function mapLimit(items, limit, fn) {
   const out = new Array(items.length);

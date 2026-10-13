@@ -81,6 +81,10 @@ const STYLES = ['2-Storey', 'Bungalow', 'Bungalow-Raised', 'Bungaloft', '1 1/2 S
   .facts b { color:var(--ink); font-weight:600; }
   .actions { display:flex; flex-direction:column; gap:6px; }
   .actions button { padding:6px 10px; font-size:12px; }
+  .pop img { display:block; width:100%; height:140px; object-fit:cover; border-radius:6px; margin-bottom:6px; cursor:pointer; background:#f1f5f9; }
+  .pop-head { font-size:13px; line-height:1.3; }
+  .pop-facts { font-size:12px; color:var(--muted); line-height:1.4; }
+  .pop .actions { flex-direction:row; margin-top:8px; }
   .why { grid-column: 1 / -1; display:none; }
   .why.open { display:grid; grid-template-columns:repeat(auto-fill, minmax(230px, 1fr)); gap:4px 18px; padding-top:6px; border-top:1px dashed var(--line); }
   .bar { display:grid; grid-template-columns: 96px 1fr 44px; gap:8px; align-items:center; font-size:12px; }
@@ -391,13 +395,18 @@ const STYLES = ['2-Storey', 'Bungalow', 'Bungalow-Raised', 'Bungaloft', '1 1/2 S
     const act = t.closest<HTMLElement>('[data-act]')?.dataset.act || (t.classList.contains('thumb') ? 'photos' : '');
     if (act === 'why') card.querySelector('.why')!.classList.toggle('open');
     if (act === 'photos') openGallery(c.row);
-    if (act === 'pick') {
-      if (picked.has(k)) picked.delete(k); else picked.set(k, c);
-      card.classList.toggle('picked', picked.has(k));
-      (t.closest('[data-act]') as HTMLElement).textContent = picked.has(k) ? '✓ Picked' : 'Pick';
-      renderShortlist();
-    }
+    if (act === 'pick') togglePick(c);
   });
+
+  function togglePick(c: Scored) {
+    const k = c.row.k;
+    if (picked.has(k)) picked.delete(k); else picked.set(k, c);
+    const card = document.querySelector<HTMLElement>(`.comp[data-k="${CSS.escape(k)}"]`);
+    card?.classList.toggle('picked', picked.has(k));
+    const btn = card?.querySelector<HTMLElement>('[data-act="pick"]');
+    if (btn) btn.textContent = picked.has(k) ? '✓ Picked' : 'Pick';
+    renderShortlist();
+  }
 
   // ---- photos ----
   const photoCache = new Map<string, Promise<string[]>>();
@@ -469,11 +478,40 @@ const STYLES = ['2-Storey', 'Bungalow', 'Bungalow-Raised', 'Bungaloft', '1 1/2 S
         pts.push([c.row.lat, c.row.lng!]);
         L.marker([c.row.lat, c.row.lng], { icon: L.divIcon({ className: '', html: `<div style="background:${STATUS[st].hex};color:#fff;font:700 11px Inter,sans-serif;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4)">${i + 1}</div>`, iconAnchor: [11, 11] }) })
           .bindTooltip(`${STATUS[st].label} #${i + 1} · ${c.score}/100 · ${esc(c.row.a.replace(/, ON .*$/, ''))}`)
-          .on('click', () => document.querySelector(`.comp[data-k="${CSS.escape(c.row.k)}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'center' }))
+          .bindPopup(() => mapPopup(c, i + 1, st), { maxWidth: 260, minWidth: 240 })
           .addTo(layer);
       });
     }
     map.fitBounds(pts, { padding: [30, 30], maxZoom: 16 });
+  }
+
+  // Clicking a pin shows the home right on the map, so the list keeps its place.
+  function mapPopup(c: Scored, n: number, st: 'S' | 'C' | 'A') {
+    const r = c.row;
+    const el = document.createElement('div');
+    el.className = 'pop';
+    const price = st === 'S' ? `${money(r.sp)} <span class="sub">sold · list ${money(r.lp)}</span>` : `${money(r.lp)} <span class="sub">list</span>`;
+    const when = st === 'S' ? `Firm ${date(r.d)}` : st === 'C' ? `Conditional ${date(r.d)}` : `Listed ${date(r.ld)}`;
+    const facts = [r.sty, `${r.b ?? '?'}${r.bb ? `+${r.bb}` : ''} bd`, `${r.ba ?? '?'} ba`, r.sqTxt ? `${r.sqTxt} sf` : null, r.ageTxt ? `${r.ageTxt} yrs` : null].filter(Boolean).join(' · ');
+    el.innerHTML = `<img alt="" />
+      <div class="pop-head"><span class="num" style="background:${STATUS[st].hex}">${n}</span><b>${esc(r.a.replace(/, ON .*$/, ''))}</b></div>
+      <div class="price">${price}</div>
+      <div class="pop-facts">${esc(when)} · <b style="color:${scoreColor(c.score)}">${c.score}/100</b><br>${esc(facts)}</div>
+      <div class="actions">
+        <button type="button" data-pop="photos">Photos</button>
+        <button type="button" data-pop="pick">${picked.has(r.k) ? '✓ Picked' : 'Pick'}</button>
+        <button type="button" data-pop="list">In list</button>
+      </div>`;
+    const img = el.querySelector('img')!;
+    photos(r.k).then((p) => { if (p[0]) img.src = p[0]; else img.remove(); });
+    img.addEventListener('click', () => openGallery(r));
+    el.addEventListener('click', (e) => {
+      const act = (e.target as HTMLElement).closest<HTMLElement>('[data-pop]')?.dataset.pop;
+      if (act === 'photos') openGallery(r);
+      if (act === 'pick') { togglePick(c); (e.target as HTMLElement).textContent = picked.has(r.k) ? '✓ Picked' : 'Pick'; }
+      if (act === 'list') document.querySelector(`.comp[data-k="${CSS.escape(r.k)}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+    return el;
   }
 
   // ---- shortlist -> /cma ----
