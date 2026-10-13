@@ -1,14 +1,18 @@
 // Backs /admin/comps/ (Justin's comparable-homes finder). Gated by
-// ?key=HEATMAP_KEY like the admin pages. Three calls:
+// ?key=HEATMAP_KEY like the admin pages. Calls:
 //   GET  ?q=<address or MLS#>  -> the subject home's starting specs
 //   POST {subject, weights, filters} -> scored comps: sold / conditional / active
 //   GET  ?photos=<ListingKey>  -> that listing's photos (VOW Media)
+//   GET  ?suggest=<typed text> -> address suggestions (comps-suggest.ts)
+//   GET  ?at=<lat>,<lng>       -> City of London zoning/lot/heritage/etc. there
 // Reads the nightly index written by netlify/functions/comps-index-background.mjs.
 import type { APIRoute } from 'astro';
 import { getStore } from '@netlify/blobs';
 import { odataGet, getSoldListingPhotos } from '@/lib/vow-listing';
 import { COMPS_SELECT, statusOf, slim, placeOf, inCompsArea } from '@/lib/comps-shared.mjs';
 import { geocodeFreeformAddress } from '@/lib/ddf';
+import { suggest } from '@/lib/comps-suggest';
+import { cityFactsAt } from '@/lib/city-layers-info';
 import {
   rankComps, subjectFromRow, km, DEFAULT_WEIGHTS,
   type CompRow, type Subject, type Weights, type Filters,
@@ -103,6 +107,7 @@ async function findSubject(q: string, index: Index | null) {
   }
 
   let subject: Subject;
+  let near: { lat: number; lng: number } | null = null;
   if (row) {
     subject = subjectFromRow(row, row.a);
     if (row.gp !== 'exact' || subject.lat == null) {
@@ -110,18 +115,23 @@ async function findSubject(q: string, index: Index | null) {
       if (g) Object.assign(subject, { lat: g.lat, lng: g.lng }, placeOf(g.lat, g.lng));
     }
   } else {
-    let g = isMls ? null : await geocodeFreeformAddress(q).catch(() => null);
+    let g = isMls ? null : await geocodeFreeformAddress(q, { needExact: true }).catch(() => null);
     // Google will "find" a typo'd street somewhere else in Ontario -- only
     // trust a match within ~60 km of London.
     if (g && km(g.lat, g.lng, 42.9849, -81.2453) > 60) g = null;
+    // A street or area guess (new build, typo): start the map there and let
+    // Justin click the house instead of comparing from the wrong spot.
+    if (g && !g.exact) { near = { lat: g.lat, lng: g.lng }; g = null; }
     subject = {
       address: q, lat: g?.lat ?? null, lng: g?.lng ?? null, ...(g ? placeOf(g.lat, g.lng) : { ar: null, arn: null }),
       subType: 'Detached', style: null, beds: null, bedsBelow: null, baths: null,
       sqft: null, age: null, lot: null, rural: false, basement: null, garage: null,
     };
-    source = g ? 'Not found in MLS®. Location found; fill in the home\'s details below.' : 'Couldn\'t find that address. Check the spelling or try the MLS® number.';
+    source = g ? 'Not found in MLS®. Location found; fill in the home\'s details below.'
+      : near ? 'Not found in MLS®, and Google only knows roughly where that is. Click the map where the home is.'
+      : 'Couldn\'t find that address. Click the map where the home is (or check the spelling / try the MLS® number).';
   }
-  return { subject, source, mlsRow: row };
+  return { subject, source, mlsRow: row, near };
 }
 
 export const GET: APIRoute = async ({ url }) => {
@@ -133,6 +143,11 @@ export const GET: APIRoute = async ({ url }) => {
   const q = (url.searchParams.get('q') || '').trim();
   const index = await loadIndex();
   const meta = index ? { builtAt: index.builtAt, soldSince: index.soldSince, counts: index.counts } : null;
+  // City of London layer facts at a point (map click / the home's summary).
+  const at = url.searchParams.get('at')?.split(',').map(Number);
+  if (at?.length === 2 && at.every(Number.isFinite)) return json(await cityFactsAt(at[0], at[1]));
+  const sug = url.searchParams.get('suggest');
+  if (sug != null) return json({ suggestions: index ? suggest(sug, index.rows, index.builtAt) : [] });
   if (!q) return json({ index: meta });
   return json({ index: meta, ...(await findSubject(q, index)) });
 };
@@ -147,12 +162,16 @@ export const POST: APIRoute = async ({ url, request }) => {
 
   const weights = { ...DEFAULT_WEIGHTS, ...(body.weights || {}) } as Weights;
   const filters: Filters = { maxKm: 3, soldMonths: 6, sameTypeOnly: true, minBeds: null, maxBeds: null, ...(body.filters || {}) };
+  // A pin dropped or dragged on the map: work out its neighbourhood here.
+  const place = body.subject.lat != null && body.subject.lng != null ? placeOf(body.subject.lat, body.subject.lng) : null;
+  if (place) Object.assign(body.subject, place);
   // Never compare the subject with its own listing (or its own last sale).
   const own = body.subject.address.toLowerCase();
   const rows = index.rows.filter((r) => r.k !== body.exclude && r.a.toLowerCase() !== own);
   const ranked = rankComps(body.subject, rows, weights, filters);
   const LIMIT = { S: 40, C: 20, A: 30 } as const;
   return json({
+    place,
     totals: { S: ranked.S.length, C: ranked.C.length, A: ranked.A.length },
     S: ranked.S.slice(0, LIMIT.S),
     C: ranked.C.slice(0, LIMIT.C),

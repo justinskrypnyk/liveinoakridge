@@ -626,7 +626,8 @@ async function geocodeAddress(listing: RawListing): Promise<{ lat: number; lng: 
 // cache store as the Nominatim path above — a cached lat/lng is provider-
 // agnostic, so addresses already geocoded for Chapman's own feed are reused
 // for free, and vice versa.
-async function geocodeLiveGoogle(query: string): Promise<{ lat: number; lng: number } | null> {
+// exact = Google matched a real house (not a street/area guess or a partial match).
+async function geocodeLiveGoogle(query: string): Promise<{ lat: number; lng: number; exact: boolean } | null> {
   const apiKey = import.meta.env.GOOGLE_GEOCODING_API_KEY;
   if (!apiKey) return null;
   try {
@@ -637,8 +638,10 @@ async function geocodeLiveGoogle(query: string): Promise<{ lat: number; lng: num
     if (!res.ok) return null;
     const data = await res.json();
     if (data.status !== 'OK' || !data.results?.[0]) return null;
-    const loc = data.results[0].geometry.location;
-    return { lat: loc.lat, lng: loc.lng };
+    const top = data.results[0];
+    const loc = top.geometry.location;
+    const exact = !top.partial_match && (top.types || []).some((t: string) => ['street_address', 'premise', 'subpremise'].includes(t));
+    return { lat: loc.lat, lng: loc.lng, exact };
   } catch {
     return null;
   }
@@ -669,16 +672,19 @@ export async function geocodeAddressGoogle(listing: RawListing): Promise<{ lat: 
   return geo;
 }
 
-/** Same cached Google geocoding path as geocodeAddressGoogle, for a plain user-typed address string (e.g. the "watch my home" alert signup) rather than a listing record. */
-export async function geocodeFreeformAddress(address: string): Promise<{ lat: number; lng: number } | null> {
+/**
+ * Same cached Google geocoding path as geocodeAddressGoogle, for a plain user-typed address string (e.g. the "watch my home" alert signup) rather than a listing record.
+ * `exact` is missing on results cached before 2026-10-13; pass needExact to re-ask Google for those.
+ */
+export async function geocodeFreeformAddress(address: string, opts: { needExact?: boolean } = {}): Promise<{ lat: number; lng: number; exact?: boolean } | null> {
   const trimmed = address.trim();
   if (!trimmed) return null;
 
   let store: ReturnType<typeof getStore> | null = null;
   try {
     store = getStore('ddf-geocode-cache');
-    const cached = await store.get(trimmed, { type: 'json' });
-    if (cached) return cached as { lat: number; lng: number };
+    const cached = (await store.get(trimmed, { type: 'json' })) as { lat: number; lng: number; exact?: boolean } | null;
+    if (cached && !(opts.needExact && cached.exact === undefined)) return cached;
   } catch {
     // Blobs unavailable (e.g. local dev without `netlify dev`) — fall through, just uncached.
   }

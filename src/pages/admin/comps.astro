@@ -45,7 +45,11 @@ const STYLES = ['2-Storey', 'Bungalow', 'Bungalow-Raised', 'Bungaloft', '1 1/2 S
   h2 { font-size:15px; margin:24px 0 10px; display:flex; align-items:baseline; gap:8px; }
   h2 .count { font-size:12px; color:var(--muted); font-weight:500; }
   .card { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:16px; }
-  .search { display:flex; gap:8px; }
+  .search { display:flex; gap:8px; position:relative; }
+  .sugg { position:absolute; top:100%; left:0; right:0; margin-top:4px; background:#fff; border:1px solid var(--line); border-radius:8px; box-shadow:0 6px 18px rgba(0,0,0,.12); z-index:1100; overflow:hidden; }
+  .sugg div { padding:9px 12px; cursor:pointer; display:flex; justify-content:space-between; gap:12px; font-size:15px; }
+  .sugg div small { color:var(--muted); font-size:12px; white-space:nowrap; align-self:center; }
+  .sugg div.on, .sugg div:hover { background:#f1f5f9; }
   .search input { flex:1; font-size:16px; padding:10px 12px; border:1px solid var(--line); border-radius:6px; min-width:0; }
   button, .btn { font:inherit; font-weight:600; padding:9px 14px; border-radius:6px; border:1px solid var(--line); background:#fff; color:var(--ink); cursor:pointer; white-space:nowrap; }
   button.primary { background:var(--accent); color:#fff; border-color:var(--accent); }
@@ -63,7 +67,24 @@ const STYLES = ['2-Storey', 'Bungalow', 'Bungalow-Raised', 'Bungaloft', '1 1/2 S
   .weights label { display:grid; grid-template-columns: 105px minmax(0, 1fr) 24px; align-items:center; gap:8px; font-size:13px; min-width:0; }
   .weights input[type=range] { width:100%; min-width:0; margin:0; }
   .weights output { font-variant-numeric:tabular-nums; text-align:right; color:var(--muted); }
-  #map { height:360px; border-radius:8px; border:1px solid var(--line); }
+  #map { height:460px; border-radius:8px; border:1px solid var(--line); }
+  #map.placing { cursor:crosshair; outline:3px solid #b91c1c; outline-offset:-3px; }
+  .map-note { font-size:12px; color:var(--muted); margin-top:4px; }
+  .city-facts { font-size:13px; margin-top:10px; line-height:1.5; }
+  .city-facts:empty { display:none; }
+  .city-facts b { color:var(--ink); }
+  .city-facts .muted { color:var(--muted); font-size:12px; }
+  .layers { background:#fff; padding:8px 10px; border-radius:8px; box-shadow:0 1px 5px rgba(0,0,0,.3); font:13px Inter,sans-serif; max-width:230px; }
+  .layers summary { font-weight:700; cursor:pointer; }
+  .layers label { display:flex; align-items:center; gap:6px; margin:5px 0; cursor:pointer; }
+  .layers .sw { width:12px; height:12px; border-radius:3px; flex:none; }
+  .layers .legend { display:flex; flex-wrap:wrap; gap:3px 8px; margin:2px 0 6px 18px; font-size:11px; color:var(--muted); }
+  .layers .legend span { display:inline-flex; align-items:center; gap:3px; }
+  .layers .legend i { width:9px; height:9px; border-radius:2px; display:inline-block; }
+  .layers .zoomhint { font-size:11px; color:#b45309; margin-left:18px; }
+  .layers .foot { font-size:11px; color:var(--muted); border-top:1px solid var(--line); margin-top:6px; padding-top:6px; }
+  .facts-pop { font-size:12.5px; line-height:1.5; min-width:220px; }
+  .map-note.ask { color:#b91c1c; font-weight:700; font-size:14px; }
   .hint { background:#fffbeb; border:1px solid #fde68a; border-radius:8px; padding:10px 12px; font-size:13px; margin-top:12px; display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
   .hint button { padding:5px 10px; font-size:12px; }
   .comps { display:grid; grid-template-columns:minmax(0, 1fr); gap:10px; }
@@ -124,6 +145,7 @@ const STYLES = ['2-Storey', 'Bungalow', 'Bungalow-Raised', 'Bungaloft', '1 1/2 S
         <form class="search" id="search">
           <input id="q" placeholder="Address (e.g. 520 Oakridge Dr) or MLS® number" autocomplete="off" />
           <button class="primary" id="find">Find comps</button>
+          <div class="sugg" id="sugg" hidden></div>
         </form>
         <div class="source" id="source"></div>
         <div class="meta" id="meta"></div>
@@ -146,6 +168,7 @@ const STYLES = ['2-Storey', 'Bungalow', 'Bungalow-Raised', 'Bungaloft', '1 1/2 S
               <label class="f">Garage<select id="s-garage"><option value="">Any</option><option value="attached">Attached</option><option value="detached">Detached</option><option value="none">None</option></select></label>
               <label class="chk"><input id="s-rural" type="checkbox" /> Rural (septic / well / big lot)</label>
             </div>
+            <div class="city-facts" id="city-facts"></div>
           </div>
           <div class="card">
             <h2 style="margin-top:0">Search</h2>
@@ -178,7 +201,7 @@ const STYLES = ['2-Storey', 'Bungalow', 'Bungalow-Raised', 'Bungaloft', '1 1/2 S
         </div>
 
         <div id="hint"></div>
-        <div style="margin-top:16px"><div id="map"></div></div>
+        <div style="margin-top:16px"><div id="map"></div><div class="map-note" id="map-note"></div></div>
 
         <h2>Sold <span class="count" id="count-S"></span></h2>
         <div class="comps" id="list-S"></div>
@@ -210,6 +233,7 @@ const STYLES = ['2-Storey', 'Bungalow', 'Bungalow-Raised', 'Bungaloft', '1 1/2 S
 
 <script>
   import { FACTORS, DEFAULT_WEIGHTS, type Subject, type Scored, type CompRow } from '@/lib/comps-score';
+  import { CITY_LAYERS, ZONING_COLOURS, UTRCA_MAP_URL, cityTileUrl } from '@/lib/city-layers';
 
   const main = document.querySelector('main');
   if (!main) throw new Error('not authorized'); // 404 page: nothing to wire up
@@ -236,16 +260,57 @@ const STYLES = ['2-Storey', 'Bungalow', 'Bungalow-Raised', 'Bungaloft', '1 1/2 S
     $('meta').textContent = `${(c.S || 0).toLocaleString()} sales since ${date(d.index.soldSince)}, ${c.C || 0} conditional, ${(c.A || 0).toLocaleString()} active · updated ${new Date(d.index.builtAt).toLocaleString('en-CA', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}`;
   }).catch(() => {});
 
+  // ---- address suggestions (typo-tolerant, from the comps index) ----
+  let sugg: { label: string; note: string }[] = [], si = -1, sugTimer = 0, sugToken = 0;
+  const hideSugg = () => { $('sugg').hidden = true; sugg = []; si = -1; };
+  function drawSugg() {
+    $('sugg').innerHTML = sugg.map((x, i) => `<div data-i="${i}" class="${i === si ? 'on' : ''}"><span>${esc(x.label)}</span><small>${esc(x.note)}</small></div>`).join('');
+    $('sugg').hidden = !sugg.length;
+  }
+  function pickSugg(i: number) {
+    $<HTMLInputElement>('q').value = sugg[i].label;
+    hideSugg();
+    $('search').dispatchEvent(new Event('submit', { cancelable: true }));
+  }
+  $('q').addEventListener('input', () => {
+    clearTimeout(sugTimer);
+    const q = $<HTMLInputElement>('q').value.trim();
+    if (!/^\S*\d+\S*\s+\S{2,}/.test(q)) { hideSugg(); return; }
+    sugTimer = window.setTimeout(async () => {
+      const my = ++sugToken;
+      const d = await (await fetch(api(`&suggest=${encodeURIComponent(q)}`))).json().catch(() => ({}));
+      if (my !== sugToken) return;
+      sugg = d.suggestions || []; si = -1; drawSugg();
+    }, 150);
+  });
+  $('q').addEventListener('keydown', (e) => {
+    if ($('sugg').hidden) return;
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      // Cycles through the list and back to "none highlighted" (-1).
+      e.preventDefault();
+      const n = sugg.length + 1;
+      si = ((si + 1 + (e.key === 'ArrowDown' ? 1 : -1) + n) % n) - 1;
+      drawSugg();
+    }
+    if (e.key === 'Enter' && si >= 0) { e.preventDefault(); pickSugg(si); }
+    if (e.key === 'Escape') hideSugg();
+  });
+  // mousedown, so the pick lands before the input's blur hides the list
+  $('sugg').addEventListener('mousedown', (e) => { const i = (e.target as HTMLElement).closest<HTMLElement>('[data-i]')?.dataset.i; if (i) { e.preventDefault(); pickSugg(Number(i)); } });
+  $('q').addEventListener('blur', () => setTimeout(hideSugg, 100));
+
   // ---- find subject ----
   $('search').addEventListener('submit', async (e) => {
     e.preventDefault();
     const q = $<HTMLInputElement>('q').value.trim();
     if (!q) return;
+    hideSugg(); sugToken++;
     $<HTMLButtonElement>('find').disabled = true;
     $('source').textContent = 'Looking it up...';
     try {
       const d = await (await fetch(api(`&q=${encodeURIComponent(q)}`))).json();
       subject = d.subject;
+      near = d.near || null;
       mlsKey = d.mlsRow?.k || null;
       $('source').textContent = d.source || '';
       if (!subject) return;
@@ -262,7 +327,7 @@ const STYLES = ['2-Storey', 'Bungalow', 'Bungalow-Raised', 'Bungaloft', '1 1/2 S
 
   const SUBJ_FIELDS = ['subType', 'style', 'beds', 'bedsBelow', 'baths', 'sqft', 'age', 'lot', 'basement', 'garage'] as const;
   function fillSubject(s: Subject) {
-    $('subj-addr').textContent = s.address + (s.arn ? ` · ${s.arn}` : '');
+    showSubjectAddr();
     for (const f of SUBJ_FIELDS) {
       const el = $<HTMLInputElement | HTMLSelectElement>(`s-${f}`);
       const v = (s as any)[f];
@@ -272,6 +337,9 @@ const STYLES = ['2-Storey', 'Bungalow', 'Bungalow-Raised', 'Bungaloft', '1 1/2 S
     $<HTMLInputElement>('s-rural').checked = !!s.rural;
     // Rural homes need a wider net by default.
     $<HTMLSelectElement>('f-maxKm').value = s.rural ? '25' : '3';
+  }
+  function showSubjectAddr() {
+    $('subj-addr').textContent = subject!.address + (subject!.arn ? ` · ${subject!.arn}` : '');
   }
   function readSubject(): Subject {
     const s = { ...subject! } as any;
@@ -297,11 +365,22 @@ const STYLES = ['2-Storey', 'Bungalow', 'Bungalow-Raised', 'Bungaloft', '1 1/2 S
   async function run() {
     if (!subject) return;
     const my = ++token;
+    if (subject.lat == null) {
+      // No location yet: nothing to compare until the home is on the map.
+      loadSubjectFacts();
+      last = { S: [], C: [], A: [] };
+      for (const st of ['S', 'C', 'A'] as const) $(`count-${st}`).textContent = '';
+      $('hint').innerHTML = '';
+      render();
+      return;
+    }
     const res = await fetch(api(), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ subject: readSubject(), weights: readWeights(), filters: readFilters(), exclude: mlsKey }) });
     const d = await res.json();
     if (my !== token) return;
     if (d.error) { $('hint').innerHTML = `<div class="hint">${esc(d.error)}</div>`; return; }
     last = { S: d.S, C: d.C, A: d.A };
+    if (d.place) { Object.assign(subject, d.place); showSubjectAddr(); }
+    loadSubjectFacts();
     for (const st of ['S', 'C', 'A'] as const) $(`count-${st}`).textContent = `${d.totals[st]} found${d.totals[st] > d[st].length ? `, best ${d[st].length} shown` : ''}`;
     render();
     renderHint(d.totals);
@@ -456,22 +535,44 @@ const STYLES = ['2-Storey', 'Bungalow', 'Bungalow-Raised', 'Bungaloft', '1 1/2 S
 
   // ---- map ----
   let map: any = null, layer: any = null;
+  let near: { lat: number; lng: number } | null = null; // Google's rough guess, to start the pin drop
   async function loadLeaflet() {
     if ((window as any).L) return;
     await new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js'; s.onload = res; s.onerror = rej; document.head.appendChild(s); });
   }
+  // Put the home at a spot on the map (pin drop or dragging the star) and re-run.
+  function placeHome(lat: number, lng: number) {
+    if (!subject) return;
+    Object.assign(subject, { lat, lng, ar: null, arn: null });
+    $('source').textContent = 'Location set on the map.';
+    run();
+  }
   async function renderMap() {
-    if (!subject?.lat) return;
+    if (!subject) return;
     await loadLeaflet();
     const L = (window as any).L;
     if (!map) {
       map = L.map('map');
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors', maxZoom: 19 }).addTo(map);
+      // While the home has no location a click places it; otherwise, with a
+      // City layer on, a click shows what's there.
+      map.on('click', (e: any) => {
+        if (subject && subject.lat == null) placeHome(e.latlng.lat, e.latlng.lng);
+        else if (onLayers.size) showFactsAt(e.latlng);
+      });
+      addLayersControl(L);
     }
     layer?.remove();
     layer = L.layerGroup().addTo(map);
-    const pts: [number, number][] = [[subject.lat, subject.lng!]];
-    L.marker([subject.lat, subject.lng], { icon: L.divIcon({ className: '', html: '<div style="background:#b91c1c;color:#fff;font:700 11px Inter,sans-serif;padding:4px 8px;border-radius:12px;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4);white-space:nowrap">★ This home</div>', iconAnchor: [40, 12] }) }).addTo(layer);
+    const placing = subject.lat == null;
+    $('map').classList.toggle('placing', placing);
+    $('map-note').className = placing ? 'map-note ask' : 'map-note';
+    $('map-note').textContent = placing ? 'Click the map where the home is.' : 'Wrong spot? Drag the ★ to the right place.';
+    if (placing) { map.setView(near ? [near.lat, near.lng] : [42.9849, -81.2453], near ? 15 : 12); return; }
+    const pts: [number, number][] = [[subject.lat!, subject.lng!]];
+    L.marker([subject.lat, subject.lng], { draggable: true, zIndexOffset: 1000, icon: L.divIcon({ className: '', html: '<div style="background:#b91c1c;color:#fff;font:700 11px Inter,sans-serif;padding:4px 8px;border-radius:12px;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4);white-space:nowrap;cursor:move">★ This home</div>', iconAnchor: [40, 12] }) })
+      .on('dragend', (e: any) => { const p = e.target.getLatLng(); placeHome(p.lat, p.lng); })
+      .addTo(layer);
     for (const st of ['A', 'C', 'S'] as const) {
       last[st].slice(0, shown[st]).forEach((c, i) => {
         if (c.row.lat == null) return;
@@ -483,6 +584,91 @@ const STYLES = ['2-Storey', 'Bungalow', 'Bungalow-Raised', 'Bungaloft', '1 1/2 S
       });
     }
     map.fitBounds(pts, { padding: [30, 30], maxZoom: 16 });
+  }
+
+  // ---- City of London layers (zoning, lot lines, heritage, ...) ----
+  const LAYERS_KEY = 'comps-layers';
+  const onLayers = new Set<string>(JSON.parse(localStorage.getItem(LAYERS_KEY) || '[]'));
+  const tileLayers = new Map<string, any>();
+  function addLayersControl(L: any) {
+    // One image per map tile, drawn by the City's server in our colours.
+    const CityTiles = L.TileLayer.extend({
+      getTileUrl(this: any, c: any) {
+        const b = this._tileCoordsToBounds(c);
+        const sw = L.CRS.EPSG3857.project(b.getSouthWest()), ne = L.CRS.EPSG3857.project(b.getNorthEast());
+        return cityTileUrl(this.options.city, [sw.x, sw.y, ne.x, ne.y]);
+      },
+    });
+    const legend = Object.values(ZONING_COLOURS).map((z) => `<span><i style="background:rgb(${z.rgb.join(',')})"></i>${z.label}</span>`).join('');
+    const box = L.DomUtil.create('details', 'layers');
+    box.open = onLayers.size > 0;
+    box.innerHTML = `<summary>Layers</summary>${CITY_LAYERS.map((l) => `
+      <label><input type="checkbox" data-layer="${l.key}" ${onLayers.has(l.key) ? 'checked' : ''}/><span class="sw" style="background:${l.swatch}"></span>${l.label}</label>
+      ${l.key === 'zoning' ? `<div class="legend" data-legend hidden>${legend}</div>` : ''}
+      <div class="zoomhint" data-zoomhint="${l.key}" hidden>Zoom in to see this</div>`).join('')}
+      <div class="foot">City of London only. Click the map for what's at a spot.<br>Flood / creek regulated areas: <a href="${UTRCA_MAP_URL}" target="_blank" rel="noopener">UTRCA map ↗</a></div>`;
+    L.DomEvent.disableClickPropagation(box);
+    L.DomEvent.disableScrollPropagation(box);
+    const set = (key: string, on: boolean) => {
+      const def = CITY_LAYERS.find((l) => l.key === key)!;
+      if (on) {
+        onLayers.add(key);
+        if (!tileLayers.has(key)) tileLayers.set(key, new CityTiles('', { city: def, minZoom: def.minZoom, maxZoom: 19, tileSize: 256, zIndex: 10 + CITY_LAYERS.indexOf(def), attribution: 'City of London open data' }));
+        tileLayers.get(key).addTo(map);
+      } else {
+        onLayers.delete(key);
+        tileLayers.get(key)?.remove();
+      }
+      localStorage.setItem(LAYERS_KEY, JSON.stringify([...onLayers]));
+      updateLayerHints();
+    };
+    box.addEventListener('change', (e: Event) => { const t = e.target as HTMLInputElement; if (t.dataset.layer) set(t.dataset.layer, t.checked); });
+    const ctl = L.control({ position: 'topright' });
+    ctl.onAdd = () => box;
+    ctl.addTo(map);
+    map.on('zoomend moveend', updateLayerHints);
+    for (const key of [...onLayers]) set(key, true);
+  }
+  function updateLayerHints() {
+    const z = map.getZoom();
+    for (const l of CITY_LAYERS) {
+      const hint = document.querySelector<HTMLElement>(`[data-zoomhint="${l.key}"]`);
+      if (hint) hint.hidden = !(onLayers.has(l.key) && z < l.minZoom);
+    }
+    const lg = document.querySelector<HTMLElement>('[data-legend]');
+    if (lg) lg.hidden = !onLayers.has('zoning');
+  }
+
+  type CityFacts = { inCity: boolean; facts: { key: string; label: string; text: string }[] };
+  const factsCache = new Map<string, Promise<CityFacts>>();
+  const cityFacts = (lat: number, lng: number) => {
+    const k = `${lat.toFixed(5)},${lng.toFixed(5)}`;
+    if (!factsCache.has(k)) factsCache.set(k, fetch(api(`&at=${k}`)).then((r) => r.json()).catch(() => ({ inCity: true, facts: [] })));
+    return factsCache.get(k)!;
+  };
+  // For a condo the City's lot is the whole complex, not this unit.
+  const forSubject = (d: CityFacts): CityFacts => /condo/i.test(readSubject().subType || '')
+    ? { ...d, facts: d.facts.map((f) => (f.key === 'lot' ? { ...f, label: 'City lot (whole complex)' } : f)) }
+    : d;
+  const factsHtml = (d: CityFacts) => !d.inCity
+    ? '<span class="muted">Outside the City of London: no zoning/heritage data for the towns.</span>'
+    : d.facts.length ? d.facts.map((f) => `<b>${esc(f.label)}:</b> ${esc(f.text)}`).join('<br>') : '<span class="muted">Nothing on the City layers here.</span>';
+  async function showFactsAt(ll: { lat: number; lng: number }) {
+    const L = (window as any).L;
+    const pop = L.popup({ maxWidth: 300 }).setLatLng(ll).setContent('<div class="facts-pop">Looking it up...</div>').openOn(map);
+    const d = await cityFacts(ll.lat, ll.lng);
+    pop.setContent(`<div class="facts-pop">${factsHtml(d)}</div>`);
+  }
+  // The home's own zoning, lot, heritage etc., under its specs (and in Copy for /cma).
+  let subjectFacts: CityFacts | null = null;
+  async function loadSubjectFacts() {
+    if (subject?.lat == null) { subjectFacts = null; $('city-facts').innerHTML = ''; return; }
+    const at = [subject.lat, subject.lng!] as const;
+    $('city-facts').innerHTML = '<span class="muted">Checking City of London zoning...</span>';
+    const d = await cityFacts(at[0], at[1]);
+    if (subject?.lat !== at[0] || subject?.lng !== at[1]) return; // moved meanwhile
+    subjectFacts = d;
+    $('city-facts').innerHTML = `${factsHtml(forSubject(d))}${d.inCity ? '<br><span class="muted">From City of London open data, for this map spot -- confirm with the City before relying on it.</span>' : ''}`;
   }
 
   // Clicking a pin shows the home right on the map, so the list keeps its place.
@@ -533,6 +719,7 @@ const STYLES = ['2-Storey', 'Bungalow', 'Bungalow-Raised', 'Bungaloft', '1 1/2 S
     const s = readSubject();
     const lines = [
       `Subject: ${s.address} · ${s.subType || ''} ${s.style || ''} · ${s.beds ?? '?'}${s.bedsBelow ? `+${s.bedsBelow}` : ''} bed · ${s.baths ?? '?'} bath · ${s.sqft ?? '?'} sf · age ~${s.age ?? '?'} · lot ${s.lot ?? '?'} sf · basement ${s.basement || '?'} · garage ${s.garage || '?'}${s.rural ? ' · rural' : ''}`,
+      ...(subjectFacts?.inCity && subjectFacts.facts.length ? [`City of London data for the subject: ${forSubject(subjectFacts).facts.map((f) => `${f.label}: ${f.text}`).join(' · ')}`] : []),
       '',
       'Comparables (from MLS®, firm dates):',
       ...rowsForExport().map((r, i) => `${i + 1}. [${r.Status}, score ${r.Score}] ${r.Address} (MLS® ${r['MLS#']})${r['Sale price'] ? ` sold ${money(Number(r['Sale price']))}` : ''} · list ${money(Number(r['List price']) || null)}${r['Firm/conditional date'] ? ` · ${r.Status === 'Sold' ? 'firm' : 'conditional'} ${r['Firm/conditional date']}` : ''}${r.DOM !== '' ? ` · ${r.DOM} DOM` : ''} · ${r.Type} ${r.Style} · ${r.Beds} bed · ${r.Baths} bath · ${r['Sq ft']} sf · age ${r.Age || '?'} · lot ${r.Lot || '?'} · bsmt ${r.Basement || '?'} · garage ${r.Garage || '?'} · ${r['Distance km']} km away`),
