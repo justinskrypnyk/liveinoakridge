@@ -79,7 +79,7 @@ export const BLOG_POSTS: BlogPost[] = [
         </tbody>
       </table>
       <p>Source: <a href="https://climate.weather.gc.ca/climate_normals/index_e.html" target="_blank" rel="noopener noreferrer">Environment and Climate Change Canada, 1991-2020 climate normals</a> for London International Airport, where the average first fall frost is October 13. Nights and snowfall are rounded monthly averages.</p>
-      <p>My family has lived in Oakridge since 1959, so fall cleanup has been a family ritual for three generations. My years in environmental conservation also taught me how much water and trees shape a property. Most of the costly winter problems I see in mid-century homes start with water going somewhere it shouldn't.</p>
+      <p>My family has lived in Oakridge since 1959, so fall cleanup has been a family ritual for three generations. My 11 years in environmental conservation also taught me how much water and trees shape a property. Most of the costly winter problems I see in mid-century homes start with water going somewhere it shouldn't.</p>
 
       <h2>What Should Be on Your Fall Home Maintenance Checklist?</h2>
 

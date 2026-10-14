@@ -278,7 +278,10 @@ const isProd = import.meta.env.PROD;
           import { onCLS, onFCP, onINP, onLCP, onTTFB } from 'web-vitals';
 
           function sendToGA4({ name, delta, value, id, rating }) {
-            gtag('event', name, {
+            // window.gtag is the inline stub above. Astro still bundles this
+            // script in `astro dev`, where the stub isn't rendered, so guard it
+            // instead of throwing "gtag is not defined" in local previews.
+            (window as unknown as { gtag?: (...args: unknown[]) => void }).gtag?.('event', name, {
               value: Math.round(name === 'CLS' ? delta * 1000 : delta),
               metric_id: id,
               metric_value: value,
