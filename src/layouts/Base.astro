@@ -204,7 +204,15 @@ const isProd = import.meta.env.PROD;
               // Same rule as the heatmap (api/hm.ts). ?ga=on overrides it.
               var teamTz = false;
               try { teamTz = Intl.DateTimeFormat().resolvedOptions().timeZone === 'Asia/Manila'; } catch (e) {}
-              if (!teamTz || /[?&]ga=on\b/.test(location.search)) {
+              // Justin's own browsers: visiting ?hm=off once hides them from
+              // the heatmap AND GA4. hm.js saves the flag but is deferred, so
+              // read the URL here too; ?hm=on undoes it.
+              var optedOut = false;
+              try {
+                optedOut = !/[?&]hm=on\b/.test(location.search) &&
+                  (/[?&]hm=off\b/.test(location.search) || !!localStorage.getItem('hm_off'));
+              } catch (e) {}
+              if (!optedOut && (!teamTz || /[?&]ga=on\b/.test(location.search))) {
                 var gtagScript = document.createElement('script');
                 gtagScript.src = 'https://www.googletagmanager.com/gtag/js?id=G-Z2M94KRVTT';
                 document.head.appendChild(gtagScript);
