@@ -4,6 +4,9 @@ export interface BlogChart {
   labels: string[];
   values: number[];
   valueSuffix?: string;
+  /** 'bar' for a few categories (e.g. months) with every value labelled.
+   *  Defaults to the trend line. */
+  type?: 'line' | 'bar';
 }
 
 export interface BlogPost {
@@ -35,6 +38,122 @@ export interface BlogPost {
 }
 
 export const BLOG_POSTS: BlogPost[] = [
+  {
+    slug: 'fall-home-maintenance-checklist-london-ontario',
+    title: 'Fall Maintenance Checklist for London, Ontario Homes',
+    seoTitle: 'Fall Home Maintenance Checklist for London, Ontario Homes | Live In Oakridge',
+    description: `A step-by-step fall checklist for London, Ontario homeowners: eavestroughs, leaf pickup, outdoor taps, furnace service and Ontario's new carbon monoxide alarm rules.`,
+    date: '2026-10-14',
+    dateDisplay: 'October 14, 2026',
+    category: 'Homeowner Tips',
+    author: 'Justin Skrypnyk',
+    readTime: '7 min read',
+    image: '/images/fall-home-maintenance-checklist-london-ontario.webp',
+    imageAlt: 'A white house with red trim behind a picket fence, with yellow fall trees overhead and leaves covering the front lawn',
+    charts: [
+      {"title":"Nights at or below freezing in London, by month","color":"#1e3a5f","labels":["Sep","Oct","Nov","Dec"],"values":[0,5,17,27],"type":"bar"},
+      {"title":"Average snowfall in London, by month","color":"#c9971f","labels":["Sep","Oct","Nov","Dec"],"values":[0,3,17,48],"valueSuffix":" cm","type":"bar"},
+    ],
+    tldr: [
+      `Clean eavestroughs once most leaves are down, and flush every downspout so water drains well away from the foundation.`,
+      `Shut off and drain outdoor taps and disconnect hoses by early November, before the first hard freeze.`,
+      `Book a furnace service and test smoke and carbon monoxide alarms. Since January 1, 2026, Ontario requires CO alarms on every storey in most homes.`,
+      `Set leaves out in paper or compostable bags (no plastic, under 20 kg) during your City of London green week.`,
+    ],
+    content: `
+      <p>To get a London, Ontario home ready for winter, clean the eavestroughs once the leaves drop, shut off and drain outdoor taps before the first hard freeze, book a furnace service, test smoke and carbon monoxide alarms on every storey, seal drafts around windows and doors, and set leaves out for the City's green week pickup.</p>
+      <p>Most of it fits into two or three weekends between mid October and late November. Below is the full checklist in the order I'd tackle it, with the London-specific details that generic lists leave out.</p>
+
+      <h2>Why Does Fall Maintenance Matter More in London, Ontario?</h2>
+      <p>London earned its nickname honestly. In neighbourhoods like <a href="/areas/oakridge/">Oakridge</a>, <a href="/areas/byron/">Byron</a> and <a href="/areas/westmount/">Westmount</a>, the oaks and maples planted in the 1950s and 60s now tower over the rooflines. They are a big part of why people love living here, and they drop a remarkable volume of leaves into eavestroughs every October and November.</p>
+      <p>The timing is also tighter than most people expect. London's average first frost arrives in early to mid October, and overnight lows hover near 0°C through November. The window between "too many leaves still up" and "too cold to be on a ladder" is only a few weeks.</p>
+      <table>
+        <thead>
+          <tr><th>Month</th><th>Average overnight low</th><th>Nights at or below 0°C</th><th>Average snowfall</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>September</td><td>9.9°C</td><td>0</td><td>0 cm</td></tr>
+          <tr><td>October</td><td>4.3°C</td><td>5</td><td>3 cm</td></tr>
+          <tr><td>November</td><td>-0.4°C</td><td>17</td><td>17 cm</td></tr>
+          <tr><td>December</td><td>-6.1°C</td><td>27</td><td>48 cm</td></tr>
+        </tbody>
+      </table>
+      <p>Source: <a href="https://climate.weather.gc.ca/climate_normals/index_e.html" target="_blank" rel="noopener noreferrer">Environment and Climate Change Canada, 1991-2020 climate normals</a> for London International Airport, where the average first fall frost is October 13. Nights and snowfall are rounded monthly averages.</p>
+      <p>My family has lived in Oakridge since 1959, so fall cleanup has been a family ritual for three generations. My years in environmental conservation also taught me how much water and trees shape a property. Most of the costly winter problems I see in mid-century homes start with water going somewhere it shouldn't.</p>
+
+      <h2>What Should Be on Your Fall Home Maintenance Checklist?</h2>
+
+      <h3>1. Clear the eavestroughs and downspouts</h3>
+      <p>Wait until most of the leaves are down, then clean the troughs and flush each downspout with a hose. Under mature trees, plan on doing this twice: once in late October and again after the last big drop. Make sure downspout extensions carry water at least a metre or two away from the foundation, and that the soil slopes away from the house. A clogged trough in November becomes an ice dam in January.</p>
+
+      <h3>2. Walk the roof line and exterior</h3>
+      <p>From the ground, look for lifted or missing shingles, loose flashing around the chimney, and gaps in the caulking around windows and doors. Check that the chimney cap is in place. Small gaps are cheap to seal now and expensive to repair after a winter of freeze and thaw.</p>
+
+      <h3>3. Handle leaves the London way</h3>
+      <p>The <a href="https://london.ca/living-london/garbage-recycling/yard-waste-composting" target="_blank" rel="noopener noreferrer">City of London collects yard waste</a> during your "green weeks" from late March through early December. A few rules worth knowing:</p>
+      <ul>
+        <li>Use paper yard waste bags, certified compostable bags, or reusable containers between 30 and 125 litres. Plastic bags are not accepted.</li>
+        <li>Keep each bag or bundle under 20 kilograms.</li>
+        <li>Set it out by 7 a.m. on the Monday of your green week, and no earlier than 6 p.m. the night before.</li>
+        <li>Missed your week? Any City EnviroDepot takes yard waste free of charge.</li>
+      </ul>
+      <p>You can also mow lighter leaf cover straight into the lawn, where it breaks down and feeds the soil. And once Halloween is over, your jack-o'-lantern goes out with the next green week, candle removed.</p>
+
+      <h3>4. Shut off and drain outdoor water</h3>
+      <p>This is the step that causes the most expensive surprises. Close the indoor shutoff valve for each outside tap, then open the tap outside so the line drains. Disconnect every hose, even on frost-free taps, since a connected hose traps water in the line. If you have an irrigation system, book the blowout. Aim to finish by early November.</p>
+
+      <h3>5. Service your heating system</h3>
+      <p>Book an annual furnace service with a licensed technician before the first cold snap, when schedules fill up. Swap the furnace filter, and keep spares on hand for the winter. Clear leaves away from exterior vents, and have a wood-burning fireplace or chimney swept before its first fire.</p>
+
+      <h3>6. Test smoke and carbon monoxide alarms</h3>
+      <p><a href="https://www.ontario.ca/cosafety" target="_blank" rel="noopener noreferrer">Ontario's Fire Code changed on January 1, 2026</a>. Homes with a fuel-burning appliance, a fireplace or an attached garage now need carbon monoxide alarms on every storey, in addition to next to sleeping areas (<a href="https://www.hcraontario.ca/resources/new-safety-requirements-for-carbon-monoxide-alarms/" target="_blank" rel="noopener noreferrer">HCRA</a>). That covers most houses in London. Test every alarm, replace batteries, and check the manufacture date. CO alarms generally need replacing every seven to ten years.</p>
+
+      <h3>7. Seal drafts and check the inside</h3>
+      <p>Replace worn weatherstripping and door sweeps, and re-caulk drafty window frames. Take a flashlight into the attic to check insulation and make sure vents are not blocked. Test the sump pump by pouring a bucket of water into the pit, and look for damp spots in the basement before winter hides them.</p>
+
+      <h3>8. Put the yard to bed</h3>
+      <p>Give the lawn a final short mow, store patio furniture and hoses, and run the mower's fuel down. Trim branches that hang over the roof. If an overhanging branch belongs to a City boulevard tree, contact Service London instead of cutting it yourself. Then get the shovel and ice melt where you can reach them on the first snowy morning.</p>
+
+      <h3>Quick checklist</h3>
+      <ul>
+        <li>☐ Eavestroughs cleaned and downspouts flowing away from the house</li>
+        <li>☐ Roof, flashing and caulking checked</li>
+        <li>☐ Leaves bagged for green week or taken to an EnviroDepot</li>
+        <li>☐ Outdoor taps shut off, drained and hoses disconnected</li>
+        <li>☐ Furnace serviced and filter changed</li>
+        <li>☐ Smoke and CO alarms tested on every storey</li>
+        <li>☐ Drafts sealed, attic and sump pump checked</li>
+        <li>☐ Yard put away and snow gear ready</li>
+      </ul>
+
+      <h2>How Do You Fit It All in Before Winter?</h2>
+      <p>None of these jobs is difficult on its own. The value comes from doing them every year, in roughly this order, before the weather makes the decision for you. Print the quick checklist above, stick it on the fridge, and tick things off as you go.</p>
+      <p><strong>Get seasonal tips in your inbox.</strong> The London Letter is my monthly email with seasonal home reminders, local market numbers and neighbourhood news for Oakridge and West London. Sign up using the form below.</p>
+      <p><strong>Curious what your home is worth heading into spring?</strong> If you're starting to think about your next move, I'm happy to put together a free, no-pressure home value update based on recent sales near you. <a href="/home-value-estimate/">Get my value range</a></p>
+    `,
+    faqs: [
+      {
+        question: 'When should I shut off my outdoor taps in London, Ontario?',
+        answer: `Aim for late October or early November. Overnight lows in London average close to 0°C in November, and a single hard freeze can split a line that still holds water.`,
+      },
+      {
+        question: 'When does the City of London pick up leaves?',
+        answer: `Yard waste is collected during your green weeks, which run from late March through early December. Check your dates on the City's collection calendar or the Recycle Coach app. New collection schedules are delivered between late October and early November.`,
+      },
+      {
+        question: 'Do I need a carbon monoxide alarm on every floor in Ontario?',
+        answer: `Yes, if your home has a fuel-burning appliance, a fireplace or an attached garage. Since January 1, 2026, the Ontario Fire Code requires CO alarms on every storey and next to sleeping areas.`,
+      },
+      {
+        question: 'How often should I service my furnace?',
+        answer: `Once a year, ideally in early fall before the heating season starts. Change the filter every one to three months while it's running.`,
+      },
+      {
+        question: "Does fall maintenance affect my home's value?",
+        answer: `It does over time. Water damage, worn roofing and neglected mechanicals are the issues home inspectors flag most often, and they tend to show up in negotiations. A home that's been looked after season by season inspects cleaner and sells with fewer surprises.`,
+      },
+    ],
+  },
   {
     slug: 'september-2026-london-ontario-housing-market',
     title: `London Ontario Housing Market, September 2026: Detached Homes Are Moving, Condos Are Waiting, and Price Decides Everything`,
@@ -131,7 +250,7 @@ export const BLOG_POSTS: BlogPost[] = [
 
       <p style="font-size:12px;color:#888;">Source: MLS® residential data from the London and St. Thomas Association of REALTORS® (LSTAR) board feed for London East, London North and London South. Sales figures updated October 6, 2026, once late-reported September sales had settled; homes for sale and new listings are as of October 1, 2026. Sales are counted by firm (sold) date. Leases and vacant land are excluded. Neighbourhoods follow the City of London's planning district boundaries, which can differ slightly from MLS® area boundaries.</p>
     `,
-    charts: [{"title":"London firm sales by week, September 2026","color":"#e8b84b","labels":["Sept 1-7","Sept 8-14","Sept 15-21","Sept 22-30"],"values":[74,103,90,112]},{"title":"Months of inventory, detached vs condo","color":"#1e3a5f","labels":["Detached","Condo"],"values":[5,6.5],"valueSuffix":" mo"}],
+    charts: [{"title":"London firm sales by week, September 2026","color":"#e8b84b","labels":["Sept 1-7","Sept 8-14","Sept 15-21","Sept 22-30"],"values":[74,103,90,112],"type":"bar"},{"title":"Months of inventory, detached vs condo","color":"#1e3a5f","labels":["Detached","Condo"],"values":[5,6.5],"valueSuffix":" mo","type":"bar"}],
     faqs: [{"question":"How many homes sold in London Ontario in September 2026?","answer":"379 homes sold in London Ontario in September 2026, counted by the date each sale went firm. That is up 12.5% from 337 in August 2026 and up 5.9% from 358 in September 2025."},{"question":"Are house prices going down in London Ontario?","answer":"Prices eased slightly in September 2026. The median sale price in London was $540,000, down 1.8% from August and 6.6% from September 2025, and homes sold at about 95% of their original asking price on average."},{"question":"Is London Ontario a buyer's or seller's market right now?","answer":"London is a balanced market overall, with about 5.5 months of inventory as of October 1, 2026. Detached homes are balanced at about 5.0 months, while condos lean toward buyers at about 6.5 months."},{"question":"Is fall a good time to sell a house in London Ontario?","answer":"Fall can be a good time to sell in London, since buyer activity usually builds through late September and into October. Pricing matters most: in September 2026, homes sold at 96.9% of their final list price but 94.9% of their original list price, so starting at the right price is the biggest advantage a seller has."},{"question":"Why are condos selling slower than houses in London Ontario?","answer":"Condos have more supply relative to sales right now, with about 6.5 months of inventory compared with 5.0 for detached homes in London. Only 6% of condos sold over asking in September 2026, and a quarter of active condo listings had already been reduced."}],
   },
 
@@ -195,7 +314,7 @@ export const BLOG_POSTS: BlogPost[] = [
 
       <p style="font-size:12px;color:#888;">Source: MLS® residential data from the London and St. Thomas Association of REALTORS® (LSTAR) board feed for London East, London North and London South. Sales are counted by firm (sold) date, the same way the MLS® system records them; leases and vacant land excluded. Corrected October 1, 2026: this post originally counted sales by closing date and included some outlying towns.</p>
     `,
-    charts: [{"title":"London homes sold by firm date, June to August 2026","color":"#e8b84b","labels":["Jun","Jul","Aug"],"values":[504,446,337]}],
+    charts: [{"title":"London homes sold by firm date, June to August 2026","color":"#e8b84b","labels":["Jun","Jul","Aug"],"values":[504,446,337],"type":"bar"}],
     faqs: [{"question":"How many homes sold in London Ontario in August 2026?","answer":"337 homes sold in London Ontario in August 2026, counted by firm date. That is down 24.4% from July and 15.3% from August 2025."},{"question":"Did home prices drop in London Ontario in August 2026?","answer":"Prices held steady month over month. The median sale price was $550,000 in August 2026, nearly the same as July's $549,450, and down 5.2% from August 2025."},{"question":"Is London Ontario a buyer's or seller's market right now?","answer":"London was close to balanced in August 2026. Homes sold for 97.2% of list price on average, and 13.4% sold above asking, so well-priced homes still sold near asking while buyers had room on the rest."},{"question":"How is the Oakridge, London Ontario real estate market doing?","answer":"19 homes sold in Oakridge in August 2026 at a median price of $779,900, and 21.1% sold above asking, ahead of the citywide rate of 13.4%."},{"question":"Is now a good time to sell a home in London Ontario?","answer":"For accurately priced homes, yes. Homes sold for about 97% of list price on average in August 2026, but with fewer sales overall, homes priced above the market are the ones that sit."}],
   },
 
@@ -1862,6 +1981,7 @@ export const BLOG_POSTS: BlogPost[] = [
         labels: ['Uplands', 'Stoneybrook', 'London North', 'Oakridge', 'Argyle', 'Talbot', 'Sunningdale', 'Lambeth', 'Jackson', 'Woodhull'],
         values: [33, 35, 35, 37, 51, 65, 71, 71, 72, 89],
         valueSuffix: 'd',
+        type: 'bar',
       },
     ],
     tldr: [

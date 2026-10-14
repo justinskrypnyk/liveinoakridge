@@ -2,6 +2,7 @@
 import Base from '@/layouts/Base.astro';
 import Schema from '@/components/Schema.astro';
 import TrendLineChart from '@/components/TrendLineChart.astro';
+import BarChart from '@/components/BarChart.astro';
 import { SITE } from '@/data/site';
 import { BLOG_POSTS } from '@/data/blog';
 import BlogSignup from '@/components/BlogSignup.astro';
@@ -70,6 +71,8 @@ const SOCIAL_SHARES = [
     icon: 'M18.9 1.15h3.68l-8.04 9.19L24 22.85h-7.4l-5.8-7.58-6.64 7.58H.48l8.6-9.83L0 1.15h7.59l5.24 6.93 6.07-6.93zm-1.29 19.5h2.04L6.48 3.24H4.3l13.31 17.41z',
   },
 ];
+// Icon-only version of the same buttons, for the compact sidebar share box.
+const shareIcon = 'inline-flex items-center justify-center w-9 h-9 rounded-full border border-navy/15 text-navy hover:border-gold hover:text-gold-deep transition-colors';
 const shareBtn = 'inline-flex items-center gap-2 rounded-full border border-navy/15 px-4 py-2 text-sm font-semibold text-navy hover:border-gold hover:text-gold-deep transition-colors';
 ---
 
@@ -215,13 +218,23 @@ const shareBtn = 'inline-flex items-center gap-2 rounded-full border border-navy
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
               {post.charts.map((chart) => (
                 <div class="bg-white rounded-2xl p-5 shadow-sm">
-                  <TrendLineChart
-                    title={chart.title}
-                    color={chart.color}
-                    labels={chart.labels}
-                    values={chart.values}
-                    valueSuffix={chart.valueSuffix}
-                  />
+                  {chart.type === 'bar' ? (
+                    <BarChart
+                      title={chart.title}
+                      color={chart.color}
+                      labels={chart.labels}
+                      values={chart.values}
+                      valueSuffix={chart.valueSuffix}
+                    />
+                  ) : (
+                    <TrendLineChart
+                      title={chart.title}
+                      color={chart.color}
+                      labels={chart.labels}
+                      values={chart.values}
+                      valueSuffix={chart.valueSuffix}
+                    />
+                  )}
                 </div>
               ))}
             </div>
@@ -291,6 +304,27 @@ const shareBtn = 'inline-flex items-center gap-2 rounded-full border border-navy
           </div>
 
           <div class="bg-white rounded-2xl p-6 shadow-sm">
+            <h3 class="font-semibold text-navy mb-3 text-sm">Share this article</h3>
+            <div class="flex flex-wrap gap-2">
+              <button type="button" data-share-copy class={shareIcon} aria-label="Copy link" title="Copy link">
+                <svg aria-hidden="true" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 13a5 5 0 0 0 7.07 0l3-3a5 5 0 0 0-7.07-7.07l-1.5 1.5M14 11a5 5 0 0 0-7.07 0l-3 3a5 5 0 0 0 7.07 7.07l1.5-1.5"/></svg>
+              </button>
+              <a data-share="email" href={`mailto:?subject=${encodeURIComponent(post.title)}&body=${encodeURIComponent(`${post.description}\n\n${shareUrl}`)}`} class={shareIcon} aria-label="Share by email" title="Email">
+                <svg aria-hidden="true" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path stroke-linecap="round" stroke-linejoin="round" d="m3 7 9 6 9-6"/></svg>
+              </a>
+              {SOCIAL_SHARES.map((s) => (
+                <a data-share={s.method} href={s.href} target="_blank" rel="noopener noreferrer" class={shareIcon} aria-label={`Share on ${s.label} (opens in a new tab)`} title={s.label}>
+                  <svg aria-hidden="true" class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d={s.icon} /></svg>
+                </a>
+              ))}
+              <button type="button" data-share-native hidden class={shareIcon} aria-label="More ways to share" title="More">
+                <svg aria-hidden="true" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v12M7 8l5-5 5 5M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg>
+              </button>
+            </div>
+            <p data-share-status class="text-xs text-slate mt-2" aria-live="polite"></p>
+          </div>
+
+          <div class="bg-white rounded-2xl p-6 shadow-sm">
             <h3 class="font-semibold text-navy mb-3 text-sm">Related Pages</h3>
             <ul class="space-y-2">
               <li><a href="/services/home-evaluation/" class="text-sm text-slate hover:text-gold transition-colors">Complimentary Home Evaluation</a></li>
@@ -325,18 +359,27 @@ const shareBtn = 'inline-flex items-center gap-2 rounded-full border border-navy
     w.gtag?.('event', 'share', { method, content_type: 'article', item_id: location.pathname });
   };
 
-  document.querySelector<HTMLButtonElement>('[data-share-copy]')?.addEventListener('click', async (e) => {
-    const btn = e.currentTarget as HTMLButtonElement;
-    const label = btn.querySelector('[data-share-label]');
-    const url = location.origin + location.pathname;
-    try {
-      await navigator.clipboard.writeText(url);
-      if (label) label.textContent = 'Link copied';
-    } catch {
-      window.prompt('Copy this link:', url);
-    }
-    track('copy_link');
-    setTimeout(() => { if (label) label.textContent = 'Copy link'; }, 2000);
+  // There are two share boxes (sidebar and end of post). The bottom one's
+  // copy button has a text label; the sidebar's icon button reports through
+  // the status line under it instead.
+  document.querySelectorAll<HTMLButtonElement>('[data-share-copy]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const label = btn.querySelector('[data-share-label]');
+      const status = btn.parentElement?.parentElement?.querySelector('[data-share-status]');
+      const url = location.origin + location.pathname;
+      try {
+        await navigator.clipboard.writeText(url);
+        if (label) label.textContent = 'Link copied';
+        if (status) status.textContent = 'Link copied';
+      } catch {
+        window.prompt('Copy this link:', url);
+      }
+      track('copy_link');
+      setTimeout(() => {
+        if (label) label.textContent = 'Copy link';
+        if (status) status.textContent = '';
+      }, 2000);
+    });
   });
 
   document.querySelectorAll<HTMLAnchorElement>('[data-share]').forEach((a) => {
@@ -345,16 +388,17 @@ const shareBtn = 'inline-flex items-center gap-2 rounded-full border border-navy
 
   // "More" opens the phone's own share sheet (Messages, WhatsApp, Messenger,
   // etc.). Only shown where the browser supports it -- mostly phones.
-  const native = document.querySelector<HTMLButtonElement>('[data-share-native]');
-  if (native && typeof navigator.share === 'function') {
-    native.hidden = false;
-    native.addEventListener('click', async () => {
-      try {
-        await navigator.share({ title: document.title, url: location.origin + location.pathname });
-        track('native');
-      } catch {
-        // Closing the share sheet throws AbortError -- nothing to do.
-      }
+  if (typeof navigator.share === 'function') {
+    document.querySelectorAll<HTMLButtonElement>('[data-share-native]').forEach((native) => {
+      native.hidden = false;
+      native.addEventListener('click', async () => {
+        try {
+          await navigator.share({ title: document.title, url: location.origin + location.pathname });
+          track('native');
+        } catch {
+          // Closing the share sheet throws AbortError -- nothing to do.
+        }
+      });
     });
   }
 </script>

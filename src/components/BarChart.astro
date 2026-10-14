@@ -1,0 +1,84 @@
+---
+// Bar chart for a handful of categories (e.g. four months), with every value
+// printed on its bar. Server-rendered SVG with real <text> so it stays readable
+// and crawlable. The viewBox is close to the size it actually renders at in a
+// blog chart card (~260-340px), so 13-14px text stays ~11-14px on screen
+// instead of shrinking the way a wide viewBox does.
+// Many categories or long names (neighbourhoods) switch to horizontal bars,
+// with the name on the left, since they won't fit under vertical bars.
+interface Props {
+  title: string;
+  color?: string;
+  labels: string[];
+  values: number[];
+  valueSuffix?: string;
+}
+
+const { title, color = '#1e3a5f', labels, values, valueSuffix = '' } = Astro.props;
+
+const max = Math.max(...values) || 1;
+const horizontal = labels.length > 6 || labels.some((l) => l.length > 10);
+const fmt = (v: number) => `${v}${valueSuffix}`;
+
+const width = 320;
+
+// Vertical layout
+const vHeight = 210;
+const vPad = { top: 26, right: 8, bottom: 30, left: 8 };
+const vPlotW = width - vPad.left - vPad.right;
+const vPlotH = vHeight - vPad.top - vPad.bottom;
+const slot = vPlotW / values.length;
+const barW = Math.min(52, slot * 0.6);
+const baseline = vPad.top + vPlotH;
+const vBars = values.map((v, i) => {
+  // Zero still gets a thin stub so the category doesn't look missing.
+  const h = Math.max(2, (v / max) * vPlotH);
+  const cx = vPad.left + slot * i + slot / 2;
+  return { v, label: labels[i], cx, x: cx - barW / 2, y: baseline - h, h };
+});
+
+// Horizontal layout
+const rowH = 26;
+const labelW = Math.min(130, 12 + Math.max(...labels.map((l) => l.length)) * 7.2);
+const valueW = 8 + Math.max(...values.map((v) => fmt(v).length)) * 8.5;
+const hPlotW = width - labelW - valueW;
+const hHeight = rowH * values.length + 4;
+const hBars = values.map((v, i) => {
+  const w = Math.max(2, (v / max) * hPlotW);
+  const y = 2 + i * rowH;
+  return { v, label: labels[i], y, w };
+});
+
+const height = horizontal ? hHeight : vHeight;
+---
+
+<figure class="m-0">
+  <figcaption class="text-sm font-semibold text-navy mb-3">{title}</figcaption>
+  <svg
+    viewBox={`0 0 ${width} ${height}`}
+    class="w-full h-auto"
+    role="img"
+    aria-label={`${title}: ${labels.map((l, i) => `${l} ${fmt(values[i])}`).join(', ')}. Full values are also listed in the article.`}
+  >
+    {horizontal ? (
+      hBars.map((b) => (
+        <g>
+          <text x={labelW - 8} y={b.y + rowH / 2 + 1} text-anchor="end" dominant-baseline="middle" font-size="13" fill="#475569">{b.label}</text>
+          <rect x={labelW} y={b.y + 4} width={b.w} height={rowH - 8} rx="3" fill={color} />
+          <text x={labelW + b.w + 6} y={b.y + rowH / 2 + 1} dominant-baseline="middle" font-size="13" font-weight="700" fill="#1e3a5f">{fmt(b.v)}</text>
+        </g>
+      ))
+    ) : (
+      <>
+        <line x1={vPad.left} y1={baseline} x2={width - vPad.right} y2={baseline} stroke="#cbd5e1" stroke-width="1" />
+        {vBars.map((b) => (
+          <g>
+            <rect x={b.x} y={b.y} width={barW} height={b.h} rx="4" fill={color} />
+            <text x={b.cx} y={b.y - 7} text-anchor="middle" font-size="14" font-weight="700" fill="#1e3a5f">{fmt(b.v)}</text>
+            <text x={b.cx} y={baseline + 20} text-anchor="middle" font-size="13" fill="#475569">{b.label}</text>
+          </g>
+        ))}
+      </>
+    )}
+  </svg>
+</figure>

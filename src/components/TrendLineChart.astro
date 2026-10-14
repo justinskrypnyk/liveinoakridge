@@ -14,11 +14,14 @@ const {
   labels,
   values,
   valueSuffix = '',
-  height = 220,
+  height = 210,
 } = Astro.props;
 
-const width = 700;
-const padding = { top: 24, right: 16, bottom: 28, left: 16 };
+// The viewBox is close to the size the chart actually renders at in a blog
+// chart card (~260-340px wide), so 11-13px text stays readable on screen.
+// A 700-wide viewBox shrank labels to ~4px.
+const width = 340;
+const padding = { top: 30, right: 22, bottom: 28, left: 22 };
 const plotW = width - padding.left - padding.right;
 const plotH = height - padding.top - padding.bottom;
 
@@ -35,6 +38,11 @@ const points = values.map((v, i) => {
   const y = padding.top + plotH - ((v - yMin) / (yMax - yMin)) * plotH;
   return { x, y, v, label: labels[i] };
 });
+
+// Values printed on the chart: first, last and the highest point (the rest
+// show on hover/tap).
+const maxIdx = values.indexOf(max);
+const labelled = [...new Set([0, maxIdx, values.length - 1])];
 
 const linePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
 
@@ -74,22 +82,27 @@ const chartId = `trend-chart-${Math.random().toString(36).slice(2, 9)}`;
         />
       ))}
 
-      <text
-        x={points[points.length - 1].x}
-        y={points[points.length - 1].y - 12}
-        text-anchor="end"
-        class="fill-navy text-[13px] font-semibold"
-      >
-        {values[values.length - 1]}{valueSuffix}
-      </text>
+      {labelled.map((i) => (
+        <text
+          x={points[i].x}
+          y={points[i].y - 11}
+          text-anchor="middle"
+          font-size="13"
+          font-weight="700"
+          fill="#1e3a5f"
+        >
+          {values[i]}{valueSuffix}
+        </text>
+      ))}
 
       {labels.map((l, i) => (
-        (i % 2 === 0 || i === labels.length - 1) && (
+        (labels.length <= 12 || i % 2 === 0 || i === labels.length - 1) && (
           <text
             x={points[i].x}
-            y={height - 6}
-            text-anchor={i === labels.length - 1 ? 'end' : 'middle'}
-            class="fill-slate text-[10px]"
+            y={height - 8}
+            text-anchor="middle"
+            font-size="12"
+            fill="#475569"
           >
             {l}
           </text>
