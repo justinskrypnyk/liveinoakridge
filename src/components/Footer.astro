@@ -1,7 +1,9 @@
 ---
 import { SITE } from '@/data/site';
+import { getLatestMarketUpdate } from '@/data/blog';
 
 const year = new Date().getFullYear();
+const marketUpdate = getLatestMarketUpdate();
 ---
 
 <footer class="bg-navy-dark text-white/70">
@@ -75,7 +77,7 @@ const year = new Date().getFullYear();
       <div>
         <h3 class="text-white font-semibold mb-4">Insights & Guides</h3>
         <ul class="space-y-2 text-sm">
-          <li><a href="/blog/june-2026-london-ontario-market-update/" class="hover:text-gold transition-colors">June 2026 Market Update</a></li>
+          <li><a href={`/blog/${marketUpdate.slug}/`} class="hover:text-gold transition-colors">{marketUpdate.label}</a></li>
           <li><a href="/blog/london-ontario-neighbourhood-guide-2026/" class="hover:text-gold transition-colors">Neighbourhood Guide 2026</a></li>
           <li><a href="https://realestate.liveinoakridge.ca/buyer-guide" class="hover:text-gold transition-colors">Free Buyer's Guide (Download)</a></li>
           <li><a href="/blog/first-time-home-buyer-london-ontario-guide/" class="hover:text-gold transition-colors">First-Time Buyer Guide</a></li>

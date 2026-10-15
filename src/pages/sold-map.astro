@@ -15,6 +15,7 @@ import { SITE } from '@/data/site';
 import { getAllAreasBounds, getAreaBounds, areaNameForSlug } from '@/lib/area-boundaries';
 import { getVowSession } from '@/lib/vow-session';
 import { PROPERTY_TYPE_OPTIONS } from '@/lib/vow-property-types';
+import { getLatestMarketUpdate } from '@/data/blog';
 
 const session = getVowSession(Astro.cookies);
 const authenticated = session !== null;
@@ -291,7 +292,7 @@ const faqs = [
           Sold prices tell you more than list prices. A home listed at $699,900 might have sold at $680,000 after 30 days, or at $740,000 in a bidding war. Looking at what actually sold nearby is the same first step I take when I price a home for a client.
         </p>
         <p>
-          Thinking of selling? The <a href="/home-value-estimate/" class="text-navy font-semibold underline hover:text-gold">free home value estimate</a> gives you a range from recent sales, and I'm happy to <a href="/contact/" class="text-navy font-semibold underline hover:text-gold">pull the exact comparable sales</a> for your home. For the bigger picture, read the latest <a href="/blog/september-2026-london-ontario-housing-market/" class="text-navy font-semibold underline hover:text-gold">London Ontario housing market update</a>.
+          Thinking of selling? The <a href="/home-value-estimate/" class="text-navy font-semibold underline hover:text-gold">free home value estimate</a> gives you a range from recent sales, and I'm happy to <a href="/contact/" class="text-navy font-semibold underline hover:text-gold">pull the exact comparable sales</a> for your home. For the bigger picture, read the latest <a href={`/blog/${getLatestMarketUpdate().slug}/`} class="text-navy font-semibold underline hover:text-gold">London Ontario housing market update</a>.
         </p>
       </div>
 

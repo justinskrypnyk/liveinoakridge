@@ -2820,3 +2820,16 @@ export const BLOG_POSTS: BlogPost[] = [
 export function getBlogPost(slug: string): BlogPost | undefined {
   return BLOG_POSTS.find((p) => p.slug === slug);
 }
+
+/**
+ * The newest monthly market update, for site-wide links (footer, sold map)
+ * that should always point at the current month without hand-editing.
+ * Label is the month the post covers, read from its title ("September 2026").
+ */
+export function getLatestMarketUpdate(): { slug: string; label: string } {
+  const post = BLOG_POSTS
+    .filter((p) => p.category === 'Market Updates')
+    .sort((a, b) => b.date.localeCompare(a.date))[0];
+  const month = post.title.match(/(January|February|March|April|May|June|July|August|September|October|November|December) \d{4}/)?.[0];
+  return { slug: post.slug, label: month ? `${month} Market Update` : 'Latest Market Update' };
+}
