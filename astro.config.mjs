@@ -17,8 +17,13 @@ export default defineConfig({
       changefreq: 'weekly',
       priority: 0.7,
       lastmod: new Date(),
-      customPages: [],
-      filter: (page) => !page.includes('/admin/'),
+      // /areas/[area]/ is server-rendered (live listings), and the sitemap
+      // plugin skips dynamic server routes, so list the area hubs by hand.
+      // Keep in sync with the slugs in src/data/areas.ts.
+      customPages: ['byron', 'westmount', 'riverbend', 'lambeth', 'whitehills', 'west-london']
+        .map((slug) => `https://www.liveinoakridge.ca/areas/${slug}/`),
+      // Drop admin, the sign-in redirect page, and the noindex legal pages.
+      filter: (page) => !/\/(admin|vow\/callback|privacy-policy|terms-of-use)\//.test(page),
     }),
     mdx(),
     // Partytown (GA4 off the main thread, ~238ms TBT win) was removed
