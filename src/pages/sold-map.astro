@@ -50,10 +50,36 @@ const DATE_RANGE_OPTIONS = [
   { value: 'd360', label: 'Last 360 days' },
   { value: 'y2026', label: 'Year 2026' },
   { value: 'y2025', label: 'Year 2025' },
+  // 2022-2023 dropped 2026-10-14: vow_sold_listings has no sales before fall
+  // 2024, so those options only ever showed an empty map.
   { value: 'y2024', label: 'Year 2024' },
-  { value: 'y2023', label: 'Year 2023' },
-  { value: 'y2022', label: 'Year 2022' },
   { value: 'all', label: 'All time' },
+];
+
+// Text under the map so the page can answer "how do I find what a house sold
+// for" searches (GSC 2026-10: ~200 impressions/mo at position ~10-12 with
+// almost no indexable copy on the page). Also rendered as FAQPage schema.
+const faqs = [
+  {
+    question: 'How do I find out what a house sold for in London, Ontario?',
+    answer: 'Zoom the map above into the street you want, then sign in free to see the exact sold price, sold date and how it compared to the asking price. The data comes from the MLS® system through the local real estate board and refreshes at least once a day.',
+  },
+  {
+    question: 'Why do I need to sign in to see sold prices?',
+    answer: "Real estate board rules only allow exact sold prices to be shown to people who register and accept the terms of use. Signing in is free and uses a magic link sent to your email, so there's no password to set up.",
+  },
+  {
+    question: 'Can I look up sold prices for past years?',
+    answer: 'Yes. Use the Sold filter above the map to switch from the last 90 days to the last 30, 180 or 360 days, or to a single calendar year. The sales history on the map goes back to fall 2024.',
+  },
+  {
+    question: 'Is the assessed value the same as the sold price?',
+    answer: "No. Your MPAC assessment is the value used for property tax, and it can be well above or below what a home would sell for today. The sold price is what a buyer actually paid, which is why recent sales on your street are the best guide to your home's value.",
+  },
+  {
+    question: 'Are there other ways to find a sold price in Ontario?',
+    answer: "You can buy a property's parcel register from Ontario's land registry through OnLand, which shows the price recorded on the transfer. It only covers one property at a time and lags behind MLS® sales, so for comparing a street or neighbourhood, a sold map like this one is faster.",
+  },
 ];
 ---
 
@@ -61,6 +87,17 @@ const DATE_RANGE_OPTIONS = [
   title="Sold Home Prices in London, Ontario | Free Sold Map | Live In Oakridge"
   description="Find out what homes sold for near you. Browse recent London, Ontario sold prices on a free map, then sign in free to see exact prices and sale-to-list."
 >
+  <Fragment slot="head">
+    <script type="application/ld+json" set:html={JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: faqs.map((f) => ({
+        '@type': 'Question',
+        name: f.question,
+        acceptedAnswer: { '@type': 'Answer', text: f.answer },
+      })),
+    })} />
+  </Fragment>
   <section class="bg-navy py-16 text-white">
     <div class="container-site">
       <nav aria-label="Breadcrumb" class="flex items-center gap-2 text-sm text-white/50 mb-8">
@@ -239,6 +276,34 @@ const DATE_RANGE_OPTIONS = [
       <p class="text-xs text-slate/60 mt-8 max-w-2xl mx-auto text-center leading-relaxed">
         The information provided herein is deemed reliable but is not guaranteed accurate by PROPTX. The information provided herein must only be used by consumers that have a bona fide interest in the purchase, sale, or lease of real estate and may not be used for any commercial purpose or any other purpose. Data refreshes at least once every 24 hours.
       </p>
+    </div>
+  </section>
+
+  <!-- How to use / FAQ -->
+  <section class="py-16 bg-white">
+    <div class="container-site max-w-3xl">
+      <h2 class="section-heading mb-4">How to Find Recently Sold Homes in London, Ontario</h2>
+      <div class="space-y-4 text-slate leading-relaxed">
+        <p>
+          The quickest way to see what homes sold for in London is the map above. It shows recent MLS® sales across the city. Zoom into a street, set the price range and property type, and sign in free to see each home's exact sold price and date.
+        </p>
+        <p>
+          Sold prices tell you more than list prices. A home listed at $699,900 might have sold at $680,000 after 30 days, or at $740,000 in a bidding war. Looking at what actually sold nearby is the same first step I take when I price a home for a client.
+        </p>
+        <p>
+          Thinking of selling? The <a href="/home-value-estimate/" class="text-navy font-semibold underline hover:text-gold">free home value estimate</a> gives you a range from recent sales, and I'm happy to <a href="/contact/" class="text-navy font-semibold underline hover:text-gold">pull the exact comparable sales</a> for your home. For the bigger picture, read the latest <a href="/blog/september-2026-london-ontario-housing-market/" class="text-navy font-semibold underline hover:text-gold">London Ontario housing market update</a>.
+        </p>
+      </div>
+
+      <h2 class="section-heading mt-14 mb-8">Common Questions About Sold Prices</h2>
+      <div class="space-y-6">
+        {faqs.map((f) => (
+          <div class="bg-cream rounded-xl p-6 border border-gray-200">
+            <h3 class="font-serif text-lg text-navy mb-2">{f.question}</h3>
+            <p class="text-sm text-slate leading-relaxed">{f.answer}</p>
+          </div>
+        ))}
+      </div>
     </div>
   </section>
 </Base>
