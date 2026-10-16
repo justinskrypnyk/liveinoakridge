@@ -16,8 +16,11 @@
 // the City stopped mapping most of them after 2024.
 //
 // Blobs (store `city-applications`):
-//   seen    { [key]: { edited, status } } for every in-area file at the last run
-//   pages   { [slug]: { files, title, proposed, fetchedAt } } london.ca page cache
+//   seen        { [key]: { edited, status } } for every in-area file at the last run
+//   pages       { [slug]: { files, title, proposed, fetchedAt } } london.ca page cache
+//   first-seen  { [key]: 'YYYY-MM-DD' } city-wide, the day each file first showed
+//               up on the map (null = already there when tracking began) -- the
+//               monthly neighbourhood report uses it to tell new files from old
 import areaBoundaries from '../data/area-boundaries.json' with { type: 'json' };
 
 const MAP = 'https://maps.london.ca/server/rest/services';
@@ -28,9 +31,13 @@ const BASELINE_DAYS = 365;
 
 export const OUR_AREAS = ['oakridge', 'west-london', 'whitehills', 'byron', 'westmount', 'riverbend', 'lambeth'];
 
-const areas = areaBoundaries.features
-  .filter((f) => OUR_AREAS.includes(f.properties.slug))
-  .map((f) => ({ slug: f.properties.slug, name: f.properties.name, ring: f.geometry.coordinates[0] }));
+// All 39 London neighbourhoods; the daily alert keeps OUR_AREAS, the monthly
+// report and the city-wide site use the rest too.
+const areas = areaBoundaries.features.map((f) => ({ slug: f.properties.slug, name: f.properties.name, ring: f.geometry.coordinates[0] }));
+
+export function areaForPoint(lat, lng) {
+  return areas.find((ar) => pointInRing(lat, lng, ar.ring)) ?? null;
+}
 
 // Layer id -> what the application type means, in Justin's words for clients.
 export const LAYERS = {
@@ -68,8 +75,8 @@ async function getJson(url) {
 
 const isoDay = (ms) => (ms ? new Date(ms).toISOString().slice(0, 10) : null);
 
-/** Every application on the City map whose centre falls inside one of our 7 areas. */
-export async function fetchAreaApplications() {
+/** Every application on the City map, tagged with the neighbourhood its centre falls in (area null if none). */
+export async function fetchApplications() {
   const byKey = new Map();
   let cityTotal = 0;
   for (const [layerId, info] of Object.entries(LAYERS)) {
@@ -86,8 +93,7 @@ export async function fetchAreaApplications() {
       const pts = rings.flat();
       const lng = pts.reduce((s, p) => s + p[0], 0) / pts.length;
       const lat = pts.reduce((s, p) => s + p[1], 0) / pts.length;
-      const area = areas.find((ar) => pointInRing(lat, lng, ar.ring));
-      if (!area) continue;
+      const area = areaForPoint(lat, lng);
       const file = a.FileNumber.trim();
       const key = `${layerId}:${a.FileNumber_Phase || file}`;
       const app = {
@@ -96,14 +102,14 @@ export async function fetchAreaApplications() {
         type: info.type,
         what: info.what,
         file,
-        phase: a.Phase || null,
+        phase: a.Phase && a.Phase.trim() !== '0' ? a.Phase.trim() : null,
         yearOpened: a.YearOpened || null,
         edited: isoDay(a.LastEditDate),
         registered: isoDay(a.RegisteredDate),
         status: a.Status ? STATUS_WORDS[a.Status.trim()] ?? titleCase(a.Status) : null,
         statusCode: a.StatusCode ?? null,
-        area: area.slug,
-        areaName: area.name,
+        area: area?.slug ?? null,
+        areaName: area?.name ?? null,
         lat,
         lng,
         rings,
@@ -115,6 +121,12 @@ export async function fetchAreaApplications() {
   }
   if (cityTotal === 0) throw new Error('City map returned 0 applications city-wide -- service changed or down');
   return { apps: [...byKey.values()], cityTotal };
+}
+
+/** Only the files inside our 7 areas. */
+export async function fetchAreaApplications() {
+  const { apps, cityTotal } = await fetchApplications();
+  return { apps: apps.filter((a) => OUR_AREAS.includes(a.area)), cityTotal, allApps: apps };
 }
 
 function titleCase(s) {
@@ -181,6 +193,26 @@ export async function fetchCityPages(cache = {}) {
   return pages;
 }
 
+/** Attach the london.ca page (description + link) and a street address to each app. */
+export async function describeApps(list, pages) {
+  const pageByFile = {};
+  for (const [slug, p] of Object.entries(pages)) for (const f of p.files) pageByFile[f] ??= { slug, ...p };
+  for (const app of list) {
+    const page = pageByFile[app.file];
+    if (page) {
+      app.pageUrl = `${CITY_PAGES}/${page.slug}`;
+      app.pageTitle = page.title;
+      app.proposed = page.proposed;
+    }
+    try {
+      app.address = page?.title && /^\d/.test(page.title) ? page.title : await lookupAddress(app);
+    } catch (err) {
+      console.warn('city-applications: address lookup failed', app.file, err.message);
+    }
+  }
+  return list;
+}
+
 /** Street address inside the application boundary, or "near <closest>" for raw land. */
 export async function lookupAddress(app) {
   const pts = app.rings.flat();
@@ -238,6 +270,8 @@ function card(app) {
 </div>`;
 }
 
+export { card as applicationCard, esc };
+
 export function buildEmail({ fresh, updated, baseline }) {
   const total = fresh.length + updated.length;
   const subject = baseline
@@ -276,10 +310,9 @@ export async function runCityApplications({ getStore, dryRun = false, to = proce
   const seen = (await store.get('seen', { type: 'json' })) || null;
   const pageCache = (await store.get('pages', { type: 'json' })) || {};
 
-  const { apps, cityTotal } = await fetchAreaApplications();
+  const firstSeen = await store.get('first-seen', { type: 'json' });
+  const { apps, cityTotal, allApps } = await fetchAreaApplications();
   const pages = await fetchCityPages(pageCache);
-  const pageByFile = {};
-  for (const [slug, p] of Object.entries(pages)) for (const f of p.files) pageByFile[f] ??= { slug, ...p };
 
   const baseline = !seen;
   const cutoff = new Date(Date.now() - BASELINE_DAYS * 86400000).toISOString().slice(0, 10);
@@ -293,19 +326,7 @@ export async function runCityApplications({ getStore, dryRun = false, to = proce
     else if (before.edited !== app.edited || before.status !== (app.status ?? app.statusCode)) updated.push(app);
   }
 
-  for (const app of [...fresh, ...updated]) {
-    const page = pageByFile[app.file];
-    if (page) {
-      app.pageUrl = `${CITY_PAGES}/${page.slug}`;
-      app.pageTitle = page.title;
-      app.proposed = page.proposed;
-    }
-    try {
-      app.address = page?.title && /^\d/.test(page.title) ? page.title : await lookupAddress(app);
-    } catch (err) {
-      console.warn('city-applications: address lookup failed', app.file, err.message);
-    }
-  }
+  await describeApps([...fresh, ...updated], pages);
   const newestFirst = (a, b) => (b.edited || '').localeCompare(a.edited || '');
   fresh.sort(newestFirst);
   updated.sort(newestFirst);
@@ -319,6 +340,12 @@ export async function runCityApplications({ getStore, dryRun = false, to = proce
   if (!dryRun) {
     await store.setJSON('seen', Object.fromEntries(apps.map((a) => [a.key, { edited: a.edited, status: a.status ?? a.statusCode }])));
     await store.setJSON('pages', pages);
+    // City-wide first-seen dates. On the very first run every file is "already
+    // there" (null), so the monthly report never calls an old file new.
+    const today = new Date().toISOString().slice(0, 10);
+    const nextSeen = { ...(firstSeen || {}) };
+    for (const a of allApps) if (!(a.key in nextSeen)) nextSeen[a.key] = firstSeen ? today : null;
+    await store.setJSON('first-seen', nextSeen);
   }
   return { ...result, email };
 }
