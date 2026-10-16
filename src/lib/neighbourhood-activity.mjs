@@ -51,7 +51,7 @@ export function permitSummary() {
 }
 
 /** Latest "Quarter N, YYYY" report the City lists, so we can flag one we haven't loaded. */
-async function latestCityReport() {
+export async function latestCityReport() {
   try {
     const html = await (await fetch(REPORTS_PAGE, { headers: { 'User-Agent': 'Mozilla/5.0' } })).text();
     const found = [...html.matchAll(/Quarter\s+([1-4]),\s*(\d{4})/g)].map((m) => `${m[2]} Q${m[1]}`);
@@ -137,7 +137,7 @@ ${ours.filter((a) => a.area === r.slug).map(applicationCard).join('')}`
     )
     .join('');
 
-  const subject = `Neighbourhood activity, ${month.label}: ${rows[0].value ? `${rows[0].name} leads your areas` : 'your 7 areas'}`;
+  const subject = `${newReportWaiting ? `ACTION NEEDED: load the new City permit report (${newReportWaiting}) · ` : ''}Neighbourhood activity, ${month.label}: ${rows[0].value ? `${rows[0].name} leads your areas` : 'your 7 areas'}`;
   const html = `<div style="font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif;max-width:660px;margin:0 auto;color:#222">
 <h1 style="font-size:22px;margin:0 0 4px">Where the money is going: ${esc(month.label)}</h1>
 <p style="font-size:14px;color:#555;margin:0 0 16px">Big permits = every City building permit of $1M+ so far in ${esc(permits?.year || '')} (${esc(permits?.period || 'none loaded')} report), not counting single and semi-detached houses. Planning files = applications the City worked on in ${esc(month.label)}.</p>
@@ -171,4 +171,45 @@ ${elsewhere.length ? `<p style="font-size:14px;margin:16px 0 8px"><b>Rezonings, 
     await store.setJSON(`monthly/${month.key}`, snapshot);
   }
   return { subject, html, snapshot, newReportWaiting };
+}
+
+/**
+ * Justin wants a strong, explicit nudge when the City posts a quarterly permit
+ * report we haven't loaded (2026-10-15), because loading it is a manual step
+ * ("tell Claude: load it"). Checked daily by the planning-alert job: emails the
+ * day a new report appears, then again every 7 days until it's loaded.
+ * Blob `city-applications` permit-report-reminder: { report, lastSent }.
+ */
+export async function remindNewPermitReport({ getStore, dryRun = false, to = process.env.DIGEST_TO_EMAIL || 'info@homeswithjustin.ca', now = new Date() }) {
+  const loaded = permitSummary()?.period ?? null;
+  const latest = await latestCityReport();
+  if (!latest || (loaded && latest <= loaded)) return { waiting: null, loaded, latest };
+
+  const store = getStore('city-applications');
+  const state = (await store.get('permit-report-reminder', { type: 'json' })) || {};
+  const daysSince = state.report === latest && state.lastSent ? (now - new Date(state.lastSent)) / 86400000 : Infinity;
+  if (daysSince < 7) return { waiting: latest, loaded, sent: false };
+
+  const nth = state.report === latest ? (state.count || 1) + 1 : 1;
+  const subject = `ACTION NEEDED: new City permit report (${latest}) is out. Tell Claude "load it"${nth > 1 ? ` (reminder #${nth})` : ''}`;
+  const html = `<div style="font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif;max-width:600px;margin:0 auto;color:#222">
+<div style="background:#fff4e5;border:2px solid #b4541a;border-radius:8px;padding:18px 20px">
+<p style="font-size:20px;font-weight:700;margin:0 0 10px;color:#b4541a">New City permit report: ${esc(latest)}</p>
+<p style="font-size:15px;margin:0 0 12px">The City of London just posted its <b>${esc(latest)}</b> Building Services Report. Your monthly neighbourhood report is still using <b>${esc(loaded || 'nothing')}</b>, so its big-permit numbers are out of date until it's loaded.</p>
+<p style="font-size:16px;margin:0 0 6px"><b>What to do:</b> open Claude Code in the london-realtor folder and type:</p>
+<p style="font-size:18px;font-family:Menlo,Consolas,monospace;background:#fff;border:1px solid #e3e1db;border-radius:6px;padding:10px 12px;margin:0 0 12px">load the new City permit report (${esc(latest)})</p>
+<p style="font-size:13px;color:#555;margin:0">Takes Claude a few minutes. This email repeats every 7 days until it's loaded.</p>
+</div>
+<p style="font-size:12px;color:#888;margin-top:14px">Source: <a href="${REPORTS_PAGE}">london.ca building permit reports</a></p>
+</div>`;
+  if (!dryRun) {
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ from: 'Live In Oakridge Alerts <reports@mail.liveinoakridge.ca>', to: [to], subject, html }),
+    });
+    if (!res.ok) throw new Error(`Resend HTTP ${res.status}: ${await res.text().catch(() => '')}`);
+    await store.setJSON('permit-report-reminder', { report: latest, lastSent: now.toISOString(), count: nth });
+  }
+  return { waiting: latest, loaded, sent: true, subject, html };
 }
